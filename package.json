@@ -1,0 +1,21 @@
+{
+  "name": "vixy-crm",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=server && npm run build --workspace=client",
+    "db:migrate": "npm run db:migrate --workspace=server",
+    "db:seed": "npm run db:seed --workspace=server",
+    "db:studio": "npm run db:studio --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

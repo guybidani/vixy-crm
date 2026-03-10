@@ -1,0 +1,760 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { sanitizeHtml } from "../lib/sanitize";
+import {
+  Plus,
+  X,
+  BookOpen,
+  FolderOpen,
+  Eye,
+  ThumbsUp,
+  ThumbsDown,
+  ArrowRight,
+  FileText,
+  Globe,
+  PenLine,
+  Search,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import PageShell, { EmptyState } from "../components/layout/PageShell";
+import Modal from "../components/shared/Modal";
+import StatusBadge from "../components/shared/StatusBadge";
+import {
+  listCategories,
+  listArticles,
+  getArticle,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+  createCategory,
+  voteArticle,
+  type KbCategory,
+  type KbArticle,
+} from "../api/knowledge";
+
+type View = "list" | "article" | "editor";
+
+const CATEGORY_COLORS = [
+  "#6161FF",
+  "#00CA72",
+  "#FDAB3D",
+  "#A25DDC",
+  "#579BFC",
+  "#FB275D",
+  "#25D366",
+  "#FF642E",
+];
+
+function getCategoryColor(index: number) {
+  return CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+}
+
+export default function KnowledgeBasePage() {
+  const queryClient = useQueryClient();
+  const [view, setView] = useState<View>("list");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedArticleId, setSelectedArticleId] = useState<string | null>(
+    null,
+  );
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [showCreateArticle, setShowCreateArticle] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const { data: categories } = useQuery({
+    queryKey: ["kb-categories"],
+    queryFn: listCategories,
+  });
+
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ["kb-articles", { categoryId: selectedCategory, search }],
+    queryFn: () =>
+      listArticles({
+        categoryId: selectedCategory || undefined,
+        search: search || undefined,
+      }),
+  });
+
+  const { data: selectedArticle } = useQuery({
+    queryKey: ["kb-article", selectedArticleId],
+    queryFn: () => getArticle(selectedArticleId!),
+    enabled: !!selectedArticleId && view === "article",
+  });
+
+  function openArticle(id: string) {
+    setSelectedArticleId(id);
+    setView("article");
+  }
+
+  function backToList() {
+    setView("list");
+    setSelectedArticleId(null);
+  }
+
+  if (view === "article" && selectedArticle) {
+    return (
+      <ArticleView
+        article={selectedArticle}
+        categories={categories || []}
+        onBack={backToList}
+        onEdit={() => setView("editor")}
+      />
+    );
+  }
+
+  if (view === "editor" && selectedArticle) {
+    return (
+      <ArticleEditor
+        article={selectedArticle}
+        categories={categories || []}
+        onBack={() => setView("article")}
+        onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["kb-articles"] });
+          queryClient.invalidateQueries({
+            queryKey: ["kb-article", selectedArticleId],
+          });
+          setView("article");
+        }}
+      />
+    );
+  }
+
+  return (
+    <PageShell
+      title="מאגר ידע"
+      subtitle={`${articles?.length || 0} מאמרים`}
+      actions={
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCreateCategory(true)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-border hover:border-primary text-text-secondary hover:text-primary text-sm font-semibold rounded-lg transition-all hover:shadow-sm"
+          >
+            <FolderOpen size={14} />
+            קטגוריה חדשה
+          </button>
+          <button
+            onClick={() => setShowCreateArticle(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          >
+            <Plus size={16} />
+            מאמר חדש
+          </button>
+        </div>
+      }
+    >
+      {/* Search */}
+      <div className="relative max-w-sm">
+        <Search
+          size={16}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="חיפוש מאמרים..."
+          className="w-full pr-9 pl-4 py-2 bg-white border border-border rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        {/* Categories sidebar */}
+        <div className="col-span-1 bg-white rounded-xl shadow-card p-3 space-y-1 self-start">
+          <button
+            onClick={() => setSelectedCategory("")}
+            className={`w-full text-right px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+              !selectedCategory
+                ? "bg-[#F5F6FF] text-primary font-semibold border-r-[3px] border-primary"
+                : "text-text-secondary hover:bg-surface-secondary"
+            }`}
+          >
+            <BookOpen size={14} />
+            <span className="flex-1">כל המאמרים</span>
+            <span
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                !selectedCategory
+                  ? "bg-primary text-white"
+                  : "bg-surface-tertiary text-text-tertiary"
+              }`}
+            >
+              {articles?.length || 0}
+            </span>
+          </button>
+          {categories?.map((cat, idx) => {
+            const color = getCategoryColor(idx);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`w-full text-right px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                  selectedCategory === cat.id
+                    ? "bg-[#F5F6FF] font-semibold border-r-[3px]"
+                    : "text-text-secondary hover:bg-surface-secondary"
+                }`}
+                style={
+                  selectedCategory === cat.id
+                    ? { borderRightColor: color, color }
+                    : undefined
+                }
+              >
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: color }}
+                />
+                <span className="flex-1 truncate">{cat.name}</span>
+                <span
+                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    selectedCategory === cat.id
+                      ? "text-white"
+                      : "bg-surface-tertiary text-text-tertiary"
+                  }`}
+                  style={
+                    selectedCategory === cat.id
+                      ? { backgroundColor: color }
+                      : undefined
+                  }
+                >
+                  {cat._count.articles}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Articles list */}
+        <div className="col-span-3">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-card p-5 h-28 animate-pulse"
+                />
+              ))}
+            </div>
+          ) : !articles || articles.length === 0 ? (
+            <EmptyState
+              icon={<BookOpen size={28} className="text-text-tertiary" />}
+              title="אין מאמרים"
+              description="צרו מאמר ראשון במאגר הידע."
+              action={
+                <button
+                  onClick={() => setShowCreateArticle(true)}
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md"
+                >
+                  צור מאמר ראשון
+                </button>
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {articles.map((article) => {
+                const catIdx = categories?.findIndex(
+                  (c) => c.id === article.categoryId,
+                );
+                const catColor =
+                  catIdx !== undefined && catIdx >= 0
+                    ? getCategoryColor(catIdx)
+                    : "#C4C4C4";
+                return (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    categoryColor={catColor}
+                    onClick={() => openArticle(article.id)}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showCreateCategory && (
+        <CreateCategoryModal onClose={() => setShowCreateCategory(false)} />
+      )}
+      {showCreateArticle && (
+        <CreateArticleModal
+          categories={categories || []}
+          onClose={() => setShowCreateArticle(false)}
+        />
+      )}
+    </PageShell>
+  );
+}
+
+function ArticleCard({
+  article,
+  categoryColor,
+  onClick,
+}: {
+  article: KbArticle;
+  categoryColor: string;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white rounded-xl shadow-card border-r-4 hover:shadow-card-hover transition-all p-5 cursor-pointer group"
+      style={{ borderRightColor: categoryColor }}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+            style={{ backgroundColor: categoryColor }}
+          >
+            <FileText size={14} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-text-primary group-hover:text-primary transition-colors">
+              {article.title}
+            </h3>
+            {article.category && (
+              <span className="text-xs text-text-tertiary">
+                {article.category.name}
+              </span>
+            )}
+          </div>
+        </div>
+        <StatusBadge
+          label={article.status === "published" ? "מפורסם" : "טיוטה"}
+          color={article.status === "published" ? "#00CA72" : "#C4C4C4"}
+        />
+      </div>
+      <div className="flex items-center gap-4 mt-3 text-xs text-text-tertiary">
+        <div className="flex items-center gap-1.5">
+          <Eye size={12} className="text-primary" />
+          <span>{article.viewCount} צפיות</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <ThumbsUp size={12} className="text-success" />
+          <span>{article.helpfulCount}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <ThumbsDown size={12} className="text-danger" />
+          <span>{article.notHelpfulCount}</span>
+        </div>
+        <span className="mr-auto">
+          עודכן {new Date(article.updatedAt).toLocaleDateString("he-IL")}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ArticleView({
+  article,
+  categories,
+  onBack,
+  onEdit,
+}: {
+  article: KbArticle;
+  categories: KbCategory[];
+  onBack: () => void;
+  onEdit: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const catIdx = categories.findIndex((c) => c.id === article.categoryId);
+  const catColor = catIdx >= 0 ? getCategoryColor(catIdx) : "#6161FF";
+
+  const voteMutation = useMutation({
+    mutationFn: (helpful: boolean) => voteArticle(article.id, helpful),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["kb-article", article.id],
+      });
+      toast.success("תודה על המשוב!");
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onBack}
+          className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+        >
+          <ArrowRight size={18} className="text-text-secondary" />
+        </button>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            {article.category && (
+              <span
+                className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                style={{ backgroundColor: catColor }}
+              >
+                {article.category.name}
+              </span>
+            )}
+          </div>
+          <h1 className="text-xl font-bold text-text-primary">
+            {article.title}
+          </h1>
+        </div>
+        <button
+          onClick={onEdit}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-border hover:border-primary text-text-secondary hover:text-primary text-sm font-semibold rounded-lg transition-all hover:shadow-sm"
+        >
+          <PenLine size={14} />
+          ערוך
+        </button>
+      </div>
+
+      {/* Article body */}
+      <div
+        className="bg-white rounded-xl shadow-card p-6 border-r-4"
+        style={{ borderRightColor: catColor }}
+      >
+        <div
+          className="prose prose-sm max-w-none text-text-primary"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.body) }}
+        />
+      </div>
+
+      {/* Stats + Vote */}
+      <div className="bg-white rounded-xl shadow-card p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+          <div className="flex items-center gap-1.5">
+            <Eye size={12} className="text-primary" />
+            <span>{article.viewCount} צפיות</span>
+          </div>
+          <StatusBadge
+            label={article.status === "published" ? "מפורסם" : "טיוטה"}
+            color={article.status === "published" ? "#00CA72" : "#C4C4C4"}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-text-secondary">
+            האם מאמר זה עזר לך?
+          </span>
+          <button
+            onClick={() => voteMutation.mutate(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:border-success hover:bg-success-light hover:text-success transition-all text-sm"
+          >
+            <ThumbsUp size={14} />
+            <span>כן ({article.helpfulCount})</span>
+          </button>
+          <button
+            onClick={() => voteMutation.mutate(false)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:border-danger hover:bg-red-50 hover:text-danger transition-all text-sm"
+          >
+            <ThumbsDown size={14} />
+            <span>לא ({article.notHelpfulCount})</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ArticleEditor({
+  article,
+  categories,
+  onBack,
+  onSaved,
+}: {
+  article: KbArticle;
+  categories: KbCategory[];
+  onBack: () => void;
+  onSaved: () => void;
+}) {
+  const [title, setTitle] = useState(article.title);
+  const [body, setBody] = useState(article.body);
+  const [categoryId, setCategoryId] = useState(article.categoryId || "");
+  const [status, setStatus] = useState(article.status);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateArticle(article.id, {
+        title,
+        body,
+        categoryId: categoryId || undefined,
+        status,
+      }),
+    onSuccess: () => {
+      toast.success("מאמר עודכן בהצלחה!");
+      onSaved();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "שגיאה בעדכון מאמר");
+    },
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+          >
+            <ArrowRight size={18} className="text-text-secondary" />
+          </button>
+          <h1 className="text-xl font-bold text-text-primary">עריכת מאמר</h1>
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as any)}
+            className="px-3 py-1.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="draft">טיוטה</option>
+            <option value="published">מפורסם</option>
+          </select>
+          <button
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending}
+            className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md disabled:opacity-50"
+          >
+            {mutation.isPending ? "שומר..." : "שמור"}
+          </button>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div className="bg-white rounded-xl shadow-card p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            כותרת
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            קטגוריה
+          </label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          >
+            <option value="">ללא קטגוריה</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            תוכן (HTML)
+          </label>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono"
+            rows={15}
+            dir="ltr"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateCategoryModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createCategory({
+        name,
+        slug: name.replace(/\s+/g, "-").toLowerCase(),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-categories"] });
+      toast.success("קטגוריה נוצרה!");
+      onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "שגיאה ביצירת קטגוריה");
+    },
+  });
+
+  return (
+    <Modal
+      open={true}
+      onClose={onClose}
+      title="קטגוריה חדשה"
+      maxWidth="max-w-sm"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          mutation.mutate();
+        }}
+        className="space-y-4 p-6"
+      >
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            שם קטגוריה *
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            required
+            autoFocus
+          />
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+          >
+            ביטול
+          </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+          >
+            {mutation.isPending ? "יוצר..." : "צור"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function CreateArticleModal({
+  categories,
+  onClose,
+}: {
+  categories: KbCategory[];
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    title: "",
+    body: "",
+    categoryId: "",
+    status: "draft",
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createArticle({
+        title: form.title,
+        slug: form.title.replace(/\s+/g, "-").toLowerCase(),
+        body: form.body,
+        categoryId: form.categoryId || undefined,
+        status: form.status,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["kb-articles"] });
+      toast.success("מאמר נוצר בהצלחה!");
+      onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "שגיאה ביצירת מאמר");
+    },
+  });
+
+  const setField = (key: string, value: string) =>
+    setForm((f) => ({ ...f, [key]: value }));
+
+  return (
+    <Modal open={true} onClose={onClose} title="מאמר חדש">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          mutation.mutate();
+        }}
+        className="space-y-4 p-6"
+      >
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            כותרת *
+          </label>
+          <input
+            type="text"
+            value={form.title}
+            onChange={(e) => setField("title", e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            required
+            autoFocus
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              קטגוריה
+            </label>
+            <select
+              value={form.categoryId}
+              onChange={(e) => setField("categoryId", e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            >
+              <option value="">ללא</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              סטטוס
+            </label>
+            <select
+              value={form.status}
+              onChange={(e) => setField("status", e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            >
+              <option value="draft">טיוטה</option>
+              <option value="published">מפורסם</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            תוכן *
+          </label>
+          <textarea
+            value={form.body}
+            onChange={(e) => setField("body", e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            rows={8}
+            required
+            placeholder="תוכן המאמר (תומך HTML)"
+          />
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+          >
+            ביטול
+          </button>
+          <button
+            type="submit"
+            disabled={mutation.isPending}
+            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+          >
+            {mutation.isPending ? "יוצר..." : "צור מאמר"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

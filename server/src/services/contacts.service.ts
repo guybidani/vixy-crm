@@ -1,0 +1,349 @@
+import { Prisma } from "@prisma/client";
+import { prisma } from "../db/client";
+import { AppError } from "../middleware/errorHandler";
+import { enqueueAutomationTrigger } from "../queue/automation.queue";
+
+const SORTABLE_FIELDS = [
+  "firstName",
+  "lastName",
+  "email",
+  "phone",
+  "status",
+  "leadScore",
+  "createdAt",
+  "updatedAt",
+] as const;
+
+interface ListParams {
+  workspaceId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  companyId?: string;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}
+
+export async function list(params: ListParams) {
+  const {
+    workspaceId,
+    page = 1,
+    limit = 25,
+    search,
+    status,
+    companyId,
+    sortBy: rawSortBy = "createdAt",
+    sortDir = "desc",
+  } = params;
+  const sortBy = SORTABLE_FIELDS.includes(rawSortBy as any)
+    ? rawSortBy
+    : "createdAt";
+
+  const where: Prisma.ContactWhereInput = { workspaceId };
+
+  if (search) {
+    where.OR = [
+      { firstName: { contains: search, mode: "insensitive" } },
+      { lastName: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
+      { phone: { contains: search } },
+    ];
+  }
+  if (status) {
+    where.status = status as any;
+  }
+  if (companyId) {
+    where.companyId = companyId;
+  }
+
+  const [contacts, total] = await Promise.all([
+    prisma.contact.findMany({
+      where,
+      include: {
+        company: { select: { id: true, name: true } },
+        tags: { include: { tag: true } },
+        createdBy: {
+          include: { user: { select: { name: true } } },
+        },
+      },
+      orderBy: { [sortBy]: sortDir },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.contact.count({ where }),
+  ]);
+
+  return {
+    data: contacts.map((c) => ({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      fullName: `${c.firstName} ${c.lastName}`,
+      email: c.email,
+      phone: c.phone,
+      company: c.company,
+      position: c.position,
+      source: c.source,
+      status: c.status,
+      leadScore: c.leadScore,
+      lastActivityAt: c.lastActivityAt,
+      tags: c.tags.map((t) => ({
+        id: t.tag.id,
+        name: t.tag.name,
+        color: t.tag.color,
+      })),
+      createdBy: c.createdBy.user.name,
+      createdAt: c.createdAt,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
+}
+
+export async function getById(workspaceId: string, id: string) {
+  const contact = await prisma.contact.findFirst({
+    where: { id, workspaceId },
+    include: {
+      company: true,
+      tags: { include: { tag: true } },
+      deals: {
+        include: {
+          assignee: { include: { user: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      tickets: {
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      },
+      activities: {
+        include: {
+          member: { include: { user: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
+      tasks: {
+        include: {
+          assignee: { include: { user: { select: { name: true } } } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 10,
+      },
+      createdBy: {
+        include: { user: { select: { name: true } } },
+      },
+    },
+  });
+
+  if (!contact) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
+  return contact;
+}
+
+export async function create(
+  workspaceId: string,
+  memberId: string,
+  data: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    companyId?: string;
+    position?: string;
+    source?: string;
+    status?: string;
+    leadScore?: number;
+  },
+) {
+  const contact = await prisma.contact.create({
+    data: {
+      workspaceId,
+      createdById: memberId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phone: data.phone,
+      companyId: data.companyId,
+      position: data.position,
+      source: data.source,
+      status: (data.status as any) || "LEAD",
+      leadScore: data.leadScore || 0,
+    },
+    include: {
+      company: { select: { id: true, name: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+
+  enqueueAutomationTrigger({
+    workspaceId,
+    trigger: "CONTACT_CREATED",
+    entityType: "contact",
+    entityId: contact.id,
+    data: {
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      fullName: `${contact.firstName} ${contact.lastName}`,
+      status: contact.status,
+      source: contact.source,
+    },
+  }).catch(() => {});
+
+  return contact;
+}
+
+export async function update(
+  workspaceId: string,
+  id: string,
+  data: Partial<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    companyId: string | null;
+    position: string;
+    source: string;
+    status: string;
+    leadScore: number;
+  }>,
+) {
+  const existing = await prisma.contact.findFirst({
+    where: { id, workspaceId },
+  });
+  if (!existing) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
+  const updated = await prisma.contact.update({
+    where: { id },
+    data: {
+      ...data,
+      status: data.status as any,
+      lastActivityAt: new Date(),
+    },
+    include: {
+      company: { select: { id: true, name: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+
+  // Fire automation triggers
+  if (data.status && data.status !== existing.status) {
+    enqueueAutomationTrigger({
+      workspaceId,
+      trigger: "CONTACT_STATUS_CHANGED",
+      entityType: "contact",
+      entityId: id,
+      data: {
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        fullName: `${updated.firstName} ${updated.lastName}`,
+        status: updated.status,
+      },
+      previousData: { status: existing.status },
+    }).catch(() => {});
+  }
+
+  if (data.leadScore !== undefined && data.leadScore !== existing.leadScore) {
+    enqueueAutomationTrigger({
+      workspaceId,
+      trigger: "LEAD_SCORE_CHANGED",
+      entityType: "contact",
+      entityId: id,
+      data: {
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        leadScore: updated.leadScore,
+      },
+      previousData: { leadScore: existing.leadScore },
+    }).catch(() => {});
+  }
+
+  return updated;
+}
+
+export async function remove(workspaceId: string, id: string) {
+  const existing = await prisma.contact.findFirst({
+    where: { id, workspaceId },
+  });
+  if (!existing) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
+  return prisma.contact.delete({ where: { id } });
+}
+
+export async function getTimeline(workspaceId: string, contactId: string) {
+  const [activities, deals, tickets] = await Promise.all([
+    prisma.activity.findMany({
+      where: { workspaceId, contactId },
+      include: {
+        member: { include: { user: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.deal.findMany({
+      where: { workspaceId, contactId },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.ticket.findMany({
+      where: { workspaceId, contactId },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  return { activities, deals, tickets };
+}
+
+export async function board(workspaceId: string) {
+  const contacts = await prisma.contact.findMany({
+    where: { workspaceId },
+    include: {
+      company: { select: { id: true, name: true } },
+      tags: { include: { tag: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const statuses = ["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"];
+  const grouped: Record<string, any[]> = {};
+  for (const s of statuses) grouped[s] = [];
+
+  for (const c of contacts) {
+    grouped[c.status]?.push({
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      fullName: `${c.firstName} ${c.lastName}`,
+      email: c.email,
+      phone: c.phone,
+      position: c.position,
+      status: c.status,
+      leadScore: c.leadScore,
+      source: c.source,
+      company: c.company,
+      tags: c.tags.map((t) => ({
+        id: t.tag.id,
+        name: t.tag.name,
+        color: t.tag.color,
+      })),
+      createdAt: c.createdAt,
+    });
+  }
+
+  const totals = statuses.map((s) => ({
+    status: s,
+    count: grouped[s].length,
+  }));
+
+  return { statuses: grouped, totals };
+}

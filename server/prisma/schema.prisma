@@ -1,0 +1,852 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Multi-Tenant Core ───
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String    @map("password_hash")
+  name                String
+  avatarUrl           String?   @map("avatar_url")
+  isActive            Boolean   @default(true) @map("is_active")
+  passwordChangedAt   DateTime? @map("password_changed_at")
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  memberships     WorkspaceMember[]
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+  refreshTokens   RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique @map("token_hash")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  owner     User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  ownerId   String   @map("owner_id")
+  logoUrl   String?  @map("logo_url")
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members             WorkspaceMember[]
+  contacts            Contact[]
+  companies           Company[]
+  deals               Deal[]
+  activities          Activity[]
+  tasks               Task[]
+  tags                Tag[]
+  smartViews          SmartView[]
+  tickets             Ticket[]
+  slaPolicies         SlaPolicy[]
+  cannedResponses     CannedResponse[]
+  kbCategories        KbCategory[]
+  kbArticles          KbArticle[]
+  vixyCampaigns       VixyCampaignLink[]
+  documents           Document[]
+  followUpSequences   FollowUpSequence[]
+  followUpExecutions  FollowUpExecution[]
+  boards              Board[]
+  workflows           Workflow[]
+  notifications       Notification[]
+  notifPreferences    NotificationPreference[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String          @id @default(uuid())
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String          @map("workspace_id")
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String          @map("user_id")
+  role        WorkspaceRole   @default(AGENT)
+  invitedAt   DateTime        @default(now()) @map("invited_at")
+  joinedAt    DateTime?       @map("joined_at")
+
+  // Relations within workspace
+  assignedDeals   Deal[]     @relation("DealAssignee")
+  assignedTasks   Task[]     @relation("TaskAssignee")
+  createdTasks    Task[]     @relation("TaskCreator")
+  assignedTickets Ticket[]   @relation("TicketAssignee")
+  activities      Activity[]
+  createdContacts  Contact[]  @relation("ContactCreator")
+  createdDocuments Document[] @relation("DocumentCreator")
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  AGENT
+}
+
+// ─── Contacts ───
+
+model Contact {
+  id             String        @id @default(uuid())
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId    String        @map("workspace_id")
+  firstName      String        @map("first_name")
+  lastName       String        @map("last_name")
+  email          String?
+  phone          String?
+  company        Company?      @relation(fields: [companyId], references: [id])
+  companyId      String?       @map("company_id")
+  position       String?
+  source         String?
+  status         ContactStatus @default(LEAD)
+  leadScore      Int           @default(0) @map("lead_score")
+  lastActivityAt DateTime?     @map("last_activity_at")
+  createdBy      WorkspaceMember @relation("ContactCreator", fields: [createdById], references: [id])
+  createdById    String        @map("created_by_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  deals              Deal[]
+  activities         Activity[]
+  tasks              Task[]
+  tickets            Ticket[]
+  tags               TagOnContact[]
+  vixyCampaigns      VixyCampaignLink[]
+  followUpExecutions FollowUpExecution[]
+  documents          DocumentLink[]
+
+  @@map("contacts")
+}
+
+enum ContactStatus {
+  LEAD
+  QUALIFIED
+  CUSTOMER
+  CHURNED
+  INACTIVE
+}
+
+enum CompanyStatus {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+  CHURNED
+}
+
+// ─── Companies ───
+
+model Company {
+  id          String        @id @default(uuid())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String        @map("workspace_id")
+  name        String
+  status      CompanyStatus @default(PROSPECT)
+  website     String?
+  phone       String?
+  email       String?
+  address     String?
+  industry    String?
+  size        String?
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  contacts  Contact[]
+  deals     Deal[]
+  documents DocumentLink[]
+
+  @@map("companies")
+}
+
+// ─── Deals ───
+
+model Deal {
+  id            String    @id @default(uuid())
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId   String    @map("workspace_id")
+  title         String
+  value         Decimal?  @db.Decimal(12, 2)
+  currency      String    @default("ILS")
+  stage         DealStage @default(LEAD)
+  priority      Priority  @default(MEDIUM)
+  contact       Contact   @relation(fields: [contactId], references: [id])
+  contactId     String    @map("contact_id")
+  company       Company?  @relation(fields: [companyId], references: [id])
+  companyId     String?   @map("company_id")
+  assignee      WorkspaceMember @relation("DealAssignee", fields: [assigneeId], references: [id])
+  assigneeId    String    @map("assignee_id")
+  probability   Int       @default(0)
+  expectedClose DateTime? @map("expected_close")
+  stageChangedAt DateTime @default(now()) @map("stage_changed_at")
+  closedAt      DateTime? @map("closed_at")
+  lostReason    String?   @map("lost_reason")
+  lastActivityAt DateTime? @map("last_activity_at")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  activities    Activity[]
+  tasks         Task[]
+  tags          TagOnDeal[]
+  vixyCampaigns VixyCampaignLink[]
+  documents     DocumentLink[]
+
+  @@map("deals")
+}
+
+enum DealStage {
+  LEAD
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ─── Activities ───
+
+model Activity {
+  id          String       @id @default(uuid())
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String       @map("workspace_id")
+  type        ActivityType
+  subject     String?
+  body        String?
+  contact     Contact?     @relation(fields: [contactId], references: [id])
+  contactId   String?      @map("contact_id")
+  deal        Deal?        @relation(fields: [dealId], references: [id])
+  dealId      String?      @map("deal_id")
+  ticket      Ticket?      @relation(fields: [ticketId], references: [id])
+  ticketId    String?      @map("ticket_id")
+  member      WorkspaceMember @relation(fields: [memberId], references: [id])
+  memberId    String       @map("member_id")
+  metadata    Json?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  @@map("activities")
+}
+
+enum ActivityType {
+  NOTE
+  CALL
+  EMAIL
+  MEETING
+  WHATSAPP
+  STATUS_CHANGE
+  SYSTEM
+}
+
+// ─── Tasks ───
+
+model Task {
+  id          String     @id @default(uuid())
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String     @map("workspace_id")
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?  @map("due_date")
+  contact     Contact?   @relation(fields: [contactId], references: [id])
+  contactId   String?    @map("contact_id")
+  deal        Deal?      @relation(fields: [dealId], references: [id])
+  dealId      String?    @map("deal_id")
+  ticket      Ticket?    @relation(fields: [ticketId], references: [id])
+  ticketId    String?    @map("ticket_id")
+  assignee    WorkspaceMember @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String     @map("assignee_id")
+  createdBy   WorkspaceMember @relation("TaskCreator", fields: [createdById], references: [id])
+  createdById String     @map("created_by_id")
+  completedAt DateTime?  @map("completed_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+// ─── Tags ───
+
+model Tag {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  name        String
+  color       String    @default("#0073EA")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  contacts TagOnContact[]
+  deals    TagOnDeal[]
+
+  @@unique([workspaceId, name])
+  @@map("tags")
+}
+
+model TagOnContact {
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String  @map("contact_id")
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     String  @map("tag_id")
+
+  @@id([contactId, tagId])
+  @@map("tags_on_contacts")
+}
+
+model TagOnDeal {
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId String @map("deal_id")
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId  String @map("tag_id")
+
+  @@id([dealId, tagId])
+  @@map("tags_on_deals")
+}
+
+// ─── Smart Views ───
+
+model SmartView {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  name        String
+  module      String    // "contacts" | "deals" | "tickets"
+  filters     Json
+  memberId    String?   @map("member_id")
+  isShared    Boolean   @default(false) @map("is_shared")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("smart_views")
+}
+
+// ─── Support: Tickets ───
+
+model Ticket {
+  id              String       @id @default(uuid())
+  workspace       Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId     String       @map("workspace_id")
+  subject         String
+  description     String?
+  status          TicketStatus @default(NEW)
+  priority        Priority     @default(MEDIUM)
+  channel         String       @default("email")
+  contact         Contact?     @relation(fields: [contactId], references: [id])
+  contactId       String?      @map("contact_id")
+  assignee        WorkspaceMember? @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  assigneeId      String?      @map("assignee_id")
+  slaPolicy       SlaPolicy?   @relation(fields: [slaPolicyId], references: [id])
+  slaPolicyId     String?      @map("sla_policy_id")
+  firstResponseAt DateTime?    @map("first_response_at")
+  resolvedAt      DateTime?    @map("resolved_at")
+  csatScore       Int?         @map("csat_score")
+  csatComment     String?      @map("csat_comment")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  messages   TicketMessage[]
+  activities Activity[]
+  tasks      Task[]
+  documents  DocumentLink[]
+
+  @@map("tickets")
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  PENDING
+  RESOLVED
+  CLOSED
+}
+
+model TicketMessage {
+  id          String   @id @default(uuid())
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId    String   @map("ticket_id")
+  senderType  String   // "agent" | "contact"
+  senderId    String   @map("sender_id")
+  body        String
+  isInternal  Boolean  @default(false) @map("is_internal")
+  attachments Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("ticket_messages")
+}
+
+// ─── Support: SLA ───
+
+model SlaPolicy {
+  id                    String    @id @default(uuid())
+  workspace             Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId           String    @map("workspace_id")
+  name                  String
+  firstResponseMinutes  Int       @map("first_response_minutes")
+  resolutionMinutes     Int       @map("resolution_minutes")
+  businessHoursOnly     Boolean   @default(true) @map("business_hours_only")
+  isDefault             Boolean   @default(false) @map("is_default")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  tickets Ticket[]
+
+  @@map("sla_policies")
+}
+
+// ─── Support: Canned Responses ───
+
+model CannedResponse {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  title       String
+  body        String
+  category    String?
+  memberId    String?   @map("member_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("canned_responses")
+}
+
+// ─── Support: Knowledge Base ───
+
+model KbCategory {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  name        String
+  slug        String
+  order       Int       @default(0)
+  parentId    String?   @map("parent_id")
+  parent      KbCategory? @relation("CategoryChildren", fields: [parentId], references: [id])
+  children    KbCategory[] @relation("CategoryChildren")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  articles KbArticle[]
+
+  @@unique([workspaceId, slug])
+  @@map("kb_categories")
+}
+
+model KbArticle {
+  id              String     @id @default(uuid())
+  workspace       Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId     String     @map("workspace_id")
+  title           String
+  slug            String
+  body            String
+  category        KbCategory? @relation(fields: [categoryId], references: [id])
+  categoryId      String?    @map("category_id")
+  status          String     @default("draft")
+  authorId        String     @map("author_id")
+  viewCount       Int        @default(0) @map("view_count")
+  helpfulCount    Int        @default(0) @map("helpful_count")
+  notHelpfulCount Int        @default(0) @map("not_helpful_count")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, slug])
+  @@map("kb_articles")
+}
+
+// ─── Documents ───
+
+enum DocumentType {
+  FILE
+  RICH_TEXT
+}
+
+model Document {
+  id          String       @id @default(uuid())
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String       @map("workspace_id")
+  type        DocumentType
+  title       String
+  content     String?      @db.Text
+  fileName    String?      @map("file_name")
+  fileUrl     String?      @map("file_url")
+  fileSize    Int?         @map("file_size")
+  mimeType    String?      @map("mime_type")
+  createdBy   WorkspaceMember @relation("DocumentCreator", fields: [createdById], references: [id])
+  createdById String       @map("created_by_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  links DocumentLink[]
+
+  @@map("documents")
+}
+
+model DocumentLink {
+  id         String   @id @default(uuid())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String   @map("document_id")
+  contact    Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId  String?  @map("contact_id")
+  deal       Deal?    @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  dealId     String?  @map("deal_id")
+  company    Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId  String?  @map("company_id")
+  ticket     Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId   String?  @map("ticket_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([documentId, contactId, dealId, companyId, ticketId])
+  @@map("document_links")
+}
+
+// ─── Follow-Up Automation ───
+
+enum FollowUpChannel {
+  EMAIL
+  WHATSAPP
+  SMS
+  CALL_TASK
+}
+
+enum FollowUpExecutionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model FollowUpSequence {
+  id              String          @id @default(uuid())
+  workspace       Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId     String          @map("workspace_id")
+  name            String
+  description     String?
+  triggerStatuses  ContactStatus[] @map("trigger_statuses")
+  endAction       String          @default("MOVE_INACTIVE") @map("end_action")
+  isActive        Boolean         @default(true) @map("is_active")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  steps      FollowUpStep[]
+  executions FollowUpExecution[]
+
+  @@map("follow_up_sequences")
+}
+
+model FollowUpStep {
+  id              String           @id @default(uuid())
+  sequence        FollowUpSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId      String           @map("sequence_id")
+  stepNumber      Int              @map("step_number")
+  delayDays       Int              @map("delay_days")
+  channel         FollowUpChannel
+  messageTemplate String?          @map("message_template")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  @@map("follow_up_steps")
+}
+
+model FollowUpExecution {
+  id            String                   @id @default(uuid())
+  workspace     Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId   String                   @map("workspace_id")
+  sequence      FollowUpSequence         @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  sequenceId    String                   @map("sequence_id")
+  contact       Contact                  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId     String                   @map("contact_id")
+  currentStep   Int                      @default(0) @map("current_step")
+  status        FollowUpExecutionStatus  @default(ACTIVE)
+  nextRunAt     DateTime?                @map("next_run_at")
+  lastStepAt    DateTime?                @map("last_step_at")
+  completedAt   DateTime?                @map("completed_at")
+  createdAt     DateTime                 @default(now()) @map("created_at")
+  updatedAt     DateTime                 @updatedAt @map("updated_at")
+
+  @@map("follow_up_executions")
+}
+
+// ─── Vixy Integration ───
+
+model VixyCampaignLink {
+  id               String    @id @default(uuid())
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId      String    @map("workspace_id")
+  vixyCampaignId   String    @map("vixy_campaign_id")
+  vixyCampaignName String?   @map("vixy_campaign_name")
+  contact          Contact?  @relation(fields: [contactId], references: [id])
+  contactId        String?   @map("contact_id")
+  deal             Deal?     @relation(fields: [dealId], references: [id])
+  dealId           String?   @map("deal_id")
+  metadata         Json?
+  syncedAt         DateTime  @default(now()) @map("synced_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  @@map("vixy_campaign_links")
+}
+
+// ─── Automations ───
+
+enum WorkflowTrigger {
+  DEAL_STAGE_CHANGED
+  DEAL_CREATED
+  CONTACT_CREATED
+  CONTACT_STATUS_CHANGED
+  TASK_CREATED
+  TASK_COMPLETED
+  TICKET_CREATED
+  TICKET_STATUS_CHANGED
+  LEAD_SCORE_CHANGED
+  ENTITY_UPDATED
+}
+
+enum WorkflowActionType {
+  SEND_NOTIFICATION
+  CREATE_TASK
+  CHANGE_FIELD
+  SEND_EMAIL
+  ADD_TAG
+  MOVE_STAGE
+  ASSIGN_OWNER
+}
+
+model Workflow {
+  id          String           @id @default(uuid())
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String           @map("workspace_id")
+  name        String
+  description String?
+  trigger     WorkflowTrigger
+  conditions  Json?            // { field, operator, value }[]
+  isActive    Boolean          @default(true) @map("is_active")
+  createdById String           @map("created_by_id")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  actions WorkflowAction[]
+  runs    WorkflowRun[]
+
+  @@index([workspaceId, trigger])
+  @@map("workflows")
+}
+
+model WorkflowAction {
+  id         String             @id @default(uuid())
+  workflow   Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowId String            @map("workflow_id")
+  type       WorkflowActionType
+  config     Json               // action-specific config
+  order      Int                @default(0)
+
+  @@index([workflowId, order])
+  @@map("workflow_actions")
+}
+
+model WorkflowRun {
+  id          String   @id @default(uuid())
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  workflowId  String   @map("workflow_id")
+  triggeredBy String?  @map("triggered_by") // entity id that triggered
+  entityType  String?  @map("entity_type")  // "deal", "contact", etc.
+  entityId    String?  @map("entity_id")
+  status      String   @default("SUCCESS")  // SUCCESS, FAILED
+  error       String?
+  executedAt  DateTime @default(now()) @map("executed_at")
+
+  @@index([workflowId])
+  @@map("workflow_runs")
+}
+
+// ─── Notifications ───
+
+enum NotificationType {
+  AUTOMATION
+  DEAL_UPDATE
+  TASK_ASSIGNED
+  TASK_DUE
+  TICKET_UPDATE
+  CONTACT_UPDATE
+  SYSTEM
+  MENTION
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String           @map("workspace_id")
+  userId      String           @map("user_id")
+  type        NotificationType
+  title       String
+  body        String?
+  entityType  String?          @map("entity_type") // "deal", "contact", etc.
+  entityId    String?          @map("entity_id")
+  isRead      Boolean          @default(false) @map("is_read")
+  readAt      DateTime?        @map("read_at")
+  metadata    Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@index([workspaceId, userId, isRead])
+  @@index([workspaceId, userId, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  userId      String    @map("user_id")
+  type        NotificationType
+  inApp       Boolean   @default(true) @map("in_app")
+  email       Boolean   @default(false)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, userId, type])
+  @@map("notification_preferences")
+}
+
+// ─── Audit Log ───
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  workspaceId String?  @map("workspace_id")
+  userId      String   @map("user_id")
+  action      String   // e.g. "user.login", "sla.create", "automation.delete"
+  entityType  String?  @map("entity_type") // e.g. "SlaPolicy", "Workflow"
+  entityId    String?  @map("entity_id")
+  metadata    Json?    // extra context (old values, new values, etc.)
+  ip          String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([workspaceId, createdAt])
+  @@index([userId, createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Custom Boards ───
+
+enum BoardColumnType {
+  TEXT
+  NUMBER
+  STATUS
+  DATE
+  PERSON
+  EMAIL
+  PHONE
+  LINK
+  PRIORITY
+  CHECKBOX
+}
+
+model Board {
+  id          String    @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String    @map("workspace_id")
+  name        String
+  description String?
+  icon        String?   @default("LayoutGrid")
+  color       String?   @default("#579BFC")
+  templateKey String?   @map("template_key")
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  columns BoardColumn[]
+  groups  BoardGroup[]
+  items   BoardItem[]
+
+  @@index([workspaceId])
+  @@map("boards")
+}
+
+model BoardColumn {
+  id      String          @id @default(uuid())
+  board   Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId String          @map("board_id")
+  key     String
+  label   String
+  type    BoardColumnType @default(TEXT)
+  width   String?         @default("150px")
+  order   Int             @default(0)
+  options Json?
+
+  values BoardItemValue[]
+
+  @@index([boardId, order])
+  @@map("board_columns")
+}
+
+model BoardGroup {
+  id        String  @id @default(uuid())
+  board     Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String  @map("board_id")
+  name      String
+  color     String  @default("#579BFC")
+  order     Int     @default(0)
+  collapsed Boolean @default(false)
+
+  items BoardItem[]
+
+  @@index([boardId, order])
+  @@map("board_groups")
+}
+
+model BoardItem {
+  id        String     @id @default(uuid())
+  board     Board      @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String     @map("board_id")
+  group     BoardGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String     @map("group_id")
+  name      String
+  order     Int        @default(0)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  values BoardItemValue[]
+
+  @@index([groupId, order])
+  @@map("board_items")
+}
+
+model BoardItemValue {
+  id          String      @id @default(uuid())
+  item        BoardItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String      @map("item_id")
+  column      BoardColumn @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  columnId    String      @map("column_id")
+  textValue   String?     @map("text_value")
+  numberValue Float?      @map("number_value")
+  dateValue   DateTime?   @map("date_value")
+  jsonValue   Json?       @map("json_value")
+
+  @@unique([itemId, columnId])
+  @@map("board_item_values")
+}

@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family:
+      "Poppins",
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
+    color: #323338;
+    background-color: #f5f6f8;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #c4c4c4;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9699a6;
+  }
+}
+
+@layer components {
+  /* Monday-style solid color pills */
+  .pill-success {
+    @apply bg-success text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+  .pill-warning {
+    @apply bg-warning text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+  .pill-danger {
+    @apply bg-danger text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+  .pill-primary {
+    @apply bg-primary text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+  .pill-purple {
+    @apply bg-purple text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+  .pill-gray {
+    @apply bg-text-tertiary text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
+  }
+
+  /* Legacy badge classes (keep for backward compat) */
+  .badge-success {
+    @apply bg-success text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-warning {
+    @apply bg-warning text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-danger {
+    @apply bg-danger text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-primary {
+    @apply bg-primary text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-purple {
+    @apply bg-purple text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-orange {
+    @apply bg-orange text-white font-semibold text-xs px-3 py-1 rounded-full;
+  }
+  .badge-gray {
+    @apply bg-surface-tertiary text-text-secondary font-semibold text-xs px-3 py-1 rounded-full;
+  }
+}
