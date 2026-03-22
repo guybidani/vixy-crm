@@ -52,9 +52,19 @@ export const config = {
     apiKey: process.env.VIXY_API_KEY || "",
     webhookSecret: process.env.VIXY_WEBHOOK_SECRET || "",
   },
+  kolio: {
+    webhookSecret: process.env.KOLIO_WEBHOOK_SECRET || "",
+  },
   cookie: {
     secure: nodeEnv === "production",
     sameSite: (nodeEnv === "production" ? "strict" : "lax") as "strict" | "lax",
     domain: process.env.COOKIE_DOMAIN || undefined,
+  },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    oauthRedirectUri:
+      process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+      "http://localhost:3001/api/v1/calendar/callback",
   },
 } as const;

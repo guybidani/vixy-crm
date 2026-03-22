@@ -6,6 +6,7 @@ import { prisma } from "../db/client";
 import { config } from "../config";
 
 export const vixyRouter = Router();
+export const vixyWebhookRouter = Router();
 
 // ─── Webhook: Vixy sends lead data when an ad converts ───
 // POST /api/v1/vixy/webhook
@@ -48,11 +49,11 @@ function verifyVixySignature(
   }
 }
 
-vixyRouter.post("/webhook", validate(webhookSchema), async (req, res, next) => {
+vixyWebhookRouter.post("/", validate(webhookSchema), async (req, res, next) => {
   try {
-    // Verify webhook signature
+    // Verify webhook signature using the original raw body (not re-serialized)
     const signature = req.headers["x-vixy-signature"] as string | undefined;
-    const rawBody = JSON.stringify(req.body);
+    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
     if (!verifyVixySignature(rawBody, signature)) {
       return res.status(401).json({
         error: {

@@ -66,7 +66,7 @@ slaRouter.patch(
     try {
       const data = await slaService.updateSlaPolicy(
         req.workspaceId!,
-        req.params.id,
+        req.params.id as string,
         req.body,
       );
       res.json(data);
@@ -82,13 +82,13 @@ slaRouter.delete(
   requireRole("OWNER", "ADMIN"),
   async (req, res, next) => {
     try {
-      await slaService.deleteSlaPolicy(req.workspaceId!, req.params.id);
+      await slaService.deleteSlaPolicy(req.workspaceId!, req.params.id as string);
       audit({
         workspaceId: req.workspaceId!,
         userId: req.user!.userId,
         action: "sla.delete",
         entityType: "SlaPolicy",
-        entityId: req.params.id,
+        entityId: req.params.id as string,
         ip: req.ip,
       });
       res.json({ success: true });

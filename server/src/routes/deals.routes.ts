@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import * as dealsService from "../services/deals.service";
 import { prisma } from "../db/client";
 
@@ -79,6 +80,93 @@ dealsRouter.get("/pipeline", async (req, res, next) => {
     next(err);
   }
 });
+
+// POST /api/v1/deals/bulk-delete
+const bulkDeleteSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+dealsRouter.post(
+  "/bulk-delete",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkDeleteSchema),
+  async (req, res, next) => {
+    try {
+      const { ids } = req.body;
+      const result = await prisma.deal.deleteMany({
+        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      });
+      res.json({ deleted: result.count });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /api/v1/deals/bulk-update
+const bulkUpdateSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+  data: z.object({
+    stage: z
+      .enum([
+        "LEAD",
+        "QUALIFIED",
+        "PROPOSAL",
+        "NEGOTIATION",
+        "CLOSED_WON",
+        "CLOSED_LOST",
+      ])
+      .optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+    tagId: z.string().uuid().optional(),
+  }),
+});
+
+dealsRouter.post(
+  "/bulk-update",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const { ids, data } = req.body;
+
+      const updateData: Record<string, any> = {};
+      if (data.stage) updateData.stage = data.stage;
+      if (data.priority) updateData.priority = data.priority;
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.deal.updateMany({
+          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          data: updateData,
+        });
+      }
+
+      if (data.tagId) {
+        const tag = await prisma.tag.findFirst({
+          where: { id: data.tagId, workspaceId: req.workspaceId! },
+        });
+        if (!tag) {
+          return res.status(404).json({
+            error: { code: "NOT_FOUND", message: "Tag not found" },
+          });
+        }
+        await Promise.all(
+          ids.map((dealId: string) =>
+            prisma.tagOnDeal.upsert({
+              where: { dealId_tagId: { dealId, tagId: data.tagId } },
+              create: { dealId, tagId: data.tagId },
+              update: {},
+            }),
+          ),
+        );
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // GET /api/v1/deals/:id
 dealsRouter.get("/:id", async (req, res, next) => {

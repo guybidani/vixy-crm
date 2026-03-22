@@ -74,6 +74,7 @@ model Workspace {
   workflows           Workflow[]
   notifications       Notification[]
   notifPreferences    NotificationPreference[]
+  calendarIntegrations CalendarIntegration[]
 
   @@map("workspaces")
 }
@@ -96,6 +97,8 @@ model WorkspaceMember {
   activities      Activity[]
   createdContacts  Contact[]  @relation("ContactCreator")
   createdDocuments Document[] @relation("DocumentCreator")
+  boardAccess     BoardAccess[]
+  calendarIntegration CalendarIntegration?
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
@@ -123,6 +126,7 @@ model Contact {
   source         String?
   status         ContactStatus @default(LEAD)
   leadScore      Int           @default(0) @map("lead_score")
+  leadHeat       LeadHeat?     @map("lead_heat")
   lastActivityAt DateTime?     @map("last_activity_at")
   createdBy      WorkspaceMember @relation("ContactCreator", fields: [createdById], references: [id])
   createdById    String        @map("created_by_id")
@@ -138,6 +142,8 @@ model Contact {
   followUpExecutions FollowUpExecution[]
   documents          DocumentLink[]
 
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
   @@map("contacts")
 }
 
@@ -147,6 +153,14 @@ enum ContactStatus {
   CUSTOMER
   CHURNED
   INACTIVE
+}
+
+enum LeadHeat {
+  HOT        // חם מאוד / בוער
+  WARM       // חם
+  LUKEWARM   // פושר
+  COLD       // קר
+  FROZEN     // קפוא
 }
 
 enum CompanyStatus {
@@ -178,6 +192,7 @@ model Company {
   deals     Deal[]
   documents DocumentLink[]
 
+  @@index([workspaceId])
   @@map("companies")
 }
 
@@ -214,6 +229,8 @@ model Deal {
   vixyCampaigns VixyCampaignLink[]
   documents     DocumentLink[]
 
+  @@index([workspaceId, stage])
+  @@index([workspaceId, createdAt])
   @@map("deals")
 }
 
@@ -253,6 +270,8 @@ model Activity {
   metadata    Json?
   createdAt   DateTime     @default(now()) @map("created_at")
 
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, contactId])
   @@map("activities")
 }
 
@@ -268,6 +287,15 @@ enum ActivityType {
 
 // ─── Tasks ───
 
+enum TaskType {
+  CALL
+  EMAIL
+  MEETING
+  WHATSAPP
+  FOLLOW_UP
+  TASK
+}
+
 model Task {
   id          String     @id @default(uuid())
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -276,6 +304,7 @@ model Task {
   description String?
   status      TaskStatus @default(TODO)
   priority    Priority   @default(MEDIUM)
+  taskType    TaskType   @default(TASK) @map("task_type")
   dueDate     DateTime?  @map("due_date")
   contact     Contact?   @relation(fields: [contactId], references: [id])
   contactId   String?    @map("contact_id")
@@ -287,10 +316,17 @@ model Task {
   assigneeId  String     @map("assignee_id")
   createdBy   WorkspaceMember @relation("TaskCreator", fields: [createdById], references: [id])
   createdById String     @map("created_by_id")
-  completedAt DateTime?  @map("completed_at")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  dueTime                String?    @map("due_time")          // "HH:mm" e.g. "14:30"
+  reminderMinutes        Int?       @default(15) @map("reminder_minutes")
+  completedAt            DateTime?  @map("completed_at")
+  outcomeNote            String?    @map("outcome_note")
+  googleCalendarEventId  String?    @map("google_calendar_event_id")
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
 
+  @@index([workspaceId, status])
+  @@index([workspaceId, assigneeId])
+  @@index([workspaceId, taskType])
   @@map("tasks")
 }
 
@@ -356,6 +392,13 @@ model SmartView {
 
 // ─── Support: Tickets ───
 
+enum UrgencyLevel {
+  CRITICAL   // דחוף מאוד
+  HIGH       // דחוף
+  MEDIUM     // בינוני
+  LOW        // נמוך
+}
+
 model Ticket {
   id              String       @id @default(uuid())
   workspace       Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -364,6 +407,7 @@ model Ticket {
   description     String?
   status          TicketStatus @default(NEW)
   priority        Priority     @default(MEDIUM)
+  urgencyLevel    UrgencyLevel @default(MEDIUM) @map("urgency_level")
   channel         String       @default("email")
   contact         Contact?     @relation(fields: [contactId], references: [id])
   contactId       String?      @map("contact_id")
@@ -383,6 +427,8 @@ model Ticket {
   tasks      Task[]
   documents  DocumentLink[]
 
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
   @@map("tickets")
 }
 
@@ -592,6 +638,8 @@ model FollowUpExecution {
   createdAt     DateTime                 @default(now()) @map("created_at")
   updatedAt     DateTime                 @updatedAt @map("updated_at")
 
+  @@index([workspaceId, status])
+  @@index([nextRunAt])
   @@map("follow_up_executions")
 }
 
@@ -780,9 +828,11 @@ model Board {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  columns BoardColumn[]
-  groups  BoardGroup[]
-  items   BoardItem[]
+  isPrivate Boolean       @default(false) @map("is_private")
+  columns   BoardColumn[]
+  groups    BoardGroup[]
+  items     BoardItem[]
+  access    BoardAccess[]
 
   @@index([workspaceId])
   @@map("boards")
@@ -849,4 +899,53 @@ model BoardItemValue {
 
   @@unique([itemId, columnId])
   @@map("board_item_values")
+}
+
+// ─── Board Access / Permissions ───
+
+enum BoardPermission {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+model BoardAccess {
+  id          String          @id @default(uuid())
+  board       Board           @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId     String          @map("board_id")
+  member      WorkspaceMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId    String          @map("member_id")
+  permission  BoardPermission @default(VIEWER)
+  grantedBy   String?         @map("granted_by")
+  grantedAt   DateTime        @default(now()) @map("granted_at")
+
+  @@unique([boardId, memberId])
+  @@index([boardId])
+  @@index([memberId])
+  @@map("board_access")
+}
+
+// ─── Google Calendar Integration ───
+
+model CalendarIntegration {
+  id               String          @id @default(uuid())
+  workspace        Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId      String          @map("workspace_id")
+  member           WorkspaceMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId         String          @unique @map("member_id")
+  accessToken      String          @map("access_token") @db.Text
+  refreshToken     String          @map("refresh_token") @db.Text
+  expiresAt        DateTime        @map("expires_at")
+  googleEmail      String          @map("google_email")
+  googleCalendarId String          @default("primary") @map("google_calendar_id")
+  isActive         Boolean         @default(true) @map("is_active")
+  connectedAt      DateTime        @default(now()) @map("connected_at")
+  lastSyncedAt     DateTime?       @map("last_synced_at")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, memberId])
+  @@index([workspaceId])
+  @@index([memberId])
+  @@map("calendar_integrations")
 }

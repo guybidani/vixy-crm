@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import * as contactsService from "../services/contacts.service";
 import { prisma } from "../db/client";
 
@@ -50,6 +51,81 @@ contactsRouter.get("/board", async (req, res, next) => {
     next(err);
   }
 });
+
+// POST /api/v1/contacts/bulk-delete
+const bulkDeleteSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+contactsRouter.post(
+  "/bulk-delete",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkDeleteSchema),
+  async (req, res, next) => {
+    try {
+      const { ids } = req.body;
+      const result = await prisma.contact.deleteMany({
+        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      });
+      res.json({ deleted: result.count });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /api/v1/contacts/bulk-update
+const bulkUpdateSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+  data: z.object({
+    status: z
+      .enum(["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"])
+      .optional(),
+    tagId: z.string().uuid().optional(),
+  }),
+});
+
+contactsRouter.post(
+  "/bulk-update",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const { ids, data } = req.body;
+
+      if (data.status) {
+        await prisma.contact.updateMany({
+          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          data: { status: data.status },
+        });
+      }
+
+      if (data.tagId) {
+        const tag = await prisma.tag.findFirst({
+          where: { id: data.tagId, workspaceId: req.workspaceId! },
+        });
+        if (!tag) {
+          return res.status(404).json({
+            error: { code: "NOT_FOUND", message: "Tag not found" },
+          });
+        }
+        await Promise.all(
+          ids.map((contactId: string) =>
+            prisma.tagOnContact.upsert({
+              where: { contactId_tagId: { contactId, tagId: data.tagId } },
+              create: { contactId, tagId: data.tagId },
+              update: {},
+            }),
+          ),
+        );
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // GET /api/v1/contacts/:id
 contactsRouter.get("/:id", async (req, res, next) => {

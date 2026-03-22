@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   Plus,
-  X,
   MessageSquare,
   Mail,
   Phone,
@@ -14,11 +13,14 @@ import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import StatusDropdown from "../components/shared/StatusDropdown";
+import MondayTextCell from "../components/shared/MondayTextCell";
+import MondayPersonCell from "../components/shared/MondayPersonCell";
 import DataTable from "../components/shared/DataTable";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
 import ViewToggle from "../components/shared/ViewToggle";
+import ExportButton from "../components/shared/ExportButton";
 import {
   listTickets,
   createTicket,
@@ -27,15 +29,10 @@ import {
   type Ticket,
 } from "../api/tickets";
 import { listContacts } from "../api/contacts";
-import { TICKET_STATUSES, PRIORITIES } from "../lib/constants";
-
-const CHANNELS = {
-  email: "אימייל",
-  whatsapp: "ווטסאפ",
-  chat: "צ׳אט",
-  phone: "טלפון",
-  portal: "פורטל",
-} as const;
+import { getWorkspaceMembers } from "../api/auth";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useAuth } from "../hooks/useAuth";
 
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   email: <Mail size={12} />,
@@ -45,15 +42,9 @@ const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   portal: <Smartphone size={12} />,
 };
 
-const CHANNEL_COLORS: Record<string, string> = {
-  email: "#579BFC",
-  whatsapp: "#25D366",
-  chat: "#6161FF",
-  phone: "#FDAB3D",
-  portal: "#A25DDC",
-};
-
 export default function TicketsPage() {
+  const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
+  const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
@@ -63,6 +54,20 @@ export default function TicketsPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(false);
+
+  const inlineUpdate = useInlineUpdate(updateTicket, [
+    ["tickets"],
+    ["tickets-board"],
+  ]);
+  const { data: members } = useQuery({
+    queryKey: ["members"],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId,
+  });
+  const memberOptions = (members || []).map((m) => ({
+    id: m.memberId,
+    name: m.name,
+  }));
 
   const { data, isLoading } = useQuery({
     queryKey: ["tickets", { statusFilter, page, sortBy, sortDir }],
@@ -94,14 +99,14 @@ export default function TicketsPage() {
   });
 
   // Kanban columns
-  const kanbanColumns: KanbanCol<Ticket>[] = Object.entries(
-    TICKET_STATUSES,
-  ).map(([key, info]) => ({
-    key,
-    label: info.label,
-    color: info.color,
-    items: boardData?.statuses[key] || [],
-  }));
+  const kanbanColumns: KanbanCol<Ticket>[] = Object.entries(ticketStatuses).map(
+    ([key, info]) => ({
+      key,
+      label: info.label,
+      color: info.color,
+      items: boardData?.statuses[key] || [],
+    }),
+  );
 
   function handleKanbanDragEnd(
     itemId: string,
@@ -109,9 +114,7 @@ export default function TicketsPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(
-      `פנייה הועברה ל${TICKET_STATUSES[toColumn as keyof typeof TICKET_STATUSES]?.label}`,
-    );
+    toast.success(`פנייה הועברה ל${ticketStatuses[toColumn]?.label}`);
   }
 
   const priorityMutation = useMutation({
@@ -139,7 +142,11 @@ export default function TicketsPage() {
       sortable: true,
       render: (row: Ticket) => (
         <div>
-          <span className="font-semibold text-text-primary">{row.subject}</span>
+          <MondayTextCell
+            value={row.subject}
+            onChange={(val) => inlineUpdate(row.id, { subject: val })}
+            placeholder="נושא פנייה"
+          />
           {row.description && (
             <p className="text-xs text-text-tertiary truncate max-w-xs mt-0.5">
               {row.description}
@@ -155,7 +162,7 @@ export default function TicketsPage() {
       render: (row: Ticket) => (
         <StatusDropdown
           value={row.status}
-          options={TICKET_STATUSES}
+          options={ticketStatuses}
           onChange={(status) => statusMutation.mutate({ id: row.id, status })}
         />
       ),
@@ -167,7 +174,7 @@ export default function TicketsPage() {
       render: (row: Ticket) => (
         <StatusDropdown
           value={row.priority}
-          options={PRIORITIES}
+          options={priorities}
           onChange={(priority) =>
             priorityMutation.mutate({ id: row.id, priority })
           }
@@ -199,7 +206,7 @@ export default function TicketsPage() {
       key: "channel",
       label: "ערוץ",
       render: (row: Ticket) => {
-        const color = CHANNEL_COLORS[row.channel] || "#C4C4C4";
+        const color = ticketChannels[row.channel]?.color || "#C4C4C4";
         const icon = CHANNEL_ICONS[row.channel];
         return (
           <div className="flex items-center gap-1.5">
@@ -210,7 +217,7 @@ export default function TicketsPage() {
               {icon}
             </div>
             <span className="text-xs text-text-secondary">
-              {CHANNELS[row.channel as keyof typeof CHANNELS] || row.channel}
+              {ticketChannels[row.channel]?.label || row.channel}
             </span>
           </div>
         );
@@ -219,23 +226,18 @@ export default function TicketsPage() {
     {
       key: "assignee",
       label: "נציג",
-      render: (row: Ticket) =>
-        row.assignee ? (
-          <div className="flex items-center gap-1.5">
-            <div
-              className="w-6 h-6 bg-primary rounded-full flex items-center justify-center"
-              role="img"
-              aria-label={row.assignee.name}
-            >
-              <span className="text-white text-[10px] font-bold">
-                {row.assignee.name[0]}
-              </span>
-            </div>
-            <span className="text-xs">{row.assignee.name}</span>
-          </div>
-        ) : (
-          <span className="text-text-tertiary text-xs">לא שויך</span>
-        ),
+      render: (row: Ticket) => (
+        <MondayPersonCell
+          value={
+            row.assignee
+              ? { id: row.assignee.id, name: row.assignee.name }
+              : null
+          }
+          onChange={(id) => inlineUpdate(row.id, { assigneeId: id! })}
+          options={memberOptions}
+          placeholder="לא שויך"
+        />
+      ),
     },
     {
       key: "messageCount",
@@ -282,6 +284,10 @@ export default function TicketsPage() {
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          <ExportButton
+            entity="tickets"
+            filters={{ status: statusFilter, search }}
+          />
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
@@ -315,7 +321,7 @@ export default function TicketsPage() {
                 setPage(1);
               }}
             />
-            {Object.entries(TICKET_STATUSES).map(([key, val]) => (
+            {Object.entries(ticketStatuses).map(([key, val]) => (
               <FilterChip
                 key={key}
                 label={val.label}
@@ -361,11 +367,11 @@ function TicketCard({
   ticket: Ticket;
   isDragging?: boolean;
 }) {
-  const priorityInfo = PRIORITIES[ticket.priority as keyof typeof PRIORITIES];
-  const channelColor = CHANNEL_COLORS[ticket.channel] || "#C4C4C4";
+  const { priorities, ticketChannels } = useWorkspaceOptions();
+  const priorityInfo = priorities[ticket.priority];
+  const channelColor = ticketChannels[ticket.channel]?.color || "#C4C4C4";
   const channelIcon = CHANNEL_ICONS[ticket.channel];
-  const channelLabel =
-    CHANNELS[ticket.channel as keyof typeof CHANNELS] || ticket.channel;
+  const channelLabel = ticketChannels[ticket.channel]?.label || ticket.channel;
 
   return (
     <div
@@ -464,6 +470,7 @@ function FilterChip({
 }
 
 function CreateTicketModal({ onClose }: { onClose: () => void }) {
+  const { priorities, ticketChannels } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     subject: "",
@@ -543,7 +550,7 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setField("priority", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
-              {Object.entries(PRIORITIES).map(([key, val]) => (
+              {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>
@@ -559,9 +566,9 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setField("channel", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
-              {Object.entries(CHANNELS).map(([key, val]) => (
+              {Object.entries(ticketChannels).map(([key, val]) => (
                 <option key={key} value={key}>
-                  {val}
+                  {val.label}
                 </option>
               ))}
             </select>

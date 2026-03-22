@@ -98,7 +98,7 @@ followupRouter.put(
     try {
       const data = await followupService.updateSequence(
         req.workspaceId!,
-        req.params.id,
+        req.params.id as string,
         req.body,
       );
       res.json(data);
@@ -113,13 +113,13 @@ followupRouter.delete(
   requireRole("OWNER", "ADMIN"),
   async (req, res, next) => {
     try {
-      await followupService.deleteSequence(req.workspaceId!, req.params.id);
+      await followupService.deleteSequence(req.workspaceId!, req.params.id as string);
       audit({
         workspaceId: req.workspaceId!,
         userId: req.user!.userId,
         action: "followup.delete",
         entityType: "FollowUpSequence",
-        entityId: req.params.id,
+        entityId: req.params.id as string,
         ip: req.ip,
       });
       res.json({ success: true });
@@ -136,7 +136,7 @@ followupRouter.post(
     try {
       const data = await followupService.toggleSequence(
         req.workspaceId!,
-        req.params.id,
+        req.params.id as string,
       );
       res.json(data);
     } catch (err) {

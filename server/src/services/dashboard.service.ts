@@ -109,6 +109,16 @@ export async function getDashboardStats(workspaceId: string) {
     }),
   ]);
 
+  // Completed tasks this week
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const tasksCompletedThisWeek = await prisma.task.count({
+    where: {
+      workspaceId,
+      status: "DONE",
+      completedAt: { gte: weekAgo },
+    },
+  });
+
   return {
     kpis: {
       contactsTotal,
@@ -119,6 +129,7 @@ export async function getDashboardStats(workspaceId: string) {
       ticketsUrgent,
       tasksToday,
       tasksOverdue,
+      tasksCompletedThisWeek,
     },
     pipeline: dealsPipeline.map((g) => ({
       stage: g.stage,

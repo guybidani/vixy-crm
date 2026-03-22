@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Zap,
   Clock,
   Plus,
-  X,
   Pencil,
   Trash2,
   Shield,
@@ -15,11 +15,21 @@ import {
   Crown,
   UserPlus,
   Workflow,
+  Palette,
+  Tag,
+  Navigation,
+  Calendar,
+  Plug2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import AutomationTab from "../components/settings/AutomationTab";
+import OptionsTab from "../components/settings/OptionsTab";
+import TagsTab from "../components/settings/TagsTab";
+import NavPermissionsTab from "../components/settings/NavPermissionsTab";
+import CalendarTab from "../components/settings/CalendarTab";
+import IntegrationsTab from "../components/settings/IntegrationsTab";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkspaceMembers, inviteMember } from "../api/auth";
 import {
@@ -38,18 +48,47 @@ import {
 } from "../api/sla";
 import { ROLES } from "../lib/constants";
 
-const TABS = [
+interface SettingsTab {
+  key: string;
+  label: string;
+  icon: typeof User;
+  color: string;
+  adminOnly?: boolean;
+}
+
+const BASE_TABS: SettingsTab[] = [
   { key: "profile", label: "פרופיל", icon: User, color: "#6161FF" },
   { key: "members", label: "חברי צוות", icon: Users, color: "#00CA72" },
   { key: "canned", label: "תגובות מוכנות", icon: Zap, color: "#FDAB3D" },
   { key: "sla", label: "מדיניות SLA", icon: Shield, color: "#A25DDC" },
   { key: "automation", label: "אוטומציה", icon: Workflow, color: "#FF642E" },
-] as const;
+  { key: "options", label: "אפשרויות תצוגה", icon: Palette, color: "#66CCFF" },
+  { key: "tags", label: "תגיות", icon: Tag, color: "#579BFC" },
+  { key: "calendar", label: "Google Calendar", icon: Calendar, color: "#4285F4" },
+  { key: "integrations", label: "אינטגרציות", icon: Plug2, color: "#00CA72" },
+  { key: "nav-permissions", label: "הרשאות ניווט", icon: Navigation, color: "#FB275D", adminOnly: true },
+];
 
-type Tab = (typeof TABS)[number]["key"];
+type Tab = string;
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<Tab>("profile");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(
+    () => searchParams.get("tab") ?? "profile",
+  );
+  const { workspaces, currentWorkspaceId } = useAuth();
+
+  // Sync tab when URL changes (e.g. after OAuth redirect)
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab) setTab(urlTab);
+  }, [searchParams]);
+  const currentRole = workspaces.find((w) => w.id === currentWorkspaceId)?.role;
+  const isOwnerOrAdmin = currentRole === "OWNER" || currentRole === "ADMIN";
+
+  const TABS = BASE_TABS.filter(
+    (t) => !t.adminOnly || isOwnerOrAdmin,
+  );
 
   return (
     <PageShell title="הגדרות" subtitle="ניהול מערכת">
@@ -90,6 +129,11 @@ export default function SettingsPage() {
       {tab === "canned" && <CannedResponsesTab />}
       {tab === "sla" && <SlaPoliciesTab />}
       {tab === "automation" && <AutomationTab />}
+      {tab === "options" && <OptionsTab />}
+      {tab === "tags" && <TagsTab />}
+      {tab === "calendar" && <CalendarTab />}
+      {tab === "integrations" && <IntegrationsTab />}
+      {tab === "nav-permissions" && <NavPermissionsTab />}
     </PageShell>
   );
 }

@@ -19,6 +19,7 @@ import {
   automationWorker,
   setAutomationWorkerIO,
 } from "./queue/automation.worker";
+import { reminderWorker, setReminderWorkerIO } from "./queue/reminder.worker";
 
 const logger = pino({
   transport:
@@ -80,7 +81,17 @@ app.use(
 // Middleware
 app.use(cors({ origin: config.corsOrigin, credentials: true }));
 app.use(cookieParser());
-app.use(express.json({ limit: "1mb" }));
+app.use(
+  express.json({
+    limit: "1mb",
+    // Preserve raw body for webhook HMAC signature verification
+    verify: (req: any, _res, buf) => {
+      if (req.url?.startsWith("/api/v1/vixy/webhook")) {
+        req.rawBody = buf.toString("utf8");
+      }
+    },
+  }),
+);
 app.use(apiLimiter);
 
 // Make io available to routes
@@ -119,6 +130,23 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// In production, serve the Vite client build from ../public
+if (config.nodeEnv === "production") {
+  const clientDir = path.resolve(__dirname, "../public");
+  app.use(express.static(clientDir));
+  // SPA fallback - serve index.html for all non-API routes
+  app.get("*", (req, res, next) => {
+    if (
+      req.path.startsWith("/api/") ||
+      req.path.startsWith("/socket.io/") ||
+      req.path.startsWith("/uploads/")
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(clientDir, "index.html"));
+  });
+}
+
 // Error handler (must be last)
 app.use(errorHandler);
 
@@ -129,7 +157,7 @@ io.use((socket, next) => {
     return next(new Error("Authentication required"));
   }
   try {
-    const payload = jwt.verify(token, config.jwt.secret) as {
+    const payload = jwt.verify(token, config.jwt.secret, { algorithms: ['HS256'] }) as {
       userId: string;
       email: string;
     };
@@ -197,9 +225,11 @@ httpServer.listen(config.port, async () => {
   try {
     setWorkerIO(io);
     setAutomationWorkerIO(io);
+    setReminderWorkerIO(io);
     await registerFollowUpScheduler();
     logger.info("Follow-up automation scheduler registered");
     logger.info("Automation workflow worker started");
+    logger.info("Task reminder worker started");
   } catch (err) {
     logger.warn(
       "Failed to initialize follow-up scheduler (Redis may be unavailable)",

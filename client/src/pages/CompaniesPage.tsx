@@ -1,17 +1,19 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, X, Building2, Users, Handshake } from "lucide-react";
+import { Plus, Building2, Users, Handshake } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
-import SidePanel from "../components/shared/SidePanel";
+import MondayTextCell from "../components/shared/MondayTextCell";
+// import SidePanel from "../components/shared/SidePanel";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
 import ViewToggle from "../components/shared/ViewToggle";
+import ExportButton from "../components/shared/ExportButton";
 import {
   listCompanies,
   createCompany,
@@ -19,7 +21,8 @@ import {
   getCompaniesBoard,
   type Company,
 } from "../api/companies";
-import { COMPANY_STATUSES } from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
 
 const COMPANY_COLORS = [
   "#6161FF",
@@ -40,6 +43,7 @@ function companyColor(name: string) {
 }
 
 export default function CompaniesPage() {
+  const { companyStatuses } = useWorkspaceOptions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
@@ -49,9 +53,14 @@ export default function CompaniesPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+  const [_selectedCompanyId, _setSelectedCompanyId] = useState<string | null>(
     null,
   );
+
+  const inlineUpdate = useInlineUpdate(updateCompany, [
+    ["companies"],
+    ["companies-board"],
+  ]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["companies", { search: debouncedSearch, page, sortBy, sortDir }],
@@ -84,7 +93,7 @@ export default function CompaniesPage() {
 
   // Kanban columns
   const kanbanColumns: KanbanCol<Company>[] = Object.entries(
-    COMPANY_STATUSES,
+    companyStatuses,
   ).map(([key, info]) => ({
     key,
     label: info.label,
@@ -98,9 +107,7 @@ export default function CompaniesPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(
-      `חברה הועברה ל${COMPANY_STATUSES[toColumn as keyof typeof COMPANY_STATUSES]?.label}`,
-    );
+    toast.success(`חברה הועברה ל${companyStatuses[toColumn]?.label}`);
   }
 
   const handleSort = useCallback(
@@ -128,38 +135,47 @@ export default function CompaniesPage() {
           >
             <Building2 size={14} />
           </div>
-          <span className="font-semibold text-text-primary">{row.name}</span>
+          <MondayTextCell
+            value={row.name}
+            onChange={(val) => inlineUpdate(row.id, { name: val })}
+            placeholder="שם חברה"
+          />
         </div>
       ),
     },
     {
       key: "industry",
       label: "תעשייה",
-      render: (row: Company) =>
-        row.industry ? (
-          <span className="text-sm text-text-secondary px-2 py-0.5 bg-surface-secondary rounded-full">
-            {row.industry}
-          </span>
-        ) : (
-          "—"
-        ),
+      render: (row: Company) => (
+        <MondayTextCell
+          value={row.industry || ""}
+          onChange={(val) => inlineUpdate(row.id, { industry: val })}
+          placeholder="תעשייה"
+        />
+      ),
     },
     {
       key: "email",
       label: "אימייל",
       render: (row: Company) => (
-        <span dir="ltr" className="text-text-secondary text-sm">
-          {row.email || "—"}
-        </span>
+        <MondayTextCell
+          value={row.email || ""}
+          onChange={(val) => inlineUpdate(row.id, { email: val })}
+          placeholder="אימייל"
+          dir="ltr"
+        />
       ),
     },
     {
       key: "phone",
       label: "טלפון",
       render: (row: Company) => (
-        <span dir="ltr" className="text-text-secondary text-sm">
-          {row.phone || "—"}
-        </span>
+        <MondayTextCell
+          value={row.phone || ""}
+          onChange={(val) => inlineUpdate(row.id, { phone: val })}
+          placeholder="טלפון"
+          dir="ltr"
+        />
       ),
     },
     {
@@ -198,6 +214,10 @@ export default function CompaniesPage() {
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          <ExportButton
+            entity="companies"
+            filters={{ search: debouncedSearch }}
+          />
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"

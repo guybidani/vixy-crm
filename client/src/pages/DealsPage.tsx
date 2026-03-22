@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { useDebounce } from "../hooks/useDebounce";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import {
   Plus,
-  X,
   Clock,
   Building2,
   AlertTriangle,
@@ -18,11 +17,17 @@ import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
 import ViewToggle from "../components/shared/ViewToggle";
+import ExportButton from "../components/shared/ExportButton";
+import BulkActionBar from "../components/shared/BulkActionBar";
 import MondayBoard, {
   MondayStatusCell,
   type MondayGroup,
   type MondayColumn,
 } from "../components/shared/MondayBoard";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import MondayTextCell from "../components/shared/MondayTextCell";
+import MondayNumberCell from "../components/shared/MondayNumberCell";
+import MondayPersonCell from "../components/shared/MondayPersonCell";
 import DealDetailPanel from "../components/deals/DealDetailPanel";
 import DealsChartView from "../components/deals/DealsChartView";
 import {
@@ -30,23 +35,25 @@ import {
   listDeals,
   createDeal,
   updateDeal,
+  bulkDeleteDeals,
   type Deal,
   type PipelineResponse,
 } from "../api/deals";
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
-import { DEAL_STAGES, PRIORITIES } from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 type ViewMode = "kanban" | "table";
 type TableTab = "table" | "chart";
 
 export default function DealsPage() {
-  const navigate = useNavigate();
+  const { dealStages, priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [tableTab, setTableTab] = useState<TableTab>("table");
   const [showCreate, setShowCreate] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Kanban data
   const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
@@ -59,6 +66,9 @@ export default function DealsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
+
+  useEffect(() => setSelectedIds(new Set()), [page, debouncedSearch]);
+
   const { data: tableData, isLoading: tableLoading } = useQuery({
     queryKey: ["deals", { search: debouncedSearch, page }],
     queryFn: () => listDeals({ search: debouncedSearch || undefined, page }),
@@ -75,8 +85,42 @@ export default function DealsPage() {
     },
   });
 
+  const bulkDeleteMutation = useMutation({
+    mutationFn: () => bulkDeleteDeals(Array.from(selectedIds)),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      toast.success(`${data.deleted} עסקאות נמחקו`);
+      setSelectedIds(new Set());
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
+  // Inline update
+  const inlineUpdate = useInlineUpdate(updateDeal, [
+    ["deals"],
+    ["deals-pipeline"],
+  ]);
+
+  // Contact & company options for person pickers
+  const { data: contactsData } = useQuery({
+    queryKey: ["contacts", { limit: 200 }],
+    queryFn: () => listContacts({ limit: 200 }),
+  });
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+  });
+  const contactOptions = (contactsData?.data || []).map((c) => ({
+    id: c.id,
+    name: c.fullName,
+  }));
+  const companyOptions = (companiesData?.data || []).map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
+
   // ── Kanban columns ──────────────────────────
-  const kanbanColumns: KanbanCol<Deal>[] = Object.entries(DEAL_STAGES).map(
+  const kanbanColumns: KanbanCol<Deal>[] = Object.entries(dealStages).map(
     ([stageKey, stageInfo]) => ({
       key: stageKey,
       label: stageInfo.label,
@@ -111,9 +155,7 @@ export default function DealsPage() {
     );
 
     stageMutation.mutate({ id: itemId, stage: toColumn });
-    toast.success(
-      `עסקה הועברה ל${DEAL_STAGES[toColumn as keyof typeof DEAL_STAGES]?.label}`,
-    );
+    toast.success(`עסקה הועברה ל${dealStages[toColumn]?.label}`);
   }
 
   // ── Monday Board columns ────────────────────
@@ -121,57 +163,53 @@ export default function DealsPage() {
     {
       key: "title",
       label: "Item",
+      sortable: true,
       render: (row) => (
-        <span className="font-medium text-[#323338]">{row.title}</span>
+        <MondayTextCell
+          value={row.title}
+          onChange={(val) => inlineUpdate(row.id, { title: val })}
+        />
       ),
     },
     {
       key: "contact",
       label: "איש קשר",
-      width: "140px",
-      render: (row) =>
-        row.contact ? (
-          <div className="flex items-center gap-1.5">
-            <div
-              className="w-[22px] h-[22px] rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0"
-              role="img"
-              aria-label={row.contact.name}
-            >
-              <span className="text-white text-[9px] font-bold">
-                {row.contact.name[0]}
-              </span>
-            </div>
-            <span className="text-[13px] text-[#323338] truncate">
-              {row.contact.name}
-            </span>
-          </div>
-        ) : (
-          <span className="text-[#C3C6D4]">—</span>
-        ),
+      width: "160px",
+      render: (row) => (
+        <MondayPersonCell
+          value={row.contact}
+          options={contactOptions}
+          onChange={(id) => inlineUpdate(row.id, { contactId: id! })}
+          placeholder="בחר איש קשר"
+        />
+      ),
     },
     {
       key: "value",
       label: "סכום",
-      width: "120px",
+      width: "130px",
+      sortable: true,
+      summary: "sum",
       render: (row) => (
-        <span className="font-bold text-[13px] text-[#323338]" dir="ltr">
-          ₪{row.value.toLocaleString()}
-        </span>
+        <MondayNumberCell
+          value={row.value}
+          onChange={(val) => inlineUpdate(row.id, { value: val })}
+          prefix="₪"
+        />
       ),
     },
     {
       key: "stage",
       label: "סטטוס",
       width: "150px",
+      sortable: true,
       render: (row) => (
         <MondayStatusCell
           value={row.stage}
-          options={DEAL_STAGES}
+          options={dealStages}
           onChange={(stage) => {
-            stageMutation.mutate({ id: row.id, stage });
-            toast.success(
-              `עסקה הועברה ל${DEAL_STAGES[stage as keyof typeof DEAL_STAGES]?.label}`,
-            );
+            inlineUpdate(row.id, { stage });
+            toast.success(`עסקה הועברה ל${dealStages[stage]?.label}`);
           }}
         />
       ),
@@ -180,40 +218,34 @@ export default function DealsPage() {
       key: "priority",
       label: "עדיפות",
       width: "120px",
+      sortable: true,
       render: (row) => (
         <MondayStatusCell
           value={row.priority}
-          options={PRIORITIES}
-          onChange={(priority) => {
-            stageMutation.mutate({ id: row.id, stage: row.stage });
-            // Use updateDeal for priority
-            updateDeal(row.id, { priority }).then(() =>
-              queryClient.invalidateQueries({ queryKey: ["deals"] }),
-            );
-          }}
+          options={priorities}
+          onChange={(priority) => inlineUpdate(row.id, { priority })}
         />
       ),
     },
     {
       key: "company",
       label: "חברה",
-      width: "140px",
-      render: (row) =>
-        row.company ? (
-          <div className="flex items-center gap-1.5">
-            <Building2 size={13} className="text-[#676879] flex-shrink-0" />
-            <span className="text-[13px] text-[#323338] truncate">
-              {row.company.name}
-            </span>
-          </div>
-        ) : (
-          <span className="text-[#C3C6D4]">—</span>
-        ),
+      width: "160px",
+      render: (row) => (
+        <MondayPersonCell
+          value={row.company}
+          options={companyOptions}
+          onChange={(id) => inlineUpdate(row.id, { companyId: id })}
+          placeholder="בחר חברה"
+        />
+      ),
     },
     {
       key: "daysInStage",
       label: "ימים בשלב",
       width: "100px",
+      sortable: true,
+      summary: "avg",
       render: (row) => {
         const isRotting = row.daysInStage >= 7;
         const isSevere = row.daysInStage >= 14;
@@ -245,34 +277,18 @@ export default function DealsPage() {
     {
       key: "probability",
       label: "סיכוי סגירה",
-      width: "100px",
-      render: (row) => {
-        const color =
-          row.probability >= 70
-            ? "#00CA72"
-            : row.probability >= 40
-              ? "#FDAB3D"
-              : "#C4C4C4";
-        return (
-          <div className="flex items-center gap-1.5">
-            <div className="flex-1 h-[5px] bg-[#F5F6F8] rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${row.probability}%`,
-                  backgroundColor: color,
-                }}
-              />
-            </div>
-            <span
-              className="text-[11px] text-[#676879] font-medium w-[30px] text-left"
-              dir="ltr"
-            >
-              {row.probability}%
-            </span>
-          </div>
-        );
-      },
+      width: "110px",
+      sortable: true,
+      summary: "avg",
+      render: (row) => (
+        <MondayNumberCell
+          value={row.probability}
+          onChange={(val) => inlineUpdate(row.id, { probability: val })}
+          suffix="%"
+          min={0}
+          max={100}
+        />
+      ),
     },
   ];
 
@@ -304,6 +320,7 @@ export default function DealsPage() {
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          <ExportButton entity="deals" filters={{ search: debouncedSearch }} />
           {viewMode === "kanban" && (
             <button
               onClick={() => setShowCreate(true)}
@@ -386,7 +403,33 @@ export default function DealsPage() {
           pagination={tableData?.pagination}
           onPageChange={setPage}
           statusKey="stage"
-          statusOptions={DEAL_STAGES}
+          statusOptions={dealStages}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          groupByColumns={[
+            { key: "stage", label: "סטטוס" },
+            { key: "priority", label: "עדיפות" },
+          ]}
+          contextMenuItems={(row: Deal) => {
+            const items: ContextMenuItem[] = [
+              {
+                label: "פתח עסקה",
+                icon: <Clock size={14} />,
+                onClick: () => setSelectedDealId(row.id),
+              },
+              { label: "", onClick: () => {}, divider: true },
+              {
+                label: "מחק",
+                onClick: () => {
+                  if (window.confirm("למחוק עסקה זו?")) {
+                    bulkDeleteMutation.mutate();
+                  }
+                },
+                danger: true,
+              },
+            ];
+            return items;
+          }}
         />
       )}
 
@@ -399,6 +442,16 @@ export default function DealsPage() {
           onDeleted={() => setSelectedDealId(null)}
         />
       )}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onDelete={() => {
+          if (window.confirm(`למחוק ${selectedIds.size} עסקאות?`)) {
+            bulkDeleteMutation.mutate();
+          }
+        }}
+        deleting={bulkDeleteMutation.isPending}
+      />
     </PageShell>
   );
 }
@@ -541,6 +594,7 @@ function CheckSquareIcon() {
 /* ── Create Deal Modal ─────────────────────────────── */
 
 function CreateDealModal({ onClose }: { onClose: () => void }) {
+  const { dealStages, priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     title: "",
@@ -689,7 +743,7 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setField("stage", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
-              {Object.entries(DEAL_STAGES).map(([key, val]) => (
+              {Object.entries(dealStages).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>
@@ -705,7 +759,7 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setField("priority", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
-              {Object.entries(PRIORITIES).map(([key, val]) => (
+              {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>

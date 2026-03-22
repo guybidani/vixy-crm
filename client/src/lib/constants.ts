@@ -4,7 +4,7 @@ export const NAV_ITEMS = [
     key: "dashboard",
     label: "דשבורד",
     icon: "LayoutDashboard",
-    path: "/",
+    path: "/dashboard",
     dot: "#6161FF",
   },
   {

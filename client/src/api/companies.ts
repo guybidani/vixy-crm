@@ -9,6 +9,7 @@ export interface Company {
   email: string | null;
   industry: string | null;
   size: string | null;
+  notes: string | null;
   status: "PROSPECT" | "ACTIVE" | "INACTIVE" | "CHURNED";
   contactCount: number;
   dealCount: number;

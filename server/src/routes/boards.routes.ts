@@ -1,12 +1,44 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
 import { requireRole } from "../middleware/auth";
 import { audit } from "../services/audit.service";
 import * as boardsService from "../services/boards.service";
 import { BOARD_TEMPLATES } from "../services/board-templates";
+import { prisma } from "../db/client";
 
 export const boardsRouter = Router();
+
+/**
+ * Middleware factory: require board-level permission on the board identified by req.params.id.
+ * Must run after requireWorkspace (which sets req.workspaceId and req.workspaceRole).
+ */
+function requireBoardPermission(minPermission: 'VIEWER' | 'EDITOR' | 'ADMIN') {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const boardId = req.params.id as string;
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      if (!member) {
+        return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not a workspace member' } });
+      }
+      const allowed = await boardsService.checkBoardPermission(
+        boardId,
+        member.id,
+        req.workspaceId!,
+        req.workspaceRole!,
+        minPermission,
+      );
+      if (!allowed) {
+        return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Insufficient board permission' } });
+      }
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+}
 
 // ── Templates ──────────────────────────────────────────────────────
 
@@ -46,7 +78,17 @@ const updateBoardSchema = z.object({
 // GET /boards
 boardsRouter.get("/", async (req, res, next) => {
   try {
-    const boards = await boardsService.list(req.workspaceId!);
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({ error: { code: "NOT_A_MEMBER", message: "Not a member" } });
+    }
+    const boards = await boardsService.listBoardsForMember(
+      req.workspaceId!,
+      member.id,
+      req.workspaceRole!,
+    );
     res.json(boards);
   } catch (err) {
     next(err);
@@ -74,6 +116,21 @@ boardsRouter.get("/:id", async (req, res, next) => {
       req.workspaceId!,
       req.params.id as string,
     );
+
+    // Check access for private boards (OWNER role bypasses)
+    if (board.isPrivate && req.workspaceRole !== "OWNER") {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      if (!member) {
+        return res.status(403).json({ error: { code: "FORBIDDEN", message: "Access denied" } });
+      }
+      const permission = await boardsService.getBoardAccess(board.id, member.id);
+      if (!permission) {
+        return res.status(403).json({ error: { code: "FORBIDDEN", message: "You do not have access to this board" } });
+      }
+    }
+
     res.json(board);
   } catch (err) {
     next(err);
@@ -83,6 +140,7 @@ boardsRouter.get("/:id", async (req, res, next) => {
 // PATCH /boards/:id
 boardsRouter.patch(
   "/:id",
+  requireBoardPermission('ADMIN'),
   validate(updateBoardSchema),
   async (req, res, next) => {
     try {
@@ -167,6 +225,7 @@ const updateColumnSchema = z.object({
 // POST /boards/:id/columns
 boardsRouter.post(
   "/:id/columns",
+  requireBoardPermission('EDITOR'),
   validate(addColumnSchema),
   async (req, res, next) => {
     try {
@@ -185,6 +244,7 @@ boardsRouter.post(
 // PATCH /boards/:id/columns/:colId
 boardsRouter.patch(
   "/:id/columns/:colId",
+  requireBoardPermission('EDITOR'),
   validate(updateColumnSchema),
   async (req, res, next) => {
     try {
@@ -202,7 +262,7 @@ boardsRouter.patch(
 );
 
 // DELETE /boards/:id/columns/:colId
-boardsRouter.delete("/:id/columns/:colId", async (req, res, next) => {
+boardsRouter.delete("/:id/columns/:colId", requireBoardPermission('EDITOR'), async (req, res, next) => {
   try {
     await boardsService.deleteColumn(
       req.workspaceId!,
@@ -232,6 +292,7 @@ const updateGroupSchema = z.object({
 // POST /boards/:id/groups
 boardsRouter.post(
   "/:id/groups",
+  requireBoardPermission('EDITOR'),
   validate(addGroupSchema),
   async (req, res, next) => {
     try {
@@ -250,6 +311,7 @@ boardsRouter.post(
 // PATCH /boards/:id/groups/:groupId
 boardsRouter.patch(
   "/:id/groups/:groupId",
+  requireBoardPermission('EDITOR'),
   validate(updateGroupSchema),
   async (req, res, next) => {
     try {
@@ -267,7 +329,7 @@ boardsRouter.patch(
 );
 
 // DELETE /boards/:id/groups/:groupId
-boardsRouter.delete("/:id/groups/:groupId", async (req, res, next) => {
+boardsRouter.delete("/:id/groups/:groupId", requireBoardPermission('EDITOR'), async (req, res, next) => {
   try {
     await boardsService.deleteGroup(
       req.workspaceId!,
@@ -295,6 +357,7 @@ const updateItemSchema = z.object({
 // POST /boards/:id/groups/:groupId/items
 boardsRouter.post(
   "/:id/groups/:groupId/items",
+  requireBoardPermission('EDITOR'),
   validate(addItemSchema),
   async (req, res, next) => {
     try {
@@ -314,6 +377,7 @@ boardsRouter.post(
 // PATCH /boards/:id/items/:itemId
 boardsRouter.patch(
   "/:id/items/:itemId",
+  requireBoardPermission('EDITOR'),
   validate(updateItemSchema),
   async (req, res, next) => {
     try {
@@ -331,7 +395,7 @@ boardsRouter.patch(
 );
 
 // DELETE /boards/:id/items/:itemId
-boardsRouter.delete("/:id/items/:itemId", async (req, res, next) => {
+boardsRouter.delete("/:id/items/:itemId", requireBoardPermission('EDITOR'), async (req, res, next) => {
   try {
     await boardsService.deleteItem(
       req.workspaceId!,
@@ -361,6 +425,7 @@ const updateValuesSchema = z.object({
 // PUT /boards/:id/items/:itemId/values
 boardsRouter.put(
   "/:id/items/:itemId/values",
+  requireBoardPermission('EDITOR'),
   validate(updateValuesSchema),
   async (req, res, next) => {
     try {
@@ -371,6 +436,115 @@ boardsRouter.put(
         req.body.values,
       );
       res.json(results);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── Board Access / Permissions ────────────────────────────────────
+
+const setBoardAccessSchema = z.object({
+  memberId: z.string().uuid(),
+  permission: z.enum(["VIEWER", "EDITOR", "ADMIN"]),
+});
+
+const togglePrivacySchema = z.object({
+  isPrivate: z.boolean(),
+});
+
+// GET /boards/:id/access - list members with access
+boardsRouter.get("/:id/access", async (req, res, next) => {
+  try {
+    const members = await boardsService.getBoardMembers(req.workspaceId!, req.params.id as string);
+    res.json(members);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /boards/:id/access - grant access
+boardsRouter.post(
+  "/:id/access",
+  requireBoardPermission('ADMIN'),
+  validate(setBoardAccessSchema),
+  async (req, res, next) => {
+    try {
+      const grantor = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      const access = await boardsService.setBoardAccess(
+        req.workspaceId!,
+        req.params.id as string,
+        req.body.memberId,
+        req.body.permission,
+        grantor?.id,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "board.access.grant",
+        entityType: "Board",
+        entityId: req.params.id as string,
+        metadata: { memberId: req.body.memberId, permission: req.body.permission },
+        ip: req.ip,
+      });
+      res.status(201).json(access);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /boards/:id/access/:memberId - revoke access
+boardsRouter.delete(
+  "/:id/access/:memberId",
+  requireBoardPermission('ADMIN'),
+  async (req, res, next) => {
+    try {
+      await boardsService.removeBoardAccess(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.memberId as string,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "board.access.revoke",
+        entityType: "Board",
+        entityId: req.params.id as string,
+        metadata: { memberId: req.params.memberId },
+        ip: req.ip,
+      });
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /boards/:id/privacy - toggle isPrivate
+boardsRouter.patch(
+  "/:id/privacy",
+  requireBoardPermission('ADMIN'),
+  validate(togglePrivacySchema),
+  async (req, res, next) => {
+    try {
+      const board = await boardsService.update(
+        req.workspaceId!,
+        req.params.id as string,
+        { isPrivate: req.body.isPrivate },
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "board.privacy.toggle",
+        entityType: "Board",
+        entityId: req.params.id as string,
+        metadata: { isPrivate: req.body.isPrivate },
+        ip: req.ip,
+      });
+      res.json(board);
     } catch (err) {
       next(err);
     }

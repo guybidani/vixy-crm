@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sanitizeHtml } from "../lib/sanitize";
 import {
   Plus,
-  X,
   BookOpen,
   FolderOpen,
   Eye,
@@ -11,7 +10,6 @@ import {
   ThumbsDown,
   ArrowRight,
   FileText,
-  Globe,
   PenLine,
   Search,
 } from "lucide-react";
@@ -25,7 +23,6 @@ import {
   getArticle,
   createArticle,
   updateArticle,
-  deleteArticle,
   createCategory,
   voteArticle,
   type KbCategory,

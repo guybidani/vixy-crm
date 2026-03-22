@@ -60,9 +60,40 @@ export default {
       },
       boxShadow: {
         card: "0 1px 4px rgba(0, 0, 0, 0.08)",
-        "card-hover": "0 4px 12px rgba(0, 0, 0, 0.12)",
+        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12)",
+        "card-glow": "0 8px 32px rgba(97, 97, 255, 0.15)",
         modal: "0 8px 32px rgba(0, 0, 0, 0.16)",
         sidebar: "1px 0 8px rgba(0, 0, 0, 0.06)",
+        glass: "0 4px 16px rgba(0, 0, 0, 0.06)",
+      },
+      keyframes: {
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "slide-in-right": {
+          "0%": { opacity: "0", transform: "translateX(12px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "slide-in-left": {
+          "0%": { opacity: "0", transform: "translateX(-12px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        "scale-check": {
+          "0%": { opacity: "0", transform: "scale(0.5)" },
+          "60%": { opacity: "1", transform: "scale(1.15)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "strength-fill": {
+          "0%": { width: "0%" },
+          "100%": { width: "var(--strength-width)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fade-in-up 0.3s ease-out both",
+        "slide-in-right": "slide-in-right 0.25s ease-out both",
+        "slide-in-left": "slide-in-left 0.25s ease-out both",
+        "scale-check": "scale-check 0.5s ease-out both",
       },
     },
   },

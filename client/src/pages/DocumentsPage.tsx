@@ -8,13 +8,10 @@ import {
   Image,
   FileSpreadsheet,
   Presentation,
-  X,
   Upload,
   Trash2,
   Download,
   Search,
-  Filter,
-  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDebounce } from "../hooks/useDebounce";

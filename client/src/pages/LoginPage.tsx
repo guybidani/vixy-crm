@@ -18,7 +18,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success("התחברת בהצלחה!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (err: any) {
       toast.error(err?.message || "שגיאה בהתחברות");
     } finally {
@@ -28,14 +28,14 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen bg-surface-secondary flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
       dir="rtl"
     >
-      <div className="bg-white rounded-xl shadow-card p-8 w-full max-w-md">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-card-hover border border-white/60 p-8 w-full max-w-md animate-fade-in-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-light rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-primary text-2xl font-bold">V</span>
+          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-card-glow">
+            <span className="text-white text-2xl font-bold">V</span>
           </div>
           <h1 className="text-2xl font-bold text-text-primary">
             ברוכים הבאים ל-Vixy CRM
@@ -52,7 +52,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+              className="w-full px-4 py-2.5 border border-border-light rounded-xl text-text-primary placeholder:text-text-tertiary bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
               placeholder="your@email.com"
               required
               dir="ltr"
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+                className="w-full px-4 py-2.5 border border-border-light rounded-xl text-text-primary placeholder:text-text-tertiary bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
                 placeholder="הזינו סיסמה"
                 required
                 dir="ltr"
@@ -87,7 +87,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-gradient-to-l from-primary to-primary-dark hover:from-primary-hover hover:to-primary text-white font-semibold rounded-xl shadow-sm hover:shadow-card-glow hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -104,25 +104,34 @@ export default function LoginPage() {
           אין לכם חשבון?{" "}
           <Link
             to="/register"
-            className="text-primary font-semibold hover:underline"
+            className="text-primary font-semibold hover:text-primary-dark hover:underline transition-colors"
           >
             הרשמה
           </Link>
         </p>
 
+        <p className="text-center mt-4">
+          <Link
+            to="/"
+            className="text-text-tertiary text-xs hover:text-text-secondary hover:underline transition-colors"
+          >
+            חזרה לדף הבית
+          </Link>
+        </p>
+
         {/* Demo credentials */}
-        <div className="mt-6 p-3 bg-surface-secondary rounded-lg">
-          <p className="text-xs text-text-tertiary text-center mb-2">
+        <div className="mt-6 p-4 bg-gradient-to-l from-primary-light/40 to-purple-light/30 rounded-xl border border-primary-light/60">
+          <p className="text-xs text-text-secondary text-center mb-2.5 font-medium">
             משתמש הדגמה:
           </p>
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2.5 justify-center">
             <button
               type="button"
               onClick={() => {
                 setEmail("admin@vixy.co.il");
                 setPassword("admin123");
               }}
-              className="text-xs bg-white px-3 py-1.5 rounded border border-border hover:border-primary transition-colors text-text-secondary cursor-pointer"
+              className="text-xs bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border-light hover:border-primary hover:bg-white hover:shadow-sm active:scale-95 transition-all text-text-secondary hover:text-primary font-medium cursor-pointer"
               aria-label="מלא פרטי כניסה של מנהל הדגמה"
             >
               מנהל
@@ -133,7 +142,7 @@ export default function LoginPage() {
                 setEmail("agent@vixy.co.il");
                 setPassword("agent123");
               }}
-              className="text-xs bg-white px-3 py-1.5 rounded border border-border hover:border-primary transition-colors text-text-secondary cursor-pointer"
+              className="text-xs bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border-light hover:border-primary hover:bg-white hover:shadow-sm active:scale-95 transition-all text-text-secondary hover:text-primary font-medium cursor-pointer"
               aria-label="מלא פרטי כניסה של נציג הדגמה"
             >
               נציג

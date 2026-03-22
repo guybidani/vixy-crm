@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import { upload } from "../middleware/upload";
 import { prisma } from "../db/client";
 import * as documentService from "../services/document.service";
@@ -167,17 +168,50 @@ documentRouter.put("/:id", validate(updateSchema), async (req, res, next) => {
 
 // ─── Delete document ───
 // DELETE /api/v1/documents/:id
+// Only OWNER/ADMIN or the document creator can delete
 documentRouter.delete("/:id", async (req, res, next) => {
   try {
-    const result = await documentService.remove(
+    // Allow OWNER/ADMIN to delete any document
+    if (req.workspaceRole === "OWNER" || req.workspaceRole === "ADMIN") {
+      const result = await documentService.remove(
+        req.workspaceId!,
+        req.params.id as string,
+      );
+      if (!result) {
+        return res.status(404).json({
+          error: { code: "NOT_FOUND", message: "Document not found" },
+        });
+      }
+      return res.json(result);
+    }
+
+    // For other roles, check if the user is the document creator
+    const doc = await documentService.getById(
       req.workspaceId!,
       req.params.id as string,
     );
-    if (!result) {
+    if (!doc) {
       return res.status(404).json({
         error: { code: "NOT_FOUND", message: "Document not found" },
       });
     }
+
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member || doc.createdById !== member.id) {
+      return res.status(403).json({
+        error: {
+          code: "INSUFFICIENT_ROLE",
+          message: "You can only delete documents you created",
+        },
+      });
+    }
+
+    const result = await documentService.remove(
+      req.workspaceId!,
+      req.params.id as string,
+    );
     res.json(result);
   } catch (err) {
     next(err);

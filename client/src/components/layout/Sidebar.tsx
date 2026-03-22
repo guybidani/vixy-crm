@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,12 +15,14 @@ import {
   ChevronLeft,
   Plus,
   Zap,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth";
 import { NAV_ITEMS } from "../../lib/constants";
 import { listBoards, updateBoard } from "../../api/boards";
+import { getNavPermissions } from "../../api/settings";
 import CreateBoardModal from "../boards/CreateBoardModal";
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -123,6 +125,7 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { workspaces, currentWorkspaceId, selectWorkspace } = useAuth();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
+  const isOwner = currentWs?.role === "OWNER";
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
   const [navLabels, setNavLabels] =
     useState<Record<string, string>>(loadNavLabels);
@@ -132,6 +135,27 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     queryKey: ["boards"],
     queryFn: listBoards,
   });
+
+  // Fetch nav permissions to filter visible items
+  const { data: navPermData } = useQuery({
+    queryKey: ["nav-permissions", currentWorkspaceId],
+    queryFn: getNavPermissions,
+    enabled: !!currentWorkspaceId && !isOwner,
+  });
+
+  const filteredNavItems = useMemo(() => {
+    // Owner always sees everything
+    if (isOwner || !navPermData?.navPermissions) return NAV_ITEMS;
+
+    const memberId = currentWs?.memberId;
+    if (!memberId) return NAV_ITEMS;
+
+    const allowed = navPermData.navPermissions[memberId];
+    // No permissions set = full access (default)
+    if (!allowed) return NAV_ITEMS;
+
+    return NAV_ITEMS.filter((item) => allowed.includes(item.key));
+  }, [isOwner, navPermData, currentWs?.memberId]);
 
   const updateBoardMut = useMutation({
     mutationFn: (p: { id: string; name: string }) =>
@@ -155,14 +179,14 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <>
       <aside
         className={cn(
-          "fixed top-0 right-0 h-screen bg-[#F7F7F9] z-40 transition-all duration-200 flex flex-col",
+          "fixed top-0 right-0 h-screen bg-gradient-to-b from-[#F7F7F9] to-[#F0F0F5] z-40 transition-all duration-300 ease-in-out flex flex-col border-l border-border-light/50",
           collapsed ? "w-16" : "w-60",
         )}
       >
         {/* Logo / Workspace */}
         <div className="p-3 pb-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
               <span className="text-white text-lg font-bold">V</span>
             </div>
             {!collapsed && (
@@ -191,21 +215,21 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Navigation - Flat Monday-style list */}
         <nav className="flex-1 overflow-y-auto py-1 px-2">
-          {NAV_ITEMS.map((item) => {
+          {filteredNavItems.map((item) => {
             const Icon = ICON_MAP[item.icon] || LayoutDashboard;
             const label = getNavLabel(item);
             return (
               <NavLink
                 key={item.key}
                 to={item.path}
-                end={item.path === "/"}
+                end={item.path === "/dashboard"}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group relative mb-0.5",
+                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative mb-0.5",
                     isActive
                       ? "bg-white shadow-sm border-r-[3px] border-primary font-semibold text-text-primary"
-                      : "text-text-secondary hover:bg-white/60 hover:text-text-primary",
-                    collapsed && "justify-center px-0",
+                      : "text-text-secondary hover:bg-white/80 hover:text-text-primary hover:translate-x-[-2px]",
+                    collapsed && "justify-center px-0 hover:translate-x-0",
                   )
                 }
               >
@@ -220,10 +244,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     <Icon
                       size={18}
                       className={cn(
-                        "flex-shrink-0",
+                        "flex-shrink-0 transition-colors duration-200",
                         isActive
                           ? "text-primary"
-                          : "text-text-tertiary group-hover:text-text-secondary",
+                          : "text-text-tertiary group-hover:text-primary/70",
                       )}
                     />
                     {!collapsed && (
@@ -266,10 +290,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   to={`/boards/${board.id}`}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group relative mb-0.5",
+                      "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative mb-0.5",
                       isActive
                         ? "bg-white shadow-sm border-r-[3px] border-primary font-semibold text-text-primary"
-                        : "text-text-secondary hover:bg-white/60 hover:text-text-primary",
+                        : "text-text-secondary hover:bg-white/80 hover:text-text-primary hover:translate-x-[-2px]",
                     )
                   }
                 >
@@ -283,6 +307,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       updateBoardMut.mutate({ id: board.id, name: newName })
                     }
                   />
+                  {board.isPrivate && (
+                    <Lock size={12} className="flex-shrink-0 text-[#6161FF] opacity-60" />
+                  )}
                 </NavLink>
               ))}
               {boards.length === 0 && (
@@ -320,11 +347,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             to="/settings"
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all group relative",
+                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative",
                 isActive
                   ? "bg-white shadow-sm border-r-[3px] border-primary font-semibold text-text-primary"
-                  : "text-text-secondary hover:bg-white/60 hover:text-text-primary",
-                collapsed && "justify-center px-0",
+                  : "text-text-secondary hover:bg-white/80 hover:text-text-primary hover:translate-x-[-2px]",
+                collapsed && "justify-center px-0 hover:translate-x-0",
               )
             }
           >
@@ -333,10 +360,10 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <Settings
                   size={18}
                   className={cn(
-                    "flex-shrink-0",
+                    "flex-shrink-0 transition-colors duration-200",
                     isActive
                       ? "text-primary"
-                      : "text-text-tertiary group-hover:text-text-secondary",
+                      : "text-text-tertiary group-hover:text-primary/70",
                   )}
                 />
                 {!collapsed && <span className="truncate">הגדרות</span>}
@@ -350,7 +377,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </NavLink>
           <button
             onClick={onToggle}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-text-tertiary hover:bg-white/60 transition-colors mt-1"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-text-tertiary hover:bg-white/80 hover:text-text-secondary transition-all duration-200 mt-1"
           >
             <ChevronLeft
               size={16}

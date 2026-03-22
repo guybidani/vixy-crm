@@ -7,7 +7,6 @@ import {
   Upload,
   Plus,
   X,
-  Trash2,
   Download,
   Link2,
 } from "lucide-react";
@@ -21,7 +20,6 @@ import {
   getDocuments,
   createRichText,
   type EntityDocumentLink,
-  type Document,
 } from "../../api/documents";
 
 interface EntityDocumentsSectionProps {

@@ -60,7 +60,7 @@ cannedRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   try {
     const data = await cannedService.updateCannedResponse(
       req.workspaceId!,
-      req.params.id,
+      req.params.id as string,
       req.body,
     );
     res.json(data);

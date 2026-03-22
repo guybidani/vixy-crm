@@ -10,7 +10,6 @@ import {
   Calendar,
   Edit2,
   Trash2,
-  X,
   StickyNote,
   PhoneCall,
   MessageCircle,
@@ -22,25 +21,26 @@ import {
   Mic,
   Brain,
   Megaphone,
-  ExternalLink,
   Send,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
 import FollowUpCard from "../components/contacts/FollowUpCard";
+import Modal from "../components/shared/Modal";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { getContact, updateContact, deleteContact } from "../api/contacts";
 import { listCompanies } from "../api/companies";
-import {
-  CONTACT_STATUSES,
-  DEAL_STAGES,
-  TICKET_STATUSES,
-  PRIORITIES,
-  ACTIVITY_TYPES,
-} from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 export default function ContactDetailPage() {
+  const {
+    contactStatuses,
+    dealStages,
+    ticketStatuses,
+    priorities,
+    activityTypes,
+  } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -77,8 +77,7 @@ export default function ContactDetailPage() {
     );
   }
 
-  const statusInfo =
-    CONTACT_STATUSES[contact.status as keyof typeof CONTACT_STATUSES];
+  const statusInfo = contactStatuses[contact.status];
 
   return (
     <div className="space-y-4">
@@ -333,8 +332,7 @@ export default function ContactDetailPage() {
             {contact.deals && contact.deals.length > 0 ? (
               <div className="space-y-2">
                 {contact.deals.map((deal: any) => {
-                  const stage =
-                    DEAL_STAGES[deal.stage as keyof typeof DEAL_STAGES];
+                  const stage = dealStages[deal.stage];
                   return (
                     <div
                       key={deal.id}
@@ -384,12 +382,8 @@ export default function ContactDetailPage() {
             {contact.tickets && contact.tickets.length > 0 ? (
               <div className="space-y-2">
                 {contact.tickets.map((ticket: any) => {
-                  const status =
-                    TICKET_STATUSES[
-                      ticket.status as keyof typeof TICKET_STATUSES
-                    ];
-                  const priority =
-                    PRIORITIES[ticket.priority as keyof typeof PRIORITIES];
+                  const status = ticketStatuses[ticket.status];
+                  const priority = priorities[ticket.priority];
                   return (
                     <div
                       key={ticket.id}
@@ -435,8 +429,7 @@ export default function ContactDetailPage() {
             {contact.tasks && contact.tasks.length > 0 ? (
               <div className="space-y-2">
                 {contact.tasks.map((task: any) => {
-                  const priority =
-                    PRIORITIES[task.priority as keyof typeof PRIORITIES];
+                  const priority = priorities[task.priority];
                   return (
                     <div
                       key={task.id}
@@ -499,10 +492,7 @@ export default function ContactDetailPage() {
                 <div className="absolute right-[11px] top-2 bottom-2 w-0.5 bg-border-light" />
                 <div className="space-y-4">
                   {contact.activities.map((activity: any) => {
-                    const typeInfo =
-                      ACTIVITY_TYPES[
-                        activity.type as keyof typeof ACTIVITY_TYPES
-                      ];
+                    const typeInfo = activityTypes[activity.type];
                     return (
                       <div key={activity.id} className="flex gap-3 relative">
                         <div className="w-6 h-6 rounded-full bg-white border-2 border-border flex items-center justify-center flex-shrink-0 z-10">
@@ -620,6 +610,7 @@ function EditContactModal({
   contact: any;
   onClose: () => void;
 }) {
+  const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     firstName: contact.firstName,
@@ -771,7 +762,7 @@ function EditContactModal({
               onChange={(e) => setField("status", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
-              {Object.entries(CONTACT_STATUSES).map(([key, val]) => (
+              {Object.entries(contactStatuses).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>

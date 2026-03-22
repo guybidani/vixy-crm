@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import { addBoardColumn } from "../../api/boards";

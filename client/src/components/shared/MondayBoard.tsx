@@ -1,17 +1,30 @@
-import { useState, useRef, useEffect, useMemo, type ReactNode } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from "react";
 import {
   Search,
   ChevronDown,
   ChevronRight,
   Filter,
-  Users,
   Plus,
   MoreHorizontal,
   Trash2,
   Pencil,
   Palette,
   X,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Eye,
+  EyeOff,
+  Layers,
 } from "lucide-react";
+import RowContextMenu, { type ContextMenuItem } from "./RowContextMenu";
 import { cn } from "../../lib/utils";
 
 /* ── Types ──────────────────────────────────────────── */
@@ -21,11 +34,19 @@ export interface StatusOption {
   color: string;
 }
 
+export type ColumnSummary = "count" | "sum" | "avg" | "min" | "max" | "none";
+
 export interface MondayColumn<T> {
   key: string;
   label: string;
   width?: string;
   render?: (row: T) => ReactNode;
+  sortable?: boolean;
+  sortValue?: (row: T) => any;
+  /** Summary aggregation to show at bottom of group */
+  summary?: ColumnSummary;
+  /** Custom summary value extractor (defaults to row[key]) */
+  summaryValue?: (row: T) => number | null;
 }
 
 export interface MondayGroup<T> {
@@ -82,6 +103,13 @@ interface MondayBoardProps<T extends { id: string }> {
   onColumnDelete?: (colKey: string) => void;
   /** Row delete */
   onDeleteItem?: (row: T) => void;
+  /** Context menu items builder */
+  contextMenuItems?: (row: T) => ContextMenuItem[];
+  /** Columns available for dynamic grouping */
+  groupByColumns?: Array<{ key: string; label: string }>;
+  /** Bulk selection */
+  selectedIds?: Set<string>;
+  onSelectionChange?: (selectedIds: Set<string>) => void;
 }
 
 /* ── Main Board ─────────────────────────────────────── */
@@ -107,6 +135,10 @@ export default function MondayBoard<T extends { id: string }>({
   onColumnRename,
   onColumnDelete,
   onDeleteItem,
+  contextMenuItems,
+  groupByColumns,
+  selectedIds,
+  onSelectionChange,
 }: MondayBoardProps<T>) {
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
@@ -119,6 +151,34 @@ export default function MondayBoard<T extends { id: string }>({
   const [editingColLabel, setEditingColLabel] = useState("");
   const [colMenuKey, setColMenuKey] = useState<string | null>(null);
 
+  // ── Sort state ──
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // ── Context menu state ──
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    row: T;
+  } | null>(null);
+
+  // ── Group By state ──
+  const [groupByKey, setGroupByKey] = useState<string | null>(null);
+  const [groupByOpen, setGroupByOpen] = useState(false);
+
+  // ── Column Visibility state ──
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  const [hideColsOpen, setHideColsOpen] = useState(false);
+
+  // ── Keyboard navigation state ──
+  const [focusedCell, setFocusedCell] = useState<{
+    groupIdx: number;
+    rowIdx: number;
+    colIdx: number;
+  } | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const cellRefs = useRef<Map<string, HTMLTableCellElement>>(new Map());
+
   // ── Filter state ──
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<
@@ -126,17 +186,18 @@ export default function MondayBoard<T extends { id: string }>({
   >([]);
   const [filterColKey, setFilterColKey] = useState<string | null>(null);
 
-  // Compute unique values per column (for filter picker)
+  // Compute unique values per column with counts (for filter picker)
   const columnValues = useMemo(() => {
-    const map: Record<string, Set<string>> = {};
+    const map: Record<string, Map<string, number>> = {};
     for (const g of groups) {
       for (const item of g.items) {
         for (const col of columns) {
           if (col.key === "__add_col") continue;
           const val = (item as any)[col.key];
           if (val != null && val !== "") {
-            if (!map[col.key]) map[col.key] = new Set();
-            map[col.key].add(String(val));
+            if (!map[col.key]) map[col.key] = new Map();
+            const strVal = String(val);
+            map[col.key].set(strVal, (map[col.key].get(strVal) || 0) + 1);
           }
         }
       }
@@ -157,6 +218,73 @@ export default function MondayBoard<T extends { id: string }>({
       ),
     }));
   }, [groups, activeFilters]);
+
+  // Apply sort to groups
+  const sortedGroups = useMemo(() => {
+    if (!sortColumn) return filteredGroups;
+    const col = columns.find((c) => c.key === sortColumn);
+    if (!col) return filteredGroups;
+
+    return filteredGroups.map((g) => ({
+      ...g,
+      items: [...g.items].sort((a, b) => {
+        const aVal = col.sortValue ? col.sortValue(a) : (a as any)[sortColumn];
+        const bVal = col.sortValue ? col.sortValue(b) : (b as any)[sortColumn];
+
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return 1;
+        if (bVal == null) return -1;
+
+        let cmp: number;
+        if (typeof aVal === "number" && typeof bVal === "number") {
+          cmp = aVal - bVal;
+        } else if (aVal instanceof Date && bVal instanceof Date) {
+          cmp = aVal.getTime() - bVal.getTime();
+        } else {
+          cmp = String(aVal).localeCompare(String(bVal), "he");
+        }
+
+        return sortDirection === "desc" ? -cmp : cmp;
+      }),
+    }));
+  }, [filteredGroups, sortColumn, sortDirection, columns]);
+
+  // Apply dynamic group-by (replaces original groups with regrouped data)
+  const groupedData = useMemo(() => {
+    if (!groupByKey) return sortedGroups;
+
+    const allItems = sortedGroups.flatMap((g) => g.items);
+    const byValue = new Map<string, T[]>();
+
+    for (const item of allItems) {
+      const rawVal = (item as any)[groupByKey];
+      const val = rawVal != null && rawVal !== "" ? String(rawVal) : "—";
+      if (!byValue.has(val)) byValue.set(val, []);
+      byValue.get(val)!.push(item);
+    }
+
+    const colorList = GROUP_COLORS;
+    let idx = 0;
+    const result: MondayGroup<T>[] = [];
+    for (const [val, items] of byValue) {
+      // Try to get status color if available
+      const statusColor = statusOptions?.[val]?.color;
+      result.push({
+        key: `groupby_${val}`,
+        label: statusOptions?.[val]?.label || val,
+        color: statusColor || colorList[idx % colorList.length],
+        items,
+      });
+      idx++;
+    }
+    return result;
+  }, [sortedGroups, groupByKey, statusOptions]);
+
+  // Filter visible columns (hide hidden ones)
+  const visibleColumns = useMemo(() => {
+    if (hiddenColumns.size === 0) return columns;
+    return columns.filter((c) => !hiddenColumns.has(c.key));
+  }, [columns, hiddenColumns]);
 
   function toggleGroup(key: string) {
     setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -194,6 +322,211 @@ export default function MondayBoard<T extends { id: string }>({
     setFilterColKey(null);
   }
 
+  function toggleSort(colKey: string) {
+    if (sortColumn === colKey) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else {
+        setSortColumn(null);
+        setSortDirection("asc");
+      }
+    } else {
+      setSortColumn(colKey);
+      setSortDirection("asc");
+    }
+  }
+
+  function clearSort() {
+    setSortColumn(null);
+    setSortDirection("asc");
+  }
+
+  // ── Keyboard navigation helpers ──
+  const cellKey = (gIdx: number, rIdx: number, cIdx: number) =>
+    `${gIdx}-${rIdx}-${cIdx}`;
+
+  const setCellRef = useCallback(
+    (
+      gIdx: number,
+      rIdx: number,
+      cIdx: number,
+      el: HTMLTableCellElement | null,
+    ) => {
+      const key = cellKey(gIdx, rIdx, cIdx);
+      if (el) {
+        cellRefs.current.set(key, el);
+      } else {
+        cellRefs.current.delete(key);
+      }
+    },
+    [],
+  );
+
+  // Scroll focused cell into view
+  useEffect(() => {
+    if (!focusedCell) return;
+    const key = cellKey(
+      focusedCell.groupIdx,
+      focusedCell.rowIdx,
+      focusedCell.colIdx,
+    );
+    const el = cellRefs.current.get(key);
+    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [focusedCell]);
+
+  const handleBoardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      // Don't handle if an input/textarea is focused (user is editing)
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      const expandedGroups = groupedData.filter(
+        (g) => !collapsedGroups[g.key] && g.items.length > 0,
+      );
+      if (expandedGroups.length === 0) return;
+      const colCount = visibleColumns.length;
+      if (colCount === 0) return;
+
+      // Map expanded groups back to their original groupedData indices
+      const expandedMap = groupedData
+        .map((g, i) => ({ group: g, originalIdx: i }))
+        .filter(
+          (x) => !collapsedGroups[x.group.key] && x.group.items.length > 0,
+        );
+
+      if (e.key === "Escape") {
+        setFocusedCell(null);
+        return;
+      }
+
+      if (!focusedCell) {
+        // First arrow key press: focus first cell
+        if (
+          ["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight"].includes(e.key)
+        ) {
+          e.preventDefault();
+          setFocusedCell({
+            groupIdx: expandedMap[0].originalIdx,
+            rowIdx: 0,
+            colIdx: 0,
+          });
+        }
+        return;
+      }
+
+      const { groupIdx, rowIdx, colIdx } = focusedCell;
+      const currentExpandedIdx = expandedMap.findIndex(
+        (x) => x.originalIdx === groupIdx,
+      );
+      if (currentExpandedIdx === -1) {
+        setFocusedCell(null);
+        return;
+      }
+      const currentGroup = expandedMap[currentExpandedIdx];
+
+      switch (e.key) {
+        case "ArrowDown": {
+          e.preventDefault();
+          if (rowIdx < currentGroup.group.items.length - 1) {
+            setFocusedCell({ groupIdx, rowIdx: rowIdx + 1, colIdx });
+          } else if (currentExpandedIdx < expandedMap.length - 1) {
+            // Jump to first row of next expanded group
+            const next = expandedMap[currentExpandedIdx + 1];
+            setFocusedCell({ groupIdx: next.originalIdx, rowIdx: 0, colIdx });
+          }
+          break;
+        }
+        case "ArrowUp": {
+          e.preventDefault();
+          if (rowIdx > 0) {
+            setFocusedCell({ groupIdx, rowIdx: rowIdx - 1, colIdx });
+          } else if (currentExpandedIdx > 0) {
+            const prev = expandedMap[currentExpandedIdx - 1];
+            setFocusedCell({
+              groupIdx: prev.originalIdx,
+              rowIdx: prev.group.items.length - 1,
+              colIdx,
+            });
+          }
+          break;
+        }
+        case "ArrowLeft": {
+          // RTL: left = next column
+          e.preventDefault();
+          if (colIdx < colCount - 1) {
+            setFocusedCell({ groupIdx, rowIdx, colIdx: colIdx + 1 });
+          }
+          break;
+        }
+        case "ArrowRight": {
+          // RTL: right = previous column
+          e.preventDefault();
+          if (colIdx > 0) {
+            setFocusedCell({ groupIdx, rowIdx, colIdx: colIdx - 1 });
+          }
+          break;
+        }
+        case "Tab": {
+          e.preventDefault();
+          if (e.shiftKey) {
+            // Previous cell
+            if (colIdx > 0) {
+              setFocusedCell({ groupIdx, rowIdx, colIdx: colIdx - 1 });
+            } else if (rowIdx > 0) {
+              setFocusedCell({
+                groupIdx,
+                rowIdx: rowIdx - 1,
+                colIdx: colCount - 1,
+              });
+            } else if (currentExpandedIdx > 0) {
+              const prev = expandedMap[currentExpandedIdx - 1];
+              setFocusedCell({
+                groupIdx: prev.originalIdx,
+                rowIdx: prev.group.items.length - 1,
+                colIdx: colCount - 1,
+              });
+            }
+          } else {
+            // Next cell
+            if (colIdx < colCount - 1) {
+              setFocusedCell({ groupIdx, rowIdx, colIdx: colIdx + 1 });
+            } else if (rowIdx < currentGroup.group.items.length - 1) {
+              setFocusedCell({ groupIdx, rowIdx: rowIdx + 1, colIdx: 0 });
+            } else if (currentExpandedIdx < expandedMap.length - 1) {
+              const next = expandedMap[currentExpandedIdx + 1];
+              setFocusedCell({
+                groupIdx: next.originalIdx,
+                rowIdx: 0,
+                colIdx: 0,
+              });
+            }
+          }
+          break;
+        }
+        case "Enter": {
+          // Simulate a click on the focused cell to trigger inline editing
+          e.preventDefault();
+          const key = cellKey(groupIdx, rowIdx, colIdx);
+          const cellEl = cellRefs.current.get(key);
+          if (cellEl) {
+            // Find the first clickable/focusable element inside
+            const clickable = cellEl.querySelector<HTMLElement>(
+              "button, input, [tabindex], [role='button']",
+            );
+            if (clickable) {
+              clickable.click();
+              clickable.focus();
+            } else {
+              cellEl.click();
+            }
+          }
+          break;
+        }
+      }
+    },
+    [focusedCell, groupedData, collapsedGroups, visibleColumns.length],
+  );
+
   const hasNewItem = !!(onNewItem || onNewItemInGroup);
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -210,7 +543,12 @@ export default function MondayBoard<T extends { id: string }>({
   }, [filterOpen]);
 
   return (
-    <div className="flex flex-col gap-0">
+    <div
+      className="flex flex-col gap-0 outline-none"
+      ref={boardRef}
+      tabIndex={0}
+      onKeyDown={handleBoardKeyDown}
+    >
       {/* ── Toolbar ──────────────────────────── */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         {onNewItem && (
@@ -295,6 +633,7 @@ export default function MondayBoard<T extends { id: string }>({
                       const active = activeFilters.find(
                         (f) => f.column === col.key,
                       );
+                      const totalValues = columnValues[col.key]?.size || 0;
                       return (
                         <button
                           key={col.key}
@@ -303,9 +642,13 @@ export default function MondayBoard<T extends { id: string }>({
                         >
                           <span>{col.label}</span>
                           <div className="flex items-center gap-2">
-                            {active && (
+                            {active ? (
                               <span className="text-[11px] text-[#0073EA] bg-[#E6F4FF] px-1.5 py-0.5 rounded">
                                 {active.values.length} נבחרו
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-[#9699A6]">
+                                {totalValues}
                               </span>
                             )}
                             <ChevronDown
@@ -328,9 +671,12 @@ export default function MondayBoard<T extends { id: string }>({
                     {columns.find((c) => c.key === filterColKey)?.label}
                   </button>
                   <div className="max-h-[250px] overflow-y-auto py-1">
-                    {[...(columnValues[filterColKey] || [])]
-                      .sort()
-                      .map((val) => {
+                    {[
+                      ...(columnValues[filterColKey] ||
+                        new Map<string, number>()),
+                    ]
+                      .sort(([a], [b]) => a.localeCompare(b, "he"))
+                      .map(([val, count]) => {
                         const isChecked = activeFilters
                           .find((f) => f.column === filterColKey)
                           ?.values.includes(val);
@@ -349,16 +695,19 @@ export default function MondayBoard<T extends { id: string }>({
                             />
                             {statusOpt ? (
                               <span
-                                className="px-2 py-0.5 text-[12px] font-medium text-white rounded-sm"
+                                className="flex-1 px-2 py-0.5 text-[12px] font-medium text-white rounded-sm text-center"
                                 style={{ backgroundColor: statusOpt.color }}
                               >
                                 {statusOpt.label}
                               </span>
                             ) : (
-                              <span className="text-[13px] text-[#323338]">
+                              <span className="flex-1 text-[13px] text-[#323338]">
                                 {val || "—"}
                               </span>
                             )}
+                            <span className="text-[11px] text-[#9699A6] tabular-nums min-w-[20px] text-left">
+                              {count}
+                            </span>
                           </label>
                         );
                       })}
@@ -368,6 +717,132 @@ export default function MondayBoard<T extends { id: string }>({
             </div>
           )}
         </div>
+
+        {/* Sort button */}
+        {columns.some((c) => c.sortable) && (
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (sortColumn) {
+                  clearSort();
+                } else {
+                  // Sort by first sortable column
+                  const firstSortable = columns.find((c) => c.sortable);
+                  if (firstSortable) toggleSort(firstSortable.key);
+                }
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
+                sortColumn
+                  ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
+                  : "text-[#323338] hover:bg-[#F5F6F8]",
+              )}
+            >
+              <ArrowUpDown
+                size={15}
+                className={sortColumn ? "text-[#0073EA]" : "text-[#676879]"}
+              />
+              מיון
+              {sortColumn && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearSort();
+                  }}
+                  className="p-0.5 hover:bg-[#0073EA]/10 rounded-full transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </button>
+          </div>
+        )}
+
+        {/* Hide columns button */}
+        <div className="relative">
+          <button
+            onClick={() => setHideColsOpen(!hideColsOpen)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
+              hiddenColumns.size > 0
+                ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
+                : "text-[#323338] hover:bg-[#F5F6F8]",
+            )}
+          >
+            {hiddenColumns.size > 0 ? (
+              <EyeOff size={15} className="text-[#0073EA]" />
+            ) : (
+              <Eye size={15} className="text-[#676879]" />
+            )}
+            הסתר
+            {hiddenColumns.size > 0 && (
+              <span className="bg-[#0073EA] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {hiddenColumns.size}
+              </span>
+            )}
+          </button>
+
+          {hideColsOpen && (
+            <HideColumnsDropdown
+              columns={columns}
+              hiddenColumns={hiddenColumns}
+              onToggle={(colKey) => {
+                setHiddenColumns((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(colKey)) next.delete(colKey);
+                  else next.add(colKey);
+                  return next;
+                });
+              }}
+              onShowAll={() => setHiddenColumns(new Set())}
+              onClose={() => setHideColsOpen(false)}
+            />
+          )}
+        </div>
+
+        {/* Group By button */}
+        {groupByColumns && groupByColumns.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setGroupByOpen(!groupByOpen)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
+                groupByKey
+                  ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
+                  : "text-[#323338] hover:bg-[#F5F6F8]",
+              )}
+            >
+              <Layers
+                size={15}
+                className={groupByKey ? "text-[#0073EA]" : "text-[#676879]"}
+              />
+              קבץ לפי
+              {groupByKey && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setGroupByKey(null);
+                  }}
+                  className="p-0.5 hover:bg-[#0073EA]/10 rounded-full transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </button>
+
+            {groupByOpen && (
+              <GroupByDropdown
+                groupByColumns={groupByColumns}
+                activeGroupBy={groupByKey}
+                onSelect={(key) => {
+                  setGroupByKey(key === groupByKey ? null : key);
+                  setGroupByOpen(false);
+                }}
+                onClose={() => setGroupByOpen(false)}
+              />
+            )}
+          </div>
+        )}
 
         <button
           aria-label="אפשרויות נוספות"
@@ -409,11 +884,37 @@ export default function MondayBoard<T extends { id: string }>({
         </div>
       )}
 
+      {/* Active sort chip */}
+      {sortColumn && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[11px] text-[#9699A6]">ממוין לפי:</span>
+          <div className="flex items-center gap-1 bg-[#E6F4FF] text-[#0073EA] text-[12px] px-2 py-1 rounded-full">
+            {sortDirection === "asc" ? (
+              <ArrowUp size={12} />
+            ) : (
+              <ArrowDown size={12} />
+            )}
+            <span className="font-medium">
+              {columns.find((c) => c.key === sortColumn)?.label}
+            </span>
+            <span className="text-[#0073EA]/60">
+              ({sortDirection === "asc" ? "עולה" : "יורד"})
+            </span>
+            <button
+              onClick={clearSort}
+              className="p-0.5 hover:bg-[#0073EA]/10 rounded-full transition-colors"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Groups ───────────────────────────── */}
       {loading ? (
         <BoardSkeleton columns={columns} />
       ) : (
-        filteredGroups.map((group) => (
+        groupedData.map((group, groupIdx) => (
           <div key={group.key} className="mb-6">
             {/* Group Header */}
             <div className="flex items-center gap-1.5 mb-1 select-none group/header">
@@ -547,15 +1048,36 @@ export default function MondayBoard<T extends { id: string }>({
                           type="checkbox"
                           aria-label="בחר הכל"
                           className="w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA]"
-                          readOnly
+                          checked={
+                            selectedIds !== undefined &&
+                            group.items.length > 0 &&
+                            group.items.every((item) =>
+                              selectedIds.has(item.id),
+                            )
+                          }
+                          onChange={() => {
+                            if (!onSelectionChange || !selectedIds) return;
+                            const allGroupIds = group.items.map((i) => i.id);
+                            const allSelected = allGroupIds.every((id) =>
+                              selectedIds.has(id),
+                            );
+                            const next = new Set(selectedIds);
+                            if (allSelected) {
+                              allGroupIds.forEach((id) => next.delete(id));
+                            } else {
+                              allGroupIds.forEach((id) => next.add(id));
+                            }
+                            onSelectionChange(next);
+                          }}
+                          readOnly={!onSelectionChange}
                         />
                       </th>
-                      {columns.map((col, i) => (
+                      {visibleColumns.map((col, i) => (
                         <th
                           key={col.key}
                           className={cn(
                             "px-3 py-2 text-right text-[12px] font-normal text-[#676879] bg-white border-b border-[#D0D4E4] group/col relative",
-                            i < columns.length - 1 &&
+                            i < visibleColumns.length - 1 &&
                               "border-l border-[#E6E9EF]",
                           )}
                           style={col.width ? { width: col.width } : undefined}
@@ -591,9 +1113,16 @@ export default function MondayBoard<T extends { id: string }>({
                             <div className="flex items-center justify-between">
                               <span
                                 className={cn(
+                                  "flex items-center gap-1",
+                                  col.sortable &&
+                                    "cursor-pointer hover:text-[#323338]",
                                   onColumnRename &&
+                                    !col.sortable &&
                                     "cursor-pointer hover:text-[#323338]",
                                 )}
+                                onClick={() => {
+                                  if (col.sortable) toggleSort(col.key);
+                                }}
                                 onDoubleClick={() => {
                                   if (onColumnRename) {
                                     setEditingColKey(col.key);
@@ -602,51 +1131,84 @@ export default function MondayBoard<T extends { id: string }>({
                                 }}
                               >
                                 {col.label}
+                                {/* Sort indicator */}
+                                {sortColumn === col.key && (
+                                  <span className="text-[#0073EA]">
+                                    {sortDirection === "asc" ? (
+                                      <ArrowUp size={12} />
+                                    ) : (
+                                      <ArrowDown size={12} />
+                                    )}
+                                  </span>
+                                )}
+                                {col.sortable && sortColumn !== col.key && (
+                                  <span className="text-[#C3C6D4] opacity-0 group-hover/col:opacity-100 transition-opacity">
+                                    <ArrowUpDown size={11} />
+                                  </span>
+                                )}
                               </span>
                               {/* Column menu */}
-                              {(onColumnRename || onColumnDelete) &&
-                                col.key !== "__add_col" && (
-                                  <div className="relative inline-block">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setColMenuKey(
-                                          colMenuKey === col.key
-                                            ? null
-                                            : col.key,
-                                        );
+                              {col.key !== "__add_col" && (
+                                <div className="relative inline-block">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setColMenuKey(
+                                        colMenuKey === col.key ? null : col.key,
+                                      );
+                                    }}
+                                    aria-label={`תפריט עמודה ${col.label}`}
+                                    className="p-0.5 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/col:opacity-100 transition-all text-[#9699A6] hover:text-[#323338]"
+                                  >
+                                    <ChevronDown size={12} />
+                                  </button>
+                                  {colMenuKey === col.key && (
+                                    <ColumnMenu
+                                      colKey={col.key}
+                                      colLabel={col.label}
+                                      isSortable={col.sortable}
+                                      isSorted={sortColumn === col.key}
+                                      sortDirection={sortDirection}
+                                      onSort={
+                                        col.sortable
+                                          ? () => toggleSort(col.key)
+                                          : undefined
+                                      }
+                                      onFilter={() => {
+                                        setFilterOpen(true);
+                                        setFilterColKey(col.key);
+                                        setColMenuKey(null);
                                       }}
-                                      aria-label={`תפריט עמודה ${col.label}`}
-                                      className="p-0.5 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/col:opacity-100 transition-all text-[#9699A6] hover:text-[#323338]"
-                                    >
-                                      <ChevronDown size={12} />
-                                    </button>
-                                    {colMenuKey === col.key && (
-                                      <ColumnMenu
-                                        colKey={col.key}
-                                        colLabel={col.label}
-                                        onRename={
-                                          onColumnRename
-                                            ? () => {
-                                                setEditingColKey(col.key);
-                                                setEditingColLabel(col.label);
-                                                setColMenuKey(null);
-                                              }
-                                            : undefined
-                                        }
-                                        onDelete={
-                                          onColumnDelete
-                                            ? () => {
-                                                onColumnDelete(col.key);
-                                                setColMenuKey(null);
-                                              }
-                                            : undefined
-                                        }
-                                        onClose={() => setColMenuKey(null)}
-                                      />
-                                    )}
-                                  </div>
-                                )}
+                                      onHide={() => {
+                                        setHiddenColumns((prev) => {
+                                          const next = new Set(prev);
+                                          next.add(col.key);
+                                          return next;
+                                        });
+                                        setColMenuKey(null);
+                                      }}
+                                      onRename={
+                                        onColumnRename
+                                          ? () => {
+                                              setEditingColKey(col.key);
+                                              setEditingColLabel(col.label);
+                                              setColMenuKey(null);
+                                            }
+                                          : undefined
+                                      }
+                                      onDelete={
+                                        onColumnDelete
+                                          ? () => {
+                                              onColumnDelete(col.key);
+                                              setColMenuKey(null);
+                                            }
+                                          : undefined
+                                      }
+                                      onClose={() => setColMenuKey(null)}
+                                    />
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </th>
@@ -667,14 +1229,16 @@ export default function MondayBoard<T extends { id: string }>({
                           style={{ backgroundColor: group.color }}
                         />
                         <td
-                          colSpan={columns.length + 1 + (onDeleteItem ? 1 : 0)}
+                          colSpan={
+                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0)
+                          }
                           className="px-4 py-8 text-center text-[13px] text-[#676879]"
                         >
                           אין פריטים בקבוצה
                         </td>
                       </tr>
                     ) : (
-                      group.items.map((row) => (
+                      group.items.map((row, rowIdx) => (
                         <tr
                           key={row.id}
                           className={cn(
@@ -682,6 +1246,16 @@ export default function MondayBoard<T extends { id: string }>({
                             onRowClick && "cursor-pointer hover:bg-[#F5F6F8]",
                           )}
                           onClick={() => onRowClick?.(row)}
+                          onContextMenu={(e) => {
+                            if (contextMenuItems) {
+                              e.preventDefault();
+                              setContextMenu({
+                                x: e.clientX,
+                                y: e.clientY,
+                                row,
+                              });
+                            }
+                          }}
                         >
                           {/* Group color indicator */}
                           <td
@@ -693,29 +1267,57 @@ export default function MondayBoard<T extends { id: string }>({
                             <input
                               type="checkbox"
                               aria-label="בחר פריט"
-                              className="w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA] opacity-0 group-hover/row:opacity-100 transition-opacity"
+                              className={cn(
+                                "w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA] transition-opacity",
+                                selectedIds?.has(row.id)
+                                  ? "opacity-100"
+                                  : "opacity-0 group-hover/row:opacity-100",
+                              )}
+                              checked={selectedIds?.has(row.id) ?? false}
+                              onChange={() => {
+                                if (!onSelectionChange || !selectedIds) return;
+                                const next = new Set(selectedIds);
+                                if (next.has(row.id)) next.delete(row.id);
+                                else next.add(row.id);
+                                onSelectionChange(next);
+                              }}
                               onClick={(e) => e.stopPropagation()}
-                              readOnly
+                              readOnly={!onSelectionChange}
                             />
                           </td>
                           {/* Data cells */}
-                          {columns.map((col, i) => (
-                            <td
-                              key={col.key}
-                              className={cn(
-                                "px-3 py-[7px] text-[13px] text-[#323338] bg-white group-hover/row:bg-[#F5F6F8]",
-                                i < columns.length - 1 &&
-                                  "border-l border-[#E6E9EF]",
-                              )}
-                              style={
-                                col.width ? { width: col.width } : undefined
-                              }
-                            >
-                              {col.render
-                                ? col.render(row)
-                                : (row as any)[col.key]?.toString() || "—"}
-                            </td>
-                          ))}
+                          {visibleColumns.map((col, colIdx) => {
+                            const isFocused =
+                              focusedCell?.groupIdx === groupIdx &&
+                              focusedCell?.rowIdx === rowIdx &&
+                              focusedCell?.colIdx === colIdx;
+                            return (
+                              <td
+                                key={col.key}
+                                ref={(el) =>
+                                  setCellRef(groupIdx, rowIdx, colIdx, el)
+                                }
+                                className={cn(
+                                  "px-3 py-[7px] text-[13px] text-[#323338] bg-white group-hover/row:bg-[#F5F6F8] transition-shadow",
+                                  colIdx < visibleColumns.length - 1 &&
+                                    "border-l border-[#E6E9EF]",
+                                  isFocused &&
+                                    "ring-2 ring-inset ring-[#0073EA] z-10 relative",
+                                )}
+                                style={
+                                  col.width ? { width: col.width } : undefined
+                                }
+                                onClick={() => {
+                                  // Set focus on click too
+                                  setFocusedCell({ groupIdx, rowIdx, colIdx });
+                                }}
+                              >
+                                {col.render
+                                  ? col.render(row)
+                                  : (row as any)[col.key]?.toString() || "—"}
+                              </td>
+                            );
+                          })}
                           {/* Delete button */}
                           {onDeleteItem && (
                             <td className="w-[36px] px-1 py-0 bg-white group-hover/row:bg-[#F5F6F8]">
@@ -743,7 +1345,9 @@ export default function MondayBoard<T extends { id: string }>({
                           style={{ backgroundColor: group.color }}
                         />
                         <td
-                          colSpan={columns.length + 1 + (onDeleteItem ? 1 : 0)}
+                          colSpan={
+                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0)
+                          }
                           className="px-3 py-[7px]"
                         >
                           <button
@@ -762,6 +1366,39 @@ export default function MondayBoard<T extends { id: string }>({
                         </td>
                       </tr>
                     )}
+
+                    {/* Summary row */}
+                    {visibleColumns.some(
+                      (c) => c.summary && c.summary !== "none",
+                    ) &&
+                      group.items.length > 0 && (
+                        <tr className="bg-[#F5F6F8] border-t border-[#D0D4E4]">
+                          <td
+                            className="w-[6px] p-0"
+                            style={{
+                              backgroundColor: group.color,
+                              opacity: 0.5,
+                            }}
+                          />
+                          <td className="w-[36px] px-1 py-1.5" />
+                          {visibleColumns.map((col, i) => (
+                            <td
+                              key={col.key}
+                              className={cn(
+                                "px-3 py-1.5 text-[11px] font-medium text-[#676879]",
+                                i < visibleColumns.length - 1 &&
+                                  "border-l border-[#E6E9EF]",
+                              )}
+                            >
+                              <ColumnSummaryCell
+                                items={group.items}
+                                column={col}
+                              />
+                            </td>
+                          ))}
+                          {onDeleteItem && <td className="w-[36px]" />}
+                        </tr>
+                      )}
                   </tbody>
                 </table>
 
@@ -776,6 +1413,16 @@ export default function MondayBoard<T extends { id: string }>({
             )}
           </div>
         ))
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && contextMenuItems && (
+        <RowContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems(contextMenu.row)}
+          onClose={() => setContextMenu(null)}
+        />
       )}
 
       {/* Pagination */}
@@ -899,15 +1546,27 @@ function GroupMenu({
 
 function ColumnMenu({
   colKey,
-  colLabel,
+  colLabel: _colLabel,
   onRename,
   onDelete,
+  onSort,
+  onFilter,
+  onHide,
+  isSortable,
+  isSorted,
+  sortDirection,
   onClose,
 }: {
   colKey: string;
   colLabel: string;
   onRename?: () => void;
   onDelete?: () => void;
+  onSort?: () => void;
+  onFilter?: () => void;
+  onHide?: () => void;
+  isSortable?: boolean;
+  isSorted?: boolean;
+  sortDirection?: "asc" | "desc";
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -923,8 +1582,59 @@ function ColumnMenu({
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 left-0 z-50 bg-white rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[140px]"
+      className="absolute top-full mt-1 left-0 z-50 bg-white rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[160px]"
     >
+      {isSortable && onSort && (
+        <button
+          onClick={() => {
+            onSort();
+            onClose();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+        >
+          {isSorted ? (
+            sortDirection === "asc" ? (
+              <ArrowDown size={13} className="text-[#0073EA]" />
+            ) : (
+              <X size={13} className="text-[#676879]" />
+            )
+          ) : (
+            <ArrowUp size={13} className="text-[#676879]" />
+          )}
+          {isSorted
+            ? sortDirection === "asc"
+              ? "מיון יורד"
+              : "הסר מיון"
+            : "מיון עולה"}
+        </button>
+      )}
+      {onFilter && (
+        <button
+          onClick={() => {
+            onFilter();
+            onClose();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+        >
+          <Filter size={13} className="text-[#676879]" />
+          סנן לפי עמודה
+        </button>
+      )}
+      {onHide && (
+        <button
+          onClick={() => {
+            onHide();
+            onClose();
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+        >
+          <EyeOff size={13} className="text-[#676879]" />
+          הסתר עמודה
+        </button>
+      )}
+      {(isSortable || onFilter || onHide) && (onRename || onDelete) && (
+        <div className="border-t border-[#E6E9EF] my-1" />
+      )}
       {onRename && (
         <button
           onClick={onRename}
@@ -1321,23 +2031,186 @@ function StatusBar<T>({
 
 /* ── Reusable layout icon ──────────────────────────── */
 
-function LayoutGridIcon(props: { size: number; className?: string }) {
+/* ── Column Summary Cell ───────────────────────────── */
+
+function ColumnSummaryCell<T>({
+  items,
+  column,
+}: {
+  items: T[];
+  column: MondayColumn<T>;
+}) {
+  if (!column.summary || column.summary === "none") return null;
+
+  const values = items
+    .map((item) =>
+      column.summaryValue
+        ? column.summaryValue(item)
+        : typeof (item as any)[column.key] === "number"
+          ? (item as any)[column.key]
+          : null,
+    )
+    .filter((v): v is number => v != null);
+
+  if (values.length === 0) return null;
+
+  let result: string;
+  switch (column.summary) {
+    case "count":
+      result = `${items.length}`;
+      break;
+    case "sum":
+      result = values.reduce((a, b) => a + b, 0).toLocaleString();
+      break;
+    case "avg":
+      result = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(1);
+      break;
+    case "min":
+      result = Math.min(...values).toLocaleString();
+      break;
+    case "max":
+      result = Math.max(...values).toLocaleString();
+      break;
+    default:
+      return null;
+  }
+
+  const labels: Record<string, string> = {
+    count: "סה״כ",
+    sum: "סכום",
+    avg: "ממוצע",
+    min: "מינימום",
+    max: "מקסימום",
+  };
+
   return (
-    <svg
-      width={props.size}
-      height={props.size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={props.className}
+    <span className="text-[#676879]">
+      <span className="text-[#9699A6]">{labels[column.summary]}: </span>
+      {result}
+    </span>
+  );
+}
+
+/* ── Hide Columns Dropdown ──────────────────────────── */
+
+function HideColumnsDropdown<T>({
+  columns,
+  hiddenColumns,
+  onToggle,
+  onShowAll,
+  onClose,
+}: {
+  columns: MondayColumn<T>[];
+  hiddenColumns: Set<string>;
+  onToggle: (colKey: string) => void;
+  onShowAll: () => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  const toggleable = columns.filter((c) => c.key !== "__add_col");
+
+  return (
+    <div
+      ref={ref}
+      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[220px]"
     >
-      <rect x="3" y="3" width="7" height="7" />
-      <rect x="14" y="3" width="7" height="7" />
-      <rect x="3" y="14" width="7" height="7" />
-      <rect x="14" y="14" width="7" height="7" />
-    </svg>
+      <div className="p-3 border-b border-[#E6E9EF] flex items-center justify-between">
+        <span className="text-[13px] font-semibold text-[#323338]">
+          הצג/הסתר עמודות
+        </span>
+        {hiddenColumns.size > 0 && (
+          <button
+            onClick={onShowAll}
+            className="text-[11px] text-[#0073EA] hover:underline"
+          >
+            הצג הכל
+          </button>
+        )}
+      </div>
+      <div className="max-h-[300px] overflow-y-auto py-1">
+        {toggleable.map((col) => (
+          <label
+            key={col.key}
+            className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F6F8] cursor-pointer transition-colors"
+          >
+            <input
+              type="checkbox"
+              checked={!hiddenColumns.has(col.key)}
+              onChange={() => onToggle(col.key)}
+              className="w-4 h-4 rounded accent-[#0073EA]"
+            />
+            <span className="text-[13px] text-[#323338]">{col.label}</span>
+            {hiddenColumns.has(col.key) && (
+              <EyeOff size={12} className="text-[#C3C6D4] mr-auto" />
+            )}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Group By Dropdown ─────────────────────────────── */
+
+function GroupByDropdown({
+  groupByColumns,
+  activeGroupBy,
+  onSelect,
+  onClose,
+}: {
+  groupByColumns: Array<{ key: string; label: string }>;
+  activeGroupBy: string | null;
+  onSelect: (key: string) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[200px]"
+    >
+      <div className="p-3 border-b border-[#E6E9EF]">
+        <span className="text-[13px] font-semibold text-[#323338]">
+          קבץ לפי
+        </span>
+      </div>
+      <div className="max-h-[300px] overflow-y-auto py-1">
+        {groupByColumns.map((col) => (
+          <button
+            key={col.key}
+            onClick={() => onSelect(col.key)}
+            className={cn(
+              "w-full flex items-center justify-between px-3 py-2.5 text-[13px] transition-colors text-right",
+              activeGroupBy === col.key
+                ? "bg-[#E6F4FF] text-[#0073EA] font-medium"
+                : "text-[#323338] hover:bg-[#F5F6F8]",
+            )}
+          >
+            <span>{col.label}</span>
+            {activeGroupBy === col.key && (
+              <span className="text-[#0073EA] text-[11px]">פעיל</span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

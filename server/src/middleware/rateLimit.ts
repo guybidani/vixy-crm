@@ -18,9 +18,12 @@ export const authLimiter = rateLimit({
   keyGenerator: (req) => {
     // Rate limit by IP + email (if present) to prevent distributed attacks
     const email = req.body?.email || "";
-    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    const rawIp = req.ip || req.socket.remoteAddress || "unknown";
+    // Normalize IPv6-mapped IPv4 addresses (e.g. ::ffff:127.0.0.1 → 127.0.0.1)
+    const ip = rawIp.replace(/^::ffff:/, "");
     return `${ip}:${email}`;
   },
+  validate: { keyGeneratorIpFallback: false },
 });
 
 /**

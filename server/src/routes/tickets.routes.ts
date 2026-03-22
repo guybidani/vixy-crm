@@ -111,7 +111,7 @@ ticketsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   try {
     const ticket = await ticketsService.update(
       req.workspaceId!,
-      req.params.id,
+      req.params.id as string,
       req.body,
     );
     res.json(ticket);
@@ -136,7 +136,7 @@ ticketsRouter.post(
       }
       const message = await ticketsService.addMessage(
         req.workspaceId!,
-        req.params.id,
+        req.params.id as string,
         {
           body: req.body.body,
           senderType: "agent",

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import {
   Plus,
   X,
@@ -37,12 +38,6 @@ const CHANNEL_OPTIONS = [
   { value: "CALL_TASK", label: "משימת שיחה", icon: Phone, color: "#A25DDC" },
 ] as const;
 
-const STATUS_OPTIONS = [
-  { value: "LEAD", label: "ליד", color: "#579BFC" },
-  { value: "QUALIFIED", label: "מוכשר", color: "#00CA72" },
-  { value: "CUSTOMER", label: "לקוח", color: "#6161FF" },
-];
-
 const END_ACTIONS = [
   { value: "MOVE_INACTIVE", label: "העבר ללא פעיל" },
   { value: "MOVE_CHURNED", label: "העבר לנוטש" },
@@ -50,6 +45,14 @@ const END_ACTIONS = [
 ];
 
 export default function AutomationTab() {
+  const { contactStatuses } = useWorkspaceOptions();
+  const STATUS_OPTIONS = useMemo(
+    () =>
+      Object.entries(contactStatuses)
+        .filter(([, v]) => !v.hidden)
+        .map(([key, v]) => ({ value: key, label: v.label, color: v.color })),
+    [contactStatuses],
+  );
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<FollowUpSequence | null>(null);
@@ -315,6 +318,14 @@ function SequenceForm({
   editing: FollowUpSequence | null;
   onClose: () => void;
 }) {
+  const { contactStatuses } = useWorkspaceOptions();
+  const STATUS_OPTIONS = useMemo(
+    () =>
+      Object.entries(contactStatuses)
+        .filter(([, v]) => !v.hidden)
+        .map(([key, v]) => ({ value: key, label: v.label, color: v.color })),
+    [contactStatuses],
+  );
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState({

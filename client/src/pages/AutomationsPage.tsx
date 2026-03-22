@@ -25,7 +25,6 @@ import {
   toggleWorkflow,
   deleteWorkflow,
   type Workflow,
-  type WorkflowAction,
 } from "../api/automations";
 import { cn } from "../lib/utils";
 

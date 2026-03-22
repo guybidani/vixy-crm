@@ -30,7 +30,7 @@ interface RichTextEditorProps {
 export default function RichTextEditor({
   value,
   onChange,
-  placeholder = "התחל לכתוב...",
+  placeholder: _placeholder = "התחל לכתוב...",
   readOnly = false,
   className,
 }: RichTextEditorProps) {

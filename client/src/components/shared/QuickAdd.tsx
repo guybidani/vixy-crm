@@ -7,6 +7,7 @@ import { createContact } from "../../api/contacts";
 import { createDeal } from "../../api/deals";
 import { createTicket } from "../../api/tickets";
 import { createTask } from "../../api/tasks";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 type QuickType = "contact" | "deal" | "ticket" | "task";
 
@@ -180,6 +181,7 @@ function QuickForm({
   onBack: () => void;
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const { dealStages, priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const config = QUICK_TYPES.find((t) => t.key === type)!;
 
@@ -195,12 +197,15 @@ function QuickForm({
   const [dealForm, setDealForm] = useState({
     title: "",
     value: "",
+    stage: "LEAD",
+    priority: "MEDIUM",
   });
 
   // Ticket form
   const [ticketForm, setTicketForm] = useState({
     subject: "",
     description: "",
+    priority: "MEDIUM",
   });
 
   // Task form
@@ -231,7 +236,9 @@ function QuickForm({
       createDeal({
         title: dealForm.title,
         value: dealForm.value ? parseFloat(dealForm.value) : undefined,
-        stage: "LEAD",
+        stage: dealForm.stage,
+        priority: dealForm.priority,
+        contactId: "",
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
@@ -247,6 +254,7 @@ function QuickForm({
       createTicket({
         subject: ticketForm.subject,
         description: ticketForm.description || undefined,
+        priority: ticketForm.priority,
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
@@ -392,6 +400,34 @@ function QuickForm({
               placeholder="שווי (₪)"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
             />
+            <div className="grid grid-cols-2 gap-3">
+              <select
+                value={dealForm.stage}
+                onChange={(e) =>
+                  setDealForm((f) => ({ ...f, stage: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              >
+                {Object.entries(dealStages).map(([key, val]) => (
+                  <option key={key} value={key}>
+                    {val.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={dealForm.priority}
+                onChange={(e) =>
+                  setDealForm((f) => ({ ...f, priority: e.target.value }))
+                }
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              >
+                {Object.entries(priorities).map(([key, val]) => (
+                  <option key={key} value={key}>
+                    {val.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </>
         )}
 
@@ -417,6 +453,19 @@ function QuickForm({
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
               rows={3}
             />
+            <select
+              value={ticketForm.priority}
+              onChange={(e) =>
+                setTicketForm((f) => ({ ...f, priority: e.target.value }))
+              }
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+            >
+              {Object.entries(priorities).map(([key, val]) => (
+                <option key={key} value={key}>
+                  {val.label}
+                </option>
+              ))}
+            </select>
           </>
         )}
 

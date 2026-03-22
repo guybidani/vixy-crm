@@ -312,6 +312,7 @@ export async function board(workspaceId: string) {
       tags: { include: { tag: true } },
     },
     orderBy: { createdAt: "asc" },
+    take: 500,
   });
 
   const statuses = ["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"];

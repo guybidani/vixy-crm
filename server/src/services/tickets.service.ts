@@ -298,6 +298,7 @@ export async function board(workspaceId: string) {
       _count: { select: { messages: true } },
     },
     orderBy: { createdAt: "asc" },
+    take: 500,
   });
 
   const statuses = ["NEW", "OPEN", "PENDING", "RESOLVED", "CLOSED"];

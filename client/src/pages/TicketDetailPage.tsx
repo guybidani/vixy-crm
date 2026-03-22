@@ -25,9 +25,10 @@ import {
   type TicketDetail,
   type TicketMessage,
 } from "../api/tickets";
-import { TICKET_STATUSES, PRIORITIES } from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 export default function TicketDetailPage() {
+  const { ticketStatuses, priorities } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -57,9 +58,8 @@ export default function TicketDetailPage() {
     );
   }
 
-  const statusInfo =
-    TICKET_STATUSES[ticket.status as keyof typeof TICKET_STATUSES];
-  const priorityInfo = PRIORITIES[ticket.priority as keyof typeof PRIORITIES];
+  const statusInfo = ticketStatuses[ticket.status];
+  const priorityInfo = priorities[ticket.priority];
 
   // SLA calculation
   const slaInfo = ticket.slaPolicy ? getSlaInfo(ticket) : null;

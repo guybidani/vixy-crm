@@ -122,7 +122,7 @@ knowledgeRouter.patch(
     try {
       const article = await knowledgeService.updateArticle(
         req.workspaceId!,
-        req.params.id,
+        req.params.id as string,
         req.body,
       );
       res.json(article);
@@ -138,13 +138,13 @@ knowledgeRouter.delete(
   requireRole("OWNER", "ADMIN"),
   async (req, res, next) => {
     try {
-      await knowledgeService.deleteArticle(req.workspaceId!, req.params.id);
+      await knowledgeService.deleteArticle(req.workspaceId!, req.params.id as string);
       audit({
         workspaceId: req.workspaceId!,
         userId: req.user!.userId,
         action: "kb.article_delete",
         entityType: "KbArticle",
-        entityId: req.params.id,
+        entityId: req.params.id as string,
         ip: req.ip,
       });
       res.json({ success: true });

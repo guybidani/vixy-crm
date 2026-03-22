@@ -1,6 +1,7 @@
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { BOARD_TEMPLATES } from "./board-templates";
+import type { BoardPermission } from "@prisma/client";
 
 // ── List boards (lightweight) ──────────────────────────────────────
 export async function list(workspaceId: string) {
@@ -19,6 +20,7 @@ export async function list(workspaceId: string) {
     icon: b.icon,
     color: b.color,
     templateKey: b.templateKey,
+    isPrivate: b.isPrivate,
     itemCount: b._count.items,
     columnCount: b._count.columns,
     groupCount: b._count.groups,
@@ -73,6 +75,11 @@ export async function create(
     ? BOARD_TEMPLATES[data.templateKey]
     : BOARD_TEMPLATES.blank;
 
+  // Find the workspace member record for the creator
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId },
+  });
+
   const board = await prisma.board.create({
     data: {
       workspaceId,
@@ -103,6 +110,18 @@ export async function create(
           },
         ],
       },
+      // Auto-grant ADMIN to the board creator
+      ...(member
+        ? {
+            access: {
+              create: {
+                memberId: member.id,
+                permission: "ADMIN",
+                grantedBy: member.id,
+              },
+            },
+          }
+        : {}),
     },
     include: {
       columns: { orderBy: { order: "asc" } },
@@ -122,6 +141,7 @@ export async function update(
     description: string;
     icon: string;
     color: string;
+    isPrivate: boolean;
   }>,
 ) {
   const existing = await prisma.board.findFirst({ where: { id, workspaceId } });
@@ -403,4 +423,144 @@ export async function updateItemValues(
   );
 
   return results;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// BOARD ACCESS / PERMISSIONS
+// ══════════════════════════════════════════════════════════════════
+
+/** Get a member's permission level on a board, or null if no access record. */
+export async function getBoardAccess(boardId: string, memberId: string) {
+  const access = await prisma.boardAccess.findUnique({
+    where: { boardId_memberId: { boardId, memberId } },
+  });
+  return access?.permission ?? null;
+}
+
+/**
+ * List boards visible to a member:
+ * - Board is NOT private (isPrivate=false), OR
+ * - Member has a BoardAccess record, OR
+ * - Member role is OWNER (sees everything)
+ */
+export async function listBoardsForMember(
+  workspaceId: string,
+  memberId: string,
+  memberRole: string,
+) {
+  // OWNERs see all boards
+  if (memberRole === "OWNER") {
+    return list(workspaceId);
+  }
+
+  const boards = await prisma.board.findMany({
+    where: {
+      workspaceId,
+      OR: [
+        { isPrivate: false },
+        { access: { some: { memberId } } },
+      ],
+    },
+    include: {
+      _count: { select: { items: true, columns: true, groups: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return boards.map((b) => ({
+    id: b.id,
+    name: b.name,
+    description: b.description,
+    icon: b.icon,
+    color: b.color,
+    templateKey: b.templateKey,
+    isPrivate: b.isPrivate,
+    itemCount: b._count.items,
+    columnCount: b._count.columns,
+    groupCount: b._count.groups,
+    createdAt: b.createdAt,
+  }));
+}
+
+/** Grant or update a member's access to a board. */
+export async function setBoardAccess(
+  workspaceId: string,
+  boardId: string,
+  memberId: string,
+  permission: BoardPermission,
+  grantedBy?: string,
+) {
+  // Verify the board belongs to this workspace
+  const board = await prisma.board.findFirst({
+    where: { id: boardId, workspaceId },
+  });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardAccess.upsert({
+    where: { boardId_memberId: { boardId, memberId } },
+    create: { boardId, memberId, permission, grantedBy },
+    update: { permission, grantedBy },
+  });
+}
+
+/** Revoke a member's access to a board. */
+export async function removeBoardAccess(workspaceId: string, boardId: string, memberId: string) {
+  // Verify the board belongs to this workspace
+  const board = await prisma.board.findFirst({
+    where: { id: boardId, workspaceId },
+  });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardAccess.delete({
+    where: { boardId_memberId: { boardId, memberId } },
+  });
+}
+
+/** Check if a member has at least minPermission on a board. */
+export async function checkBoardPermission(
+  boardId: string,
+  memberId: string,
+  workspaceId: string,
+  workspaceRole: string,
+  minPermission: 'VIEWER' | 'EDITOR' | 'ADMIN'
+): Promise<boolean> {
+  // OWNER workspace role always has full access
+  if (workspaceRole === 'OWNER') return true;
+
+  // Check if board belongs to workspace
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) return false;
+
+  // Public boards: anyone can view, EDITOR+ to edit
+  if (!board.isPrivate && minPermission === 'VIEWER') return true;
+
+  // Check board access record
+  const access = await prisma.boardAccess.findUnique({
+    where: { boardId_memberId: { boardId, memberId } }
+  });
+  if (!access) return false;
+
+  const hierarchy: Record<string, number> = { VIEWER: 0, EDITOR: 1, ADMIN: 2 };
+  return hierarchy[access.permission] >= hierarchy[minPermission];
+}
+
+/** List all members who have explicit access to a board. */
+export async function getBoardMembers(workspaceId: string, boardId: string) {
+  // Verify the board belongs to this workspace
+  const board = await prisma.board.findFirst({
+    where: { id: boardId, workspaceId },
+  });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardAccess.findMany({
+    where: { boardId },
+    include: {
+      member: {
+        include: {
+          user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        },
+      },
+    },
+    orderBy: { grantedAt: "asc" },
+  });
 }

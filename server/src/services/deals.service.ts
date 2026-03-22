@@ -141,6 +141,7 @@ export async function pipeline(workspaceId: string) {
       },
     },
     orderBy: { createdAt: "asc" },
+    take: 500,
   });
 
   const stages = [

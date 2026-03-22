@@ -1,12 +1,15 @@
 import {
   useState,
   useCallback,
+  useEffect,
   Component,
   type ErrorInfo,
   type ReactNode,
 } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
+import { useTaskReminders } from "./hooks/useTaskReminders";
+import { connectSocket, disconnectSocket } from "./lib/socket";
 import { cn } from "./lib/utils";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
@@ -28,6 +31,7 @@ import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import BoardPage from "./pages/BoardPage";
 import SettingsPage from "./pages/SettingsPage";
 import AutomationsPage from "./pages/AutomationsPage";
+import LandingPage from "./pages/LandingPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -46,7 +50,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
@@ -57,15 +61,58 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) return null;
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return <>{children}</>;
+}
+
+function HomeRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <span className="text-primary text-xl font-bold">V</span>
+          </div>
+          <p className="text-text-secondary text-sm">טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <LandingPage />;
 }
 
 function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const openQuickAdd = useCallback(() => setQuickAddOpen(true), []);
+  const { currentWorkspaceId } = useAuth();
+
+  // Connect socket.io and join workspace room
+  useEffect(() => {
+    if (!currentWorkspaceId) return;
+    connectSocket(currentWorkspaceId);
+    return () => {
+      disconnectSocket();
+    };
+  }, [currentWorkspaceId]);
+
+  // Request browser notification permission on first load
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Listen for task-reminder socket events
+  useTaskReminders();
 
   return (
     <div className="min-h-screen bg-surface-secondary" dir="rtl">
@@ -144,6 +191,8 @@ function App() {
   return (
     <ErrorBoundary>
       <Routes>
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/landing" element={<LandingPage />} />
         <Route
           path="/login"
           element={
@@ -167,7 +216,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="contacts" element={<ContactsPage />} />
           <Route path="contacts/:id" element={<ContactDetailPage />} />
           <Route path="companies" element={<CompaniesPage />} />

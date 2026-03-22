@@ -1,4 +1,24 @@
 services:
+  app:
+    build: .
+    container_name: vixy-crm-app
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/vixy_crm
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      PORT: '3000'
+      JWT_SECRET: local-dev-secret-must-be-32-chars-long
+      JWT_REFRESH_SECRET: local-dev-refresh-secret-32-chars!!
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: vixy-crm-db
@@ -10,6 +30,11 @@ services:
       - '5433:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   redis:
     image: redis:7-alpine

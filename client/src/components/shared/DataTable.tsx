@@ -143,8 +143,8 @@ export default function DataTable<T extends { id: string }>({
                 <tr
                   key={row.id}
                   className={cn(
-                    "border-b border-border-light last:border-0 transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-[#F5F6FF]",
+                    "border-b border-border-light last:border-0 transition-all duration-150",
+                    onRowClick && "cursor-pointer hover:bg-[#F5F6FF] hover:shadow-[inset_3px_0_0_0_#6161FF]",
                   )}
                   onClick={() => onRowClick?.(row)}
                 >

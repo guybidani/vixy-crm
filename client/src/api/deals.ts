@@ -141,3 +141,20 @@ export function updateDeal(
 export function deleteDeal(id: string) {
   return api(`/deals/${id}`, { method: "DELETE" });
 }
+
+export function bulkDeleteDeals(ids: string[]) {
+  return api<{ deleted: number }>("/deals/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export function bulkUpdateDeals(
+  ids: string[],
+  data: { stage?: string; priority?: string; tagId?: string },
+) {
+  return api<{ success: boolean }>("/deals/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, data }),
+  });
+}

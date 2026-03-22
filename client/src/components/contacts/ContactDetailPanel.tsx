@@ -27,15 +27,13 @@ import {
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
 import StatusDropdown from "../shared/StatusDropdown";
+import TagSelector from "../shared/TagSelector";
+import MondayPersonCell, {
+  type PersonOption,
+} from "../shared/MondayPersonCell";
 import { getContact, updateContact, deleteContact } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
-import {
-  CONTACT_STATUSES,
-  DEAL_STAGES,
-  TICKET_STATUSES,
-  PRIORITIES,
-  ACTIVITY_TYPES,
-} from "../../lib/constants";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -56,6 +54,9 @@ export default function ContactDetailPanel({
   contactId,
   onClose,
 }: ContactDetailPanelProps) {
+  const {
+    contactStatuses,
+  } = useWorkspaceOptions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"info" | "timeline" | "related">(
@@ -171,7 +172,7 @@ export default function ContactDetailPanel({
           <div className="flex items-center gap-3 mt-1.5">
             <StatusDropdown
               value={contact.status}
-              options={CONTACT_STATUSES}
+              options={contactStatuses}
               onChange={(s) => statusMutation.mutate(s)}
               size="md"
             />
@@ -242,7 +243,7 @@ export default function ContactDetailPanel({
 
       {/* Tab Content */}
       {activeTab === "info" && (
-        <InfoTab contact={contact} navigate={navigate} />
+        <InfoTab contact={contact} />
       )}
       {activeTab === "timeline" && <TimelineTab contact={contact} />}
       {activeTab === "related" && (
@@ -259,10 +260,8 @@ export default function ContactDetailPanel({
 
 function InfoTab({
   contact,
-  navigate,
 }: {
   contact: any;
-  navigate: ReturnType<typeof useNavigate>;
 }) {
   const queryClient = useQueryClient();
 
@@ -275,6 +274,14 @@ function InfoTab({
     },
     onError: () => toast.error("שגיאה בעדכון"),
   });
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+  });
+  const companyOptions: PersonOption[] = (companiesData?.data || []).map(
+    (c) => ({ id: c.id, name: c.name }),
+  );
 
   const handleSave = (field: string, value: string) => {
     const payload: Record<string, any> = {};
@@ -305,17 +312,24 @@ function InfoTab({
               dir="ltr"
               onSave={(v) => handleSave("phone", v)}
             />
-            <EditableInfoRow
-              icon={<Building2 size={14} />}
-              label="חברה"
-              value={contact.company?.name || ""}
-              placeholder="הוסף חברה..."
-              onSave={() => {}}
-              onClick={() =>
-                contact.company && navigate(`/companies/${contact.company.id}`)
-              }
-              readOnly
-            />
+            <div className="flex items-center gap-2">
+              <span className="text-text-tertiary">
+                <Building2 size={14} />
+              </span>
+              <span className="text-xs text-text-tertiary w-14">חברה</span>
+              <div className="flex-1">
+                <MondayPersonCell
+                  value={
+                    contact.company
+                      ? { id: contact.company.id, name: contact.company.name }
+                      : null
+                  }
+                  options={companyOptions}
+                  onChange={(id) => updateMut.mutate({ companyId: id })}
+                  placeholder="בחר חברה"
+                />
+              </div>
+            </div>
             <EditableInfoRow
               icon={<Briefcase size={14} />}
               label="תפקיד"
@@ -340,7 +354,20 @@ function InfoTab({
 
         {/* Tags */}
         <div className="bg-surface-secondary/50 rounded-xl p-4">
-          <h3 className="font-bold text-text-primary text-sm mb-3">תגיות</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-text-primary text-sm">תגיות</h3>
+            <TagSelector
+              entityType="contact"
+              entityId={contact.id}
+              currentTags={
+                contact.tags?.map((t: any) => ({
+                  id: t.tag?.id || t.id,
+                  name: t.tag?.name || t.name,
+                  color: t.tag?.color || t.color,
+                })) || []
+              }
+            />
+          </div>
           <div className="flex gap-1.5 flex-wrap">
             {contact.tags?.map((t: any) => (
               <span
@@ -445,6 +472,7 @@ function InfoTab({
 }
 
 function TimelineTab({ contact }: { contact: any }) {
+  const { activityTypes } = useWorkspaceOptions();
   if (!contact.activities || contact.activities.length === 0) {
     return (
       <p className="text-sm text-text-tertiary text-center py-8">אין פעילות</p>
@@ -454,8 +482,7 @@ function TimelineTab({ contact }: { contact: any }) {
   return (
     <div className="space-y-1">
       {contact.activities.map((activity: any) => {
-        const typeInfo =
-          ACTIVITY_TYPES[activity.type as keyof typeof ACTIVITY_TYPES];
+        const typeInfo = activityTypes[activity.type];
         const color = ACTIVITY_COLORS[activity.type] || "#C4C4C4";
         return (
           <div
@@ -512,6 +539,7 @@ function RelatedTab({
   contact: any;
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const { dealStages, ticketStatuses, priorities } = useWorkspaceOptions();
   return (
     <div className="space-y-5">
       {/* Deals */}
@@ -523,7 +551,7 @@ function RelatedTab({
         {contact.deals && contact.deals.length > 0 ? (
           <div className="space-y-2">
             {contact.deals.map((deal: any) => {
-              const stage = DEAL_STAGES[deal.stage as keyof typeof DEAL_STAGES];
+              const stage = dealStages[deal.stage];
               return (
                 <div
                   key={deal.id}
@@ -568,10 +596,8 @@ function RelatedTab({
         {contact.tickets && contact.tickets.length > 0 ? (
           <div className="space-y-2">
             {contact.tickets.map((ticket: any) => {
-              const status =
-                TICKET_STATUSES[ticket.status as keyof typeof TICKET_STATUSES];
-              const priority =
-                PRIORITIES[ticket.priority as keyof typeof PRIORITIES];
+              const status = ticketStatuses[ticket.status];
+              const priority = priorities[ticket.priority];
               return (
                 <div
                   key={ticket.id}
@@ -612,8 +638,7 @@ function RelatedTab({
         {contact.tasks && contact.tasks.length > 0 ? (
           <div className="space-y-2">
             {contact.tasks.map((task: any) => {
-              const priority =
-                PRIORITIES[task.priority as keyof typeof PRIORITIES];
+              const priority = priorities[task.priority];
               return (
                 <div
                   key={task.id}
@@ -885,6 +910,7 @@ function EditContactModal({
   contact: any;
   onClose: () => void;
 }) {
+  const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     firstName: contact.firstName,
@@ -1042,7 +1068,7 @@ function EditContactModal({
                 onChange={(e) => setField("status", e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
               >
-                {Object.entries(CONTACT_STATUSES).map(([key, val]) => (
+                {Object.entries(contactStatuses).map(([key, val]) => (
                   <option key={key} value={key}>
                     {val.label}
                   </option>

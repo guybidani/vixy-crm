@@ -10,6 +10,7 @@ export interface DashboardData {
     ticketsUrgent: number;
     tasksToday: number;
     tasksOverdue: number;
+    tasksCompletedThisWeek: number;
   };
   pipeline: Array<{
     stage: string;

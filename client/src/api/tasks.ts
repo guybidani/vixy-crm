@@ -8,12 +8,30 @@ export interface Task {
   status: "TODO" | "IN_PROGRESS" | "DONE" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   dueDate: string | null;
+  dueTime: string | null;
+  reminderMinutes: number | null;
   assignee: { id: string; name: string } | null;
   contact: { id: string; name: string } | null;
   deal: { id: string; title: string } | null;
   createdBy: string;
   completedAt: string | null;
   createdAt: string;
+}
+
+export interface TaskDetail extends Task {
+  ticket: { id: string; subject: string } | null;
+  updatedAt?: string;
+}
+
+export function getTask(id: string) {
+  return api<TaskDetail>(`/tasks/${id}`);
+}
+
+export function getTaskStats(myOnly?: boolean) {
+  const qs = myOnly ? "?myOnly=true" : "";
+  return api<{ overdueCount: number; dueTodayCount: number; completedThisWeek: number }>(
+    `/tasks/stats${qs}`,
+  );
 }
 
 export function listTasks(params?: {
@@ -45,6 +63,8 @@ export function createTask(data: {
   description?: string;
   priority?: string;
   dueDate?: string;
+  dueTime?: string;
+  reminderMinutes?: number;
   contactId?: string;
   dealId?: string;
   ticketId?: string;
@@ -64,6 +84,8 @@ export function updateTask(
     status: string;
     priority: string;
     dueDate: string;
+    dueTime: string | null;
+    reminderMinutes: number;
     assigneeId: string;
   }>,
 ) {

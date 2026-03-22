@@ -18,6 +18,7 @@ export interface BoardSummary {
   icon: string;
   color: string;
   templateKey: string | null;
+  isPrivate: boolean;
   itemCount: number;
   columnCount: number;
   groupCount: number;
@@ -74,9 +75,32 @@ export interface Board {
   icon: string;
   color: string;
   templateKey: string | null;
+  isPrivate: boolean;
   columns: BoardColumn[];
   groups: BoardGroup[];
   createdAt: string;
+}
+
+// ── Board Access Types ──────────────────────────────────────────────
+
+export type BoardPermission = "VIEWER" | "EDITOR" | "ADMIN";
+
+export interface BoardAccessRecord {
+  id: string;
+  boardId: string;
+  memberId: string;
+  permission: BoardPermission;
+  grantedBy: string | null;
+  grantedAt: string;
+  member: {
+    id: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      avatarUrl: string | null;
+    };
+  };
 }
 
 // ── API Functions ──────────────────────────────────────────────────
@@ -235,5 +259,35 @@ export function updateBoardItemValues(
   return api<BoardItemValue[]>(`/boards/${boardId}/items/${itemId}/values`, {
     method: "PUT",
     body: JSON.stringify({ values }),
+  });
+}
+
+// ── Board Access / Permissions ──────────────────────────────────────
+
+export function getBoardAccess(boardId: string) {
+  return api<BoardAccessRecord[]>(`/boards/${boardId}/access`);
+}
+
+export function setBoardAccess(
+  boardId: string,
+  memberId: string,
+  permission: BoardPermission,
+) {
+  return api<BoardAccessRecord>(`/boards/${boardId}/access`, {
+    method: "POST",
+    body: JSON.stringify({ memberId, permission }),
+  });
+}
+
+export function removeBoardAccess(boardId: string, memberId: string) {
+  return api<{ success: boolean }>(`/boards/${boardId}/access/${memberId}`, {
+    method: "DELETE",
+  });
+}
+
+export function toggleBoardPrivacy(boardId: string, isPrivate: boolean) {
+  return api<Board>(`/boards/${boardId}/privacy`, {
+    method: "PATCH",
+    body: JSON.stringify({ isPrivate }),
   });
 }

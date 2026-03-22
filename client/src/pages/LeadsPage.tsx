@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+// useNavigate removed - not currently used
 import {
   Plus,
-  X,
   Inbox,
-  ArrowLeftCircle,
   Phone,
   Mail,
   Building2,
   Search,
+  LayoutGrid,
+  Columns3,
+  TrendingUp,
+  Sparkles,
+  Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
@@ -24,16 +27,36 @@ import {
 } from "../api/contacts";
 import { createDeal } from "../api/deals";
 import { listCompanies } from "../api/companies";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
-// Score-based card top border color
+// Score-based colors
 function scoreColor(score: number) {
   if (score >= 70) return "#00CA72";
   if (score >= 40) return "#FDAB3D";
   return "#C4C4C4";
 }
 
+function scoreLabel(score: number) {
+  if (score >= 70) return "חם";
+  if (score >= 40) return "פושר";
+  return "קר";
+}
+
+function scoreBgClass(score: number) {
+  if (score >= 70) return "bg-green-50 text-green-700";
+  if (score >= 40) return "bg-amber-50 text-amber-700";
+  return "bg-gray-50 text-gray-500";
+}
+
+// Pipeline stages for board view
+const PIPELINE_STAGES = [
+  { key: "cold", label: "קר", color: "#C4C4C4", minScore: 0, maxScore: 29 },
+  { key: "warm", label: "פושר", color: "#FDAB3D", minScore: 30, maxScore: 59 },
+  { key: "hot", label: "חם", color: "#FF642E", minScore: 60, maxScore: 79 },
+  { key: "ready", label: "מוכן להסמכה", color: "#00CA72", minScore: 80, maxScore: 100 },
+];
+
 export default function LeadsPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -41,6 +64,7 @@ export default function LeadsPage() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
+  const [viewMode, setViewMode] = useState<"cards" | "pipeline">("cards");
 
   const { data, isLoading } = useQuery({
     queryKey: ["leads", { search }],
@@ -80,18 +104,53 @@ export default function LeadsPage() {
 
   const leads = data?.data || [];
 
+  // Group leads by score range for pipeline view
+  const pipelineData = PIPELINE_STAGES.map((stage) => ({
+    ...stage,
+    leads: leads.filter(
+      (l) => l.leadScore >= stage.minScore && l.leadScore <= stage.maxScore,
+    ),
+  }));
+
   return (
     <PageShell
       title="לידים"
       subtitle={`${data?.pagination.total || 0} לידים ממתינים`}
       actions={
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
-        >
-          <Plus size={16} />
-          ליד חדש
-        </button>
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center bg-surface-secondary rounded-lg p-0.5">
+            <button
+              onClick={() => setViewMode("cards")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                viewMode === "cards"
+                  ? "bg-white text-text-primary shadow-sm"
+                  : "text-text-tertiary hover:text-text-secondary"
+              }`}
+            >
+              <LayoutGrid size={14} />
+              כרטיסים
+            </button>
+            <button
+              onClick={() => setViewMode("pipeline")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                viewMode === "pipeline"
+                  ? "bg-white text-text-primary shadow-sm"
+                  : "text-text-tertiary hover:text-text-secondary"
+              }`}
+            >
+              <Columns3 size={14} />
+              משפך
+            </button>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          >
+            <Plus size={16} />
+            ליד חדש
+          </button>
+        </div>
       }
     >
       {/* Search */}
@@ -115,20 +174,69 @@ export default function LeadsPage() {
         </div>
       ) : leads.length === 0 ? (
         <EmptyState
-          icon={<Inbox size={28} className="text-text-tertiary" />}
+          icon={
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
+              <Inbox size={28} className="text-primary" />
+            </div>
+          }
           title="אין לידים חדשים"
           description="לידים חדשים יופיעו כאן. הוסיפו ליד ידנית או חכו ללידים מ-Vixy."
           action={
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors"
+              className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] flex items-center gap-2"
             >
+              <Plus size={16} />
               הוסף ליד ראשון
             </button>
           }
         />
+      ) : viewMode === "pipeline" ? (
+        /* Pipeline / Funnel Board View */
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {pipelineData.map((stage) => (
+            <div key={stage.key} className="flex-shrink-0 w-[280px]">
+              {/* Column header */}
+              <div className="flex items-center gap-2 mb-3 px-1">
+                <div
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: stage.color }}
+                />
+                <span className="text-sm font-bold text-text-primary">
+                  {stage.label}
+                </span>
+                <span className="text-xs text-text-tertiary bg-surface-secondary rounded-full px-2 py-0.5">
+                  {stage.leads.length}
+                </span>
+              </div>
+              {/* Column body */}
+              <div className="space-y-2.5 min-h-[200px] bg-surface-secondary/40 rounded-xl p-2.5">
+                {stage.leads.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
+                    <Inbox size={20} className="mb-1.5 opacity-40" />
+                    <span className="text-xs">אין לידים</span>
+                  </div>
+                ) : (
+                  stage.leads.map((lead) => (
+                    <PipelineCard
+                      key={lead.id}
+                      lead={lead}
+                      isQualifying={qualifyingId === lead.id}
+                      onQualify={() => {
+                        setQualifyingId(lead.id);
+                        qualifyMutation.mutate(lead);
+                      }}
+                      onClick={() => setSelectedContactId(lead.id)}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        <div className="grid gap-3 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        /* Cards Grid View */
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {leads.map((lead) => (
             <LeadCard
               key={lead.id}
@@ -175,75 +283,96 @@ function LeadCard({
   onClick: () => void;
 }) {
   const sc = scoreColor(lead.leadScore);
+  const label = scoreLabel(lead.leadScore);
+  const bgClass = scoreBgClass(lead.leadScore);
 
   return (
     <div
-      className="bg-white rounded-xl shadow-card border-t-4 hover:shadow-card-hover transition-all p-4"
-      style={{ borderTopColor: sc }}
+      className="group bg-white rounded-xl shadow-card border border-transparent hover:shadow-card-hover hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden"
     >
+      {/* Score accent bar at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-1 transition-all duration-300 group-hover:h-1.5"
+        style={{ backgroundColor: sc }}
+      />
+
       {/* Header: Name + Score ring */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="cursor-pointer flex-1" onClick={onClick}>
-          <h3 className="font-bold text-text-primary">{lead.fullName}</h3>
+      <div className="flex items-start justify-between mb-4 mt-1">
+        <div className="cursor-pointer flex-1 min-w-0" onClick={onClick}>
+          <h3 className="font-bold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors">
+            {lead.fullName}
+          </h3>
           {lead.position && (
-            <p className="text-xs text-text-tertiary mt-0.5">{lead.position}</p>
+            <p className="text-xs text-text-tertiary mt-0.5 truncate">{lead.position}</p>
           )}
         </div>
-        {/* Circular score */}
-        <div className="relative w-10 h-10 flex-shrink-0">
-          <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="#E8E8FF"
-              strokeWidth="2.5"
-            />
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke={sc}
-              strokeWidth="2.5"
-              strokeDasharray={`${lead.leadScore}, 100`}
-              strokeLinecap="round"
-            />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text-primary">
-            {lead.leadScore}
+        {/* Circular score with label */}
+        <div className="flex flex-col items-center gap-1 flex-shrink-0 mr-3">
+          <div className="relative w-11 h-11">
+            <svg className="w-11 h-11 -rotate-90" viewBox="0 0 36 36">
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="#F0F0F5"
+                strokeWidth="3"
+              />
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke={sc}
+                strokeWidth="3"
+                strokeDasharray={`${lead.leadScore}, 100`}
+                strokeLinecap="round"
+                className="transition-all duration-500"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text-primary">
+              {lead.leadScore}
+            </span>
+          </div>
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${bgClass}`}>
+            {label}
           </span>
         </div>
       </div>
 
       {/* Contact info */}
-      <div className="space-y-1.5 mb-3">
+      <div className="space-y-2 mb-4">
         {lead.email && (
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            <Mail size={12} className="text-text-tertiary flex-shrink-0" />
+          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+            <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Mail size={12} className="text-blue-500" />
+            </div>
             <span dir="ltr" className="truncate">
               {lead.email}
             </span>
           </div>
         )}
         {lead.phone && (
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            <Phone size={12} className="text-text-tertiary flex-shrink-0" />
+          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+            <div className="w-6 h-6 rounded-md bg-green-50 flex items-center justify-center flex-shrink-0">
+              <Phone size={12} className="text-green-500" />
+            </div>
             <span dir="ltr">{lead.phone}</span>
           </div>
         )}
         {lead.company && (
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            <Building2 size={12} className="text-text-tertiary flex-shrink-0" />
-            <span>{lead.company.name}</span>
+          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+            <div className="w-6 h-6 rounded-md bg-purple-50 flex items-center justify-center flex-shrink-0">
+              <Building2 size={12} className="text-purple-500" />
+            </div>
+            <span className="truncate">{lead.company.name}</span>
           </div>
         )}
       </div>
 
       {/* Tags */}
       {lead.tags.length > 0 && (
-        <div className="flex gap-1 flex-wrap mb-3">
+        <div className="flex gap-1.5 flex-wrap mb-4">
           {lead.tags.map((t) => (
             <span
               key={t.id}
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+              className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full text-white shadow-sm"
               style={{ backgroundColor: t.color }}
             >
               {t.name}
@@ -253,16 +382,24 @@ function LeadCard({
       )}
 
       {/* Source + Date */}
-      <div className="flex items-center justify-between text-[10px] text-text-tertiary mb-3 pb-3 border-b border-border-light">
-        {lead.source && <span>מקור: {lead.source}</span>}
-        <span>{new Date(lead.createdAt).toLocaleDateString("he-IL")}</span>
+      <div className="flex items-center justify-between text-[10px] text-text-tertiary mb-4 pb-3 border-b border-border-light">
+        {lead.source ? (
+          <span className="flex items-center gap-1">
+            <TrendingUp size={10} />
+            מקור: {lead.source}
+          </span>
+        ) : <span />}
+        <span className="flex items-center gap-1">
+          <Clock size={10} />
+          {new Date(lead.createdAt).toLocaleDateString("he-IL")}
+        </span>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2.5">
         <button
           onClick={onClick}
-          className="flex-1 py-2 text-xs font-medium text-text-secondary bg-surface-secondary hover:bg-surface-tertiary rounded-lg transition-colors"
+          className="flex-1 py-2.5 text-xs font-semibold text-text-secondary bg-surface-secondary hover:bg-surface-tertiary hover:text-text-primary rounded-lg transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-border"
         >
           פרטים
         </button>
@@ -272,17 +409,88 @@ function LeadCard({
             onQualify();
           }}
           disabled={isQualifying}
-          className="flex-1 py-2 text-xs font-semibold text-white bg-[#00CA72] hover:bg-[#00B865] rounded-lg transition-all flex items-center justify-center gap-1 disabled:opacity-50 hover:shadow-sm active:scale-[0.97]"
+          className="flex-1 py-2.5 text-xs font-bold text-white bg-[#00CA72] hover:bg-[#00B865] rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-md active:scale-[0.97]"
         >
-          <ArrowLeftCircle size={12} />
-          {isQualifying ? "מעביר..." : "הסמך"}
+          {isQualifying ? (
+            <>
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              מעביר...
+            </>
+          ) : (
+            <>
+              <Sparkles size={12} />
+              הסמך
+            </>
+          )}
         </button>
       </div>
     </div>
   );
 }
 
+/* Compact card for pipeline/board view */
+function PipelineCard({
+  lead,
+  isQualifying,
+  onQualify,
+  onClick,
+}: {
+  lead: Contact;
+  isQualifying: boolean;
+  onQualify: () => void;
+  onClick: () => void;
+}) {
+  const sc = scoreColor(lead.leadScore);
+
+  return (
+    <div
+      onClick={onClick}
+      className="group bg-white rounded-lg p-3 shadow-sm border border-transparent hover:shadow-md hover:border-primary/20 cursor-pointer transition-all duration-150"
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-sm text-text-primary truncate group-hover:text-primary transition-colors">
+          {lead.fullName}
+        </span>
+        <span
+          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white flex-shrink-0 mr-2"
+          style={{ backgroundColor: sc }}
+        >
+          {lead.leadScore}
+        </span>
+      </div>
+      {lead.company && (
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <Building2 size={10} className="text-text-tertiary" />
+          <span className="text-[11px] text-text-tertiary truncate">
+            {lead.company.name}
+          </span>
+        </div>
+      )}
+      {(lead.email || lead.phone) && (
+        <p dir="ltr" className="text-[11px] text-text-tertiary truncate text-right mb-2">
+          {lead.email || lead.phone}
+        </p>
+      )}
+      {/* Quick qualify button */}
+      {lead.leadScore >= 60 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onQualify();
+          }}
+          disabled={isQualifying}
+          className="w-full mt-1 py-1.5 text-[11px] font-semibold text-[#00CA72] bg-green-50 hover:bg-green-100 hover:text-[#00B865] rounded-md transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+        >
+          <Sparkles size={10} />
+          {isQualifying ? "מעביר..." : "הסמך"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function CreateLeadModal({ onClose }: { onClose: () => void }) {
+  const { leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     firstName: "",
@@ -424,12 +632,11 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
           >
             <option value="">בחרו מקור</option>
-            <option value="אתר">אתר</option>
-            <option value="טלפון">טלפון</option>
-            <option value="הפניה">הפניה</option>
-            <option value="פייסבוק">פייסבוק</option>
-            <option value="vixy">Vixy</option>
-            <option value="אחר">אחר</option>
+            {leadSources.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
           </select>
         </div>
 

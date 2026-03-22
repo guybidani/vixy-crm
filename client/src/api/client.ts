@@ -1,13 +1,15 @@
 const API_BASE = "/api/v1";
 
-let accessToken: string | null = null;
+let accessToken: string | null = localStorage.getItem("vixy_at");
 
 export function setTokens(access: string) {
   accessToken = access;
+  localStorage.setItem("vixy_at", access);
 }
 
 export function clearTokens() {
   accessToken = null;
+  localStorage.removeItem("vixy_at");
 }
 
 export function getAccessToken() {
@@ -17,18 +19,18 @@ export function getAccessToken() {
 /**
  * Whether we have a potential session (refresh cookie may exist).
  * We can't read the httpOnly cookie directly, so we track this flag
- * in sessionStorage (survives page reload within tab, clears on tab close).
+ * in localStorage (survives page reloads, new tabs, and direct URL navigation).
  */
 export function hasSession(): boolean {
-  return sessionStorage.getItem("vixy_session") === "1";
+  return localStorage.getItem("vixy_session") === "1";
 }
 
 export function markSession() {
-  sessionStorage.setItem("vixy_session", "1");
+  localStorage.setItem("vixy_session", "1");
 }
 
 export function clearSession() {
-  sessionStorage.removeItem("vixy_session");
+  localStorage.removeItem("vixy_session");
 }
 
 let workspaceId: string | null = localStorage.getItem("workspaceId");
@@ -68,7 +70,7 @@ export async function api<T = unknown>(
   options: RequestInit = {},
 ): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json; charset=utf-8",
     ...(options.headers as Record<string, string>),
   };
 
@@ -85,8 +87,9 @@ export async function api<T = unknown>(
     credentials: "include", // Always send cookies
   });
 
-  // Auto-refresh on 401 (skip for auth endpoints to avoid loops)
-  if (res.status === 401 && !path.startsWith("/auth/")) {
+  // Auto-refresh on 401 (skip login/refresh/register to avoid loops)
+  const skipRefreshPaths = ["/auth/login", "/auth/register", "/auth/refresh"];
+  if (res.status === 401 && !skipRefreshPaths.includes(path)) {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
       headers["Authorization"] = `Bearer ${accessToken}`;

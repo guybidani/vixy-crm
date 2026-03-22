@@ -18,6 +18,7 @@ import {
   markSession,
   clearSession,
 } from "../api/client";
+import { queryClient } from "../lib/queryClient";
 
 interface AuthState {
   user: authApi.User | null;
@@ -135,13 +136,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearTokens();
     clearSession();
     clearWorkspaceId();
-    setState({
-      user: null,
-      workspaces: [],
-      currentWorkspaceId: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
+    queryClient.clear(); // Remove all cached queries to prevent stale refetches
+    window.location.href = "/login"; // Hard redirect to ensure clean state
   }, []);
 
   const selectWorkspace = useCallback((wsId: string) => {

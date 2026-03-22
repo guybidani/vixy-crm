@@ -10,14 +10,12 @@ import {
   PieChart,
   Pie,
   Cell,
-  FunnelChart,
-  Funnel,
-  LabelList,
 } from "recharts";
 import { getDealsPipeline, listDeals } from "../../api/deals";
-import { DEAL_STAGES, PRIORITIES } from "../../lib/constants";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 export default function DealsChartView() {
+  const { dealStages, priorities } = useWorkspaceOptions();
   const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
     queryKey: ["deals-pipeline"],
     queryFn: getDealsPipeline,
@@ -40,7 +38,7 @@ export default function DealsChartView() {
 
   // ── Data preparation ──
   const stageData = pipelineData.totals.map((t) => {
-    const info = DEAL_STAGES[t.stage as keyof typeof DEAL_STAGES];
+    const info = dealStages[t.stage];
     return {
       name: info?.label || t.stage,
       count: t.count,
@@ -54,7 +52,7 @@ export default function DealsChartView() {
   const funnelData = funnelStages
     .map((s) => {
       const t = pipelineData.totals.find((x) => x.stage === s);
-      const info = DEAL_STAGES[s as keyof typeof DEAL_STAGES];
+      const info = dealStages[s];
       return {
         name: info?.label || s,
         value: t?.count || 0,
@@ -75,7 +73,7 @@ export default function DealsChartView() {
       priorityCounts[d.priority] = (priorityCounts[d.priority] || 0) + 1;
     }
   }
-  const priorityData = Object.entries(PRIORITIES).map(([key, info]) => ({
+  const priorityData = Object.entries(priorities).map(([key, info]) => ({
     name: info.label,
     value: priorityCounts[key] || 0,
     fill: info.color,
@@ -204,7 +202,7 @@ export default function DealsChartView() {
           </h3>
           {funnelData.length > 0 ? (
             <div className="space-y-2">
-              {funnelData.map((d, i) => {
+              {funnelData.map((d) => {
                 const maxCount = Math.max(...funnelData.map((x) => x.value));
                 const pct = maxCount > 0 ? (d.value / maxCount) * 100 : 0;
                 return (

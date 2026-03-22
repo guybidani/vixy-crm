@@ -9,23 +9,108 @@ import {
   Building2,
   Users,
   Handshake,
-  Edit2,
   Trash2,
-  X,
+  Factory,
+  FileText,
 } from "lucide-react";
-import Modal from "../components/shared/Modal";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
-import { getCompany, updateCompany, deleteCompany } from "../api/companies";
-import { CONTACT_STATUSES, DEAL_STAGES } from "../lib/constants";
+import { getCompany, updateCompany, deleteCompany, type Company } from "../api/companies";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
+/* ── Inline-editable row (local helper) ───────────────────────── */
+function EditableInfoRow({
+  icon,
+  label,
+  value,
+  placeholder,
+  dir,
+  onSave,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  placeholder?: string;
+  dir?: string;
+  onSave: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState(value);
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-text-tertiary">{icon}</span>
+        <span className="text-xs text-text-tertiary w-14">{label}</span>
+        <input
+          autoFocus
+          className="flex-1 text-sm text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+          value={editVal}
+          dir={dir}
+          onChange={(e) => setEditVal(e.target.value)}
+          onBlur={() => {
+            if (editVal !== value) onSave(editVal);
+            setEditing(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            if (e.key === "Escape") {
+              setEditVal(value);
+              setEditing(false);
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 group/row">
+      <span className="text-text-tertiary">{icon}</span>
+      <span className="text-xs text-text-tertiary w-14">{label}</span>
+      <span
+        className={`text-sm flex-1 min-w-0 ${
+          value ? "text-text-primary" : "text-text-tertiary"
+        } cursor-text hover:bg-surface-secondary/80 rounded px-1 -mx-1 transition-colors`}
+        dir={dir}
+        onClick={() => {
+          setEditVal(value);
+          setEditing(true);
+        }}
+      >
+        {value || placeholder || "\u2014"}
+      </span>
+      {!value && (
+        <button
+          onClick={() => {
+            setEditVal("");
+            setEditing(true);
+          }}
+          className="opacity-0 group-hover/row:opacity-100 text-primary text-[10px] transition-opacity"
+        >
+          +
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Main page ────────────────────────────────────────────────── */
 export default function CompanyDetailPage() {
+  const { contactStatuses, dealStages } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [editing, setEditing] = useState(false);
+
+  /* Inline-edit state for company name */
+  const [editingName, setEditingName] = useState(false);
+  const [nameVal, setNameVal] = useState("");
+
+  /* Inline-edit state for notes */
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesVal, setNotesVal] = useState("");
 
   const { data: company, isLoading } = useQuery({
     queryKey: ["company", id],
@@ -40,6 +125,18 @@ export default function CompanyDetailPage() {
       toast.success("חברה נמחקה");
       navigate("/companies");
     },
+  });
+
+  /* Inline update mutation */
+  const updateMut = useMutation({
+    mutationFn: (
+      data: Partial<Company>,
+    ) => updateCompany(company!.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", id] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
   });
 
   if (isLoading) {
@@ -77,9 +174,40 @@ export default function CompanyDetailPage() {
               <Building2 size={24} className="text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-text-primary">
-                {company.name}
-              </h1>
+              {/* Click-to-edit company name */}
+              {editingName ? (
+                <input
+                  autoFocus
+                  value={nameVal}
+                  onChange={(e) => setNameVal(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = nameVal.trim();
+                    if (trimmed && trimmed !== company.name) {
+                      updateMut.mutate({ name: trimmed });
+                    }
+                    setEditingName(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter")
+                      (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") {
+                      setNameVal(company.name);
+                      setEditingName(false);
+                    }
+                  }}
+                  className="text-xl font-bold text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+                />
+              ) : (
+                <h1
+                  className="text-xl font-bold text-text-primary cursor-text hover:bg-surface-secondary/80 rounded px-1 -mx-1 transition-colors"
+                  onClick={() => {
+                    setNameVal(company.name);
+                    setEditingName(true);
+                  }}
+                >
+                  {company.name}
+                </h1>
+              )}
               <div className="flex items-center gap-4 mt-1 text-sm text-text-secondary">
                 {company.industry && <span>{company.industry}</span>}
                 {company.size && <span>{company.size} עובדים</span>}
@@ -87,13 +215,6 @@ export default function CompanyDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
-            >
-              <Edit2 size={14} />
-              עריכה
-            </button>
             <button
               onClick={() => {
                 if (confirm("האם למחוק את החברה?")) {
@@ -115,31 +236,87 @@ export default function CompanyDetailPage() {
           <PageCard>
             <h3 className="font-bold text-text-primary mb-3">פרטי חברה</h3>
             <div className="space-y-3">
-              {company.email && (
-                <InfoRow
-                  icon={<Mail size={14} />}
-                  label="אימייל"
-                  value={company.email}
-                  dir="ltr"
-                />
-              )}
-              {company.phone && (
-                <InfoRow
-                  icon={<Phone size={14} />}
-                  label="טלפון"
-                  value={company.phone}
-                  dir="ltr"
-                />
-              )}
-              {company.website && (
-                <InfoRow
-                  icon={<Globe size={14} />}
-                  label="אתר"
-                  value={company.website}
-                  dir="ltr"
-                />
-              )}
+              <EditableInfoRow
+                icon={<Mail size={14} />}
+                label="אימייל"
+                value={company.email || ""}
+                placeholder="הוסף אימייל"
+                dir="ltr"
+                onSave={(val) => updateMut.mutate({ email: val })}
+              />
+              <EditableInfoRow
+                icon={<Phone size={14} />}
+                label="טלפון"
+                value={company.phone || ""}
+                placeholder="הוסף טלפון"
+                dir="ltr"
+                onSave={(val) => updateMut.mutate({ phone: val })}
+              />
+              <EditableInfoRow
+                icon={<Globe size={14} />}
+                label="אתר"
+                value={company.website || ""}
+                placeholder="הוסף אתר"
+                dir="ltr"
+                onSave={(val) => updateMut.mutate({ website: val })}
+              />
+              <EditableInfoRow
+                icon={<Factory size={14} />}
+                label="תעשייה"
+                value={company.industry || ""}
+                placeholder="הוסף תעשייה"
+                onSave={(val) => updateMut.mutate({ industry: val })}
+              />
+              <EditableInfoRow
+                icon={<Users size={14} />}
+                label="גודל"
+                value={company.size || ""}
+                placeholder="הוסף גודל"
+                onSave={(val) => updateMut.mutate({ size: val })}
+              />
             </div>
+          </PageCard>
+
+          {/* Notes */}
+          <PageCard>
+            <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
+              <FileText size={14} className="text-text-tertiary" />
+              הערות
+            </h3>
+            {editingNotes ? (
+              <textarea
+                autoFocus
+                value={notesVal}
+                onChange={(e) => setNotesVal(e.target.value)}
+                onBlur={() => {
+                  if (notesVal !== (company.notes || "")) {
+                    updateMut.mutate({ notes: notesVal });
+                  }
+                  setEditingNotes(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setNotesVal(company.notes || "");
+                    setEditingNotes(false);
+                  }
+                }}
+                className="w-full min-h-[80px] text-sm text-text-primary bg-white border border-primary rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary/30 resize-y"
+              />
+            ) : (
+              <div
+                className="text-sm text-text-primary whitespace-pre-wrap cursor-text hover:bg-surface-secondary/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px]"
+                onClick={() => {
+                  setNotesVal(company.notes || "");
+                  setEditingNotes(true);
+                }}
+              >
+                {company.notes || (
+                  <span className="text-text-tertiary">
+                    לחץ להוספת הערות...
+                  </span>
+                )}
+              </div>
+            )}
           </PageCard>
 
           {/* Stats */}
@@ -182,10 +359,7 @@ export default function CompanyDetailPage() {
             {company.contacts && company.contacts.length > 0 ? (
               <div className="space-y-2">
                 {company.contacts.map((contact: any) => {
-                  const status =
-                    CONTACT_STATUSES[
-                      contact.status as keyof typeof CONTACT_STATUSES
-                    ];
+                  const status = contactStatuses[contact.status];
                   return (
                     <div
                       key={contact.id}
@@ -239,8 +413,7 @@ export default function CompanyDetailPage() {
             {company.deals && company.deals.length > 0 ? (
               <div className="space-y-2">
                 {company.deals.map((deal: any) => {
-                  const stage =
-                    DEAL_STAGES[deal.stage as keyof typeof DEAL_STAGES];
+                  const stage = dealStages[deal.stage];
                   return (
                     <div
                       key={deal.id}
@@ -280,197 +453,6 @@ export default function CompanyDetailPage() {
           </PageCard>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      {editing && (
-        <EditCompanyModal company={company} onClose={() => setEditing(false)} />
-      )}
     </div>
-  );
-}
-
-function InfoRow({
-  icon,
-  label,
-  value,
-  dir,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  dir?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-text-tertiary">{icon}</span>
-      <span className="text-xs text-text-tertiary w-12">{label}</span>
-      <span className="text-sm text-text-primary" dir={dir}>
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function EditCompanyModal({
-  company,
-  onClose,
-}: {
-  company: any;
-  onClose: () => void;
-}) {
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    name: company.name,
-    email: company.email || "",
-    phone: company.phone || "",
-    website: company.website || "",
-    industry: company.industry || "",
-    size: company.size || "",
-  });
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      updateCompany(company.id, {
-        ...form,
-        email: form.email || undefined,
-        phone: form.phone || undefined,
-        website: form.website || undefined,
-        industry: form.industry || undefined,
-        size: form.size || undefined,
-      } as any),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company", company.id] });
-      queryClient.invalidateQueries({ queryKey: ["companies"] });
-      toast.success("חברה עודכנה!");
-      onClose();
-    },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה בעדכון");
-    },
-  });
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    mutation.mutate();
-  }
-
-  const setField = (key: string, value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
-
-  return (
-    <Modal open={true} onClose={onClose} title="עריכת חברה">
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            שם חברה *
-          </label>
-          <input
-            type="text"
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              אימייל
-            </label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              dir="ltr"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              טלפון
-            </label>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              dir="ltr"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            אתר אינטרנט
-          </label>
-          <input
-            type="url"
-            value={form.website}
-            onChange={(e) => setField("website", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            dir="ltr"
-            placeholder="https://"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              תעשייה
-            </label>
-            <select
-              value={form.industry}
-              onChange={(e) => setField("industry", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
-            >
-              <option value="">בחרו תעשייה</option>
-              <option value="טכנולוגיה">טכנולוגיה</option>
-              <option value="שיווק">שיווק</option>
-              <option value="מסחר">מסחר</option>
-              <option value="שירותים">שירותים</option>
-              <option value="נדל״ן">נדל״ן</option>
-              <option value="חינוך">חינוך</option>
-              <option value="בריאות">בריאות</option>
-              <option value="אחר">אחר</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              גודל
-            </label>
-            <select
-              value={form.size}
-              onChange={(e) => setField("size", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
-            >
-              <option value="">בחרו גודל</option>
-              <option value="1-10">1-10 עובדים</option>
-              <option value="11-50">11-50 עובדים</option>
-              <option value="51-200">51-200 עובדים</option>
-              <option value="201-500">201-500 עובדים</option>
-              <option value="500+">500+ עובדים</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
-          >
-            ביטול
-          </button>
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
-          >
-            {mutation.isPending ? "שומר..." : "שמור שינויים"}
-          </button>
-        </div>
-      </form>
-    </Modal>
   );
 }

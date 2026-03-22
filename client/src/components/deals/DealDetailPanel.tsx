@@ -10,7 +10,6 @@ import {
   DollarSign,
   Save,
   Trash2,
-  ExternalLink,
   Clock,
   StickyNote,
   PhoneCall,
@@ -24,9 +23,16 @@ import {
   getDeal,
   updateDeal,
   deleteDeal,
-  type DealDetail,
 } from "../../api/deals";
-import { DEAL_STAGES, PRIORITIES, ACTIVITY_TYPES } from "../../lib/constants";
+import TagSelector from "../shared/TagSelector";
+import MondayPersonCell, {
+  type PersonOption,
+} from "../shared/MondayPersonCell";
+import { listContacts } from "../../api/contacts";
+import { listCompanies } from "../../api/companies";
+import { getWorkspaceMembers } from "../../api/auth";
+import { useAuth } from "../../hooks/useAuth";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 interface DealDetailPanelProps {
   dealId: string;
@@ -49,6 +55,8 @@ export default function DealDetailPanel({
   onClose,
   onDeleted,
 }: DealDetailPanelProps) {
+  const { dealStages, priorities, activityTypes } = useWorkspaceOptions();
+  const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"details" | "activity">("details");
   const [editingNotes, setEditingNotes] = useState(false);
@@ -61,6 +69,31 @@ export default function DealDetailPanel({
     queryFn: () => getDeal(dealId),
     enabled: !!dealId,
   });
+
+  const { data: contactsData } = useQuery({
+    queryKey: ["contacts", { limit: 200 }],
+    queryFn: () => listContacts({ limit: 200 }),
+  });
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+  });
+  const { data: membersData } = useQuery({
+    queryKey: ["members", currentWorkspaceId],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId,
+  });
+
+  const contactOptions: PersonOption[] = (contactsData?.data || []).map(
+    (c) => ({ id: c.id, name: c.fullName }),
+  );
+  const companyOptions: PersonOption[] = (companiesData?.data || []).map(
+    (c) => ({ id: c.id, name: c.name }),
+  );
+  const memberOptions: PersonOption[] = (membersData || []).map((m) => ({
+    id: m.memberId,
+    name: m.name,
+  }));
 
   const updateMut = useMutation({
     mutationFn: (data: Parameters<typeof updateDeal>[1]) =>
@@ -138,11 +171,8 @@ export default function DealDetailPanel({
     );
   }
 
-  const stageInfo = DEAL_STAGES[deal.stage as keyof typeof DEAL_STAGES];
-  const priorityInfo = PRIORITIES[deal.priority as keyof typeof PRIORITIES];
-  const contactName = deal.contact
-    ? `${deal.contact.firstName} ${deal.contact.lastName}`
-    : null;
+  const stageInfo = dealStages[deal.stage];
+  const priorityInfo = priorities[deal.priority];
 
   return (
     <>
@@ -202,7 +232,7 @@ export default function DealDetailPanel({
               className="text-xs font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer text-white"
               style={{ backgroundColor: stageInfo?.color || "#C4C4C4" }}
             >
-              {Object.entries(DEAL_STAGES).map(([key, val]) => (
+              {Object.entries(dealStages).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>
@@ -214,7 +244,7 @@ export default function DealDetailPanel({
               className="text-xs font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer text-white"
               style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}
             >
-              {Object.entries(PRIORITIES).map(([key, val]) => (
+              {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>
@@ -368,77 +398,114 @@ export default function DealDetailPanel({
               <div className="border-t border-[#E6E9EF]" />
 
               {/* Contact */}
-              {deal.contact && (
-                <div className="bg-[#F7F7F9] rounded-xl p-3.5 space-y-2.5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div
-                      className="w-8 h-8 rounded-full bg-[#6161FF] flex items-center justify-center"
-                      role="img"
-                      aria-label={contactName}
-                    >
-                      <span className="text-white text-xs font-bold">
-                        {deal.contact.firstName[0]}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[#323338]">
-                        {contactName}
-                      </p>
-                      <p className="text-[11px] text-[#676879]">איש קשר</p>
-                    </div>
-                  </div>
-                  {deal.contact.email && (
-                    <a
-                      href={`mailto:${deal.contact.email}`}
-                      className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
-                    >
-                      <Mail size={13} className="text-[#676879]" />
-                      <span dir="ltr">{deal.contact.email}</span>
-                    </a>
-                  )}
-                  {deal.contact.phone && (
-                    <a
-                      href={`tel:${deal.contact.phone}`}
-                      className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
-                    >
-                      <Phone size={13} className="text-[#676879]" />
-                      <span dir="ltr">{deal.contact.phone}</span>
-                    </a>
-                  )}
+              <div className="bg-[#F7F7F9] rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={15} className="text-[#676879]" />
+                  <span className="text-[13px] text-[#676879]">איש קשר</span>
                 </div>
-              )}
+                <MondayPersonCell
+                  value={
+                    deal.contact
+                      ? {
+                          id: deal.contact.id,
+                          name: `${deal.contact.firstName} ${deal.contact.lastName}`,
+                        }
+                      : null
+                  }
+                  options={contactOptions}
+                  onChange={(id) => updateMut.mutate({ contactId: id! })}
+                  placeholder="בחר איש קשר"
+                />
+                {deal.contact?.email && (
+                  <a
+                    href={`mailto:${deal.contact.email}`}
+                    className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
+                  >
+                    <Mail size={13} className="text-[#676879]" />
+                    <span dir="ltr">{deal.contact.email}</span>
+                  </a>
+                )}
+                {deal.contact?.phone && (
+                  <a
+                    href={`tel:${deal.contact.phone}`}
+                    className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
+                  >
+                    <Phone size={13} className="text-[#676879]" />
+                    <span dir="ltr">{deal.contact.phone}</span>
+                  </a>
+                )}
+              </div>
 
               {/* Company */}
-              {deal.company && (
-                <div className="bg-[#F7F7F9] rounded-xl p-3.5">
-                  <div className="flex items-center gap-2">
-                    <Building2 size={15} className="text-[#676879]" />
-                    <span className="text-sm font-medium text-[#323338]">
-                      {deal.company.name}
-                    </span>
-                  </div>
+              <div className="bg-[#F7F7F9] rounded-xl p-3.5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 size={15} className="text-[#676879]" />
+                  <span className="text-[13px] text-[#676879]">חברה</span>
                 </div>
-              )}
+                <MondayPersonCell
+                  value={
+                    deal.company
+                      ? { id: deal.company.id, name: deal.company.name }
+                      : null
+                  }
+                  options={companyOptions}
+                  onChange={(id) => updateMut.mutate({ companyId: id })}
+                  placeholder="בחר חברה"
+                />
+              </div>
 
               {/* Assignee */}
-              {deal.assignee && (
-                <DetailRow icon={<User size={15} />} label="אחראי">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center"
-                      role="img"
-                      aria-label={deal.assignee.user.name}
+              <DetailRow icon={<User size={15} />} label="אחראי">
+                <MondayPersonCell
+                  value={
+                    deal.assignee
+                      ? {
+                          id: deal.assignee.id,
+                          name: deal.assignee.user.name,
+                        }
+                      : null
+                  }
+                  options={memberOptions}
+                  onChange={(id) => updateMut.mutate({ assigneeId: id! })}
+                  placeholder="בחר אחראי"
+                />
+              </DetailRow>
+
+              {/* Tags */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[13px] font-semibold text-[#323338]">
+                    תגיות
+                  </span>
+                  <TagSelector
+                    entityType="deal"
+                    entityId={deal.id}
+                    currentTags={
+                      deal.tags?.map((t: any) => ({
+                        id: t.id,
+                        name: t.name,
+                        color: t.color,
+                      })) || []
+                    }
+                  />
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {deal.tags?.map((t: any) => (
+                    <span
+                      key={t.id}
+                      className="text-xs font-semibold px-2.5 py-0.5 rounded-full text-white"
+                      style={{ backgroundColor: t.color }}
                     >
-                      <span className="text-primary text-[10px] font-bold">
-                        {deal.assignee.user.name[0]}
-                      </span>
-                    </div>
-                    <span className="text-sm text-[#323338]">
-                      {deal.assignee.user.name}
+                      {t.name}
                     </span>
-                  </div>
-                </DetailRow>
-              )}
+                  ))}
+                  {(!deal.tags || deal.tags.length === 0) && (
+                    <span className="text-[11px] text-[#676879]">
+                      אין תגיות
+                    </span>
+                  )}
+                </div>
+              </div>
 
               {/* Divider */}
               <div className="border-t border-[#E6E9EF]" />
@@ -544,10 +611,7 @@ export default function DealDetailPanel({
               {deal.activities && deal.activities.length > 0 ? (
                 <div className="space-y-0">
                   {deal.activities.map((activity, idx) => {
-                    const actType =
-                      ACTIVITY_TYPES[
-                        activity.type as keyof typeof ACTIVITY_TYPES
-                      ];
+                    const actType = activityTypes[activity.type];
                     const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
                     return (
                       <div key={activity.id} className="flex gap-3 relative">

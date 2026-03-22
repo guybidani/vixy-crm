@@ -36,9 +36,15 @@ function clearRefreshCookie(res: Response) {
   });
 }
 
+const passwordSchema = z
+  .string()
+  .min(8, "סיסמה חייבת להיות לפחות 8 תווים")
+  .regex(/[A-Z]|[a-z]/, "סיסמה חייבת לכלול לפחות אות אחת")
+  .regex(/[0-9]/, "סיסמה חייבת לכלול לפחות ספרה אחת");
+
 const registerSchema = z.object({
   email: z.string().email("אימייל לא תקין"),
-  password: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
+  password: passwordSchema,
   name: z.string().min(1, "שם נדרש"),
   workspaceName: z.string().min(1, "שם סביבת עבודה נדרש"),
 });
@@ -141,7 +147,7 @@ authRouter.post("/logout", async (req, res) => {
 // POST /api/v1/auth/change-password (protected)
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(6, "סיסמה חייבת להיות לפחות 6 תווים"),
+  newPassword: passwordSchema,
 });
 
 authRouter.post(

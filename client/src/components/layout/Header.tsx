@@ -3,6 +3,7 @@ import { Search, Plus, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
 import NotificationCenter from "./NotificationCenter";
+import SearchDropdown from "./SearchDropdown";
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -12,6 +13,7 @@ interface HeaderProps {
 export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
 
   // Ctrl+K shortcut
   useEffect(() => {
@@ -42,14 +44,32 @@ export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSearch(e.target.value.length >= 2);
+            }}
+            onFocus={() => {
+              if (searchQuery.length >= 2) setShowSearch(true);
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Escape") setSearchQuery("");
+              if (e.key === "Escape") {
+                setSearchQuery("");
+                setShowSearch(false);
+              }
             }}
             placeholder="חיפוש אנשי קשר, עסקאות, פניות..."
             aria-label="חיפוש גלובלי"
             className="w-full pr-9 pl-4 py-2 bg-surface-secondary rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus-visible:ring-2 focus-visible:ring-primary transition-colors"
           />
+          {showSearch && searchQuery.length >= 2 && (
+            <SearchDropdown
+              query={searchQuery}
+              onClose={() => {
+                setShowSearch(false);
+                setSearchQuery("");
+              }}
+            />
+          )}
         </div>
       </div>
 

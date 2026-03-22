@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, X, User, Building2 } from "lucide-react";
+import { Plus, Building2, Tag } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -13,15 +13,22 @@ import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
 import ViewToggle from "../components/shared/ViewToggle";
+import ExportButton from "../components/shared/ExportButton";
+import BulkActionBar from "../components/shared/BulkActionBar";
 import {
   listContacts,
   createContact,
   updateContact,
   getContactsBoard,
+  bulkDeleteContacts,
   type Contact,
 } from "../api/contacts";
 import { listCompanies } from "../api/companies";
-import { CONTACT_STATUSES } from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import MondayTextCell from "../components/shared/MondayTextCell";
+import MondayNumberCell from "../components/shared/MondayNumberCell";
+import MondayPersonCell from "../components/shared/MondayPersonCell";
 
 // Generate consistent avatar color from name
 function avatarColor(name: string) {
@@ -42,6 +49,7 @@ function avatarColor(name: string) {
 }
 
 export default function ContactsPage() {
+  const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
   const [search, setSearch] = useState("");
@@ -54,6 +62,7 @@ export default function ContactsPage() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -78,6 +87,33 @@ export default function ContactsPage() {
     enabled: viewMode === "kanban",
   });
 
+  // Inline editing
+  const inlineUpdate = useInlineUpdate(updateContact, [["contacts"]]);
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+  });
+  const companyOptions = (companiesData?.data || []).map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
+
+  useEffect(
+    () => setSelectedIds(new Set()),
+    [page, debouncedSearch, statusFilter],
+  );
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: () => bulkDeleteContacts(Array.from(selectedIds)),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success(`${data.deleted} אנשי קשר נמחקו`);
+      setSelectedIds(new Set());
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       updateContact(id, { status }),
@@ -90,7 +126,7 @@ export default function ContactsPage() {
 
   // Kanban columns
   const kanbanColumns: KanbanCol<Contact>[] = Object.entries(
-    CONTACT_STATUSES,
+    contactStatuses,
   ).map(([key, info]) => ({
     key,
     label: info.label,
@@ -104,9 +140,7 @@ export default function ContactsPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(
-      `איש קשר הועבר ל${CONTACT_STATUSES[toColumn as keyof typeof CONTACT_STATUSES]?.label}`,
-    );
+    toast.success(`איש קשר הועבר ל${contactStatuses[toColumn]?.label}`);
   }
 
   const handleSort = useCallback(
@@ -123,6 +157,25 @@ export default function ContactsPage() {
 
   const columns = [
     {
+      key: "__select",
+      label: "",
+      width: "40px",
+      render: (row: Contact) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(row.id)}
+          onChange={() => {
+            const next = new Set(selectedIds);
+            if (next.has(row.id)) next.delete(row.id);
+            else next.add(row.id);
+            setSelectedIds(next);
+          }}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          className="w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA]"
+        />
+      ),
+    },
+    {
       key: "fullName",
       label: "שם",
       sortable: true,
@@ -136,10 +189,17 @@ export default function ContactsPage() {
           >
             {row.firstName?.[0] || "?"}
           </div>
-          <div className="min-w-0">
-            <span className="font-semibold text-text-primary block truncate">
-              {row.fullName}
-            </span>
+          <div className="min-w-0 flex-1">
+            <MondayTextCell
+              value={row.fullName}
+              onChange={(val) => {
+                const parts = val.split(" ");
+                inlineUpdate(row.id, {
+                  firstName: parts[0] || "",
+                  lastName: parts.slice(1).join(" ") || "",
+                });
+              }}
+            />
             {row.position && (
               <span className="text-text-tertiary text-[11px] block truncate">
                 {row.position}
@@ -152,26 +212,44 @@ export default function ContactsPage() {
     {
       key: "email",
       label: "אימייל",
-      render: (row: Contact) => (
-        <span dir="ltr" className="text-text-secondary text-sm">
-          {row.email || "—"}
-        </span>
-      ),
+      render: (row: Contact) =>
+        row.email ? (
+          <MondayTextCell
+            value={row.email}
+            onChange={(val) => inlineUpdate(row.id, { email: val })}
+            dir="ltr"
+          />
+        ) : (
+          <MondayTextCell
+            value=""
+            onChange={(val) => inlineUpdate(row.id, { email: val })}
+            dir="ltr"
+            placeholder="+ הוסף אימייל"
+          />
+        ),
     },
     {
       key: "phone",
       label: "טלפון",
       render: (row: Contact) => (
-        <span dir="ltr" className="text-text-secondary text-sm">
-          {row.phone || "—"}
-        </span>
+        <MondayTextCell
+          value={row.phone || ""}
+          onChange={(val) => inlineUpdate(row.id, { phone: val })}
+          dir="ltr"
+          placeholder="הוסף טלפון"
+        />
       ),
     },
     {
       key: "company",
       label: "חברה",
       render: (row: Contact) => (
-        <span className="text-sm">{row.company?.name || "—"}</span>
+        <MondayPersonCell
+          value={row.company}
+          options={companyOptions}
+          onChange={(id) => inlineUpdate(row.id, { companyId: id })}
+          placeholder="בחר חברה"
+        />
       ),
     },
     {
@@ -181,7 +259,7 @@ export default function ContactsPage() {
       render: (row: Contact) => (
         <StatusDropdown
           value={row.status}
-          options={CONTACT_STATUSES}
+          options={contactStatuses}
           onChange={(status) => statusMutation.mutate({ id: row.id, status })}
         />
       ),
@@ -190,25 +268,32 @@ export default function ContactsPage() {
       key: "leadScore",
       label: "ציון",
       sortable: true,
-      width: "100px",
+      width: "130px",
       render: (row: Contact) => {
-        const score = row.leadScore;
+        const score = row.leadScore ?? 0;
         const barColor =
           score >= 70 ? "#00CA72" : score >= 40 ? "#FDAB3D" : "#C4C4C4";
+        const bgTint =
+          score >= 70
+            ? "bg-green-50"
+            : score >= 40
+              ? "bg-amber-50"
+              : "bg-gray-50";
         return (
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-2 bg-surface-secondary rounded-full overflow-hidden">
+            <div className={`flex-1 h-2 rounded-full overflow-hidden ${bgTint}`}>
               <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${score}%`,
-                  backgroundColor: barColor,
-                }}
+                className="h-full rounded-full transition-all duration-300"
+                style={{ width: `${score}%`, backgroundColor: barColor }}
               />
             </div>
-            <span className="text-xs font-semibold text-text-secondary w-6 text-left">
-              {score}
-            </span>
+            <MondayNumberCell
+              value={row.leadScore}
+              onChange={(val) => inlineUpdate(row.id, { leadScore: val })}
+              suffix="%"
+              min={0}
+              max={100}
+            />
           </div>
         );
       },
@@ -218,11 +303,11 @@ export default function ContactsPage() {
       label: "תגיות",
       render: (row: Contact) =>
         row.tags.length > 0 ? (
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-1 flex-wrap items-center">
             {row.tags.slice(0, 2).map((t) => (
               <span
                 key={t.id}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+                className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full text-white shadow-sm"
                 style={{ backgroundColor: t.color }}
               >
                 {t.name}
@@ -235,7 +320,16 @@ export default function ContactsPage() {
             )}
           </div>
         ) : (
-          "—"
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedContactId(row.id);
+            }}
+            className="flex items-center gap-1 text-[11px] text-text-tertiary hover:text-primary px-2 py-1 rounded-md hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/30 transition-all group"
+          >
+            <Tag size={11} className="opacity-50 group-hover:opacity-100" />
+            <span>הוסף תגית</span>
+          </button>
         ),
     },
   ];
@@ -247,6 +341,10 @@ export default function ContactsPage() {
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          <ExportButton
+            entity="contacts"
+            filters={{ status: statusFilter, search: debouncedSearch }}
+          />
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
@@ -280,7 +378,7 @@ export default function ContactsPage() {
                 setPage(1);
               }}
             />
-            {Object.entries(CONTACT_STATUSES).map(([key, val]) => (
+            {Object.entries(contactStatuses).map(([key, val]) => (
               <FilterChip
                 key={key}
                 label={val.label}
@@ -331,6 +429,17 @@ export default function ContactsPage() {
       {showCreate && (
         <CreateContactModal onClose={() => setShowCreate(false)} />
       )}
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onDelete={() => {
+          if (window.confirm(`למחוק ${selectedIds.size} אנשי קשר?`)) {
+            bulkDeleteMutation.mutate();
+          }
+        }}
+        deleting={bulkDeleteMutation.isPending}
+      />
     </PageShell>
   );
 }
@@ -457,6 +566,7 @@ function FilterChip({
 }
 
 function CreateContactModal({ onClose }: { onClose: () => void }) {
+  const { leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     firstName: "",
@@ -596,12 +706,11 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
             className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
           >
             <option value="">בחרו מקור</option>
-            <option value="אתר">אתר</option>
-            <option value="טלפון">טלפון</option>
-            <option value="הפניה">הפניה</option>
-            <option value="פייסבוק">פייסבוק</option>
-            <option value="vixy">Vixy</option>
-            <option value="אחר">אחר</option>
+            {leadSources.map((src) => (
+              <option key={src} value={src}>
+                {src}
+              </option>
+            ))}
           </select>
         </div>
 

@@ -107,3 +107,20 @@ export interface BoardResponse<T> {
 export function getContactsBoard() {
   return api<BoardResponse<Contact>>("/contacts/board");
 }
+
+export function bulkDeleteContacts(ids: string[]) {
+  return api<{ deleted: number }>("/contacts/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export function bulkUpdateContacts(
+  ids: string[],
+  data: { status?: string; tagId?: string },
+) {
+  return api<{ success: boolean }>("/contacts/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, data }),
+  });
+}

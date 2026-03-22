@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { getDashboard } from "../api/dashboard";
-import { DEAL_STAGES, ACTIVITY_TYPES, PRIORITIES } from "../lib/constants";
+import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import CalendarWidget from "../components/dashboard/CalendarWidget";
 
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "#C4C4C4",
@@ -46,6 +47,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { dealStages, activityTypes, priorities } = useWorkspaceOptions();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -86,7 +88,7 @@ export default function DashboardPage() {
       </p>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 [&>*:nth-child(1)]:animate-fade-in-up [&>*:nth-child(2)]:animate-fade-in-up [&>*:nth-child(2)]:[animation-delay:50ms] [&>*:nth-child(3)]:animate-fade-in-up [&>*:nth-child(3)]:[animation-delay:100ms] [&>*:nth-child(4)]:animate-fade-in-up [&>*:nth-child(4)]:[animation-delay:150ms]">
         <KpiCard
           borderColor="#6161FF"
           icon={<Users size={24} />}
@@ -138,7 +140,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Pipeline Chart */}
-        <div className="bg-white rounded-2xl shadow-card p-5">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-bold text-text-primary text-base">
               צינור מכירות
@@ -154,7 +156,7 @@ export default function DashboardPage() {
           ) : (
             <>
               {/* Horizontal bar */}
-              <div className="flex rounded-full overflow-hidden h-8 mb-4">
+              <div className="flex rounded-full overflow-hidden h-9 mb-4 shadow-inner bg-surface-secondary">
                 {pipeline.map((p) => {
                   const pct =
                     kpis.totalPipelineValue > 0
@@ -164,7 +166,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={p.stage}
-                      className="flex items-center justify-center text-white text-[10px] font-bold transition-all"
+                      className="flex items-center justify-center text-white text-[10px] font-bold transition-all duration-500 hover:brightness-110"
                       style={{
                         backgroundColor: STAGE_COLORS[p.stage] || "#C4C4C4",
                         width: `${Math.max(pct, 8)}%`,
@@ -178,16 +180,15 @@ export default function DashboardPage() {
               {/* Legend */}
               <div className="space-y-2">
                 {pipeline.map((p) => (
-                  <div key={p.stage} className="flex items-center gap-3">
+                  <div key={p.stage} className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-surface-secondary/60 transition-colors">
                     <div
-                      className="w-3 h-3 rounded-sm flex-shrink-0"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{
                         backgroundColor: STAGE_COLORS[p.stage] || "#C4C4C4",
                       }}
                     />
                     <span className="text-sm text-text-primary flex-1">
-                      {DEAL_STAGES[p.stage as keyof typeof DEAL_STAGES]
-                        ?.label || p.stage}
+                      {dealStages[p.stage]?.label || p.stage}
                     </span>
                     <span className="text-xs text-text-tertiary">
                       {p.count} עסקאות
@@ -203,7 +204,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-card p-5">
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-bold text-text-primary text-base">
               פעילות אחרונה
@@ -223,11 +224,11 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-sm hover:bg-surface-secondary/50 transition-colors"
+                    className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-lg hover:bg-surface-secondary/50 transition-all duration-150 hover:translate-x-[-2px]"
                     style={{ borderRightColor: color }}
                   >
                     <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white shadow-sm"
                       style={{ backgroundColor: color }}
                     >
                       {ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS.SYSTEM}
@@ -235,7 +236,7 @@ export default function DashboardPage() {
                     <span className="text-sm text-text-primary flex-1 truncate">
                       {a.subject ||
                         (a.contact
-                          ? `${ACTIVITY_TYPES[a.type as keyof typeof ACTIVITY_TYPES]?.label || a.type} - ${a.contact.firstName} ${a.contact.lastName}`
+                          ? `${activityTypes[a.type]?.label || a.type} - ${a.contact.firstName} ${a.contact.lastName}`
                           : a.type)}
                     </span>
                     <span className="text-xs text-text-tertiary flex-shrink-0">
@@ -249,10 +250,35 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Calendar Widget */}
+        <CalendarWidget />
+      </div>
+
       {/* My Tasks */}
-      <div className="bg-white rounded-2xl shadow-card p-5">
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold text-text-primary text-base">המשימות שלי</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-bold text-text-primary text-base">המשימות שלי</h2>
+            {/* Task stat badges */}
+            <div className="flex items-center gap-1.5">
+              {kpis.tasksOverdue > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-danger/10 text-danger">
+                  {kpis.tasksOverdue} באיחור
+                </span>
+              )}
+              {kpis.tasksToday > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                  {kpis.tasksToday} להיום
+                </span>
+              )}
+              {(kpis.tasksCompletedThisWeek ?? 0) > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/10 text-success">
+                  {kpis.tasksCompletedThisWeek} הושלמו השבוע
+                </span>
+              )}
+            </div>
+          </div>
           <button
             onClick={() => navigate("/tasks")}
             className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
@@ -268,16 +294,37 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-1">
             {myTasks.map((t) => {
-              const p =
-                PRIORITIES[t.priority as keyof typeof PRIORITIES] ||
-                PRIORITIES.MEDIUM;
+              const p = priorities[t.priority] || priorities.MEDIUM;
+              const isOverdue =
+                t.dueDate &&
+                t.status !== "DONE" &&
+                new Date(t.dueDate) < new Date();
+              const isDueToday =
+                t.dueDate &&
+                t.status !== "DONE" &&
+                !isOverdue &&
+                new Date(t.dueDate).toDateString() ===
+                  new Date().toDateString();
               return (
                 <div
                   key={t.id}
-                  className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-surface-secondary/50 transition-colors"
+                  className={`flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-surface-secondary/50 transition-colors cursor-pointer ${
+                    isOverdue ? "bg-danger/[0.03]" : ""
+                  }`}
+                  onClick={() => navigate("/tasks")}
                 >
-                  <div className="w-5 h-5 rounded-md border-2 border-border flex-shrink-0 hover:border-success cursor-pointer transition-colors" />
-                  <span className="text-sm text-text-primary flex-1">
+                  <div
+                    className={`w-5 h-5 rounded-md border-2 flex-shrink-0 hover:border-success cursor-pointer transition-colors ${
+                      isOverdue ? "border-danger" : "border-border"
+                    }`}
+                  />
+                  <span
+                    className={`text-sm flex-1 ${
+                      isOverdue
+                        ? "text-danger font-medium"
+                        : "text-text-primary"
+                    }`}
+                  >
                     {t.title}
                   </span>
                   <span
@@ -286,8 +333,22 @@ export default function DashboardPage() {
                   >
                     {p.label}
                   </span>
-                  <span className="text-xs text-text-tertiary">
-                    {t.dueDate ? formatRelativeTime(t.dueDate) : "ללא תאריך"}
+                  <span
+                    className={`text-xs ${
+                      isOverdue
+                        ? "text-danger font-semibold"
+                        : isDueToday
+                          ? "text-warning font-semibold"
+                          : "text-text-tertiary"
+                    }`}
+                  >
+                    {isOverdue
+                      ? "באיחור!"
+                      : isDueToday
+                        ? "היום"
+                        : t.dueDate
+                          ? formatRelativeTime(t.dueDate)
+                          : "ללא תאריך"}
                   </span>
                 </div>
               );
@@ -342,12 +403,12 @@ function KpiCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-card p-5 cursor-pointer hover:shadow-card-hover transition-all border-t-4 active:scale-[0.98]"
+      className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card p-5 cursor-pointer hover:shadow-card-hover hover:scale-[1.02] hover:bg-white transition-all duration-200 border-t-4 active:scale-[0.97] group"
       style={{ borderTopColor: borderColor }}
     >
       <div className="flex items-center justify-between mb-3">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center"
+          className="w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200"
           style={{ backgroundColor: iconBg, color: iconColor }}
         >
           {icon}

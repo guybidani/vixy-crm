@@ -10,23 +10,32 @@ import { knowledgeRouter } from "./knowledge.routes";
 import { cannedRouter } from "./canned.routes";
 import { slaRouter } from "./sla.routes";
 import { dashboardRouter } from "./dashboard.routes";
-import { vixyRouter } from "./vixy.routes";
+import { vixyRouter, vixyWebhookRouter } from "./vixy.routes";
+import { kolioWebhookRouter } from "./kolio.routes";
 import { followupRouter } from "./followup.routes";
 import { documentRouter } from "./document.routes";
 import { boardsRouter } from "./boards.routes";
 import { automationRouter } from "./automation.routes";
 import { notificationRouter } from "./notification.routes";
+import { settingsRouter } from "./settings.routes";
+import { tagsRouter } from "./tags.routes";
+import { searchRouter } from "./search.routes";
+import { exportRouter } from "./export.routes";
+import { calendarRouter } from "./calendar.routes";
 import { requireAuth, requireWorkspace } from "../middleware/auth";
+import { checkNavPermission } from "../middleware/navPermission";
 
 export const router = Router();
 
 // Public routes (no auth required)
 router.use("/auth", authRouter);
-router.use("/vixy/webhook", vixyRouter); // Webhook uses HMAC signature auth, not JWT
+router.use("/vixy/webhook", vixyWebhookRouter); // Webhook uses HMAC signature auth, not JWT
+router.use("/kolio/webhook", kolioWebhookRouter); // Kolio call analysis webhook, HMAC auth
 
 // Protected routes (require auth + workspace membership)
 router.use(requireAuth);
 router.use(requireWorkspace);
+router.use(checkNavPermission);
 
 // Domain routes
 router.use("/contacts", contactsRouter);
@@ -45,5 +54,9 @@ router.use("/documents", documentRouter);
 router.use("/boards", boardsRouter);
 router.use("/automations", automationRouter);
 router.use("/notifications", notificationRouter);
-// router.use('/tags', tagsRouter);
+router.use("/settings", settingsRouter);
+router.use("/tags", tagsRouter);
+router.use("/search", searchRouter);
+router.use("/export", exportRouter);
+router.use("/calendar", calendarRouter);
 // router.use('/smart-views', smartViewsRouter);

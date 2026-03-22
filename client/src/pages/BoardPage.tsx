@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
+import { Pencil, Lock, Shield } from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
+import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import PageShell from "../components/layout/PageShell";
 import MondayBoard, {
   MondayStatusCell,
@@ -103,6 +105,11 @@ export default function BoardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { workspaces, currentWorkspaceId } = useAuth();
+  const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
+  const userRole = currentWs?.role;
+  const canManagePermissions = userRole === "OWNER" || userRole === "ADMIN";
+  const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
   const [editingCell, setEditingCell] = useState<{
@@ -247,7 +254,7 @@ export default function BoardPage() {
         <div className="text-center py-16">
           <p className="text-text-secondary mb-4">הבורד המבוקש לא נמצא</p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/dashboard")}
             className="text-primary hover:underline text-sm"
           >
             חזור לדשבורד
@@ -272,6 +279,7 @@ export default function BoardPage() {
           key: "name",
           label: board.columns.find((c) => c.key === "name")?.label || "שם",
           width: "220px",
+          sortable: true,
           render: (row: BoardRow) => {
             if (
               editingCell?.itemId === row.id &&
@@ -325,6 +333,7 @@ export default function BoardPage() {
                   key: col.key,
                   label: col.label,
                   width: col.width || "140px",
+                  sortable: true,
                   render: (row: BoardRow) => (
                     <MondayStatusCell
                       value={row[col.key] || ""}
@@ -354,6 +363,7 @@ export default function BoardPage() {
                 key: col.key,
                 label: col.label,
                 width: col.width || "130px",
+                sortable: true,
                 render: (row: BoardRow) => {
                   const val = row[col.key];
                   return (
@@ -378,6 +388,7 @@ export default function BoardPage() {
                 key: col.key,
                 label: col.label,
                 width: col.width || "100px",
+                sortable: true,
                 render: (row: BoardRow) => {
                   if (
                     editingCell?.itemId === row.id &&
@@ -607,6 +618,9 @@ export default function BoardPage() {
         setBoardNameValue(board?.name || "");
       }}
     >
+      {board?.isPrivate && (
+        <Lock size={14} className="text-[#6161FF] flex-shrink-0" />
+      )}
       {board?.name || "טוען..."}
       <Pencil
         size={14}
@@ -621,6 +635,15 @@ export default function BoardPage() {
       actions={
         <div className="flex items-center gap-2">
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          {canManagePermissions && (
+            <button
+              onClick={() => setPermissionsOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] hover:border-[#6161FF] hover:text-[#6161FF] transition-colors"
+            >
+              <Shield size={14} />
+              הרשאות
+            </button>
+          )}
           <button
             onClick={() => setColumnEditorOpen(true)}
             className="px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
@@ -690,6 +713,16 @@ export default function BoardPage() {
           }}
           statusKey={statusCol?.key as any}
           statusOptions={statusOpts}
+          groupByColumns={
+            board?.columns
+              .filter(
+                (c) =>
+                  c.type === "STATUS" ||
+                  c.type === "PRIORITY" ||
+                  c.type === "TEXT",
+              )
+              .map((c) => ({ key: c.key, label: c.label })) || []
+          }
         />
       ) : /* Kanban View */
       kanbanColumns.length > 0 ? (
@@ -792,6 +825,17 @@ export default function BoardPage() {
           open={columnEditorOpen}
           onClose={() => setColumnEditorOpen(false)}
           boardId={board.id}
+        />
+      )}
+
+      {/* Board Permissions Modal */}
+      {board && canManagePermissions && (
+        <BoardPermissionsModal
+          open={permissionsOpen}
+          onClose={() => setPermissionsOpen(false)}
+          boardId={board.id}
+          boardName={board.name}
+          isPrivate={board.isPrivate ?? false}
         />
       )}
     </PageShell>

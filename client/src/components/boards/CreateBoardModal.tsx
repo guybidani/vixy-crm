@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { X, LayoutGrid, Users, Handshake, CheckSquare } from "lucide-react";
+import { LayoutGrid, Users, Handshake, CheckSquare } from "lucide-react";
 import { cn } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import {
   getTemplates,
   createBoard,
-  type BoardTemplate,
 } from "../../api/boards";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
