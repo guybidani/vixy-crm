@@ -92,6 +92,7 @@ export function createTicket(data: {
   subject: string;
   description?: string;
   priority?: string;
+  urgencyLevel?: string;
   channel?: string;
   contactId?: string;
   assigneeId?: string;
@@ -109,6 +110,7 @@ export function updateTicket(
     description: string;
     status: string;
     priority: string;
+    urgencyLevel: string;
     assigneeId: string;
   }>,
 ) {

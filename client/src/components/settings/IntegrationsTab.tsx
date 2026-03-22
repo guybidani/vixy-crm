@@ -13,14 +13,21 @@ export default function IntegrationsTab() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  // Handle OAuth callback: ?calendar=connected
+  // Handle OAuth callback: ?calendar_connected=1 or ?calendar=connected
   useEffect(() => {
-    if (searchParams.get("calendar") === "connected") {
-      toast.success("Google Calendar חובר בהצלחה!");
+    const connected = searchParams.get("calendar_connected") === "1" || searchParams.get("calendar") === "connected";
+    const calError = searchParams.get("calendar_error");
+    if (connected) {
+      toast.success("Google Calendar חובר בהצלחה! 📅");
       queryClient.invalidateQueries({ queryKey: ["calendar-status"] });
-      // Remove the query param without navigation
       const next = new URLSearchParams(searchParams);
+      next.delete("calendar_connected");
       next.delete("calendar");
+      setSearchParams(next, { replace: true });
+    } else if (calError) {
+      toast.error(`שגיאה בחיבור Google Calendar: ${calError}`);
+      const next = new URLSearchParams(searchParams);
+      next.delete("calendar_error");
       setSearchParams(next, { replace: true });
     }
   }, [searchParams, setSearchParams, queryClient]);

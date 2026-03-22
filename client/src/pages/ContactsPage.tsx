@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Building2, Tag } from "lucide-react";
+import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -266,34 +267,16 @@ export default function ContactsPage() {
     },
     {
       key: "leadScore",
-      label: "ציון",
+      label: "חום ליד",
       sortable: true,
-      width: "130px",
+      width: "150px",
       render: (row: Contact) => {
         const score = row.leadScore ?? 0;
-        const barColor =
-          score >= 70 ? "#00CA72" : score >= 40 ? "#FDAB3D" : "#C4C4C4";
-        const bgTint =
-          score >= 70
-            ? "bg-green-50"
-            : score >= 40
-              ? "bg-amber-50"
-              : "bg-gray-50";
+        const heat = row.leadHeat || heatFromScore(score);
         return (
           <div className="flex items-center gap-2">
-            <div className={`flex-1 h-2 rounded-full overflow-hidden ${bgTint}`}>
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${score}%`, backgroundColor: barColor }}
-              />
-            </div>
-            <MondayNumberCell
-              value={row.leadScore}
-              onChange={(val) => inlineUpdate(row.id, { leadScore: val })}
-              suffix="%"
-              min={0}
-              max={100}
-            />
+            <LeadHeatBadge heat={heat} size="sm" />
+            <span className="text-xs text-text-tertiary">{score}</span>
           </div>
         );
       },

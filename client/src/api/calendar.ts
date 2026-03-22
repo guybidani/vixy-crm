@@ -36,7 +36,7 @@ export function syncTaskToCalendar(taskId: string) {
 
 export function disconnectCalendar() {
   return api<{ success: boolean }>("/calendar/disconnect", {
-    method: "DELETE",
+    method: "POST",
   });
 }
 

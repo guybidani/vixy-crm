@@ -257,9 +257,10 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
+  const [taskTypeFilter, setTaskTypeFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState("dueDate");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showCreate, setShowCreate] = useState(false);
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [searchRaw, setSearchRaw] = useState("");
@@ -281,8 +282,16 @@ export default function TasksPage() {
   const memberOptions = (members || []).map((m) => ({ id: m.memberId, name: m.name }));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks", { statusFilter, page, sortBy, sortDir }],
-    queryFn: () => listTasks({ status: statusFilter || undefined, page, sortBy, sortDir }),
+    queryKey: ["tasks", { statusFilter, taskTypeFilter, page, sortBy, sortDir, myTasksOnly }],
+    queryFn: () =>
+      listTasks({
+        status: statusFilter || undefined,
+        taskType: taskTypeFilter || undefined,
+        page,
+        sortBy,
+        sortDir,
+        myOnly: myTasksOnly,
+      }),
     enabled: viewMode === "table",
   });
 
@@ -303,10 +312,9 @@ export default function TasksPage() {
   const tasks = useMemo(() => {
     let list = data?.data || [];
     if (priorityFilter) list = list.filter((t) => t.priority === priorityFilter);
-    if (myTasksOnly && currentMemberId) list = list.filter((t) => t.assignee?.id === currentMemberId);
     if (searchQuery.trim()) list = list.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
     return list;
-  }, [data, priorityFilter, myTasksOnly, currentMemberId, searchQuery]);
+  }, [data, priorityFilter, searchQuery]);
 
   const kanbanColumns: KanbanCol<Task>[] = useMemo(
     () => Object.entries(taskStatuses).map(([key, info]) => {
@@ -413,6 +421,29 @@ export default function TasksPage() {
             ))}
             <span className="text-border text-xs select-none">|</span>
             <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+            <span className="text-border text-xs select-none">|</span>
+            {[
+              { value: "", label: "כל הסוגים", icon: "" },
+              { value: "CALL", label: "שיחה", icon: "📞" },
+              { value: "EMAIL", label: "אימייל", icon: "📧" },
+              { value: "MEETING", label: "פגישה", icon: "🤝" },
+              { value: "WHATSAPP", label: "וואטסאפ", icon: "💬" },
+              { value: "FOLLOW_UP", label: "מעקב", icon: "🔄" },
+              { value: "TASK", label: "משימה", icon: "📋" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setTaskTypeFilter(opt.value); setPage(1); }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                  taskTypeFilter === opt.value
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                }`}
+              >
+                {opt.icon && <span>{opt.icon}</span>}
+                <span>{opt.label}</span>
+              </button>
+            ))}
           </div>
           <div className="relative">
             <Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
@@ -546,10 +577,19 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
     >
       <span className={`font-semibold text-sm block mb-1.5 ${isDone ? "line-through text-text-tertiary" : "text-text-primary"}`}>{task.title}</span>
       {task.description && <p className="text-xs text-text-tertiary truncate mb-2">{task.description}</p>}
-      <div className="flex items-center gap-1.5 mb-1">
+      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}>
           {priorityInfo?.label || task.priority}
         </span>
+        {task.taskType && task.taskType !== "TASK" && (() => {
+          const TASK_ICONS: Record<string, string> = { CALL: "📞", EMAIL: "📧", MEETING: "🤝", WHATSAPP: "💬", FOLLOW_UP: "🔄" };
+          const TASK_LABELS: Record<string, string> = { CALL: "שיחה", EMAIL: "אימייל", MEETING: "פגישה", WHATSAPP: "וואטסאפ", FOLLOW_UP: "מעקב" };
+          return (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-surface-secondary text-text-secondary">
+              {TASK_ICONS[task.taskType]} {TASK_LABELS[task.taskType]}
+            </span>
+          );
+        })()}
       </div>
       <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
         <div className="flex items-center gap-1">
@@ -711,11 +751,11 @@ const REMINDER_OPTIONS = [
 function CreateTaskModal({ onClose }: { onClose: () => void }) {
   const { priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ title: "", description: "", priority: "MEDIUM", dueDate: "", dueTime: "", reminderMinutes: 15, contactId: "", dealId: "" });
+  const [form, setForm] = useState({ title: "", description: "", priority: "MEDIUM", taskType: "TASK", dueDate: "", dueTime: "", reminderMinutes: 15, contactId: "", dealId: "" });
   const { data: contacts } = useQuery({ queryKey: ["contacts", { limit: 100 }], queryFn: () => listContacts({ limit: 100 }) });
   const { data: deals } = useQuery({ queryKey: ["deals", { limit: 100 }], queryFn: () => listDeals({ limit: 100 }) });
   const mutation = useMutation({
-    mutationFn: () => createTask({ title: form.title, description: form.description || undefined, priority: form.priority, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined, reminderMinutes: form.dueTime ? form.reminderMinutes : undefined, contactId: form.contactId || undefined, dealId: form.dealId || undefined }),
+    mutationFn: () => createTask({ title: form.title, description: form.description || undefined, priority: form.priority, taskType: form.taskType, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined, reminderMinutes: form.dueTime ? form.reminderMinutes : undefined, contactId: form.contactId || undefined, dealId: form.dealId || undefined }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
@@ -729,6 +769,35 @@ function CreateTaskModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal open={true} onClose={onClose} title="משימה חדשה">
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
+        {/* Task Type selector */}
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-2">סוג משימה</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "TASK", label: "משימה", icon: "📋", color: "#6161FF" },
+              { value: "CALL", label: "שיחה", icon: "📞", color: "#00CA72" },
+              { value: "EMAIL", label: "אימייל", icon: "📧", color: "#579BFC" },
+              { value: "MEETING", label: "פגישה", icon: "🤝", color: "#A25DDC" },
+              { value: "WHATSAPP", label: "וואטסאפ", icon: "💬", color: "#25D366" },
+              { value: "FOLLOW_UP", label: "מעקב", icon: "🔄", color: "#FDAB3D" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setField("taskType", opt.value)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all"
+                style={
+                  form.taskType === opt.value
+                    ? { backgroundColor: opt.color, color: "#fff", borderColor: opt.color }
+                    : { backgroundColor: "#fff", color: opt.color, borderColor: opt.color }
+                }
+              >
+                <span>{opt.icon}</span>
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">כותרת *</label>
           <input type="text" value={form.title} onChange={(e) => setField("title", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" required />

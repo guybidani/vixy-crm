@@ -9,6 +9,7 @@ import {
   Globe,
   Smartphone,
 } from "lucide-react";
+import UrgencyBadge from "../components/shared/UrgencyBadge";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
@@ -179,6 +180,14 @@ export default function TicketsPage() {
             priorityMutation.mutate({ id: row.id, priority })
           }
         />
+      ),
+    },
+    {
+      key: "urgencyLevel",
+      label: "דחיפות",
+      width: "110px",
+      render: (row: Ticket) => (
+        <UrgencyBadge urgency={row.urgencyLevel} size="sm" />
       ),
     },
     {
@@ -476,6 +485,7 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
     subject: "",
     description: "",
     priority: "MEDIUM",
+    urgencyLevel: "MEDIUM",
     channel: "email",
     contactId: "",
   });
@@ -491,6 +501,7 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
         subject: form.subject,
         description: form.description || undefined,
         priority: form.priority,
+        urgencyLevel: form.urgencyLevel,
         channel: form.channel,
         contactId: form.contactId || undefined,
       }),

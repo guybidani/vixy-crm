@@ -111,16 +111,12 @@ export default function ContactDetailPage() {
                     color={statusInfo.color}
                   />
                 )}
-                <span
-                  className={`text-sm font-semibold ${
-                    contact.leadScore >= 70
-                      ? "text-success"
-                      : contact.leadScore >= 40
-                        ? "text-warning"
-                        : "text-text-tertiary"
-                  }`}
-                >
-                  ציון: {contact.leadScore}
+                <LeadHeatBadge
+                  heat={contact.leadHeat || heatFromScore(contact.leadScore)}
+                  size="md"
+                />
+                <span className="text-xs text-text-tertiary">
+                  {contact.leadScore}/100
                 </span>
               </div>
             </div>
@@ -622,6 +618,7 @@ function EditContactModal({
     source: contact.source || "",
     status: contact.status,
     leadScore: contact.leadScore,
+    leadHeat: (contact.leadHeat as LeadHeat | null) || null,
     companyId: contact.companyId || "",
   });
 
@@ -640,6 +637,7 @@ function EditContactModal({
         position: form.position || undefined,
         source: form.source || undefined,
         leadScore: Number(form.leadScore),
+        leadHeat: form.leadHeat || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
@@ -781,6 +779,17 @@ function EditContactModal({
               value={form.leadScore}
               onChange={(e) => setField("leadScore", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            />
+          </div>
+
+          {/* Lead Heat */}
+          <div>
+            <label className="block text-sm font-semibold text-text-secondary mb-2">
+              חום ליד
+            </label>
+            <LeadHeatPicker
+              value={form.leadHeat}
+              onChange={(heat) => setForm((f) => ({ ...f, leadHeat: heat }))}
             />
           </div>
         </div>
