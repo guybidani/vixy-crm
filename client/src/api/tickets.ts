@@ -7,6 +7,7 @@ export interface Ticket {
   description: string | null;
   status: "NEW" | "OPEN" | "PENDING" | "RESOLVED" | "CLOSED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  urgencyLevel: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
   channel: string;
   contact: { id: string; name: string } | null;
   assignee: { id: string; name: string } | null;

@@ -7,10 +7,13 @@ import { cancelTaskReminder } from "../queue/reminder.queue";
 
 export const tasksRouter = Router();
 
+const TASK_TYPES = ["CALL", "EMAIL", "MEETING", "WHATSAPP", "FOLLOW_UP", "TASK"] as const;
+
 const createSchema = z.object({
   title: z.string().min(1, "כותרת נדרשת"),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  taskType: z.enum(TASK_TYPES).optional(),
   dueDate: z.string().optional(),
   dueTime: z
     .string()
@@ -28,6 +31,7 @@ const updateSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["TODO", "IN_PROGRESS", "DONE", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  taskType: z.enum(TASK_TYPES).optional(),
   dueDate: z.string().optional(),
   dueTime: z
     .string()
@@ -36,18 +40,31 @@ const updateSchema = z.object({
     .nullable(),
   reminderMinutes: z.number().int().min(0).max(10080).optional(),
   assigneeId: z.string().uuid().optional(),
+  outcomeNote: z.string().optional(),
 });
 
 tasksRouter.get("/", async (req, res, next) => {
   try {
+    // "myOnly" filter: resolve current member's ID
+    let myAssigneeId = req.query.assigneeId as string | undefined;
+    if (req.query.myOnly === "true") {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      if (member) myAssigneeId = member.id;
+    }
+
     const result = await tasksService.list({
       workspaceId: req.workspaceId!,
       page: Number(req.query.page) || 1,
       limit: Math.min(Number(req.query.limit) || 50, 100),
       status: req.query.status as string,
-      assigneeId: req.query.assigneeId as string,
+      taskType: req.query.taskType as string,
+      assigneeId: myAssigneeId,
       contactId: req.query.contactId as string,
       dealId: req.query.dealId as string,
+      ticketId: req.query.ticketId as string,
+      dueTodayOnly: req.query.dueTodayOnly === "true",
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
     });

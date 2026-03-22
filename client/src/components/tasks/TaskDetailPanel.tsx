@@ -19,7 +19,17 @@ import {
   Mail,
   MessageSquare,
   TrendingUp,
+  Tag,
 } from "lucide-react";
+
+const TASK_TYPE_OPTIONS = [
+  { value: "TASK", label: "משימה", icon: "📋", color: "#6161FF" },
+  { value: "CALL", label: "שיחה", icon: "📞", color: "#00CA72" },
+  { value: "EMAIL", label: "אימייל", icon: "📧", color: "#579BFC" },
+  { value: "MEETING", label: "פגישה", icon: "🤝", color: "#A25DDC" },
+  { value: "WHATSAPP", label: "וואטסאפ", icon: "💬", color: "#25D366" },
+  { value: "FOLLOW_UP", label: "מעקב", icon: "🔄", color: "#FDAB3D" },
+];
 import toast from "react-hot-toast";
 import StatusDropdown from "../shared/StatusDropdown";
 import MondayPersonCell, {
@@ -81,6 +91,8 @@ export default function TaskDetailPanel({
   const [titleValue, setTitleValue] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionValue, setDescriptionValue] = useState("");
+  const [editingOutcome, setEditingOutcome] = useState(false);
+  const [outcomeValue, setOutcomeValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: task, isLoading } = useQuery({
@@ -214,7 +226,7 @@ export default function TaskDetailPanel({
               {task.title}
             </h2>
           )}
-          <div className="flex items-center gap-2 mt-1.5">
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <StatusDropdown
               value={task.status}
               options={taskStatuses}
@@ -227,6 +239,19 @@ export default function TaskDetailPanel({
             >
               {priorityInfo?.label || task.priority}
             </span>
+            {(() => {
+              const tt = TASK_TYPE_OPTIONS.find(o => o.value === (task.taskType || "TASK"));
+              return tt && tt.value !== "TASK" ? (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border" style={{ color: tt.color, borderColor: tt.color }}>
+                  {tt.icon} {tt.label}
+                </span>
+              ) : null;
+            })()}
+            {task.dueTime && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-secondary flex items-center gap-0.5">
+                <Clock size={9} /> {task.dueTime}
+              </span>
+            )}
             {isOverdue && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-danger/10 text-danger">
                 באיחור!
@@ -325,16 +350,50 @@ export default function TaskDetailPanel({
             />
           </div>
 
-          {/* Due Date */}
+          {/* Task Type */}
+          <div className="flex items-center justify-between py-2">
+            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+              <Tag size={13} />
+              סוג משימה
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {TASK_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => updateMutation.mutate({ taskType: opt.value })}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all"
+                  style={
+                    (task.taskType || "TASK") === opt.value
+                      ? { backgroundColor: opt.color, color: "#fff", borderColor: opt.color }
+                      : { backgroundColor: "transparent", color: opt.color, borderColor: opt.color }
+                  }
+                >
+                  <span>{opt.icon}</span>
+                  <span>{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Due Date + Time */}
           <div className="flex items-center justify-between py-2">
             <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
               <Calendar size={13} />
-              תאריך יעד
+              תאריך ושעה
             </label>
-            <MondayDateCell
-              value={task.dueDate || null}
-              onChange={(val) => updateMutation.mutate({ dueDate: val ?? undefined })}
-            />
+            <div className="flex items-center gap-2">
+              <MondayDateCell
+                value={task.dueDate || null}
+                onChange={(val) => updateMutation.mutate({ dueDate: val ?? undefined })}
+              />
+              <input
+                type="time"
+                value={task.dueTime || ""}
+                onChange={(e) => updateMutation.mutate({ dueTime: e.target.value || null })}
+                className="text-xs border border-border-light rounded px-2 py-1 focus:outline-none focus:border-primary bg-white"
+                title="שעת יעד"
+              />
+            </div>
           </div>
 
           {/* Assignee */}
@@ -356,6 +415,45 @@ export default function TaskDetailPanel({
               placeholder="בחר נציג"
             />
           </div>
+
+          {/* Outcome Note (shown when completed) */}
+          {isDone && (
+            <div>
+              <label className="text-xs font-semibold text-text-tertiary uppercase mb-1.5 block flex items-center gap-1.5">
+                <CheckCircle2 size={13} className="text-success" />
+                תוצאה / סיכום
+              </label>
+              {editingOutcome ? (
+                <textarea
+                  autoFocus
+                  className="w-full px-3 py-2 border border-success rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-success/30 resize-none min-h-[70px] bg-success/5"
+                  value={outcomeValue}
+                  onChange={(e) => setOutcomeValue(e.target.value)}
+                  onBlur={() => {
+                    if (outcomeValue !== (task.outcomeNote || "")) {
+                      updateMutation.mutate({ outcomeNote: outcomeValue });
+                    }
+                    setEditingOutcome(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") setEditingOutcome(false);
+                  }}
+                />
+              ) : (
+                <div
+                  className="text-sm text-text-secondary cursor-text rounded-lg px-3 py-2 hover:bg-success/5 transition-colors min-h-[36px] border border-dashed border-success/30"
+                  onClick={() => {
+                    setOutcomeValue(task.outcomeNote || "");
+                    setEditingOutcome(true);
+                  }}
+                >
+                  {task.outcomeNote || (
+                    <span className="text-text-tertiary">הוסף סיכום מה התרחש...</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Divider */}
           <div className="border-t border-border-light my-3" />

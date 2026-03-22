@@ -6,10 +6,13 @@ import { prisma } from "../db/client";
 
 export const ticketsRouter = Router();
 
+const URGENCY_LEVELS = ["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const;
+
 const createSchema = z.object({
   subject: z.string().min(1, "נושא נדרש"),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  urgencyLevel: z.enum(URGENCY_LEVELS).optional(),
   channel: z.string().optional(),
   contactId: z.string().uuid().optional(),
   assigneeId: z.string().uuid().optional(),
@@ -20,6 +23,7 @@ const updateSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["NEW", "OPEN", "PENDING", "RESOLVED", "CLOSED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+  urgencyLevel: z.enum(URGENCY_LEVELS).optional(),
   assigneeId: z.string().uuid().optional(),
 });
 

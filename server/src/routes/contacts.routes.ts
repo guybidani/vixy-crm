@@ -19,6 +19,7 @@ const createSchema = z.object({
     .enum(["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"])
     .optional(),
   leadScore: z.number().min(0).max(100).optional(),
+  leadHeat: z.enum(["HOT", "WARM", "LUKEWARM", "COLD", "FROZEN"]).optional().nullable(),
 });
 
 const updateSchema = createSchema.partial();

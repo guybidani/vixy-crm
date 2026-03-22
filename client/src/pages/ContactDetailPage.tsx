@@ -26,6 +26,7 @@ import {
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
+import LeadHeatBadge, { LeadHeatPicker, heatFromScore, type LeadHeat } from "../components/shared/LeadHeatBadge";
 import FollowUpCard from "../components/contacts/FollowUpCard";
 import Modal from "../components/shared/Modal";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";

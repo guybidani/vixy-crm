@@ -88,6 +88,7 @@ export async function list(params: ListParams) {
             resolutionMinutes: t.slaPolicy.resolutionMinutes,
           }
         : null,
+      urgencyLevel: t.urgencyLevel,
       firstResponseAt: t.firstResponseAt,
       resolvedAt: t.resolvedAt,
       csatScore: t.csatScore,
@@ -138,6 +139,7 @@ export async function create(
     subject: string;
     description?: string;
     priority?: string;
+    urgencyLevel?: string;
     channel?: string;
     contactId?: string;
     assigneeId?: string;
@@ -154,6 +156,7 @@ export async function create(
       subject: data.subject,
       description: data.description,
       priority: (data.priority as any) || "MEDIUM",
+      urgencyLevel: (data.urgencyLevel as any) || "MEDIUM",
       channel: data.channel || "email",
       contactId: data.contactId,
       assigneeId: data.assigneeId,
@@ -189,6 +192,7 @@ export async function update(
     description: string;
     status: string;
     priority: string;
+    urgencyLevel: string;
     assigneeId: string;
   }>,
 ) {

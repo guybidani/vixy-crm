@@ -158,7 +158,31 @@ kolioWebhookRouter.post("/", async (req, res, next) => {
 
     const body = bodyParts.join("\n");
 
-    // Create the activity
+    // Create the activity — use JSON roundtrip to ensure Prisma-compatible types
+    const metadata = JSON.parse(JSON.stringify({
+      source: "kolio",
+      kolioCallId: call.id,
+      repName: call.repName,
+      direction: call.direction,
+      callType: call.callType,
+      recordedAt: call.recordedAt,
+      analysis: {
+        overallScore: analysis.overallScore,
+        scores: analysis.scores,
+        summary: analysis.summary,
+        prospectName: analysis.prospectName,
+        prospectBusiness: analysis.prospectBusiness,
+        coachingTips: analysis.coachingTips,
+        objections: analysis.objections,
+        retentionPoints: analysis.retentionPoints,
+        improvementPoints: analysis.improvementPoints,
+        buyingSignals: analysis.buyingSignals,
+        nextCallPrep: analysis.nextCallPrep,
+        talkRatioRep: analysis.talkRatioRep,
+        talkRatioCustomer: analysis.talkRatioCustomer,
+      },
+    }));
+
     const activity = await prisma.activity.create({
       data: {
         workspaceId,
@@ -167,29 +191,7 @@ kolioWebhookRouter.post("/", async (req, res, next) => {
         subject,
         body,
         contactId: contactId || null,
-        metadata: {
-          source: "kolio",
-          kolioCallId: call.id,
-          repName: call.repName,
-          direction: call.direction,
-          callType: call.callType,
-          recordedAt: call.recordedAt,
-          analysis: {
-            overallScore: analysis.overallScore,
-            scores: analysis.scores,
-            summary: analysis.summary,
-            prospectName: analysis.prospectName,
-            prospectBusiness: analysis.prospectBusiness,
-            coachingTips: analysis.coachingTips,
-            objections: analysis.objections,
-            retentionPoints: analysis.retentionPoints,
-            improvementPoints: analysis.improvementPoints,
-            buyingSignals: analysis.buyingSignals,
-            nextCallPrep: analysis.nextCallPrep,
-            talkRatioRep: analysis.talkRatioRep,
-            talkRatioCustomer: analysis.talkRatioCustomer,
-          },
-        },
+        metadata,
       },
       include: {
         member: { include: { user: { select: { name: true } } } },

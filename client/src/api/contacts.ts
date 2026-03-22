@@ -12,6 +12,7 @@ export interface Contact {
   source: string | null;
   status: "LEAD" | "QUALIFIED" | "CUSTOMER" | "CHURNED" | "INACTIVE";
   leadScore: number;
+  leadHeat: "HOT" | "WARM" | "LUKEWARM" | "COLD" | "FROZEN" | null;
   lastActivityAt: string | null;
   tags: Array<{ id: string; name: string; color: string }>;
   createdBy: string;

@@ -87,6 +87,7 @@ export async function list(params: ListParams) {
       source: c.source,
       status: c.status,
       leadScore: c.leadScore,
+      leadHeat: c.leadHeat,
       lastActivityAt: c.lastActivityAt,
       tags: c.tags.map((t) => ({
         id: t.tag.id,
@@ -213,6 +214,7 @@ export async function update(
     source: string;
     status: string;
     leadScore: number;
+    leadHeat: string;
   }>,
 ) {
   const existing = await prisma.contact.findFirst({
@@ -227,6 +229,7 @@ export async function update(
     data: {
       ...data,
       status: data.status as any,
+      leadHeat: data.leadHeat as any,
       lastActivityAt: new Date(),
     },
     include: {

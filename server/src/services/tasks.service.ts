@@ -14,9 +14,12 @@ interface ListParams {
   page?: number;
   limit?: number;
   status?: string;
+  taskType?: string;
   assigneeId?: string;
   contactId?: string;
   dealId?: string;
+  ticketId?: string;
+  dueTodayOnly?: boolean;
   sortBy?: string;
   sortDir?: "asc" | "desc";
 }
@@ -36,9 +39,12 @@ export async function list(params: ListParams) {
     page = 1,
     limit = 50,
     status,
+    taskType,
     assigneeId,
     contactId,
     dealId,
+    ticketId,
+    dueTodayOnly,
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
   } = params;
@@ -49,9 +55,16 @@ export async function list(params: ListParams) {
   const where: Prisma.TaskWhereInput = { workspaceId };
 
   if (status) where.status = status as any;
+  if (taskType) where.taskType = taskType as any;
   if (assigneeId) where.assigneeId = assigneeId;
   if (contactId) where.contactId = contactId;
   if (dealId) where.dealId = dealId;
+  if (ticketId) where.ticketId = ticketId;
+  if (dueTodayOnly) {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end = new Date(); end.setHours(23, 59, 59, 999);
+    where.dueDate = { gte: start, lte: end };
+  }
 
   const [tasks, total] = await Promise.all([
     prisma.task.findMany({
@@ -76,7 +89,11 @@ export async function list(params: ListParams) {
       description: t.description,
       status: t.status,
       priority: t.priority,
+      taskType: t.taskType,
       dueDate: t.dueDate,
+      dueTime: t.dueTime,
+      reminderMinutes: t.reminderMinutes,
+      outcomeNote: t.outcomeNote,
       assignee: t.assignee
         ? { id: t.assignee.id, name: t.assignee.user.name }
         : null,
@@ -114,7 +131,11 @@ export async function getById(workspaceId: string, id: string) {
     description: task.description,
     status: task.status,
     priority: task.priority,
+    taskType: task.taskType,
     dueDate: task.dueDate,
+    dueTime: task.dueTime,
+    reminderMinutes: task.reminderMinutes,
+    outcomeNote: task.outcomeNote,
     assignee: task.assignee
       ? { id: task.assignee.id, name: task.assignee.user.name }
       : null,
@@ -140,6 +161,7 @@ export async function create(
     title: string;
     description?: string;
     priority?: string;
+    taskType?: string;
     dueDate?: string;
     dueTime?: string;
     reminderMinutes?: number;
@@ -157,6 +179,7 @@ export async function create(
       title: data.title,
       description: data.description,
       priority: (data.priority as any) || "MEDIUM",
+      taskType: (data.taskType as any) || "TASK",
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       dueTime: data.dueTime,
       reminderMinutes: data.reminderMinutes ?? 15,
@@ -237,10 +260,12 @@ export async function update(
     description: string;
     status: string;
     priority: string;
+    taskType: string;
     dueDate: string;
-    dueTime: string;
+    dueTime: string | null;
     reminderMinutes: number;
     assigneeId: string;
+    outcomeNote: string;
   }>,
 ) {
   const existing = await prisma.task.findFirst({ where: { id, workspaceId } });
@@ -249,7 +274,9 @@ export async function update(
   const updateData: any = { ...data };
   if (data.status) updateData.status = data.status;
   if (data.priority) updateData.priority = data.priority;
+  if (data.taskType) updateData.taskType = data.taskType;
   if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
+  if (data.dueTime === null) updateData.dueTime = null;
   if (data.status === "DONE" && existing.status !== "DONE") {
     updateData.completedAt = new Date();
   }
