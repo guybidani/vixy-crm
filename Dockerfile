@@ -4,6 +4,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
+# Force development so npm ci includes devDependencies needed for build
+ENV NODE_ENV=development
+
 # Copy root package files for workspace resolution
 COPY package.json package-lock.json ./
 COPY client/package.json ./client/
