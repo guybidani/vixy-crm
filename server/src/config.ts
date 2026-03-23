@@ -13,6 +13,7 @@ if (nodeEnv === "production") {
     "CORS_ORIGIN",
     "DATABASE_URL",
     "REDIS_URL",
+    "ENCRYPTION_KEY",
   ];
   const missing = required.filter((key) => !process.env[key]);
   if (missing.length > 0) {

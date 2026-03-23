@@ -5,10 +5,15 @@ export const analyticsRouter = Router();
 
 function parseDateRange(req: { query: { from?: string; to?: string } }) {
   const now = new Date();
-  const from = req.query.from
-    ? new Date(req.query.from as string)
-    : new Date(now.getFullYear(), now.getMonth(), 1); // Default: start of current month
-  const to = req.query.to ? new Date(req.query.to as string) : now;
+  const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+  const defaultTo = now;
+
+  const fromRaw = req.query.from ? new Date(req.query.from as string) : defaultFrom;
+  const toRaw = req.query.to ? new Date(req.query.to as string) : defaultTo;
+
+  const from = isNaN(fromRaw.getTime()) ? defaultFrom : fromRaw;
+  const to = isNaN(toRaw.getTime()) ? defaultTo : toRaw;
+
   return { from, to };
 }
 

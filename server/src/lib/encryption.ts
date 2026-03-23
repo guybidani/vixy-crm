@@ -6,7 +6,13 @@ const AUTH_TAG_LENGTH = 16;
 
 function getKey(key: string): Buffer {
   // Key must be 32 bytes (64 hex chars) for AES-256
-  return Buffer.from(key, "hex");
+  const buf = Buffer.from(key, "hex");
+  if (buf.length !== 32) {
+    throw new Error(
+      `ENCRYPTION_KEY must be exactly 32 bytes (64 hex characters), got ${buf.length} bytes`,
+    );
+  }
+  return buf;
 }
 
 /**

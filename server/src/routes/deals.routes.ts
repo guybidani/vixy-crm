@@ -217,6 +217,7 @@ dealsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
       req.workspaceId!,
       req.params.id as string,
       req.body,
+      req.memberId,
     );
     res.json(deal);
   } catch (err) {

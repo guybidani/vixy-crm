@@ -172,7 +172,7 @@ async function processMemberDigest(
 
   // Emit real-time event
   if (ioRef) {
-    ioRef.to(`workspace:${workspaceId}`).emit("daily-digest", {
+    ioRef.to(`user:${userId}`).emit("daily-digest", {
       userId,
       title,
       body,

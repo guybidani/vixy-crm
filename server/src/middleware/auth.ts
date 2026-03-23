@@ -33,6 +33,16 @@ const membershipCache = new Map<string, CachedMembership>();
 
 const MEMBERSHIP_CACHE_TTL_MS = 60_000;
 
+// ─── Periodic cleanup of expired membership cache entries (every 5 min) ───
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of membershipCache) {
+    if (now > entry.expiresAt) {
+      membershipCache.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {

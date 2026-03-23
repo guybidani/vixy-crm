@@ -289,8 +289,8 @@ async function shutdown() {
   clearInterval(rateLimitCleanupInterval);
 
   // Stop accepting new connections
-  httpServer.close();
-  io.close();
+  await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  await new Promise<void>((resolve) => { io.close(() => resolve()); });
 
   // Close all BullMQ workers
   await Promise.allSettled([

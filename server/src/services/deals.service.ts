@@ -431,6 +431,8 @@ export async function update(
     lostReason: string;
     bantData: Record<string, string> | null;
   }>,
+  /** memberId of the user triggering the update, used as fallback for auto-task creation */
+  triggeredByMemberId?: string,
 ) {
   const existing = await prisma.deal.findFirst({
     where: { id, workspaceId },
@@ -489,23 +491,35 @@ export async function update(
     const templates = STAGE_TASKS[newStage];
     if (templates && templates.length > 0) {
       const now = new Date();
-      Promise.all(
-        templates.map((tpl) =>
-          prisma.task.create({
-            data: {
-              workspaceId,
-              title: tpl.title,
-              taskType: tpl.taskType as any,
-              dueDate: addDays(now, tpl.delayDays),
-              dueTime: "09:00",
-              contactId: existing.contactId,
-              dealId: id,
-              assigneeId: existing.assigneeId,
-              createdById: existing.assigneeId,
-            },
-          }),
-        ),
-      ).catch(() => {});
+      // Use deal assignee, then the member who triggered the update, then first workspace member as fallback
+      const taskOwnerId =
+        existing.assigneeId ??
+        triggeredByMemberId ??
+        (
+          await prisma.workspaceMember.findFirst({
+            where: { workspaceId },
+            select: { id: true },
+          })
+        )?.id;
+      if (taskOwnerId) {
+        Promise.all(
+          templates.map((tpl) =>
+            prisma.task.create({
+              data: {
+                workspaceId,
+                title: tpl.title,
+                taskType: tpl.taskType as any,
+                dueDate: addDays(now, tpl.delayDays),
+                dueTime: "09:00",
+                contactId: existing.contactId,
+                dealId: id,
+                assigneeId: taskOwnerId,
+                createdById: taskOwnerId,
+              },
+            }),
+          ),
+        ).catch(() => {});
+      }
     }
 
     // 2. Log STATUS_CHANGE activity

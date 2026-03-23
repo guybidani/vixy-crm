@@ -3,49 +3,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlarmClockOff, Clock } from "lucide-react";
 import toast from "react-hot-toast";
 import { updateTask } from "../../api/tasks";
-
-interface SnoozeOption {
-  label: string;
-  getDate: () => Date;
-}
-
-function getSnoozeOptions(): SnoozeOption[] {
-  const now = new Date();
-  return [
-    {
-      label: "שעה",
-      getDate: () => new Date(now.getTime() + 60 * 60 * 1000),
-    },
-    {
-      label: "שעתיים",
-      getDate: () => new Date(now.getTime() + 2 * 60 * 60 * 1000),
-    },
-    {
-      label: "4 שעות",
-      getDate: () => new Date(now.getTime() + 4 * 60 * 60 * 1000),
-    },
-    {
-      label: "מחר בבוקר",
-      getDate: () => {
-        const d = new Date(now);
-        d.setDate(d.getDate() + 1);
-        d.setHours(9, 0, 0, 0);
-        return d;
-      },
-    },
-    {
-      label: "עוד שבוע בבוקר",
-      getDate: () => {
-        // Next Sunday at 9:00 AM (Israeli work week starts Sunday)
-        const d = new Date(now);
-        const daysUntilSunday = (7 - d.getDay()) % 7 || 7;
-        d.setDate(d.getDate() + daysUntilSunday);
-        d.setHours(9, 0, 0, 0);
-        return d;
-      },
-    },
-  ];
-}
+import {
+  useSnoozeOptions,
+  resolveSnoozeDate,
+  DEFAULT_SNOOZE_OPTIONS,
+} from "../../hooks/useSnoozeOptions";
 
 interface SnoozeDropdownProps {
   taskId: string;
@@ -90,13 +52,14 @@ export default function SnoozeDropdown({
     },
   });
 
-  const handleSnooze = (option: SnoozeOption) => {
-    const until = option.getDate().toISOString();
+  const { snoozeOptions, isLoading: snoozeLoading } = useSnoozeOptions();
+  const options = snoozeLoading ? DEFAULT_SNOOZE_OPTIONS : snoozeOptions;
+
+  const handleSnooze = (option: (typeof options)[number]) => {
+    const until = resolveSnoozeDate(option).toISOString();
     toast.success(`המשימה נדחתה - ${option.label}`);
     snoozeMut.mutate(until);
   };
-
-  const options = getSnoozeOptions();
 
   return (
     <div ref={ref} className="relative flex-shrink-0">

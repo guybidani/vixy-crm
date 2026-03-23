@@ -136,7 +136,7 @@ export async function importContacts(
         lastName: lastName || "",
         email: email || undefined,
         phone: getValue("phone") || undefined,
-        position: getValue("company") || undefined, // map "company" to position if no companyId
+        position: getValue("position") || undefined,
         source: getValue("source") || undefined,
         status,
         createdById: memberId,

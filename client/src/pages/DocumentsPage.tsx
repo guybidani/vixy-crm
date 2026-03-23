@@ -229,7 +229,7 @@ export default function DocumentsPage() {
                   key={doc.id}
                   doc={doc}
                   onClick={() => setSelectedDoc(doc)}
-                  onDelete={() => setDocToDelete(doc.id)}}
+                  onDelete={() => setDocToDelete(doc.id)}
                 />
               ))}
             </div>

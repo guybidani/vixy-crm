@@ -8,7 +8,7 @@ import {
   type ErrorInfo,
   type ReactNode,
 } from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import { useTaskReminders } from "./hooks/useTaskReminders";
 import { connectSocket, disconnectSocket } from "./lib/socket";
@@ -98,8 +98,13 @@ class RouteErrorBoundary extends Component<
   }
 }
 
+function WithErrorBoundary({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  return <RouteErrorBoundary key={location.pathname}>{children}</RouteErrorBoundary>;
+}
+
 function withErrorBoundary(element: ReactNode) {
-  return <RouteErrorBoundary>{element}</RouteErrorBoundary>;
+  return <WithErrorBoundary>{element}</WithErrorBoundary>;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {

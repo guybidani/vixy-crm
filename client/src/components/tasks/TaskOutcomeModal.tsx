@@ -115,10 +115,7 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
     setSaving(true);
     try {
-      // First: call the parent onConfirm (marks task DONE)
-      onConfirm(selected, note || undefined);
-
-      // Then: create follow-up task if checked
+      // Create follow-up task FIRST (before marking done, to avoid race condition)
       if (followUp) {
         const description = [
           `המשך ל: ${task.title}`,
@@ -138,6 +135,9 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
         toast.success("משימת המשך נוצרה");
       }
+
+      // Then: call the parent onConfirm (marks task DONE)
+      onConfirm(selected, note || undefined);
     } catch {
       toast.error("שגיאה ביצירת משימת המשך");
     } finally {

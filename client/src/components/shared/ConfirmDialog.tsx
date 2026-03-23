@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Modal from "./Modal";
 
 interface ConfirmDialogProps {
@@ -33,21 +33,22 @@ export default function ConfirmDialog({
     }
   }, [open]);
 
-  // Enter = confirm, Escape = cancel (Escape already handled by Modal)
-  const handleKey = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        onConfirm();
-      }
-    },
-    [onConfirm],
-  );
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Reset on open
+  useEffect(() => {
+    if (open) setConfirmed(false);
+  }, [open]);
+
+  const handleConfirm = useCallback(() => {
+    if (confirmed) return; // prevent double-click
+    setConfirmed(true);
+    onConfirm();
+  }, [confirmed, onConfirm]);
 
   return (
     <Modal open={open} onClose={onCancel} title={title} maxWidth="max-w-sm">
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-      <div className="px-6 py-4" onKeyDown={handleKey}>
+      <div className="px-6 py-4">
         <p className="text-sm text-text-secondary mb-6">{message}</p>
         <div className="flex items-center justify-end gap-2">
           <button
@@ -58,11 +59,12 @@ export default function ConfirmDialog({
             {cancelText}
           </button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            disabled={confirmed}
             className={
               variant === "danger"
-                ? "px-4 py-2 text-sm font-medium rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors"
-                : "px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+                ? "px-4 py-2 text-sm font-medium rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50"
+                : "px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors disabled:opacity-50"
             }
           >
             {confirmText}
