@@ -70,7 +70,9 @@ authRouter.post(
   validate(registerSchema),
   async (req, res, next) => {
     try {
+      console.error("REGISTER: Starting registration for", req.body.email);
       const result = await authService.register(req.body);
+      console.error("REGISTER: Success for", req.body.email);
       const { refreshToken, ...body } = result;
       setRefreshCookie(res, refreshToken);
       audit({
@@ -80,7 +82,7 @@ authRouter.post(
       });
       res.status(201).json(body);
     } catch (err: any) {
-      console.error("REGISTER ERROR:", err?.message, err?.stack?.substring(0, 500));
+      console.error("REGISTER ERROR:", err?.message, err?.code, JSON.stringify(err).substring(0, 500));
       next(err);
     }
   },
