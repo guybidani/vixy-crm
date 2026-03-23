@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
@@ -67,6 +68,7 @@ export default function TemplatesPage() {
   const queryClient = useQueryClient();
   const [filterCategory, setFilterCategory] = useState("");
   const [filterChannel, setFilterChannel] = useState("");
+  const [templateToDelete, setTemplateToDelete] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editTemplate, setEditTemplate] = useState<Template | null>(null);
@@ -105,9 +107,7 @@ export default function TemplatesPage() {
   }, [templates, search]);
 
   function handleDelete(template: Template) {
-    if (confirm(`למחוק את התבנית "${template.name}"?`)) {
-      deleteMutation.mutate(template.id);
-    }
+    setTemplateToDelete({ id: template.id, name: template.name });
   }
 
   return (
@@ -240,6 +240,20 @@ export default function TemplatesPage() {
           onClose={() => setPreviewTemplate(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!templateToDelete}
+        onConfirm={() => {
+          if (templateToDelete) deleteMutation.mutate(templateToDelete.id);
+          setTemplateToDelete(null);
+        }}
+        onCancel={() => setTemplateToDelete(null)}
+        title="מחיקת תבנית"
+        message={templateToDelete ? `האם אתה בטוח שברצונך למחוק את התבנית "${templateToDelete.name}"?` : ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </PageShell>
   );
 }

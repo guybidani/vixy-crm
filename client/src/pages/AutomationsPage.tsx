@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -552,6 +553,7 @@ export default function AutomationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Workflow | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [automationToDelete, setAutomationToDelete] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["automations"],
@@ -721,10 +723,7 @@ export default function AutomationsPage() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm("למחוק את האוטומציה?"))
-                          deleteMut.mutate(w.id);
-                      }}
+                      onClick={() => setAutomationToDelete(w.id)}
                       className="p-2 rounded-lg hover:bg-red-50 text-text-tertiary hover:text-danger transition-colors"
                       title="מחק"
                     >
@@ -832,6 +831,20 @@ export default function AutomationsPage() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!automationToDelete}
+        onConfirm={() => {
+          if (automationToDelete) deleteMut.mutate(automationToDelete);
+          setAutomationToDelete(null);
+        }}
+        onCancel={() => setAutomationToDelete(null)}
+        title="מחיקת אוטומציה"
+        message="האם אתה בטוח שברצונך למחוק את האוטומציה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </PageShell>
   );
 }

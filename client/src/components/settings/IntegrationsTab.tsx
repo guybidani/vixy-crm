@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, ExternalLink, Unlink, CheckCircle2, Phone, Copy, Check, Zap } from "lucide-react";
@@ -158,6 +159,7 @@ function KolioCard() {
 
 function GoogleCalendarCard() {
   const queryClient = useQueryClient();
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const { data: status, isLoading } = useQuery({
     queryKey: ["calendar-status"],
@@ -186,9 +188,7 @@ function GoogleCalendarCard() {
   });
 
   const handleDisconnect = () => {
-    if (window.confirm("לנתק את Google Calendar? הסנכרון ייעצר.")) {
-      disconnectMutation.mutate();
-    }
+    setShowDisconnectConfirm(true);
   };
 
   const connected = status?.connected ?? false;
@@ -294,6 +294,20 @@ function GoogleCalendarCard() {
           </button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showDisconnectConfirm}
+        onConfirm={() => {
+          setShowDisconnectConfirm(false);
+          disconnectMutation.mutate();
+        }}
+        onCancel={() => setShowDisconnectConfirm(false)}
+        title="ניתוק Google Calendar"
+        message="לנתק את Google Calendar? הסנכרון ייעצר."
+        confirmText="נתק"
+        cancelText="ביטול"
+        variant="warning"
+      />
     </div>
   );
 }

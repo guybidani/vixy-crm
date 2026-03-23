@@ -545,6 +545,20 @@ export default function ContactDetailPage() {
       {editing && (
         <EditContactModal contact={contact} onClose={() => setEditing(false)} />
       )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMutation.mutate();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="מחיקת איש קשר"
+        message="האם אתה בטוח שברצונך למחוק את איש הקשר?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }

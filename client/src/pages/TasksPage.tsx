@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -288,6 +289,7 @@ export default function TasksPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
   const bulkPriorityRef = useRef<HTMLDivElement>(null);
 
@@ -401,8 +403,7 @@ export default function TasksPage() {
   });
 
   const handleBulkDelete = () => {
-    if (!confirm(`למחוק ${selectedTaskIds.size} משימות?`)) return;
-    bulkDeleteMutation.mutate(Array.from(selectedTaskIds));
+    setShowBulkDeleteConfirm(true);
   };
 
   const handleBulkMarkDone = () => {
@@ -730,6 +731,20 @@ export default function TasksPage() {
           )}
         </div>
       </BulkActionBar>
+
+      <ConfirmDialog
+        open={showBulkDeleteConfirm}
+        onConfirm={() => {
+          setShowBulkDeleteConfirm(false);
+          bulkDeleteMutation.mutate(Array.from(selectedTaskIds));
+        }}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
+        title="מחיקת משימות"
+        message={`האם אתה בטוח שברצונך למחוק ${selectedTaskIds.size} משימות?`}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { handleMutationError } from "../../lib/utils";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import {
@@ -58,6 +59,7 @@ export default function AutomationTab() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<FollowUpSequence | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [seqToDelete, setSeqToDelete] = useState<string | null>(null);
 
   const { data: sequences, isLoading } = useQuery({
     queryKey: ["follow-up-sequences"],
@@ -195,11 +197,7 @@ export default function AutomationTab() {
                       <Pencil size={14} className="text-text-tertiary" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (confirm("האם למחוק את הסדרה?")) {
-                          deleteMut.mutate(seq.id);
-                        }
-                      }}
+                      onClick={() => setSeqToDelete(seq.id)}
                       className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={14} className="text-danger" />
@@ -299,6 +297,20 @@ export default function AutomationTab() {
       {showForm && (
         <SequenceForm editing={editing} onClose={() => setShowForm(false)} />
       )}
+
+      <ConfirmDialog
+        open={!!seqToDelete}
+        onConfirm={() => {
+          if (seqToDelete) deleteMut.mutate(seqToDelete);
+          setSeqToDelete(null);
+        }}
+        onCancel={() => setSeqToDelete(null)}
+        title="מחיקת סדרה"
+        message="האם אתה בטוח שברצונך למחוק את הסדרה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }

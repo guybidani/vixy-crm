@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { handleMutationError } from "../lib/utils";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sanitizeHtml } from "../lib/sanitize";
 import {
@@ -64,6 +65,7 @@ export default function DocumentsPage() {
   );
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading } = useQuery({
@@ -227,9 +229,7 @@ export default function DocumentsPage() {
                   key={doc.id}
                   doc={doc}
                   onClick={() => setSelectedDoc(doc)}
-                  onDelete={() => {
-                    if (confirm("למחוק את המסמך?")) deleteMut.mutate(doc.id);
-                  }}
+                  onDelete={() => setDocToDelete(doc.id)}}
                 />
               ))}
             </div>
@@ -270,11 +270,23 @@ export default function DocumentsPage() {
         <DocumentDetailPanel
           doc={selectedDoc}
           onClose={() => setSelectedDoc(null)}
-          onDelete={() => {
-            if (confirm("למחוק את המסמך?")) deleteMut.mutate(selectedDoc.id);
-          }}
+          onDelete={() => setDocToDelete(selectedDoc.id)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!docToDelete}
+        onConfirm={() => {
+          if (docToDelete) deleteMut.mutate(docToDelete);
+          setDocToDelete(null);
+        }}
+        onCancel={() => setDocToDelete(null)}
+        title="מחיקת מסמך"
+        message="האם אתה בטוח שברצונך למחוק את המסמך?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </PageShell>
   );
 }

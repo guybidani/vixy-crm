@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
@@ -103,6 +104,8 @@ export default function CompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   /* Inline-edit state for company name */
   const [editingName, setEditingName] = useState(false);
@@ -216,11 +219,7 @@ export default function CompanyDetailPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                if (confirm("האם למחוק את החברה?")) {
-                  deleteMutation.mutate();
-                }
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-danger hover:bg-red-50 rounded-lg transition-colors"
             >
               <Trash2 size={14} />
@@ -453,6 +452,20 @@ export default function CompanyDetailPage() {
           </PageCard>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMutation.mutate();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="מחיקת חברה"
+        message="האם אתה בטוח שברצונך למחוק את החברה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }
