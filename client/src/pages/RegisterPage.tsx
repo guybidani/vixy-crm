@@ -182,10 +182,11 @@ export default function RegisterPage() {
             <div key="step1" className={stepAnimation}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-name" className="block text-sm font-medium text-text-primary mb-1">
                     שם מלא
                   </label>
                   <input
+                    id="register-name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -195,10 +196,11 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-email" className="block text-sm font-medium text-text-primary mb-1">
                     אימייל
                   </label>
                   <input
+                    id="register-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -209,11 +211,12 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-password" className="block text-sm font-medium text-text-primary mb-1">
                     סיסמה
                   </label>
                   <div className="relative">
                     <input
+                      id="register-password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -274,10 +277,11 @@ export default function RegisterPage() {
             <div key="step2" className={stepAnimation}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-workspace" className="block text-sm font-medium text-text-primary mb-1">
                     שם העסק / סביבת העבודה
                   </label>
                   <input
+                    id="register-workspace"
                     type="text"
                     value={workspaceName}
                     onChange={(e) => setWorkspaceName(e.target.value)}

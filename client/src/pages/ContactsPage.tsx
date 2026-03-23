@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
+import { avatarColor } from "../lib/utils";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
@@ -31,23 +33,6 @@ import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 
-// Generate consistent avatar color from name
-function avatarColor(name: string) {
-  const colors = [
-    "#6161FF",
-    "#A25DDC",
-    "#00CA72",
-    "#579BFC",
-    "#FDAB3D",
-    "#FB275D",
-    "#FF642E",
-    "#66CCFF",
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++)
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
-}
 
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
@@ -65,6 +50,7 @@ export default function ContactsPage() {
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [needsFollowUp, setNeedsFollowUp] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -125,6 +111,7 @@ export default function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("סטטוס עודכן");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
   // Quick activity logging
@@ -163,7 +150,6 @@ export default function ContactsPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(`איש קשר הועבר ל${contactStatuses[toColumn]?.label}`);
   }
 
   const handleSort = useCallback(
@@ -510,12 +496,22 @@ export default function ContactsPage() {
       <BulkActionBar
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
-        onDelete={() => {
-          if (window.confirm(`למחוק ${selectedIds.size} אנשי קשר?`)) {
-            bulkDeleteMutation.mutate();
-          }
-        }}
+        onDelete={() => setShowBulkDeleteConfirm(true)}
         deleting={bulkDeleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={showBulkDeleteConfirm}
+        onConfirm={() => {
+          setShowBulkDeleteConfirm(false);
+          bulkDeleteMutation.mutate();
+        }}
+        onCancel={() => setShowBulkDeleteConfirm(false)}
+        title="מחיקת אנשי קשר"
+        message={`האם אתה בטוח שברצונך למחוק ${selectedIds.size} אנשי קשר?`}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
       />
     </PageShell>
   );

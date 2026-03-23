@@ -142,13 +142,13 @@ documentRouter.get("/:id", async (req, res, next) => {
 });
 
 // ─── Update document ───
-// PUT /api/v1/documents/:id
+// PATCH /api/v1/documents/:id
 const updateSchema = z.object({
   title: z.string().min(1).optional(),
   content: z.string().optional(),
 });
 
-documentRouter.put("/:id", validate(updateSchema), async (req, res, next) => {
+documentRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   try {
     const doc = await documentService.update(
       req.workspaceId!,

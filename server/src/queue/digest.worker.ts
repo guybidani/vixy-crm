@@ -2,6 +2,9 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./connection";
 import { prisma } from "../db/client";
 import type { Server as SocketServer } from "socket.io";
+import { sendDigestEmail } from "../services/email.service";
+import { logger } from "../lib/logger";
+import { SEVEN_DAYS_MS } from "../lib/constants";
 
 let ioRef: SocketServer | null = null;
 
@@ -20,9 +23,9 @@ export const digestWorker = new Worker(
       try {
         await processWorkspaceDigest(ws.id);
       } catch (err) {
-        console.error(
-          `Digest failed for workspace ${ws.id}:`,
-          err instanceof Error ? err.message : err,
+        logger.error(
+          { workspaceId: ws.id, err: err instanceof Error ? err.message : err },
+          "Digest failed for workspace",
         );
         // Continue to next workspace
       }
@@ -37,7 +40,7 @@ export const digestWorker = new Worker(
 async function processWorkspaceDigest(workspaceId: string) {
   const members = await prisma.workspaceMember.findMany({
     where: { workspaceId },
-    include: { user: { select: { id: true } } },
+    include: { user: { select: { id: true, email: true } } },
   });
 
   const todayStart = new Date();
@@ -46,7 +49,7 @@ async function processWorkspaceDigest(workspaceId: string) {
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(Date.now() - SEVEN_DAYS_MS);
 
   for (const member of members) {
     try {
@@ -54,14 +57,15 @@ async function processWorkspaceDigest(workspaceId: string) {
         workspaceId,
         member.id,
         member.user.id,
+        member.user.email,
         todayStart,
         todayEnd,
         sevenDaysAgo,
       );
     } catch (err) {
-      console.error(
-        `Digest failed for member ${member.id}:`,
-        err instanceof Error ? err.message : err,
+      logger.error(
+        { memberId: member.id, err: err instanceof Error ? err.message : err },
+        "Digest failed for member",
       );
       // Continue to next member
     }
@@ -72,6 +76,7 @@ async function processMemberDigest(
   workspaceId: string,
   memberId: string,
   userId: string,
+  userEmail: string,
   todayStart: Date,
   todayEnd: Date,
   sevenDaysAgo: Date,
@@ -157,6 +162,14 @@ async function processMemberDigest(
     },
   });
 
+  // Send digest email (fire-and-forget)
+  sendDigestEmail(userEmail, {
+    todayTasks: todayTasksCount,
+    overdueTasks: overdueTasksCount,
+    staleDeals: staleDealsCount,
+    nextTaskTitle: firstUpcomingTask?.title,
+  }).catch((err) => logger.error({ err }, "Digest email failed"));
+
   // Emit real-time event
   if (ioRef) {
     ioRef.to(`workspace:${workspaceId}`).emit("daily-digest", {
@@ -168,5 +181,5 @@ async function processMemberDigest(
 }
 
 digestWorker.on("failed", (job, err) => {
-  console.error(`Digest job ${job?.id} failed:`, err.message);
+  logger.error({ jobId: job?.id, err: err.message }, "Digest job failed");
 });

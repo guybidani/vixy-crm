@@ -25,6 +25,7 @@ import { exportRouter } from "./export.routes";
 import { calendarRouter } from "./calendar.routes";
 import { analyticsRouter } from "./analytics.routes";
 import { viewsRouter } from "./views.routes";
+import { importRouter } from "./import.routes";
 import { requireAuth, requireWorkspace } from "../middleware/auth";
 import { checkNavPermission } from "../middleware/navPermission";
 
@@ -65,4 +66,5 @@ router.use("/export", exportRouter);
 router.use("/calendar", calendarRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/views", viewsRouter);
+router.use("/import", importRouter);
 // router.use('/smart-views', smartViewsRouter);

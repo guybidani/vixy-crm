@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./connection";
 import { prisma } from "../db/client";
 import type { Server as SocketServer } from "socket.io";
+import { logger } from "../lib/logger";
 
 let ioRef: SocketServer | null = null;
 
@@ -21,7 +22,7 @@ export const followUpWorker = new Worker(
 );
 
 followUpWorker.on("failed", (job, err) => {
-  console.error(`Follow-up job ${job?.id} failed:`, err.message);
+  logger.error({ jobId: job?.id, err: err.message }, "Follow-up job failed");
 });
 
 async function checkDueExecutions() {
@@ -42,7 +43,7 @@ async function checkDueExecutions() {
     try {
       await executeStep(execution);
     } catch (err) {
-      console.error(`Error executing step for execution ${execution.id}:`, err);
+      logger.error({ executionId: execution.id, err }, "Error executing follow-up step");
     }
   }
 }

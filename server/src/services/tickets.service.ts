@@ -8,6 +8,7 @@ interface ListParams {
   workspaceId: string;
   page?: number;
   limit?: number;
+  search?: string;
   status?: string;
   priority?: string;
   assigneeId?: string;
@@ -30,6 +31,7 @@ export async function list(params: ListParams) {
     workspaceId,
     page = 1,
     limit = 50,
+    search,
     status,
     priority,
     assigneeId,
@@ -43,6 +45,16 @@ export async function list(params: ListParams) {
 
   const where: Prisma.TicketWhereInput = { workspaceId };
 
+  if (search) {
+    where.OR = [
+      { subject: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+      { contact: { OR: [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+      ] } },
+    ];
+  }
   if (status) where.status = status as any;
   if (priority) where.priority = priority as any;
   if (assigneeId) where.assigneeId = assigneeId;

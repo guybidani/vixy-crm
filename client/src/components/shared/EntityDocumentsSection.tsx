@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText,
@@ -71,7 +72,7 @@ export default function EntityDocumentsSection({
       queryClient.invalidateQueries({ queryKey: ["documents"] });
       toast.success("קובץ הועלה וקושר!");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בהעלאה"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בהעלאה"),
   });
 
   const unlinkMut = useMutation({
@@ -81,7 +82,7 @@ export default function EntityDocumentsSection({
       queryClient.invalidateQueries({ queryKey });
       toast.success("קישור הוסר");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בהסרת קישור"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בהסרת קישור"),
   });
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -281,7 +282,7 @@ function LinkExistingDocModal({
       toast.success("מסמך קושר!");
       onLinked();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בקישור"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בקישור"),
   });
 
   return (
@@ -363,7 +364,7 @@ function QuickCreateRichText({
       toast.success("מסמך נוצר וקושר!");
       onCreated();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה ביצירת מסמך"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה ביצירת מסמך"),
   });
 
   return (

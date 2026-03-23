@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { avatarColor, handleMutationError } from "../lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -290,7 +291,7 @@ function MembersTab() {
       setShowInvite(false);
       setInviteEmail("");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const ROLE_COLORS: Record<string, { color: string; label: string }> = {
@@ -336,17 +337,7 @@ function MembersTab() {
           <div className="divide-y divide-border-light">
             {members.map((m) => {
               const role = ROLE_COLORS[m.role] || ROLE_COLORS.AGENT;
-              const avatarColors = [
-                "#6161FF",
-                "#00CA72",
-                "#A25DDC",
-                "#579BFC",
-                "#FDAB3D",
-              ];
-              const avatarColor =
-                avatarColors[
-                  (m.name || "").charCodeAt(0) % avatarColors.length
-                ];
+              const memberAvatarColor = avatarColor(m.name || "");
               return (
                 <div
                   key={m.memberId}
@@ -354,7 +345,7 @@ function MembersTab() {
                 >
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
-                    style={{ backgroundColor: avatarColor }}
+                    style={{ backgroundColor: memberAvatarColor }}
                     role="img"
                     aria-label={m.name || "חבר צוות"}
                   >
@@ -611,7 +602,7 @@ function CannedResponseForm({
       toast.success("תגובה נוצרה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const updateMut = useMutation({
@@ -626,7 +617,7 @@ function CannedResponseForm({
       toast.success("תגובה עודכנה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -728,7 +719,7 @@ function SlaPoliciesTab() {
       queryClient.invalidateQueries({ queryKey: ["sla-policies"] });
       toast.success("מדיניות נמחקה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   function formatMinutes(mins: number) {
@@ -878,7 +869,7 @@ function SlaPolicyForm({
       toast.success("מדיניות נוצרה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const updateMut = useMutation({
@@ -888,7 +879,7 @@ function SlaPolicyForm({
       toast.success("מדיניות עודכנה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   function handleSubmit(e: React.FormEvent) {

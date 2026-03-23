@@ -1,4 +1,5 @@
 import { prisma } from "../db/client";
+import { sendNotificationEmail } from "./email.service";
 
 interface CreateNotificationData {
   workspaceId: string;
@@ -11,8 +12,14 @@ interface CreateNotificationData {
   metadata?: any;
 }
 
+const EMAIL_WORTHY_TYPES = new Set([
+  "TASK_ASSIGNED",
+  "TASK_DUE",
+  "TICKET_UPDATE",
+]);
+
 export async function create(data: CreateNotificationData) {
-  return prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       workspaceId: data.workspaceId,
       userId: data.userId,
@@ -24,6 +31,29 @@ export async function create(data: CreateNotificationData) {
       metadata: data.metadata,
     },
   });
+
+  // Fire-and-forget email for important notification types
+  if (EMAIL_WORTHY_TYPES.has(data.type)) {
+    prisma.user
+      .findUnique({ where: { id: data.userId }, select: { email: true } })
+      .then((user) => {
+        if (user?.email) {
+          sendNotificationEmail(user.email, {
+            title: data.title,
+            body: data.body,
+            entityType: data.entityType,
+            entityId: data.entityId,
+          }).catch((err) =>
+            console.error("Notification email failed:", err),
+          );
+        }
+      })
+      .catch((err) =>
+        console.error("Failed to fetch user for notification email:", err),
+      );
+  }
+
+  return notification;
 }
 
 export async function createForWorkspace(

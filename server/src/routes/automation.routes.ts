@@ -149,9 +149,14 @@ automationRouter.patch(
 );
 
 // PATCH /api/v1/automations/:id/toggle
+const toggleSchema = z.object({
+  isActive: z.boolean(),
+});
+
 automationRouter.patch(
   "/:id/toggle",
   requireRole("OWNER", "ADMIN"),
+  validate(toggleSchema),
   async (req, res, next) => {
     try {
       const { isActive } = req.body;

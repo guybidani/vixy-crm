@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireRole } from "../middleware/auth";
 import * as exportService from "../services/export.service";
 
 export const exportRouter = Router();
@@ -6,7 +7,7 @@ export const exportRouter = Router();
 const VALID_ENTITIES = ["contacts", "deals", "companies", "tasks", "tickets"];
 
 // GET /api/v1/export/:entity
-exportRouter.get("/:entity", async (req, res, next) => {
+exportRouter.get("/:entity", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     const entity = req.params.entity as string;
     if (!VALID_ENTITIES.includes(entity)) {

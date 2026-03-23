@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import { prisma } from "../db/client";
 import * as templatesService from "../services/templates.service";
 
@@ -25,7 +26,7 @@ templatesRouter.get("/:id", async (req, res, next) => {
   try {
     const data = await templatesService.getTemplate(
       req.workspaceId!,
-      req.params.id,
+      req.params.id as string,
     );
     res.json(data);
   } catch (err) {
@@ -97,9 +98,9 @@ templatesRouter.patch(
 );
 
 // Delete
-templatesRouter.delete("/:id", async (req, res, next) => {
+templatesRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
-    await templatesService.deleteTemplate(req.workspaceId!, req.params.id);
+    await templatesService.deleteTemplate(req.workspaceId!, req.params.id as string);
     res.json({ success: true });
   } catch (err) {
     next(err);

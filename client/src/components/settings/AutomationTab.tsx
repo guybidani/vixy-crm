@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import {
@@ -69,7 +70,7 @@ export default function AutomationTab() {
       queryClient.invalidateQueries({ queryKey: ["follow-up-sequences"] });
       toast.success("סדרה נמחקה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const toggleMut = useMutation({
@@ -77,7 +78,7 @@ export default function AutomationTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["follow-up-sequences"] });
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   return (
@@ -371,7 +372,7 @@ function SequenceForm({
       toast.success("סדרה נוצרה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const updateMut = useMutation({
@@ -393,7 +394,7 @@ function SequenceForm({
       toast.success("סדרה עודכנה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   function addStep() {

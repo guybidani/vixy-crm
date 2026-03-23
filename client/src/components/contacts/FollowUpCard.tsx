@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { handleMutationError } from "../../lib/utils";
 import {
   Play,
   Square,
@@ -67,7 +68,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
       toast.success("סדרת מעקב הופעלה!");
       setShowSequencePicker(false);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const stopMut = useMutation({
@@ -78,7 +79,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
       });
       toast.success("סדרת מעקב בוטלה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const activeExecution = executions?.find((e) => e.status === "ACTIVE");

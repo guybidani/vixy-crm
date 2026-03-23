@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { avatarColor, handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
@@ -80,7 +81,7 @@ export default function NavPermissionsTab() {
       toast.success("הרשאות הניווט עודכנו בהצלחה");
       setIsDirty(false);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בשמירה"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בשמירה"),
   });
 
   const isLoading = membersLoading || permLoading;
@@ -191,17 +192,7 @@ export default function NavPermissionsTab() {
                 const allChecked = ALL_NAV_KEYS.every((k) =>
                   memberPerms.includes(k),
                 );
-                const avatarColors = [
-                  "#6161FF",
-                  "#00CA72",
-                  "#A25DDC",
-                  "#579BFC",
-                  "#FDAB3D",
-                ];
-                const avatarColor =
-                  avatarColors[
-                    (member.name || "").charCodeAt(0) % avatarColors.length
-                  ];
+                const memberAvatarColor = avatarColor(member.name || "");
 
                 return (
                   <tr
@@ -213,7 +204,7 @@ export default function NavPermissionsTab() {
                       <div className="flex items-center gap-2.5">
                         <div
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: avatarColor }}
+                          style={{ backgroundColor: memberAvatarColor }}
                         >
                           <span className="text-white text-xs font-bold">
                             {member.name?.charAt(0) || "?"}

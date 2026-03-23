@@ -89,6 +89,7 @@ export default function CompaniesPage() {
       queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("סטטוס עודכן");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
   // Kanban columns
@@ -107,7 +108,6 @@ export default function CompaniesPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(`חברה הועברה ל${companyStatuses[toColumn]?.label}`);
   }
 
   const handleSort = useCallback(

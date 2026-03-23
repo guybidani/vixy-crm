@@ -39,6 +39,7 @@ ticketsRouter.get("/", async (req, res, next) => {
       workspaceId: req.workspaceId!,
       page: Number(req.query.page) || 1,
       limit: Math.min(Number(req.query.limit) || 50, 100),
+      search: req.query.search as string,
       status: req.query.status as string,
       priority: req.query.priority as string,
       assigneeId: req.query.assigneeId as string,

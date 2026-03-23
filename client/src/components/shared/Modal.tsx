@@ -1,6 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface ModalProps {
   open: boolean;
@@ -10,6 +13,8 @@ interface ModalProps {
   className?: string;
   /** Max width class (default: max-w-lg) */
   maxWidth?: string;
+  /** Ref to the element that should receive focus initially */
+  initialFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
 export default function Modal({
@@ -19,28 +24,78 @@ export default function Modal({
   children,
   className,
   maxWidth = "max-w-lg",
+  initialFocusRef,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
-  // Scroll lock + Escape key
+  // Focus trap handler
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onClose],
+  );
+
+  // Scroll lock + keyboard handling + focus management
   useEffect(() => {
     if (!open) return;
+
+    // Store the element that triggered the modal so we can restore focus
+    triggerRef.current = document.activeElement as HTMLElement | null;
+
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", handleKeyDown);
 
-    // Auto-focus dialog
-    dialogRef.current?.focus();
+    // Auto-focus: prefer initialFocusRef, then first focusable, then the dialog itself
+    requestAnimationFrame(() => {
+      if (initialFocusRef?.current) {
+        initialFocusRef.current.focus();
+      } else if (dialogRef.current) {
+        const first =
+          dialogRef.current.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+        if (first) {
+          first.focus();
+        } else {
+          dialogRef.current.focus();
+        }
+      }
+    });
 
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", handleKeyDown);
+      // Restore focus to the trigger element
+      triggerRef.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open, handleKeyDown, initialFocusRef]);
 
   if (!open) return null;
 

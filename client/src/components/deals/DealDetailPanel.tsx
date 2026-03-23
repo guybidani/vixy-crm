@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAutoSave } from "../../hooks/useAutoSave";
 import {
@@ -73,6 +74,7 @@ export default function DealDetailPanel({
   const [autoSaving, setAutoSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: deal, isLoading } = useQuery({
     queryKey: ["deal", dealId],
@@ -226,9 +228,7 @@ export default function DealDetailPanel({
             )}
             <div className="flex items-center gap-1 mr-2">
               <button
-                onClick={() => {
-                  if (confirm("למחוק את העסקה?")) deleteMut.mutate();
-                }}
+                onClick={() => setShowDeleteConfirm(true)}
                 className="p-1.5 rounded-lg hover:bg-red-50 text-[#676879] hover:text-red-500 transition-colors"
               >
                 <Trash2 size={16} />
@@ -720,6 +720,21 @@ export default function DealDetailPanel({
           )}
         </div>
       </div>
+
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMut.mutate();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="מחיקת עסקה"
+        message="האם אתה בטוח שברצונך למחוק את העסקה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </>
   );
 }

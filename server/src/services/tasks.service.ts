@@ -8,6 +8,7 @@ import {
   scheduleTaskReminder,
   cancelTaskReminder,
 } from "../queue/reminder.queue";
+import { SEVEN_DAYS_MS, BOARD_MAX_ITEMS } from "../lib/constants";
 
 interface ListParams {
   workspaceId: string;
@@ -187,6 +188,24 @@ export async function create(
     recurrenceEndDate?: string;
   },
 ) {
+  // Verify foreign key references belong to this workspace
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
+    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  }
+  if (data.dealId) {
+    const deal = await prisma.deal.findFirst({ where: { id: data.dealId, workspaceId } });
+    if (!deal) throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
+  }
+  if (data.ticketId) {
+    const ticket = await prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId } });
+    if (!ticket) throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
+  }
+  if (data.assigneeId) {
+    const member = await prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId } });
+    if (!member) throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
+  }
+
   const effectiveAssigneeId = data.assigneeId || memberId;
 
   // Auto-detect task context: deal → SALES, ticket → SERVICE, otherwise use provided or GENERAL
@@ -570,6 +589,7 @@ export async function board(workspaceId: string) {
       deal: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: "asc" },
+    take: BOARD_MAX_ITEMS,
   });
 
   const statuses = ["TODO", "IN_PROGRESS", "DONE", "CANCELLED"];
@@ -656,7 +676,7 @@ export async function getStats(workspaceId: string, memberId?: string) {
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgo = new Date(now.getTime() - SEVEN_DAYS_MS);
 
   const baseWhere: Prisma.TaskWhereInput = { workspaceId };
   if (memberId) baseWhere.assigneeId = memberId;

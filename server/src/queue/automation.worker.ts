@@ -3,6 +3,7 @@ import { redisConnection } from "./connection";
 import { processTrigger } from "../services/automation.service";
 import type { AutomationJobData } from "./automation.queue";
 import type { Server as SocketServer } from "socket.io";
+import { logger } from "../lib/logger";
 
 let ioRef: SocketServer | null = null;
 
@@ -37,9 +38,9 @@ export const automationWorker = new Worker(
 );
 
 automationWorker.on("failed", (job, err) => {
-  console.error(`Automation job ${job?.id} failed:`, err.message);
+  logger.error({ jobId: job?.id, err: err.message }, "Automation job failed");
 });
 
 automationWorker.on("completed", (job) => {
-  console.log(`Automation job ${job.id} completed`);
+  logger.info({ jobId: job.id }, "Automation job completed");
 });

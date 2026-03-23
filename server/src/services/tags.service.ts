@@ -73,7 +73,19 @@ export async function assignToContact(
   });
 }
 
-export async function unassignFromContact(contactId: string, tagId: string) {
+export async function unassignFromContact(
+  workspaceId: string,
+  contactId: string,
+  tagId: string,
+) {
+  // Verify both tag and contact belong to the workspace
+  const [tag, contact] = await Promise.all([
+    prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
+    prisma.contact.findFirst({ where: { id: contactId, workspaceId } }),
+  ]);
+  if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
+  if (!contact) throw new AppError(404, "NOT_FOUND", "Contact not found");
+
   return prisma.tagOnContact
     .delete({
       where: { contactId_tagId: { contactId, tagId } },
@@ -100,7 +112,19 @@ export async function assignToDeal(
   });
 }
 
-export async function unassignFromDeal(dealId: string, tagId: string) {
+export async function unassignFromDeal(
+  workspaceId: string,
+  dealId: string,
+  tagId: string,
+) {
+  // Verify both tag and deal belong to the workspace
+  const [tag, deal] = await Promise.all([
+    prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
+    prisma.deal.findFirst({ where: { id: dealId, workspaceId } }),
+  ]);
+  if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
+  if (!deal) throw new AppError(404, "NOT_FOUND", "Deal not found");
+
   return prisma.tagOnDeal
     .delete({
       where: { dealId_tagId: { dealId, tagId } },

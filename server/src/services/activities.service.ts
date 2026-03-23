@@ -1,4 +1,5 @@
 import { prisma } from "../db/client";
+import { AppError } from "../middleware/errorHandler";
 import { calculateScoreDelta } from "../utils/scoring.util";
 
 interface ListParams {
@@ -133,6 +134,20 @@ export async function create(
     metadata?: any;
   },
 ) {
+  // Verify foreign key references belong to this workspace
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
+    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  }
+  if (data.dealId) {
+    const deal = await prisma.deal.findFirst({ where: { id: data.dealId, workspaceId } });
+    if (!deal) throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
+  }
+  if (data.ticketId) {
+    const ticket = await prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId } });
+    if (!ticket) throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
+  }
+
   const activity = await prisma.activity.create({
     data: {
       workspaceId,
@@ -154,19 +169,20 @@ export async function create(
   if (data.contactId) {
     const delta = calculateScoreDelta(data.type);
     prisma.contact
-      .update({
-        where: { id: data.contactId },
+      .updateMany({
+        where: { id: data.contactId, workspaceId },
         data: {
           ...(delta !== 0 && { leadScore: { increment: delta } }),
           lastActivityAt: new Date(),
         },
       })
-      .then((updated) => {
+      .then(async () => {
         // Clamp leadScore to 0-100 if it went out of bounds
-        if (updated.leadScore > 100 || updated.leadScore < 0) {
-          const clamped = Math.min(100, Math.max(0, updated.leadScore));
-          return prisma.contact.update({
-            where: { id: data.contactId! },
+        const contact = await prisma.contact.findFirst({ where: { id: data.contactId!, workspaceId } });
+        if (contact && (contact.leadScore > 100 || contact.leadScore < 0)) {
+          const clamped = Math.min(100, Math.max(0, contact.leadScore));
+          return prisma.contact.updateMany({
+            where: { id: data.contactId!, workspaceId },
             data: { leadScore: clamped },
           });
         }

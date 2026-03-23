@@ -60,6 +60,13 @@ export const config = {
     sameSite: (nodeEnv === "production" ? "strict" : "lax") as "strict" | "lax",
     domain: process.env.COOKIE_DOMAIN || undefined,
   },
+  encryptionKey:
+    process.env.ENCRYPTION_KEY ||
+    "0000000000000000000000000000000000000000000000000000000000000000",
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || "",
+    fromEmail: process.env.RESEND_FROM_EMAIL || "noreply@projectadam.co.il",
+  },
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",

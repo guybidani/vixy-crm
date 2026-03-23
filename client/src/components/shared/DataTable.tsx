@@ -105,6 +105,15 @@ export default function DataTable<T extends { id: string }>({
                       ? () => onSortChange(col.key)
                       : undefined
                   }
+                  aria-sort={
+                    col.sortable && sortBy === col.key
+                      ? sortDir === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : col.sortable
+                        ? "none"
+                        : undefined
+                  }
                 >
                   <span className="flex items-center gap-1">
                     {col.label}
@@ -118,7 +127,7 @@ export default function DataTable<T extends { id: string }>({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody aria-live="polite">
             {loading ? (
               <tr>
                 <td

@@ -3,6 +3,8 @@ import {
   useCallback,
   useEffect,
   Component,
+  Suspense,
+  lazy,
   type ErrorInfo,
   type ReactNode,
 } from "react";
@@ -17,26 +19,88 @@ import QuickAdd from "./components/shared/QuickAdd";
 import CommandPalette from "./components/shared/CommandPalette";
 import ShortcutsHelp from "./components/shared/ShortcutsHelp";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import ContactsPage from "./pages/ContactsPage";
-import ContactDetailPage from "./pages/ContactDetailPage";
-import CompaniesPage from "./pages/CompaniesPage";
-import CompanyDetailPage from "./pages/CompanyDetailPage";
-import DealsPage from "./pages/DealsPage";
-import LeadsPage from "./pages/LeadsPage";
-import TasksPage from "./pages/TasksPage";
-import HistoryPage from "./pages/HistoryPage";
-import TicketsPage from "./pages/TicketsPage";
-import TicketDetailPage from "./pages/TicketDetailPage";
-import DocumentsPage from "./pages/DocumentsPage";
-import KnowledgeBasePage from "./pages/KnowledgeBasePage";
-import BoardPage from "./pages/BoardPage";
-import SettingsPage from "./pages/SettingsPage";
-import AutomationsPage from "./pages/AutomationsPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
-import LandingPage from "./pages/LandingPage";
+
+// Lazy-loaded page components
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ContactsPage = lazy(() => import("./pages/ContactsPage"));
+const ContactDetailPage = lazy(() => import("./pages/ContactDetailPage"));
+const CompaniesPage = lazy(() => import("./pages/CompaniesPage"));
+const CompanyDetailPage = lazy(() => import("./pages/CompanyDetailPage"));
+const DealsPage = lazy(() => import("./pages/DealsPage"));
+const LeadsPage = lazy(() => import("./pages/LeadsPage"));
+const TasksPage = lazy(() => import("./pages/TasksPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const TicketsPage = lazy(() => import("./pages/TicketsPage"));
+const TicketDetailPage = lazy(() => import("./pages/TicketDetailPage"));
+const DocumentsPage = lazy(() => import("./pages/DocumentsPage"));
+const KnowledgeBasePage = lazy(() => import("./pages/KnowledgeBasePage"));
+const BoardPage = lazy(() => import("./pages/BoardPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const AutomationsPage = lazy(() => import("./pages/AutomationsPage"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const ImportPage = lazy(() => import("./pages/ImportPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+
+function SuspenseFallback() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
+}
+
+class RouteErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Route Error:", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          className="flex flex-col items-center justify-center min-h-[50vh] gap-4"
+          dir="rtl"
+        >
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center">
+            <span className="text-red-500 text-2xl">!</span>
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">משהו השתבש</h2>
+          <p className="text-sm text-text-secondary">
+            אירעה שגיאה בלתי צפויה. נסה לרענן את הדף.
+          </p>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.reload();
+            }}
+            className="px-6 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm"
+          >
+            נסה שוב
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function withErrorBoundary(element: ReactNode) {
+  return <RouteErrorBoundary>{element}</RouteErrorBoundary>;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -230,52 +294,59 @@ class ErrorBoundary extends Component<
 function App() {
   return (
     <ErrorBoundary>
-      <Routes>
-        <Route path="/" element={<HomeRoute />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <RegisterPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="contacts" element={<ContactsPage />} />
-          <Route path="contacts/:id" element={<ContactDetailPage />} />
-          <Route path="companies" element={<CompaniesPage />} />
-          <Route path="companies/:id" element={<CompanyDetailPage />} />
-          <Route path="deals" element={<DealsPage />} />
-          <Route path="leads" element={<LeadsPage />} />
-          <Route path="tasks" element={<TasksPage />} />
-          <Route path="history" element={<HistoryPage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="tickets" element={<TicketsPage />} />
-          <Route path="tickets/:id" element={<TicketDetailPage />} />
-          <Route path="documents" element={<DocumentsPage />} />
-          <Route path="knowledge" element={<KnowledgeBasePage />} />
-          <Route path="boards/:id" element={<BoardPage />} />
-          <Route path="automations" element={<AutomationsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<SuspenseFallback />}>
+        <Routes>
+          <Route path="/" element={withErrorBoundary(<HomeRoute />)} />
+          <Route path="/landing" element={withErrorBoundary(<LandingPage />)} />
+          <Route
+            path="/login"
+            element={
+              withErrorBoundary(
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              )
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              withErrorBoundary(
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              )
+            }
+          />
+          <Route
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="dashboard" element={withErrorBoundary(<DashboardPage />)} />
+            <Route path="contacts" element={withErrorBoundary(<ContactsPage />)} />
+            <Route path="contacts/:id" element={withErrorBoundary(<ContactDetailPage />)} />
+            <Route path="companies" element={withErrorBoundary(<CompaniesPage />)} />
+            <Route path="companies/:id" element={withErrorBoundary(<CompanyDetailPage />)} />
+            <Route path="deals" element={withErrorBoundary(<DealsPage />)} />
+            <Route path="leads" element={withErrorBoundary(<LeadsPage />)} />
+            <Route path="tasks" element={withErrorBoundary(<TasksPage />)} />
+            <Route path="history" element={withErrorBoundary(<HistoryPage />)} />
+            <Route path="analytics" element={withErrorBoundary(<AnalyticsPage />)} />
+            <Route path="tickets" element={withErrorBoundary(<TicketsPage />)} />
+            <Route path="tickets/:id" element={withErrorBoundary(<TicketDetailPage />)} />
+            <Route path="documents" element={withErrorBoundary(<DocumentsPage />)} />
+            <Route path="knowledge" element={withErrorBoundary(<KnowledgeBasePage />)} />
+            <Route path="boards/:id" element={withErrorBoundary(<BoardPage />)} />
+            <Route path="automations" element={withErrorBoundary(<AutomationsPage />)} />
+            <Route path="import" element={withErrorBoundary(<ImportPage />)} />
+            <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </ErrorBoundary>
   );
 }

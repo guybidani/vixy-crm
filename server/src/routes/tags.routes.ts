@@ -92,9 +92,9 @@ tagsRouter.post("/unassign", validate(assignSchema), async (req, res, next) => {
   try {
     const { tagId, entityType, entityId } = req.body;
     if (entityType === "contact") {
-      await tagsService.unassignFromContact(entityId, tagId);
+      await tagsService.unassignFromContact(req.workspaceId!, entityId, tagId);
     } else {
-      await tagsService.unassignFromDeal(entityId, tagId);
+      await tagsService.unassignFromDeal(req.workspaceId!, entityId, tagId);
     }
     res.json({ success: true });
   } catch (err) {

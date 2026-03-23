@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -70,6 +71,7 @@ export default function ContactDetailPanel({
     "info",
   );
   const [editing, setEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", contactId],
@@ -209,11 +211,7 @@ export default function ContactDetailPanel({
             <ExternalLink size={16} />
           </button>
           <button
-            onClick={() => {
-              if (confirm("האם למחוק את איש הקשר?")) {
-                deleteMutation.mutate();
-              }
-            }}
+            onClick={() => setShowDeleteConfirm(true)}
             className="p-2 rounded-lg text-text-tertiary hover:text-danger hover:bg-red-50 transition-colors"
             title="מחיקה"
           >
@@ -1129,6 +1127,20 @@ function RelatedTab({
           </p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMutation.mutate();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="מחיקת איש קשר"
+        message="האם אתה בטוח שברצונך למחוק את איש הקשר?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -6,13 +6,13 @@ import path from "path";
 import { createServer } from "http";
 import { Server as SocketServer } from "socket.io";
 import jwt from "jsonwebtoken";
-import pino from "pino";
 import { config } from "./config";
 import { errorHandler } from "./middleware/errorHandler";
 import { apiLimiter } from "./middleware/rateLimit";
 import { router } from "./routes";
 import { requireAuth } from "./middleware/auth";
 import { prisma } from "./db/client";
+import { redisConnection } from "./queue/connection";
 import { registerFollowUpScheduler } from "./queue/followup.queue";
 import { followUpWorker, setWorkerIO } from "./queue/followup.worker";
 import {
@@ -22,11 +22,7 @@ import {
 import { reminderWorker, setReminderWorkerIO } from "./queue/reminder.worker";
 import { registerDigestScheduler } from "./queue/digest.queue";
 import { digestWorker, setDigestWorkerIO } from "./queue/digest.worker";
-
-const logger = pino({
-  transport:
-    config.nodeEnv === "development" ? { target: "pino-pretty" } : undefined,
-});
+import { logger } from "./lib/logger";
 
 // ─── Socket.io Security: Per-user connection tracking ───
 const MAX_CONNECTIONS_PER_USER = 5;
@@ -88,7 +84,10 @@ app.use(
     limit: "1mb",
     // Preserve raw body for webhook HMAC signature verification
     verify: (req: any, _res, buf) => {
-      if (req.url?.startsWith("/api/v1/vixy/webhook")) {
+      if (
+        req.url?.startsWith("/api/v1/vixy/webhook") ||
+        req.url?.startsWith("/api/v1/kolio/webhook")
+      ) {
         req.rawBody = buf.toString("utf8");
       }
     },
@@ -127,9 +126,35 @@ app.get("/uploads/:filename", requireAuth, (req, res) => {
 // Routes
 app.use("/api/v1", router);
 
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
+// Health check (deep — DB + Redis)
+app.get("/health", async (_req, res) => {
+  const result: Record<string, string> = {
+    status: "ok",
+    db: "ok",
+    redis: "ok",
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    await prisma.$queryRawUnsafe("SELECT 1");
+  } catch {
+    result.status = "degraded";
+    result.db = "error";
+  }
+
+  try {
+    const pong = await redisConnection.ping();
+    if (pong !== "PONG") {
+      result.status = "degraded";
+      result.redis = "error";
+    }
+  } catch {
+    result.status = "degraded";
+    result.redis = "error";
+  }
+
+  const httpStatus = result.status === "ok" ? 200 : 503;
+  res.status(httpStatus).json(result);
 });
 
 // In production, serve the Vite client build from ../public
@@ -214,6 +239,12 @@ io.on("connection", (socket) => {
         userConnectionCount.set(userId, count - 1);
       }
     }
+    // Clean up rate-limit entries for this socket
+    for (const key of socketRateWindows.keys()) {
+      if (key.startsWith(`${socket.id}:`)) {
+        socketRateWindows.delete(key);
+      }
+    }
     logger.info(`Socket disconnected: ${socket.id}`);
   });
 });
@@ -241,5 +272,41 @@ httpServer.listen(config.port, async () => {
     );
   }
 });
+
+// ─── Periodic cleanup of expired socket rate-limit entries (every 5 min) ───
+const rateLimitCleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [key, window] of socketRateWindows) {
+    if (now > window.resetAt) {
+      socketRateWindows.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// ─── Graceful Shutdown ───
+async function shutdown() {
+  logger.info("Shutting down gracefully...");
+  clearInterval(rateLimitCleanupInterval);
+
+  // Stop accepting new connections
+  httpServer.close();
+  io.close();
+
+  // Close all BullMQ workers
+  await Promise.allSettled([
+    followUpWorker.close(),
+    automationWorker.close(),
+    reminderWorker.close(),
+    digestWorker.close(),
+  ]);
+
+  // Disconnect Prisma
+  await prisma.$disconnect();
+
+  process.exit(0);
+}
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 export { app, io };

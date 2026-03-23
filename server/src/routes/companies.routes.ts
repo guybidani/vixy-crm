@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import * as companiesService from "../services/companies.service";
 
 export const companiesRouter = Router();
@@ -91,7 +92,7 @@ companiesRouter.patch(
 );
 
 // DELETE /api/v1/companies/:id
-companiesRouter.delete("/:id", async (req, res, next) => {
+companiesRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await companiesService.remove(req.workspaceId!, req.params.id as string);
     res.json({ success: true });

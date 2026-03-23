@@ -1,4 +1,5 @@
 import { prisma } from "../db/client";
+import { AppError } from "../middleware/errorHandler";
 import fs from "fs";
 import path from "path";
 
@@ -162,6 +163,19 @@ export async function linkToEntity(workspaceId: string, params: LinkParams) {
     where: { id: params.documentId, workspaceId },
   });
   if (!doc) return null;
+
+  // Verify the entity belongs to the workspace
+  const entityModelMap: Record<string, any> = {
+    contact: prisma.contact,
+    deal: prisma.deal,
+    company: prisma.company,
+    ticket: prisma.ticket,
+  };
+  const model = entityModelMap[params.entityType];
+  if (model) {
+    const entity = await model.findFirst({ where: { id: params.entityId, workspaceId } });
+    if (!entity) throw new AppError(400, "INVALID_REFERENCE", `${params.entityType} not found in workspace`);
+  }
 
   const linkData: any = { documentId: params.documentId };
   linkData[`${params.entityType}Id`] = params.entityId;

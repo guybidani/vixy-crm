@@ -265,7 +265,8 @@ function evaluateConditions(
       case "is_not_empty":
         return !!value && value !== "";
       default:
-        return true;
+        console.warn(`[Automation] Unknown condition operator: ${cond.operator}`);
+        return false;
     }
   });
 }
@@ -351,6 +352,20 @@ async function executeAction(action: any, ctx: TriggerContext) {
       const { field, value } = config;
       if (!field) break;
 
+      const ALLOWED_FIELDS: Record<string, string[]> = {
+        contact: ["status", "leadScore", "source", "preferredChannel", "notes"],
+        deal: ["stage", "priority", "notes", "expectedCloseDate", "value"],
+        ticket: ["status", "priority", "assigneeId"],
+      };
+
+      const allowed = ALLOWED_FIELDS[ctx.entityType];
+      if (!allowed || !allowed.includes(field)) {
+        console.error(
+          `[Automation] CHANGE_FIELD blocked: field "${field}" is not allowed for entity type "${ctx.entityType}"`,
+        );
+        break;
+      }
+
       if (ctx.entityType === "contact") {
         await prisma.contact.update({
           where: { id: ctx.entityId },
@@ -358,6 +373,11 @@ async function executeAction(action: any, ctx: TriggerContext) {
         });
       } else if (ctx.entityType === "deal") {
         await prisma.deal.update({
+          where: { id: ctx.entityId },
+          data: { [field]: value },
+        });
+      } else if (ctx.entityType === "ticket") {
+        await prisma.ticket.update({
           where: { id: ctx.entityId },
           data: { [field]: value },
         });

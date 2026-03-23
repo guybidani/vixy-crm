@@ -347,7 +347,7 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
   }
 });
 
-tasksRouter.delete("/:id", async (req, res, next) => {
+tasksRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     const taskId = req.params.id as string;
     await tasksService.remove(req.workspaceId!, taskId);

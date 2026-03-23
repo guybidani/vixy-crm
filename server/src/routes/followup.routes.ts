@@ -90,7 +90,7 @@ const updateSequenceSchema = z.object({
     .optional(),
 });
 
-followupRouter.put(
+followupRouter.patch(
   "/sequences/:id",
   requireRole("OWNER", "ADMIN"),
   validate(updateSequenceSchema),
@@ -129,9 +129,14 @@ followupRouter.delete(
   },
 );
 
+const toggleSchema = z.object({
+  isActive: z.boolean(),
+});
+
 followupRouter.post(
   "/sequences/:id/toggle",
   requireRole("OWNER", "ADMIN"),
+  validate(toggleSchema),
   async (req, res, next) => {
     try {
       const data = await followupService.toggleSequence(

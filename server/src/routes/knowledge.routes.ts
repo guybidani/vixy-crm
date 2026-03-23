@@ -88,7 +88,7 @@ knowledgeRouter.get("/articles/:id", async (req, res, next) => {
   try {
     const article = await knowledgeService.getArticle(
       req.workspaceId!,
-      req.params.id,
+      req.params.id as string,
     );
     res.json(article);
   } catch (err) {
@@ -155,12 +155,16 @@ knowledgeRouter.delete(
 );
 
 // POST /api/v1/kb/articles/:id/helpful
-knowledgeRouter.post("/articles/:id/helpful", async (req, res, next) => {
+const helpfulSchema = z.object({
+  helpful: z.boolean(),
+});
+
+knowledgeRouter.post("/articles/:id/helpful", validate(helpfulSchema), async (req, res, next) => {
   try {
-    const helpful = req.body.helpful !== false;
+    const helpful = req.body.helpful;
     await knowledgeService.voteArticle(
       req.workspaceId!,
-      req.params.id,
+      req.params.id as string,
       helpful,
     );
     res.json({ success: true });

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { useDebounce } from "../hooks/useDebounce";
 import {
   Plus,
   MessageSquare,
@@ -51,6 +52,7 @@ export default function TicketsPage() {
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -70,10 +72,13 @@ export default function TicketsPage() {
     name: m.name,
   }));
 
+  useEffect(() => setPage(1), [debouncedSearch]);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["tickets", { statusFilter, page, sortBy, sortDir }],
+    queryKey: ["tickets", { search: debouncedSearch, statusFilter, page, sortBy, sortDir }],
     queryFn: () =>
       listTickets({
+        search: debouncedSearch || undefined,
         status: statusFilter || undefined,
         page,
         sortBy,
@@ -97,6 +102,7 @@ export default function TicketsPage() {
       queryClient.invalidateQueries({ queryKey: ["tickets-board"] });
       toast.success("סטטוס עודכן");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
   // Kanban columns
@@ -115,7 +121,6 @@ export default function TicketsPage() {
     toColumn: string,
   ) {
     statusMutation.mutate({ id: itemId, status: toColumn });
-    toast.success(`פנייה הועברה ל${ticketStatuses[toColumn]?.label}`);
   }
 
   const priorityMutation = useMutation({

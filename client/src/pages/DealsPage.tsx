@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
@@ -59,6 +60,7 @@ export default function DealsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
   // Saved views filter state
   const [activeView, setActiveView] = useState<SavedView | null>(null);
@@ -100,14 +102,16 @@ export default function DealsPage() {
   const stageMutation = useMutation({
     mutationFn: ({ id, stage }: { id: string; stage: string }) =>
       updateDeal(id, { stage }),
-    onSuccess: () => {
+    onSuccess: (_data, { stage }) => {
       queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
+      toast.success(`עסקה הועברה ל${dealStages[stage]?.label}`);
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: () => bulkDeleteDeals(Array.from(selectedIds)),
+    mutationFn: (ids?: string[]) => bulkDeleteDeals(ids ?? Array.from(selectedIds)),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success(`${data.deleted} עסקאות נמחקו`);
@@ -176,7 +180,6 @@ export default function DealsPage() {
     );
 
     stageMutation.mutate({ id: itemId, stage: toColumn });
-    toast.success(`עסקה הועברה ל${dealStages[toColumn]?.label}`);
   }
 
   // ── Monday Board columns ────────────────────
@@ -407,7 +410,7 @@ export default function DealsPage() {
           >
             <div className="flex items-center gap-1.5">
               <Table2 size={14} />
-              Main table
+              טבלה
             </div>
           </button>
           <button
@@ -422,7 +425,7 @@ export default function DealsPage() {
           >
             <div className="flex items-center gap-1.5">
               <BarChart3 size={14} />
-              Chart
+              תרשים
             </div>
           </button>
         </div>
@@ -475,11 +478,7 @@ export default function DealsPage() {
               { label: "", onClick: () => {}, divider: true },
               {
                 label: "מחק",
-                onClick: () => {
-                  if (window.confirm("למחוק עסקה זו?")) {
-                    bulkDeleteMutation.mutate();
-                  }
-                },
+                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק עסקה זו?" }),
                 danger: true,
               },
             ];
@@ -500,12 +499,22 @@ export default function DealsPage() {
       <BulkActionBar
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
-        onDelete={() => {
-          if (window.confirm(`למחוק ${selectedIds.size} עסקאות?`)) {
-            bulkDeleteMutation.mutate();
-          }
-        }}
+        onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} עסקאות?` })}
         deleting={bulkDeleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onConfirm={() => {
+          if (confirmDelete) bulkDeleteMutation.mutate(confirmDelete.ids);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+        title="מחיקת עסקאות"
+        message={confirmDelete?.message ?? ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
       />
     </PageShell>
   );

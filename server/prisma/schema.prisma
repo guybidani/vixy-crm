@@ -135,6 +135,7 @@ model Contact {
   nextFollowUpDate DateTime?     @map("next_follow_up_date")
   createdBy      WorkspaceMember @relation("ContactCreator", fields: [createdById], references: [id])
   createdById    String        @map("created_by_id")
+  deletedAt      DateTime?     @map("deleted_at")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
@@ -149,6 +150,9 @@ model Contact {
 
   @@index([workspaceId, status])
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, companyId])
+  @@index([workspaceId, nextFollowUpDate])
+  @@index([workspaceId, deletedAt])
   @@map("contacts")
 }
 
@@ -224,7 +228,7 @@ model Deal {
   closedAt      DateTime? @map("closed_at")
   lostReason    String?   @map("lost_reason")
   lastActivityAt DateTime? @map("last_activity_at")
-  notes         String?
+  notes         String?   @db.Text
   bantData      Json?     @map("bant_data")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
@@ -237,6 +241,8 @@ model Deal {
 
   @@index([workspaceId, stage])
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, assigneeId])
+  @@index([workspaceId, updatedAt])
   @@map("deals")
 }
 
@@ -264,7 +270,7 @@ model Activity {
   workspaceId String       @map("workspace_id")
   type        ActivityType
   subject     String?
-  body        String?
+  body        String?      @db.Text
   contact     Contact?     @relation(fields: [contactId], references: [id])
   contactId   String?      @map("contact_id")
   deal        Deal?        @relation(fields: [dealId], references: [id])
@@ -278,6 +284,9 @@ model Activity {
 
   @@index([workspaceId, createdAt])
   @@index([workspaceId, contactId])
+  @@index([workspaceId, memberId])
+  @@index([workspaceId, dealId])
+  @@index([workspaceId, ticketId])
   @@map("activities")
 }
 
@@ -322,7 +331,7 @@ model Task {
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId String     @map("workspace_id")
   title       String
-  description String?
+  description String?    @db.Text
   status      TaskStatus @default(TODO)
   priority    Priority   @default(MEDIUM)
   taskType    TaskType   @default(TASK) @map("task_type")
@@ -361,6 +370,8 @@ model Task {
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
   @@index([workspaceId, taskType])
+  @@index([workspaceId, dueDate])
+  @@index([workspaceId, completedAt])
   @@index([parentTaskId])
   @@map("tasks")
 }
@@ -453,7 +464,7 @@ model Ticket {
   workspace       Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   workspaceId     String       @map("workspace_id")
   subject         String
-  description     String?
+  description     String?      @db.Text
   status          TicketStatus @default(NEW)
   priority        Priority     @default(MEDIUM)
   urgencyLevel    UrgencyLevel @default(MEDIUM) @map("urgency_level")
@@ -478,6 +489,7 @@ model Ticket {
 
   @@index([workspaceId, status])
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, assigneeId])
   @@map("tickets")
 }
 
@@ -495,11 +507,12 @@ model TicketMessage {
   ticketId    String   @map("ticket_id")
   senderType  String   // "agent" | "contact"
   senderId    String   @map("sender_id")
-  body        String
+  body        String   @db.Text
   isInternal  Boolean  @default(false) @map("is_internal")
   attachments Json?
   createdAt   DateTime @default(now()) @map("created_at")
 
+  @@index([ticketId])
   @@map("ticket_messages")
 }
 
@@ -570,7 +583,7 @@ model KbArticle {
   workspaceId     String     @map("workspace_id")
   title           String
   slug            String
-  body            String
+  body            String     @db.Text
   category        KbCategory? @relation(fields: [categoryId], references: [id])
   categoryId      String?    @map("category_id")
   status          String     @default("draft")

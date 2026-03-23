@@ -146,6 +146,12 @@ export async function startExecution(
   workspaceId: string,
   data: { sequenceId: string; contactId: string },
 ) {
+  // Verify contactId belongs to this workspace
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
+    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  }
+
   const sequence = await prisma.followUpSequence.findFirst({
     where: { id: data.sequenceId, workspaceId, isActive: true },
     include: { steps: { orderBy: { stepNumber: "asc" } } },

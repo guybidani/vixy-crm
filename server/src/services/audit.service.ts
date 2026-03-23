@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
+import { logger } from "../lib/logger";
 
 interface AuditEntry {
   workspaceId?: string;
@@ -29,7 +30,6 @@ export function audit(entry: AuditEntry): void {
       },
     })
     .catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error("[audit] Failed to write audit log:", err?.message);
+      logger.error({ err: err?.message }, "Failed to write audit log");
     });
 }

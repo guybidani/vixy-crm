@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { formatRelativeTime } from "../../lib/utils";
 import SnoozeDropdown from "../shared/SnoozeDropdown";
 import {
   X,
@@ -809,21 +810,3 @@ export default function TaskDetailPanel({
   );
 }
 
-function formatRelativeTime(dateStr: string) {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    const futureDays = Math.abs(diffDays);
-    if (futureDays === 0) return "היום";
-    if (futureDays === 1) return "מחר";
-    return `בעוד ${futureDays} ימים`;
-  }
-
-  if (diffDays === 0) return "היום";
-  if (diffDays === 1) return "אתמול";
-  if (diffDays < 7) return `לפני ${diffDays} ימים`;
-  return date.toLocaleDateString("he-IL");
-}

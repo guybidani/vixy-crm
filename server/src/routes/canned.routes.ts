@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import { prisma } from "../db/client";
 import * as cannedService from "../services/canned.service";
 
@@ -70,9 +71,9 @@ cannedRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
 });
 
 // Delete
-cannedRouter.delete("/:id", async (req, res, next) => {
+cannedRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
-    await cannedService.deleteCannedResponse(req.workspaceId!, req.params.id);
+    await cannedService.deleteCannedResponse(req.workspaceId!, req.params.id as string);
     res.json({ success: true });
   } catch (err) {
     next(err);

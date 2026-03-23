@@ -1,6 +1,9 @@
 import crypto from "crypto";
 import { prisma } from "../db/client";
 import { config } from "../config";
+import { encrypt, decrypt } from "../lib/encryption";
+import { logger } from "../lib/logger";
+import { FIVE_MINUTES_MS } from "../lib/constants";
 import type { CalendarIntegration, Task } from "@prisma/client";
 
 // ─── OAuth State Store ────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ export function getAuthUrl(workspaceId: string, memberId: string): string {
   stateStore.set(state, {
     workspaceId,
     memberId,
-    expiresAt: Date.now() + 5 * 60 * 1000,
+    expiresAt: Date.now() + FIVE_MINUTES_MS,
   });
 
   const params = new URLSearchParams({
@@ -114,21 +117,24 @@ export async function handleCallback(
   const userInfo = (await userRes.json()) as { email: string };
   const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
+  const encryptedAccess = encrypt(tokens.access_token, config.encryptionKey);
+  const encryptedRefresh = encrypt(tokens.refresh_token, config.encryptionKey);
+
   const integration = await prisma.calendarIntegration.upsert({
     where: { memberId },
     create: {
       workspaceId,
       memberId,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: encryptedAccess,
+      refreshToken: encryptedRefresh,
       expiresAt,
       googleEmail: userInfo.email,
       isActive: true,
     },
     update: {
       workspaceId,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
+      accessToken: encryptedAccess,
+      refreshToken: encryptedRefresh,
       expiresAt,
       googleEmail: userInfo.email,
       isActive: true,
@@ -146,10 +152,12 @@ export async function handleCallback(
 export async function getAccessToken(
   integration: CalendarIntegration,
 ): Promise<string> {
-  const fiveMinutes = 5 * 60 * 1000;
+  const fiveMinutes = FIVE_MINUTES_MS;
   if (integration.expiresAt.getTime() > Date.now() + fiveMinutes) {
-    return integration.accessToken;
+    return decrypt(integration.accessToken, config.encryptionKey);
   }
+
+  const decryptedRefresh = decrypt(integration.refreshToken, config.encryptionKey);
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -157,7 +165,7 @@ export async function getAccessToken(
     body: new URLSearchParams({
       client_id: config.google.clientId,
       client_secret: config.google.clientSecret,
-      refresh_token: integration.refreshToken,
+      refresh_token: decryptedRefresh,
       grant_type: "refresh_token",
     }),
   });
@@ -172,10 +180,11 @@ export async function getAccessToken(
     expires_in: number;
   };
 
+  const encryptedNewAccess = encrypt(data.access_token, config.encryptionKey);
   const expiresAt = new Date(Date.now() + data.expires_in * 1000);
   await prisma.calendarIntegration.update({
     where: { id: integration.id },
-    data: { accessToken: data.access_token, expiresAt },
+    data: { accessToken: encryptedNewAccess, expiresAt },
   });
 
   return data.access_token;
@@ -261,7 +270,7 @@ export async function syncTaskToCalendar(
 
     return event.id;
   } catch (err) {
-    console.error("[CalendarService] syncTaskToCalendar error:", err);
+    logger.error({ err }, "syncTaskToCalendar error");
     return null;
   }
 }

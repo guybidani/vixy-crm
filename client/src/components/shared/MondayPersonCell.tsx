@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
+import { avatarColor } from "../../lib/utils";
 
 export interface PersonOption {
   id: string;
@@ -11,27 +12,6 @@ interface MondayPersonCellProps {
   onChange: (id: string | null) => void;
   options: PersonOption[];
   placeholder?: string;
-}
-
-const AVATAR_COLORS = [
-  "#6161FF",
-  "#A25DDC",
-  "#00CA72",
-  "#579BFC",
-  "#FDAB3D",
-  "#FB275D",
-  "#FF642E",
-  "#66CCFF",
-  "#4ECCC6",
-  "#CAB641",
-];
-
-function avatarColor(name: string) {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
 export default function MondayPersonCell({

@@ -16,9 +16,22 @@ declare global {
       workspaceId?: string;
       /** The authenticated user's role in the current workspace. */
       workspaceRole?: WorkspaceRole;
+      /** The workspace member ID for the authenticated user. */
+      memberId?: string;
     }
   }
 }
+
+// ─── Workspace membership cache (60s TTL) ───
+interface CachedMembership {
+  memberId: string;
+  role: WorkspaceRole;
+  expiresAt: number;
+}
+
+const membershipCache = new Map<string, CachedMembership>();
+
+const MEMBERSHIP_CACHE_TTL_MS = 60_000;
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -58,20 +71,36 @@ export async function requireWorkspace(
     });
   }
 
-  // Verify user is a member of this workspace
+  // Verify user is a member of this workspace (with cache)
   try {
-    const membership = await prisma.workspaceMember.findFirst({
-      where: { workspaceId, userId: req.user!.userId },
-    });
-    if (!membership) {
-      return res.status(403).json({
-        error: {
-          code: "NOT_A_MEMBER",
-          message: "You are not a member of this workspace",
-        },
+    const cacheKey = `${req.user!.userId}:${workspaceId}`;
+    const now = Date.now();
+    const cached = membershipCache.get(cacheKey);
+
+    if (cached && cached.expiresAt > now) {
+      req.workspaceRole = cached.role;
+      req.memberId = cached.memberId;
+    } else {
+      const membership = await prisma.workspaceMember.findFirst({
+        where: { workspaceId, userId: req.user!.userId },
       });
+      if (!membership) {
+        membershipCache.delete(cacheKey);
+        return res.status(403).json({
+          error: {
+            code: "NOT_A_MEMBER",
+            message: "You are not a member of this workspace",
+          },
+        });
+      }
+      membershipCache.set(cacheKey, {
+        memberId: membership.id,
+        role: membership.role,
+        expiresAt: now + MEMBERSHIP_CACHE_TTL_MS,
+      });
+      req.workspaceRole = membership.role;
+      req.memberId = membership.id;
     }
-    req.workspaceRole = membership.role;
   } catch {
     return res.status(500).json({
       error: { code: "INTERNAL_ERROR", message: "Something went wrong" },

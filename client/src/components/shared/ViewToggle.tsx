@@ -15,7 +15,7 @@ export default function ViewToggle({ viewMode, onChange }: ViewToggleProps) {
             ? "bg-white shadow-sm text-primary"
             : "text-text-tertiary hover:text-text-secondary"
         }`}
-        title="תצוגת בורד"
+        aria-label="תצוגת בורד"
       >
         <LayoutGrid size={16} />
       </button>
@@ -26,7 +26,7 @@ export default function ViewToggle({ viewMode, onChange }: ViewToggleProps) {
             ? "bg-white shadow-sm text-primary"
             : "text-text-tertiary hover:text-text-secondary"
         }`}
-        title="תצוגת טבלה"
+        aria-label="תצוגת טבלה"
       >
         <List size={16} />
       </button>

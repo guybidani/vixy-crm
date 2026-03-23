@@ -225,7 +225,7 @@ dealsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
 });
 
 // DELETE /api/v1/deals/:id
-dealsRouter.delete("/:id", async (req, res, next) => {
+dealsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await dealsService.remove(req.workspaceId!, req.params.id as string);
     res.json({ success: true });

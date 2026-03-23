@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Plus,
   Zap,
+  Upload,
   Lock,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +42,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
   Settings,
   Zap,
+  Upload,
 };
 
 const NAV_LABELS_KEY = "vixy-nav-labels";

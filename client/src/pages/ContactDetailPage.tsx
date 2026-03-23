@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -45,6 +46,7 @@ export default function ContactDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editing, setEditing] = useState(false);
 
   const { data: contact, isLoading } = useQuery({
@@ -130,11 +132,7 @@ export default function ContactDetailPage() {
               עריכה
             </button>
             <button
-              onClick={() => {
-                if (confirm("האם למחוק את איש הקשר?")) {
-                  deleteMutation.mutate();
-                }
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-danger hover:bg-red-50 rounded-lg transition-colors"
             >
               <Trash2 size={14} />

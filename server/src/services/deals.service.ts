@@ -3,6 +3,7 @@ import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { enqueueAutomationTrigger } from "../queue/automation.queue";
 import { calculateDealHealth, type DealHealthResult } from "../utils/dealHealth.util";
+import { THIRTY_DAYS_MS } from "../lib/constants";
 
 interface ListParams {
   workspaceId: string;
@@ -96,7 +97,7 @@ export async function list(params: ListParams) {
     where.contactId = contactId;
   }
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
 
   const [deals, total] = await Promise.all([
     prisma.deal.findMany({
@@ -184,7 +185,7 @@ export async function list(params: ListParams) {
 }
 
 export async function pipeline(workspaceId: string) {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
 
   const deals = await prisma.deal.findMany({
     where: { workspaceId },
@@ -318,7 +319,7 @@ export async function getById(workspaceId: string, id: string) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
   }
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
   const openTaskCount = deal.tasks.filter((t) => t.status !== "DONE").length;
   const recentActivityCount = deal.activities.filter(
     (a) => new Date(a.createdAt) >= thirtyDaysAgo,
@@ -363,6 +364,16 @@ export async function create(
     notes?: string;
   },
 ) {
+  // Verify foreign key references belong to this workspace
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
+    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  }
+  if (data.companyId) {
+    const company = await prisma.company.findFirst({ where: { id: data.companyId, workspaceId } });
+    if (!company) throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
+  }
+
   const deal = await prisma.deal.create({
     data: {
       workspaceId,
@@ -426,6 +437,16 @@ export async function update(
   });
   if (!existing) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
+  }
+
+  // Verify foreign key references belong to this workspace
+  if (data.contactId) {
+    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
+    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  }
+  if (data.companyId) {
+    const company = await prisma.company.findFirst({ where: { id: data.companyId, workspaceId } });
+    if (!company) throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
   }
 
   const updateData: any = { ...data, lastActivityAt: new Date() };

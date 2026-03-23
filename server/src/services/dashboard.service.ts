@@ -1,4 +1,5 @@
 import { prisma } from "../db/client";
+import { SEVEN_DAYS_MS, FOURTEEN_DAYS_MS } from "../lib/constants";
 
 /** Sunday 00:00 of the current week (Israeli work-week start) */
 function getThisWeekSunday(): Date {
@@ -20,81 +21,60 @@ export interface TeamMemberPerformance {
   tasksCompleted: number;
 }
 
+interface TeamPerformanceRow {
+  member_id: string;
+  name: string;
+  activities_count: bigint;
+  calls_count: bigint;
+  deals_won: bigint;
+  deals_won_value: number | null;
+  tasks_completed: bigint;
+}
+
 export async function getTeamPerformance(
   workspaceId: string,
 ): Promise<TeamMemberPerformance[]> {
   const weekStart = getThisWeekSunday();
 
-  // Get all workspace members
-  const members = await prisma.workspaceMember.findMany({
-    where: { workspaceId },
-    include: { user: { select: { name: true } } },
-  });
+  const rows = await prisma.$queryRaw<TeamPerformanceRow[]>`
+    SELECT
+      wm.id AS member_id,
+      u.name,
+      COALESCE((
+        SELECT COUNT(*) FROM activities a
+        WHERE a.workspace_id = wm.workspace_id AND a.member_id = wm.id AND a.created_at >= ${weekStart}
+      ), 0) AS activities_count,
+      COALESCE((
+        SELECT COUNT(*) FROM activities a
+        WHERE a.workspace_id = wm.workspace_id AND a.member_id = wm.id AND a.type = 'CALL' AND a.created_at >= ${weekStart}
+      ), 0) AS calls_count,
+      COALESCE((
+        SELECT COUNT(*) FROM deals d
+        WHERE d.workspace_id = wm.workspace_id AND d.assignee_id = wm.id AND d.stage = 'CLOSED_WON' AND d.stage_changed_at >= ${weekStart}
+      ), 0) AS deals_won,
+      COALESCE((
+        SELECT SUM(d.value) FROM deals d
+        WHERE d.workspace_id = wm.workspace_id AND d.assignee_id = wm.id AND d.stage = 'CLOSED_WON' AND d.stage_changed_at >= ${weekStart}
+      ), 0) AS deals_won_value,
+      COALESCE((
+        SELECT COUNT(*) FROM tasks t
+        WHERE t.workspace_id = wm.workspace_id AND t.assignee_id = wm.id AND t.status = 'DONE' AND t.completed_at >= ${weekStart}
+      ), 0) AS tasks_completed
+    FROM workspace_members wm
+    JOIN users u ON u.id = wm.user_id
+    WHERE wm.workspace_id = ${workspaceId}
+    ORDER BY activities_count DESC
+  `;
 
-  // Run all aggregations in parallel
-  const results = await Promise.all(
-    members.map(async (m) => {
-      const [activitiesCount, callsCount, dealsWon, dealsWonAgg, tasksCompleted] =
-        await Promise.all([
-          // Total activities this week
-          prisma.activity.count({
-            where: { workspaceId, memberId: m.id, createdAt: { gte: weekStart } },
-          }),
-          // Calls this week
-          prisma.activity.count({
-            where: {
-              workspaceId,
-              memberId: m.id,
-              type: "CALL",
-              createdAt: { gte: weekStart },
-            },
-          }),
-          // Deals closed-won this week (by assignee, stageChangedAt this week)
-          prisma.deal.count({
-            where: {
-              workspaceId,
-              assigneeId: m.id,
-              stage: "CLOSED_WON",
-              stageChangedAt: { gte: weekStart },
-            },
-          }),
-          // Sum of won deal values
-          prisma.deal.aggregate({
-            where: {
-              workspaceId,
-              assigneeId: m.id,
-              stage: "CLOSED_WON",
-              stageChangedAt: { gte: weekStart },
-            },
-            _sum: { value: true },
-          }),
-          // Tasks completed this week
-          prisma.task.count({
-            where: {
-              workspaceId,
-              assigneeId: m.id,
-              status: "DONE",
-              completedAt: { gte: weekStart },
-            },
-          }),
-        ]);
-
-      return {
-        memberId: m.id,
-        name: m.user.name,
-        activitiesCount,
-        callsCount,
-        dealsWon,
-        dealsWonValue: dealsWonAgg._sum.value?.toNumber() || 0,
-        tasksCompleted,
-      };
-    }),
-  );
-
-  // Sort by activitiesCount DESC
-  results.sort((a, b) => b.activitiesCount - a.activitiesCount);
-
-  return results;
+  return rows.map((r) => ({
+    memberId: r.member_id,
+    name: r.name,
+    activitiesCount: Number(r.activities_count),
+    callsCount: Number(r.calls_count),
+    dealsWon: Number(r.deals_won),
+    dealsWonValue: Number(r.deals_won_value) || 0,
+    tasksCompleted: Number(r.tasks_completed),
+  }));
 }
 
 export async function getDashboardStats(workspaceId: string) {
@@ -118,7 +98,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         createdAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - SEVEN_DAYS_MS),
         },
       },
     }),
@@ -207,7 +187,7 @@ export async function getDashboardStats(workspaceId: string) {
   ]);
 
   // Completed tasks this week
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekAgo = new Date(Date.now() - SEVEN_DAYS_MS);
   const [tasksCompletedThisWeek, rottingDeals] = await Promise.all([
     prisma.task.count({
       where: {
@@ -221,7 +201,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
-        updatedAt: { lt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+        updatedAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
       },
       include: {
         contact: { select: { id: true, firstName: true, lastName: true } },

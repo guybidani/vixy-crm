@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { handleMutationError } from "../../lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { X, Users, Handshake, Ticket, CheckSquare, Search } from "lucide-react";
@@ -231,7 +232,7 @@ function QuickForm({
       onClose();
       navigate(`/contacts/${data.id}`);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const dealMut = useMutation({
@@ -249,7 +250,7 @@ function QuickForm({
       onClose();
       navigate("/deals");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const ticketMut = useMutation({
@@ -265,7 +266,7 @@ function QuickForm({
       onClose();
       navigate(`/tickets/${data.id}`);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const taskMut = useMutation({
@@ -280,7 +281,7 @@ function QuickForm({
       onClose();
       navigate("/tasks");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה"),
+    onError: handleMutationError,
   });
 
   const isPending =

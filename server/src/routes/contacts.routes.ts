@@ -195,7 +195,7 @@ contactsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
 });
 
 // DELETE /api/v1/contacts/:id
-contactsRouter.delete("/:id", async (req, res, next) => {
+contactsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await contactsService.remove(req.workspaceId!, req.params.id as string);
     res.json({ success: true });

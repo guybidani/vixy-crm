@@ -74,6 +74,7 @@ export interface TicketMessage {
 export function listTickets(params?: {
   page?: number;
   limit?: number;
+  search?: string;
   status?: string;
   priority?: string;
   assigneeId?: string;
@@ -84,6 +85,7 @@ export function listTickets(params?: {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.set("page", String(params.page));
   if (params?.limit) searchParams.set("limit", String(params.limit));
+  if (params?.search) searchParams.set("search", params.search);
   if (params?.status) searchParams.set("status", params.status);
   if (params?.priority) searchParams.set("priority", params.priority);
   if (params?.assigneeId) searchParams.set("assigneeId", params.assigneeId);

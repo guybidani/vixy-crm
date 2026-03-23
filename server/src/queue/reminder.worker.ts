@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./connection";
 import { prisma } from "../db/client";
 import type { Server as SocketServer } from "socket.io";
+import { logger } from "../lib/logger";
 
 let ioRef: SocketServer | null = null;
 
@@ -56,5 +57,5 @@ export const reminderWorker = new Worker(
 );
 
 reminderWorker.on("failed", (job, err) => {
-  console.error(`Reminder job ${job?.id} failed:`, err.message);
+  logger.error({ jobId: job?.id, err: err.message }, "Reminder job failed");
 });

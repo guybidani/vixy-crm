@@ -91,6 +91,13 @@ export const NAV_ITEMS = [
     path: "/automations",
     dot: "#A25DDC",
   },
+  {
+    key: "import",
+    label: "ייבוא",
+    icon: "Upload",
+    path: "/import",
+    dot: "#579BFC",
+  },
 ] as const;
 
 // Legacy nav exports (keep for backward compat)

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -31,6 +32,7 @@ export default function TagsTab() {
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [tagToDelete, setTagToDelete] = useState<{ id: string; name: string } | null>(null);
   const [editColor, setEditColor] = useState("");
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(TAG_COLORS[0]);
@@ -248,11 +250,7 @@ export default function TagsTab() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm(`למחוק את התגית "${tag.name}"?`)) {
-                          deleteMutation.mutate(tag.id);
-                        }
-                      }}
+                      onClick={() => setTagToDelete({ id: tag.id, name: tag.name })}
                       className="p-1.5 text-text-tertiary hover:text-danger rounded opacity-0 group-hover:opacity-100 transition-all"
                       title="מחק"
                     >
@@ -265,6 +263,20 @@ export default function TagsTab() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!tagToDelete}
+        onConfirm={() => {
+          if (tagToDelete) deleteMutation.mutate(tagToDelete.id);
+          setTagToDelete(null);
+        }}
+        onCancel={() => setTagToDelete(null)}
+        title="מחיקת תגית"
+        message={tagToDelete ? `האם אתה בטוח שברצונך למחוק את התגית "${tagToDelete.name}"?` : ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }

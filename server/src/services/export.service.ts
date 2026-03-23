@@ -78,7 +78,9 @@ function formatDate(d: Date | string | null): string {
   return new Date(d).toLocaleDateString("he-IL");
 }
 
-const MAX_EXPORT_ROWS = 10_000;
+import { EXPORT_MAX_ROWS } from "../lib/constants";
+
+const MAX_EXPORT_ROWS = EXPORT_MAX_ROWS;
 
 export async function exportCsv(
   workspaceId: string,

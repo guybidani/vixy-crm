@@ -406,6 +406,7 @@ export default function TaskCreateModal({
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
             placeholder="מה המשימה? *"
+            aria-label="כותרת המשימה"
             className="w-full px-3 py-2.5 border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
             required
           />
@@ -493,6 +494,7 @@ export default function TaskCreateModal({
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="פרטים נוספים..."
+              aria-label="תיאור המשימה"
               rows={2}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-text-tertiary"
             />

@@ -108,6 +108,7 @@ export default function SnoozeDropdown({
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border text-text-secondary hover:border-warning hover:text-warning hover:bg-warning/5 transition-all"
           title="דחה משימה"
+          aria-label="דחה משימה"
         >
           <AlarmClockOff size={13} />
           דחה משימה
@@ -120,6 +121,7 @@ export default function SnoozeDropdown({
           }}
           className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-surface-tertiary transition-all"
           title="דחה משימה"
+          aria-label="דחה משימה"
         >
           <AlarmClockOff size={12} className="text-text-secondary" />
         </button>

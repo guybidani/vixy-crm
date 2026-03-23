@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { handleMutationError } from "../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sanitizeHtml } from "../lib/sanitize";
 import {
@@ -85,7 +86,7 @@ export default function DocumentsPage() {
       toast.success("קובץ הועלה בהצלחה!");
       setShowCreate(null);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בהעלאת קובץ"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בהעלאת קובץ"),
   });
 
   const deleteMut = useMutation({
@@ -95,7 +96,7 @@ export default function DocumentsPage() {
       toast.success("מסמך נמחק!");
       setSelectedDoc(null);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה במחיקת מסמך"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה במחיקת מסמך"),
   });
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -378,7 +379,7 @@ function DocumentDetailPanel({
       toast.success("מסמך עודכן!");
       setEditing(false);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   return (
@@ -547,7 +548,7 @@ function CreateRichTextModal({ onClose }: { onClose: () => void }) {
       toast.success("מסמך נוצר בהצלחה!");
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה ביצירת מסמך"),
+    onError: (err: unknown) => handleMutationError(err, "שגיאה ביצירת מסמך"),
   });
 
   return (
