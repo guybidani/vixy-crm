@@ -35,9 +35,9 @@ export default function SidePanel({
   if (!open) return null;
 
   const widthClass = {
-    md: "max-w-[50vw]",
-    lg: "max-w-[65vw]",
-    xl: "max-w-[80vw]",
+    md: "max-w-full md:max-w-[50vw]",
+    lg: "max-w-full md:max-w-[65vw]",
+    xl: "max-w-full md:max-w-[80vw]",
   }[width];
 
   return (

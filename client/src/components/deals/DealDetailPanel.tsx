@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAutoSave } from "../../hooks/useAutoSave";
 import {
   X,
   Mail,
@@ -8,7 +9,6 @@ import {
   Calendar,
   User,
   DollarSign,
-  Save,
   Trash2,
   Clock,
   StickyNote,
@@ -61,6 +61,7 @@ export default function DealDetailPanel({
   const [activeTab, setActiveTab] = useState<"details" | "activity">("details");
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState("");
+  const [autoSaving, setAutoSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
 
@@ -118,14 +119,22 @@ export default function DealDetailPanel({
     },
   });
 
+  // Sync notes state when deal loads
+  useEffect(() => {
+    if (deal?.notes !== undefined) setNotes(deal.notes || "");
+  }, [deal?.notes]);
+
+  // Auto-save notes 1.5s after typing stops
+  useAutoSave(notes, (val) => {
+    setAutoSaving(true);
+    updateMut.mutate({ notes: val }, {
+      onSettled: () => setAutoSaving(false),
+    });
+  }, { enabled: editingNotes && notes !== (deal?.notes || "") });
+
   function startEditNotes() {
     setEditingNotes(true);
     setNotes(deal?.notes || "");
-  }
-
-  function saveNotes() {
-    updateMut.mutate({ notes });
-    setEditingNotes(false);
   }
 
   function startEdit(field: string, value: string) {
@@ -531,22 +540,21 @@ export default function DealDetailPanel({
                       autoFocus
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
+                      onBlur={() => {
+                        if (notes === (deal?.notes || "")) setEditingNotes(false);
+                      }}
                       className="w-full min-h-[100px] px-3 py-2 text-sm border border-[#C5C7D0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-y"
                       placeholder="הוסף הערות..."
                     />
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-text-tertiary">
+                        {autoSaving ? "שומר..." : "נשמר אוטומטית"}
+                      </span>
                       <button
                         onClick={() => setEditingNotes(false)}
                         className="px-3 py-1.5 text-xs text-[#676879] hover:bg-[#F5F6F8] rounded-lg transition-colors"
                       >
-                        ביטול
-                      </button>
-                      <button
-                        onClick={saveNotes}
-                        className="px-3 py-1.5 text-xs text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <Save size={12} />
-                        שמור
+                        סגור
                       </button>
                     </div>
                   </div>

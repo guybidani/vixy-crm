@@ -99,6 +99,7 @@ model WorkspaceMember {
   createdDocuments Document[] @relation("DocumentCreator")
   boardAccess     BoardAccess[]
   calendarIntegration CalendarIntegration?
+  taskComments    TaskComment[]
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
@@ -335,10 +336,26 @@ model Task {
   createdAt              DateTime   @default(now()) @map("created_at")
   updatedAt              DateTime   @updatedAt @map("updated_at")
 
+  comments   TaskComment[]
+
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
   @@index([workspaceId, taskType])
   @@map("tasks")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String   @map("task_id")
+  author    WorkspaceMember @relation(fields: [authorId], references: [id])
+  authorId  String   @map("author_id")
+  body      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([taskId])
+  @@map("task_comments")
 }
 
 enum TaskStatus {

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, Plus, LogOut } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Plus, LogOut, Menu } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
 import NotificationCenter from "./NotificationCenter";
@@ -8,12 +8,15 @@ import SearchDropdown from "./SearchDropdown";
 interface HeaderProps {
   sidebarCollapsed: boolean;
   onQuickAdd: () => void;
+  onMobileMenuToggle?: () => void;
 }
 
-export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
+export default function Header({ sidebarCollapsed, onQuickAdd, onMobileMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchRef = useRef<HTMLInputElement>(null);
 
   // Ctrl+K shortcut
   useEffect(() => {
@@ -27,16 +30,26 @@ export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
     return () => window.removeEventListener("keydown", handleKey);
   }, [onQuickAdd]);
 
+  // Focus mobile search input when opened
+  useEffect(() => {
+    if (mobileSearchOpen && mobileSearchRef.current) {
+      mobileSearchRef.current.focus();
+    }
+  }, [mobileSearchOpen]);
+
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-4 px-4 transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
-        sidebarCollapsed ? "right-16" : "right-60",
+        "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
+        // Mobile: full width. Desktop: offset by sidebar
+        "right-0 md:right-60",
+        sidebarCollapsed && "md:right-16",
       )}
     >
-      {/* Search */}
+      {/* Search — desktop: always visible, mobile: icon toggles input */}
       <div className="flex-1 max-w-lg">
-        <div className="relative">
+        {/* Desktop search (hidden on < 640px) */}
+        <div className="relative hidden sm:block">
           <Search
             size={16}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
@@ -71,12 +84,64 @@ export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
             />
           )}
         </div>
+
+        {/* Mobile search: icon-only, expands on tap */}
+        <div className="sm:hidden">
+          {mobileSearchOpen ? (
+            <div className="relative">
+              <Search
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+              />
+              <input
+                ref={mobileSearchRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowSearch(e.target.value.length >= 2);
+                }}
+                onBlur={() => {
+                  if (!searchQuery) setMobileSearchOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setSearchQuery("");
+                    setShowSearch(false);
+                    setMobileSearchOpen(false);
+                  }
+                }}
+                placeholder="חיפוש..."
+                aria-label="חיפוש גלובלי"
+                className="w-full pr-9 pl-4 py-2 bg-surface-secondary rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+              />
+              {showSearch && searchQuery.length >= 2 && (
+                <SearchDropdown
+                  query={searchQuery}
+                  onClose={() => {
+                    setShowSearch(false);
+                    setSearchQuery("");
+                    setMobileSearchOpen(false);
+                  }}
+                />
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => setMobileSearchOpen(true)}
+              className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary"
+              aria-label="חיפוש"
+            >
+              <Search size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Quick Add */}
       <button
         onClick={onQuickAdd}
-        className="flex items-center gap-1.5 px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
         title="הוספה מהירה (Ctrl+K)"
         aria-label="הוספה מהירה (Ctrl+K)"
       >
@@ -88,7 +153,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
       <NotificationCenter />
 
       {/* User */}
-      <div className="flex items-center gap-2 border-r border-border-light pr-3">
+      <div className="flex items-center gap-2 border-r border-border-light pr-2 sm:pr-3">
         <div
           className="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
           role="img"
@@ -110,6 +175,17 @@ export default function Header({ sidebarCollapsed, onQuickAdd }: HeaderProps) {
           <LogOut size={16} />
         </button>
       </div>
+
+      {/* Mobile hamburger */}
+      {onMobileMenuToggle && (
+        <button
+          onClick={onMobileMenuToggle}
+          className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary md:hidden"
+          aria-label="תפריט"
+        >
+          <Menu size={20} />
+        </button>
+      )}
     </header>
   );
 }

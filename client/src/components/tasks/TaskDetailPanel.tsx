@@ -20,6 +20,7 @@ import {
   MessageSquare,
   TrendingUp,
   Tag,
+  Send,
 } from "lucide-react";
 
 const TASK_TYPE_OPTIONS = [
@@ -40,6 +41,9 @@ import {
   getTask,
   updateTask,
   deleteTask,
+  listTaskComments,
+  createTaskComment,
+  deleteTaskComment,
 } from "../../api/tasks";
 import { listActivities } from "../../api/activities";
 import { getWorkspaceMembers } from "../../api/auth";
@@ -83,10 +87,10 @@ export default function TaskDetailPanel({
   onClose,
 }: TaskDetailPanelProps) {
   const { taskStatuses, priorities, activityTypes } = useWorkspaceOptions();
-  const { currentWorkspaceId } = useAuth();
+  const { currentWorkspaceId, workspaces } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"info" | "activity">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "activity" | "comments">("info");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
@@ -94,6 +98,8 @@ export default function TaskDetailPanel({
   const [editingOutcome, setEditingOutcome] = useState(false);
   const [outcomeValue, setOutcomeValue] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [commentBody, setCommentBody] = useState("");
+  const currentMemberId = workspaces.find((w) => w.id === currentWorkspaceId)?.memberId;
 
   const { data: task, isLoading } = useQuery({
     queryKey: ["task", taskId],
@@ -122,6 +128,41 @@ export default function TaskDetailPanel({
       }),
     enabled: activeTab === "activity" && !!task?.contact?.id,
   });
+
+  // Comments
+  const { data: comments } = useQuery({
+    queryKey: ["task-comments", taskId],
+    queryFn: () => listTaskComments(taskId),
+    enabled: !!taskId,
+  });
+
+  const createCommentMutation = useMutation({
+    mutationFn: (body: string) => createTaskComment(taskId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-comments", taskId] });
+      setCommentBody("");
+    },
+    onError: () => {
+      toast.error("שגיאה בהוספת תגובה");
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: string) => deleteTaskComment(taskId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-comments", taskId] });
+      toast.success("תגובה נמחקה");
+    },
+    onError: () => {
+      toast.error("שגיאה במחיקת תגובה");
+    },
+  });
+
+  const handleSubmitComment = () => {
+    const trimmed = commentBody.trim();
+    if (!trimmed) return;
+    createCommentMutation.mutate(trimmed);
+  };
 
   const updateMutation = useMutation({
     mutationFn: (data: Parameters<typeof updateTask>[1]) =>
@@ -281,6 +322,7 @@ export default function TaskDetailPanel({
         {(
           [
             { key: "info", label: "פרטים" },
+            { key: "comments", label: `תגובות${comments && comments.length > 0 ? ` (${comments.length})` : ""}` },
             { key: "activity", label: "פעילות" },
           ] as const
         ).map((tab) => (
@@ -546,6 +588,83 @@ export default function TaskDetailPanel({
                 </span>
               </div>
             )}
+          </div>
+        </div>
+      ) : activeTab === "comments" ? (
+        /* Comments Tab */
+        <div className="flex flex-col gap-4">
+          {/* Comment list */}
+          <div className="space-y-3 max-h-[400px] overflow-y-auto">
+            {!comments || comments.length === 0 ? (
+              <p className="text-sm text-text-tertiary text-center py-8">
+                אין תגובות עדיין
+              </p>
+            ) : (
+              comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="flex gap-3 group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-primary">
+                    {comment.authorName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-text-primary">
+                        {comment.authorName}
+                      </span>
+                      <span className="text-[10px] text-text-tertiary">
+                        {formatRelativeTime(comment.createdAt)}
+                      </span>
+                      {comment.authorId === currentMemberId && (
+                        <button
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          className="p-1 rounded text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors opacity-0 group-hover:opacity-100"
+                          title="מחק תגובה"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-text-secondary whitespace-pre-wrap mt-0.5">
+                      {comment.body}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Comment input */}
+          <div className="border-t border-border-light pt-3">
+            <div className="flex gap-2">
+              <textarea
+                className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none min-h-[60px] placeholder:text-text-tertiary"
+                placeholder="כתוב תגובה..."
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleSubmitComment();
+                  }
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[10px] text-text-tertiary">
+                Ctrl+Enter לשליחה
+              </span>
+              <button
+                onClick={handleSubmitComment}
+                disabled={!commentBody.trim() || createCommentMutation.isPending}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send size={12} />
+                הוסף תגובה
+              </button>
+            </div>
           </div>
         </div>
       ) : (

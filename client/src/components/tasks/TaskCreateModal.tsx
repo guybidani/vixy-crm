@@ -1,0 +1,592 @@
+import { useState, useEffect, useRef, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Phone,
+  Calendar,
+  MessageSquare,
+  CheckSquare,
+  Search,
+  X,
+  ChevronDown,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import Modal from "../shared/Modal";
+import { createTask } from "../../api/tasks";
+import { listContacts, type Contact } from "../../api/contacts";
+import { listDeals, type Deal } from "../../api/deals";
+import { getWorkspaceMembers } from "../../api/auth";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
+import { useAuth } from "../../hooks/useAuth";
+
+// ── Types ──
+
+interface TaskCreateModalProps {
+  open: boolean;
+  onClose: () => void;
+  onCreated?: () => void;
+  initialContactId?: string;
+  initialDealId?: string;
+}
+
+type TaskTypeOption = "CALL" | "MEETING" | "WHATSAPP" | "TASK";
+
+interface FormState {
+  title: string;
+  taskType: TaskTypeOption;
+  description: string;
+  dueDate: string;
+  dueTime: string;
+  priority: string;
+  assigneeId: string;
+  reminderMinutes: number | "";
+  contactId: string;
+  dealId: string;
+}
+
+// ── Constants ──
+
+const TASK_TYPES: {
+  value: TaskTypeOption;
+  label: string;
+  icon: typeof Phone;
+  color: string;
+}[] = [
+  { value: "CALL", label: "שיחה", icon: Phone, color: "#00CA72" },
+  { value: "MEETING", label: "פגישה", icon: Calendar, color: "#A25DDC" },
+  { value: "WHATSAPP", label: "ווטסאפ", icon: MessageSquare, color: "#25D366" },
+  { value: "TASK", label: "כללי", icon: CheckSquare, color: "#579BFC" },
+];
+
+const PRIORITY_OPTIONS: {
+  value: string;
+  label: string;
+  color: string;
+}[] = [
+  { value: "LOW", label: "נמוך", color: "#C3C6D4" },
+  { value: "MEDIUM", label: "בינוני", color: "#579BFC" },
+  { value: "HIGH", label: "גבוה", color: "#FDAB3D" },
+  { value: "URGENT", label: "דחוף", color: "#FB275D" },
+];
+
+const REMINDER_OPTIONS: { value: number; label: string }[] = [
+  { value: 15, label: "15 דק׳" },
+  { value: 30, label: "30 דק׳" },
+  { value: 60, label: "שעה" },
+  { value: 120, label: "2 שעות" },
+];
+
+// ── Helpers ──
+
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+}
+
+// ── Searchable Dropdown ──
+
+function SearchableDropdown<T extends { id: string }>({
+  label,
+  placeholder,
+  value,
+  onChange,
+  items,
+  getLabel,
+  isLoading,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (id: string) => void;
+  items: T[];
+  getLabel: (item: T) => string;
+  isLoading?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && searchRef.current) searchRef.current.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSearch("");
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const filtered = items.filter((item) =>
+    getLabel(item).toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const selected = items.find((item) => item.id === value);
+
+  return (
+    <div className="relative" ref={ref}>
+      <label className="block text-xs font-medium text-text-secondary mb-1">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg text-sm bg-white hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors text-right"
+      >
+        <span className={selected ? "text-text-primary" : "text-text-tertiary"}>
+          {selected ? getLabel(selected) : placeholder}
+        </span>
+        <ChevronDown size={14} className="text-text-tertiary flex-shrink-0" />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 right-0 left-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-border-light overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border-light">
+            <Search size={14} className="text-text-tertiary flex-shrink-0" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש..."
+              className="flex-1 text-[13px] outline-none bg-transparent"
+            />
+          </div>
+          <div className="max-h-[180px] overflow-y-auto">
+            {value && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                  setSearch("");
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-secondary transition-colors text-right"
+              >
+                <X size={14} className="text-text-tertiary" />
+                <span className="text-[12px] text-text-secondary">הסר בחירה</span>
+              </button>
+            )}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-center py-4 text-[12px] text-text-tertiary">
+                לא נמצאו תוצאות
+              </div>
+            ) : (
+              filtered.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(item.id);
+                    setOpen(false);
+                    setSearch("");
+                  }}
+                  className={`w-full text-right px-3 py-2 text-[13px] hover:bg-surface-secondary transition-colors ${
+                    value === item.id
+                      ? "bg-primary/5 text-primary font-medium"
+                      : "text-text-primary"
+                  }`}
+                >
+                  {getLabel(item)}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Main Component ──
+
+export default function TaskCreateModal({
+  open,
+  onClose,
+  onCreated,
+  initialContactId,
+  initialDealId,
+}: TaskCreateModalProps) {
+  const { priorities } = useWorkspaceOptions();
+  const { currentWorkspaceId } = useAuth();
+  const queryClient = useQueryClient();
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  void priorities; // we use our own PRIORITY_OPTIONS for the color dots
+
+  const [form, setForm] = useState<FormState>({
+    title: "",
+    taskType: "TASK",
+    description: "",
+    dueDate: "",
+    dueTime: "",
+    priority: "MEDIUM",
+    assigneeId: "",
+    reminderMinutes: 15,
+    contactId: initialContactId || "",
+    dealId: initialDealId || "",
+  });
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (open) {
+      setForm({
+        title: "",
+        taskType: "TASK",
+        description: "",
+        dueDate: "",
+        dueTime: "",
+        priority: "MEDIUM",
+        assigneeId: "",
+        reminderMinutes: 15,
+        contactId: initialContactId || "",
+        dealId: initialDealId || "",
+      });
+      setTimeout(() => titleRef.current?.focus(), 100);
+    }
+  }, [open, initialContactId, initialDealId]);
+
+  // Ctrl+Enter to save
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (form.title.trim()) mutation.mutate();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, form]);
+
+  // Data fetching
+  const { data: contacts, isLoading: contactsLoading } = useQuery({
+    queryKey: ["contacts-dropdown"],
+    queryFn: () => listContacts({ limit: 50 }),
+    enabled: open,
+  });
+
+  const { data: deals, isLoading: dealsLoading } = useQuery({
+    queryKey: ["deals-dropdown"],
+    queryFn: () => listDeals({ limit: 50 }),
+    enabled: open,
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ["members", currentWorkspaceId],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: open && !!currentWorkspaceId,
+  });
+
+  const memberOptions = useMemo(
+    () => (members || []).map((m) => ({ id: m.memberId, name: m.name })),
+    [members],
+  );
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createTask({
+        title: form.title,
+        description: form.description || undefined,
+        priority: form.priority,
+        taskType: form.taskType,
+        dueDate: form.dueDate || undefined,
+        dueTime: form.dueTime || undefined,
+        reminderMinutes:
+          form.dueTime && form.reminderMinutes !== ""
+            ? form.reminderMinutes
+            : undefined,
+        assigneeId: form.assigneeId || undefined,
+        contactId: form.contactId || undefined,
+        dealId: form.dealId || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      toast.success("משימה נוצרה בהצלחה!");
+      onCreated?.();
+      onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "שגיאה ביצירת משימה");
+    },
+  });
+
+  function setField<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.title.trim()) return;
+    mutation.mutate();
+  }
+
+  const DATE_SHORTCUTS = [
+    { label: "היום", value: addDays(0) },
+    { label: "מחר", value: addDays(1) },
+    { label: "בעוד 3 ימים", value: addDays(3) },
+    { label: "בעוד שבוע", value: addDays(7) },
+  ];
+
+  return (
+    <Modal open={open} onClose={onClose} title="משימה חדשה" maxWidth="max-w-xl">
+      <form onSubmit={handleSubmit}>
+        <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* Title */}
+          <input
+            ref={titleRef}
+            type="text"
+            value={form.title}
+            onChange={(e) => setField("title", e.target.value)}
+            placeholder="מה המשימה? *"
+            className="w-full px-3 py-2.5 border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
+            required
+          />
+
+          {/* Task Type — horizontal button group */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              סוג משימה
+            </label>
+            <div className="flex gap-2">
+              {TASK_TYPES.map((tt) => {
+                const Icon = tt.icon;
+                const isActive = form.taskType === tt.value;
+                return (
+                  <button
+                    key={tt.value}
+                    type="button"
+                    onClick={() => setField("taskType", tt.value)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: tt.color,
+                            color: "#fff",
+                            borderColor: tt.color,
+                          }
+                        : {
+                            backgroundColor: "#fff",
+                            color: tt.color,
+                            borderColor: `${tt.color}60`,
+                          }
+                    }
+                  >
+                    <Icon size={14} />
+                    <span>{tt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              תיאור
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setField("description", e.target.value)}
+              placeholder="פרטים נוספים..."
+              rows={2}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-text-tertiary"
+            />
+          </div>
+
+          {/* Due Date + shortcuts */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">
+              תאריך יעד
+            </label>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              {DATE_SHORTCUTS.map((shortcut) => (
+                <button
+                  key={shortcut.label}
+                  type="button"
+                  onClick={() => setField("dueDate", shortcut.value)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                    form.dueDate === shortcut.value
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {shortcut.label}
+                </button>
+              ))}
+              {form.dueDate && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setField("dueDate", "");
+                    setField("dueTime", "");
+                  }}
+                  className="p-1 rounded text-text-tertiary hover:text-danger transition-colors"
+                  title="הסר תאריך"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <input
+              type="date"
+              value={form.dueDate}
+              onChange={(e) => setField("dueDate", e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              dir="ltr"
+            />
+          </div>
+
+          {/* Due Time — only when dueDate is set */}
+          {form.dueDate && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  שעה
+                </label>
+                <input
+                  type="time"
+                  value={form.dueTime}
+                  onChange={(e) => setField("dueTime", e.target.value)}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  dir="ltr"
+                />
+              </div>
+              {/* Reminder — only when dueTime is set */}
+              {form.dueTime && (
+                <div>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                    תזכורת
+                  </label>
+                  <select
+                    value={form.reminderMinutes}
+                    onChange={(e) =>
+                      setField("reminderMinutes", Number(e.target.value))
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                  >
+                    {REMINDER_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Priority */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              עדיפות
+            </label>
+            <div className="flex gap-2">
+              {PRIORITY_OPTIONS.map((opt) => {
+                const isActive = form.priority === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setField("priority", opt.value)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      isActive
+                        ? "bg-white shadow-sm"
+                        : "bg-white border-border text-text-secondary hover:border-[var(--c)]"
+                    }`}
+                    style={
+                      isActive
+                        ? {
+                            borderColor: opt.color,
+                            color: opt.color,
+                            boxShadow: `0 0 0 1px ${opt.color}`,
+                          }
+                        : ({ "--c": opt.color } as React.CSSProperties)
+                    }
+                  >
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: opt.color }}
+                    />
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Assignee — searchable member dropdown */}
+          <SearchableDropdown
+            label="אחראי"
+            placeholder="בחר אחראי..."
+            value={form.assigneeId}
+            onChange={(id) => setField("assigneeId", id)}
+            items={memberOptions}
+            getLabel={(m) => m.name}
+          />
+
+          {/* Contact + Deal side by side */}
+          <div className="grid grid-cols-2 gap-3">
+            <SearchableDropdown<Contact>
+              label="איש קשר"
+              placeholder="בחר איש קשר..."
+              value={form.contactId}
+              onChange={(id) => setField("contactId", id)}
+              items={contacts?.data || []}
+              getLabel={(c) => c.fullName}
+              isLoading={contactsLoading}
+            />
+            <SearchableDropdown<Deal>
+              label="עסקה"
+              placeholder="בחר עסקה..."
+              value={form.dealId}
+              onChange={(id) => setField("dealId", id)}
+              items={deals?.data || []}
+              getLabel={(d) => d.title}
+              isLoading={dealsLoading}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex gap-3 px-6 py-4 border-t border-border-light">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+          >
+            ביטול
+          </button>
+          <button
+            type="submit"
+            disabled={!form.title.trim() || mutation.isPending}
+            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all hover:shadow-md text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {mutation.isPending ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                יוצר...
+              </>
+            ) : (
+              "צור משימה"
+            )}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

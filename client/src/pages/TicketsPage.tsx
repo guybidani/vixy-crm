@@ -9,7 +9,7 @@ import {
   Globe,
   Smartphone,
 } from "lucide-react";
-import UrgencyBadge from "../components/shared/UrgencyBadge";
+import UrgencyScoreBadge from "../components/shared/UrgencyScoreBadge";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
@@ -183,11 +183,11 @@ export default function TicketsPage() {
       ),
     },
     {
-      key: "urgencyLevel",
+      key: "urgencyScore",
       label: "דחיפות",
-      width: "110px",
+      width: "130px",
       render: (row: Ticket) => (
-        <UrgencyBadge urgency={row.urgencyLevel} size="sm" />
+        <UrgencyScoreBadge urgency={row.urgencyComputed} />
       ),
     },
     {
@@ -284,6 +284,18 @@ export default function TicketsPage() {
     },
   ];
 
+  // Default client-side sort by urgency score DESC
+  const tableData = (() => {
+    const rows = data?.data || [];
+    if (sortBy === "createdAt" && sortDir === "desc" && !statusFilter) {
+      // Default view: sort by urgency score descending
+      return [...rows].sort(
+        (a, b) => (b.urgencyScore ?? 0) - (a.urgencyScore ?? 0),
+      );
+    }
+    return rows;
+  })();
+
   const allTickets = data?.pagination.total || 0;
 
   return (
@@ -346,7 +358,7 @@ export default function TicketsPage() {
 
           <DataTable
             columns={columns}
-            data={data?.data || []}
+            data={tableData}
             loading={isLoading}
             search={search}
             onSearchChange={(s) => {
@@ -360,6 +372,9 @@ export default function TicketsPage() {
             sortDir={sortDir}
             onSortChange={handleSort}
             onRowClick={(row) => navigate(`/tickets/${row.id}`)}
+            rowStyle={(row) => ({
+              borderRight: `3px solid ${row.urgencyComputed?.color ?? "transparent"}`,
+            })}
           />
         </>
       )}

@@ -14,6 +14,8 @@ import { cn } from "./lib/utils";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
 import QuickAdd from "./components/shared/QuickAdd";
+import ShortcutsHelp from "./components/shared/ShortcutsHelp";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -91,9 +93,22 @@ function HomeRoute() {
 
 function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const openQuickAdd = useCallback(() => setQuickAddOpen(true), []);
+  const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | null>(null);
+  const openQuickAdd = useCallback(() => {
+    setQuickAddType(null);
+    setQuickAddOpen(true);
+  }, []);
+  const openQuickAddWithType = useCallback((type?: "task" | "contact" | "deal") => {
+    setQuickAddType(type ?? null);
+    setQuickAddOpen(true);
+  }, []);
   const { currentWorkspaceId } = useAuth();
+
+  const { showShortcutsHelp, closeShortcutsHelp } = useKeyboardShortcuts({
+    onQuickAdd: openQuickAddWithType,
+  });
 
   // Connect socket.io and join workspace room
   useEffect(() => {
@@ -119,19 +134,31 @@ function AppLayout() {
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
       />
-      <Header sidebarCollapsed={sidebarCollapsed} onQuickAdd={openQuickAdd} />
+      <Header
+        sidebarCollapsed={sidebarCollapsed}
+        onQuickAdd={openQuickAdd}
+        onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+      />
       <main
         className={cn(
           "pt-14 transition-all duration-200 min-h-screen",
-          sidebarCollapsed ? "mr-16" : "mr-60",
+          // Mobile: no margin. Desktop: sidebar margin
+          sidebarCollapsed ? "md:mr-16" : "md:mr-60",
         )}
       >
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           <Outlet />
         </div>
       </main>
-      <QuickAdd open={quickAddOpen} onClose={() => setQuickAddOpen(false)} />
+      <QuickAdd
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        initialType={quickAddType}
+      />
+      <ShortcutsHelp open={showShortcutsHelp} onClose={closeShortcutsHelp} />
     </div>
   );
 }

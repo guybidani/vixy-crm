@@ -208,6 +208,25 @@ export async function create(
     data: { title: task.title, priority: task.priority, status: task.status },
   }).catch(() => {});
 
+  // Notify assignee (if different from creator)
+  if (effectiveAssigneeId !== memberId) {
+    const assignee = await prisma.workspaceMember.findUnique({
+      where: { id: effectiveAssigneeId },
+    });
+    if (assignee) {
+      notificationService
+        .create({
+          workspaceId,
+          userId: assignee.userId,
+          type: "TASK_ASSIGNED",
+          title: `משימה חדשה הוקצתה אליך: "${task.title}"`,
+          entityType: "task",
+          entityId: task.id,
+        })
+        .catch(() => {});
+    }
+  }
+
   // Sync to Google Calendar (fire-and-forget)
   maybeSyncTask(workspaceId, task.assigneeId, task).catch(() => {});
 
@@ -300,6 +319,25 @@ export async function update(
     },
   });
 
+  // Notify new assignee on reassignment
+  if (data.assigneeId && data.assigneeId !== existing.assigneeId) {
+    const newAssignee = await prisma.workspaceMember.findUnique({
+      where: { id: data.assigneeId },
+    });
+    if (newAssignee) {
+      notificationService
+        .create({
+          workspaceId,
+          userId: newAssignee.userId,
+          type: "TASK_ASSIGNED",
+          title: `משימה הוקצתה אליך: "${updated.title}"`,
+          entityType: "task",
+          entityId: id,
+        })
+        .catch(() => {});
+    }
+  }
+
   if (data.status === "DONE" && existing.status !== "DONE") {
     enqueueAutomationTrigger({
       workspaceId,
@@ -316,6 +354,29 @@ export async function update(
 
     // Task completed → cancel any pending reminder
     cancelTaskReminder(id).catch(() => {});
+
+    // Auto-create activity on task completion (linked to contact/deal)
+    if (updated.contactId || updated.dealId) {
+      const memberId = updated.assigneeId;
+      prisma.activity
+        .create({
+          data: {
+            workspaceId,
+            memberId,
+            type: updated.taskType === "CALL" ? "CALL" : updated.taskType === "MEETING" ? "MEETING" : "NOTE",
+            subject: `משימה הושלמה: ${updated.title}`,
+            body: (updated as any).outcomeNote || undefined,
+            contactId: updated.contactId,
+            dealId: updated.dealId,
+            metadata: {
+              source: "task_completion",
+              taskId: id,
+              callResult: (updated as any).callResult ?? undefined,
+            },
+          },
+        })
+        .catch(() => {});
+    }
   }
 
   // Sync to Google Calendar (fire-and-forget)

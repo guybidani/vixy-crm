@@ -43,10 +43,17 @@ const COLUMNS: Record<ExportEntity, Array<{ key: string; label: string }>> = {
   ],
   tasks: [
     { key: "title", label: "כותרת" },
+    { key: "description", label: "תיאור" },
     { key: "status", label: "סטטוס" },
     { key: "priority", label: "עדיפות" },
+    { key: "taskType", label: "סוג משימה" },
     { key: "dueDate", label: "תאריך יעד" },
+    { key: "dueTime", label: "שעה" },
+    { key: "assignee", label: "מטופל" },
     { key: "contact", label: "איש קשר" },
+    { key: "deal", label: "עסקה" },
+    { key: "completedAt", label: "הושלמה ב" },
+    { key: "createdBy", label: "מי יצר" },
     { key: "createdAt", label: "תאריך יצירה" },
   ],
   tickets: [
@@ -195,6 +202,9 @@ export async function exportCsv(
         where,
         include: {
           contact: { select: { firstName: true, lastName: true } },
+          deal: { select: { title: true } },
+          assignee: { include: { user: { select: { name: true } } } },
+          createdBy: { include: { user: { select: { name: true } } } },
         },
         orderBy: { createdAt: "desc" },
         take: MAX_EXPORT_ROWS,
@@ -202,10 +212,17 @@ export async function exportCsv(
       rows = data.map((t) =>
         [
           t.title,
+          t.description || "",
           t.status,
           t.priority,
+          t.taskType || "",
           formatDate(t.dueDate),
+          t.dueTime || "",
+          t.assignee?.user?.name || "",
           t.contact ? `${t.contact.firstName} ${t.contact.lastName}` : "",
+          t.deal?.title || "",
+          formatDate(t.completedAt),
+          t.createdBy?.user?.name || "",
           formatDate(t.createdAt),
         ]
           .map(escapeCsv)

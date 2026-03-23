@@ -28,6 +28,7 @@ interface DataTableProps<T> {
   loading?: boolean;
   groupColor?: string;
   groupLabel?: string;
+  rowStyle?: (row: T) => React.CSSProperties | undefined;
 }
 
 export default function DataTable<T extends { id: string }>({
@@ -45,6 +46,7 @@ export default function DataTable<T extends { id: string }>({
   loading,
   groupColor,
   groupLabel,
+  rowStyle,
 }: DataTableProps<T>) {
   return (
     <div className="bg-white rounded-xl shadow-card overflow-hidden">
@@ -146,6 +148,7 @@ export default function DataTable<T extends { id: string }>({
                     "border-b border-border-light last:border-0 transition-all duration-150",
                     onRowClick && "cursor-pointer hover:bg-[#F5F6FF] hover:shadow-[inset_3px_0_0_0_#6161FF]",
                   )}
+                  style={rowStyle?.(row)}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((col) => (

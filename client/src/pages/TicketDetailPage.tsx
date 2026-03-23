@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import StatusBadge from "../components/shared/StatusBadge";
+import UrgencyScoreBadge from "../components/shared/UrgencyScoreBadge";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { listCannedResponses, type CannedResponse } from "../api/canned";
 import {
@@ -84,6 +85,9 @@ export default function TicketDetailPage() {
               label={priorityInfo.label}
               color={priorityInfo.color}
             />
+            {ticket.urgencyComputed && (
+              <UrgencyScoreBadge urgency={ticket.urgencyComputed} size="md" />
+            )}
             <span className="text-xs text-text-tertiary">
               {new Date(ticket.createdAt).toLocaleString("he-IL")}
             </span>
@@ -216,6 +220,23 @@ export default function TicketDetailPage() {
                   color={priorityInfo.color}
                 />
               </DetailRow>
+              {ticket.urgencyComputed && (
+                <DetailRow label="ציון דחיפות">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: ticket.urgencyComputed.color }}
+                    >
+                      {ticket.urgencyComputed.score}
+                    </span>
+                    <UrgencyScoreBadge
+                      urgency={ticket.urgencyComputed}
+                      size="sm"
+                      showScore={false}
+                    />
+                  </div>
+                </DetailRow>
+              )}
               <DetailRow label="ערוץ">
                 <span className="text-sm text-text-secondary">
                   {ticket.channel}
@@ -280,10 +301,10 @@ export default function TicketDetailPage() {
                     <Clock size={14} />
                     <span>
                       {slaInfo.responseBreached
-                        ? "חריגה מ-SLA"
+                        ? `איחור של ${formatSlaTime(slaInfo.responseOverdue)}`
                         : ticket.firstResponseAt
                           ? "עמד ב-SLA"
-                          : `${slaInfo.responseRemaining} דקות נותרו`}
+                          : `נותרו ${formatSlaTime(slaInfo.responseRemaining)}`}
                     </span>
                   </div>
                 </div>
@@ -299,10 +320,10 @@ export default function TicketDetailPage() {
                     <Clock size={14} />
                     <span>
                       {slaInfo.resolutionBreached
-                        ? "חריגה מ-SLA"
+                        ? `איחור של ${formatSlaTime(slaInfo.resolutionOverdue)}`
                         : ticket.resolvedAt
                           ? "עמד ב-SLA"
-                          : `${slaInfo.resolutionRemaining} דקות נותרו`}
+                          : `נותרו ${formatSlaTime(slaInfo.resolutionRemaining)}`}
                     </span>
                   </div>
                 </div>
@@ -563,6 +584,14 @@ function DetailRow({
   );
 }
 
+function formatSlaTime(minutes: number): string {
+  if (minutes < 60) return `${minutes} דקות`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) return `${hours} שעות`;
+  return `${hours} שעות ו-${remainingMinutes} דקות`;
+}
+
 function getSlaInfo(ticket: TicketDetail) {
   const sla = ticket.slaPolicy;
   if (!sla) return null;
@@ -577,6 +606,10 @@ function getSlaInfo(ticket: TicketDetail) {
     0,
     Math.round(sla.firstResponseMinutes - elapsedMinutes),
   );
+  const responseOverdue = Math.max(
+    0,
+    Math.round(elapsedMinutes - sla.firstResponseMinutes),
+  );
 
   const resolutionBreached =
     !ticket.resolvedAt && elapsedMinutes > sla.resolutionMinutes;
@@ -584,11 +617,17 @@ function getSlaInfo(ticket: TicketDetail) {
     0,
     Math.round(sla.resolutionMinutes - elapsedMinutes),
   );
+  const resolutionOverdue = Math.max(
+    0,
+    Math.round(elapsedMinutes - sla.resolutionMinutes),
+  );
 
   return {
     responseBreached,
     responseRemaining,
+    responseOverdue,
     resolutionBreached,
     resolutionRemaining,
+    resolutionOverdue,
   };
 }

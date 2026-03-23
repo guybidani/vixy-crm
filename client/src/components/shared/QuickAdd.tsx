@@ -51,9 +51,10 @@ const QUICK_TYPES: {
 interface QuickAddProps {
   open: boolean;
   onClose: () => void;
+  initialType?: QuickType | null;
 }
 
-export default function QuickAdd({ open, onClose }: QuickAddProps) {
+export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) {
   const [type, setType] = useState<QuickType | null>(null);
   const [search, setSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -61,11 +62,13 @@ export default function QuickAdd({ open, onClose }: QuickAddProps) {
 
   useEffect(() => {
     if (open) {
-      setType(null);
+      setType(initialType ?? null);
       setSearch("");
-      setTimeout(() => searchRef.current?.focus(), 100);
+      if (!initialType) {
+        setTimeout(() => searchRef.current?.focus(), 100);
+      }
     }
-  }, [open]);
+  }, [open, initialType]);
 
   // Close on Escape
   useEffect(() => {

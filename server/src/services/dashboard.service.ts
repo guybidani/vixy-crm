@@ -111,13 +111,29 @@ export async function getDashboardStats(workspaceId: string) {
 
   // Completed tasks this week
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const tasksCompletedThisWeek = await prisma.task.count({
-    where: {
-      workspaceId,
-      status: "DONE",
-      completedAt: { gte: weekAgo },
-    },
-  });
+  const [tasksCompletedThisWeek, rottingDeals] = await Promise.all([
+    prisma.task.count({
+      where: {
+        workspaceId,
+        status: "DONE",
+        completedAt: { gte: weekAgo },
+      },
+    }),
+    // Deals with no activity in 14+ days (rotting/at risk)
+    prisma.deal.findMany({
+      where: {
+        workspaceId,
+        stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+        updatedAt: { lt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+      },
+      include: {
+        contact: { select: { id: true, firstName: true, lastName: true } },
+        assignee: { include: { user: { select: { name: true } } } },
+      },
+      orderBy: { updatedAt: "asc" },
+      take: 5,
+    }),
+  ]);
 
   return {
     kpis: {
@@ -138,5 +154,18 @@ export async function getDashboardStats(workspaceId: string) {
     })),
     recentActivities,
     myTasks,
+    rottingDeals: rottingDeals.map((d) => ({
+      id: d.id,
+      title: d.title,
+      stage: d.stage,
+      value: d.value?.toNumber() || 0,
+      contact: d.contact
+        ? { id: d.contact.id, name: `${d.contact.firstName} ${d.contact.lastName}` }
+        : null,
+      owner: d.assignee?.user?.name || null,
+      daysSinceUpdate: Math.floor(
+        (Date.now() - d.updatedAt.getTime()) / (1000 * 60 * 60 * 24),
+      ),
+    })),
   };
 }

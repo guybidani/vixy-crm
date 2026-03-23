@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import * as tasksService from "../services/tasks.service";
 import { prisma } from "../db/client";
 import { cancelTaskReminder } from "../queue/reminder.queue";
@@ -103,6 +104,76 @@ tasksRouter.get("/stats", async (req, res, next) => {
   }
 });
 
+// POST /api/v1/tasks/bulk-delete
+const bulkDeleteSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+tasksRouter.post(
+  "/bulk-delete",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkDeleteSchema),
+  async (req, res, next) => {
+    try {
+      const { ids } = req.body;
+      // Cancel reminders for each task
+      for (const id of ids) {
+        cancelTaskReminder(id).catch(() => {});
+      }
+      const result = await prisma.task.deleteMany({
+        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      });
+      res.json({ deleted: result.count });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /api/v1/tasks/bulk-update
+const bulkUpdateSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+  data: z.object({
+    status: z.enum(["TODO", "IN_PROGRESS", "DONE", "CANCELLED"]).optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+    assigneeId: z.string().uuid().optional(),
+    dueDate: z.string().optional(),
+  }),
+});
+
+tasksRouter.post(
+  "/bulk-update",
+  requireRole("OWNER", "ADMIN"),
+  validate(bulkUpdateSchema),
+  async (req, res, next) => {
+    try {
+      const { ids, data } = req.body;
+      const updateData: Record<string, unknown> = {};
+      if (data.status) updateData.status = data.status;
+      if (data.priority) updateData.priority = data.priority;
+      if (data.assigneeId) updateData.assigneeId = data.assigneeId;
+      if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
+      if (data.status === "DONE") updateData.completedAt = new Date();
+
+      const result = await prisma.task.updateMany({
+        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+        data: updateData,
+      });
+
+      // Cancel reminders for completed tasks
+      if (data.status === "DONE") {
+        for (const id of ids) {
+          cancelTaskReminder(id).catch(() => {});
+        }
+      }
+
+      res.json({ updated: result.count });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // GET /api/v1/tasks/:id
 tasksRouter.get("/:id", async (req, res, next) => {
   try {
@@ -145,6 +216,120 @@ tasksRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
       req.body,
     );
     res.json(task);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Task Comments ───
+
+const commentSchema = z.object({
+  body: z.string().min(1, "תוכן התגובה נדרש"),
+});
+
+// GET /api/v1/tasks/:id/comments
+tasksRouter.get("/:id/comments", async (req, res, next) => {
+  try {
+    const taskId = req.params.id as string;
+    // Verify task belongs to workspace
+    const task = await prisma.task.findFirst({
+      where: { id: taskId, workspaceId: req.workspaceId! },
+    });
+    if (!task) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Task not found" } });
+    }
+    const comments = await prisma.taskComment.findMany({
+      where: { taskId },
+      orderBy: { createdAt: "asc" },
+      include: {
+        author: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+    const mapped = comments.map((c) => ({
+      id: c.id,
+      taskId: c.taskId,
+      authorId: c.authorId,
+      authorName: c.author.user.name,
+      body: c.body,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+    res.json(mapped);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/v1/tasks/:id/comments
+tasksRouter.post("/:id/comments", validate(commentSchema), async (req, res, next) => {
+  try {
+    const taskId = req.params.id as string;
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
+    }
+    const task = await prisma.task.findFirst({
+      where: { id: taskId, workspaceId: req.workspaceId! },
+    });
+    if (!task) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Task not found" } });
+    }
+    const comment = await prisma.taskComment.create({
+      data: {
+        taskId,
+        authorId: member.id,
+        body: req.body.body,
+      },
+      include: {
+        author: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+    res.status(201).json({
+      id: comment.id,
+      taskId: comment.taskId,
+      authorId: comment.authorId,
+      authorName: comment.author.user.name,
+      body: comment.body,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/v1/tasks/:id/comments/:commentId
+tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
+  try {
+    const taskId = req.params.id as string;
+    const commentId = req.params.commentId as string;
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
+    }
+    const comment = await prisma.taskComment.findFirst({
+      where: { id: commentId, taskId },
+    });
+    if (!comment) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Comment not found" } });
+    }
+    if (comment.authorId !== member.id) {
+      return res.status(403).json({ error: { code: "FORBIDDEN", message: "ניתן למחוק רק תגובות שלך" } });
+    }
+    await prisma.taskComment.delete({ where: { id: commentId } });
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

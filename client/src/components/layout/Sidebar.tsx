@@ -120,9 +120,11 @@ function EditableLabel({
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const { workspaces, currentWorkspaceId, selectWorkspace } = useAuth();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
   const isOwner = currentWs?.role === "OWNER";
@@ -177,10 +179,21 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-40 md:hidden"
+          onClick={onMobileClose}
+          aria-hidden="true"
+        />
+      )}
       <aside
         className={cn(
-          "fixed top-0 right-0 h-screen bg-gradient-to-b from-[#F7F7F9] to-[#F0F0F5] z-40 transition-all duration-300 ease-in-out flex flex-col border-l border-border-light/50",
+          "fixed top-0 right-0 h-screen bg-gradient-to-b from-[#F7F7F9] to-[#F0F0F5] z-50 transition-all duration-300 ease-in-out flex flex-col border-l border-border-light/50",
           collapsed ? "w-16" : "w-60",
+          // Mobile: hidden by default, shown as overlay when mobileOpen
+          mobileOpen ? "translate-x-0" : "translate-x-full",
+          "md:translate-x-0",
         )}
       >
         {/* Logo / Workspace */}
@@ -223,6 +236,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 key={item.key}
                 to={item.path}
                 end={item.path === "/dashboard"}
+                onClick={onMobileClose}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative mb-0.5",
@@ -288,6 +302,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <NavLink
                   key={board.id}
                   to={`/boards/${board.id}`}
+                  onClick={onMobileClose}
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative mb-0.5",
@@ -345,6 +360,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="p-2">
           <NavLink
             to="/settings"
+            onClick={onMobileClose}
             className={({ isActive }) =>
               cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-200 group relative",

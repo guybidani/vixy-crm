@@ -1,0 +1,148 @@
+import { useEffect, useRef } from "react";
+import { X, Keyboard } from "lucide-react";
+
+interface ShortcutsHelpProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+interface ShortcutEntry {
+  keys: string[];
+  label: string;
+}
+
+interface ShortcutGroup {
+  title: string;
+  shortcuts: ShortcutEntry[];
+}
+
+const SHORTCUT_GROUPS: ShortcutGroup[] = [
+  {
+    title: "יצירה מהירה",
+    shortcuts: [
+      { keys: ["Ctrl", "K"], label: "פתיחה מהירה" },
+      { keys: ["N"], label: "משימה חדשה" },
+      { keys: ["C"], label: "איש קשר חדש" },
+      { keys: ["D"], label: "עסקה חדשה" },
+    ],
+  },
+  {
+    title: "ניווט",
+    shortcuts: [
+      { keys: ["G", "D"], label: "דשבורד" },
+      { keys: ["G", "C"], label: "אנשי קשר" },
+      { keys: ["G", "E"], label: "עסקאות" },
+      { keys: ["G", "T"], label: "משימות" },
+      { keys: ["G", "K"], label: "פניות" },
+      { keys: ["G", "S"], label: "הגדרות" },
+    ],
+  },
+  {
+    title: "כללי",
+    shortcuts: [
+      { keys: ["?"], label: "קיצורי מקלדת" },
+      { keys: ["Esc"], label: "סגירת חלון" },
+    ],
+  },
+];
+
+function Kbd({ children }: { children: string }) {
+  return (
+    <kbd className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 bg-white border border-border rounded-md text-xs font-mono font-semibold text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+      {children}
+    </kbd>
+  );
+}
+
+export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", handleKey, { capture: true });
+    return () => window.removeEventListener("keydown", handleKey, { capture: true });
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center"
+      onClick={(e) => {
+        if (e.target === overlayRef.current) onClose();
+      }}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-modal w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        dir="rtl"
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b border-border-light">
+          <div className="w-9 h-9 rounded-xl bg-primary-light flex items-center justify-center">
+            <Keyboard size={18} className="text-primary" />
+          </div>
+          <h2 className="text-base font-bold text-text-primary flex-1">
+            קיצורי מקלדת
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors"
+            aria-label="סגירה"
+          >
+            <X size={16} className="text-text-tertiary" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-4 space-y-5 max-h-[60vh] overflow-y-auto">
+          {SHORTCUT_GROUPS.map((group) => (
+            <div key={group.title}>
+              <h3 className="text-xs font-bold text-text-tertiary uppercase mb-2.5 tracking-wide">
+                {group.title}
+              </h3>
+              <div className="space-y-1.5">
+                {group.shortcuts.map((shortcut) => (
+                  <div
+                    key={shortcut.label}
+                    className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-surface-secondary/60 transition-colors"
+                  >
+                    <span className="text-sm text-text-primary">
+                      {shortcut.label}
+                    </span>
+                    <div className="flex items-center gap-1" dir="ltr">
+                      {shortcut.keys.map((key, i) => (
+                        <span key={i} className="flex items-center gap-1">
+                          {i > 0 && (
+                            <span className="text-[10px] text-text-tertiary mx-0.5">
+                              +
+                            </span>
+                          )}
+                          <Kbd>{key}</Kbd>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 py-3 border-t border-border-light bg-surface-secondary/30">
+          <p className="text-[11px] text-text-tertiary text-center">
+            קיצורים פעילים רק כשלא מקלידים בשדה טקסט
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -76,7 +76,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { kpis, pipeline, recentActivities } = data;
+  const { kpis, pipeline, recentActivities, rottingDeals } = data;
 
   return (
     <div>
@@ -254,6 +254,57 @@ export default function DashboardPage() {
         {/* Calendar Widget */}
         <CalendarWidget />
       </div>
+
+      {/* At Risk Deals + Today's Tasks */}
+      {rottingDeals && rottingDeals.length > 0 && (
+        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5 mb-6 border-t-4 border-t-warning">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-warning/10">
+                <AlertTriangle size={18} className="text-warning" />
+              </div>
+              <div>
+                <h2 className="font-bold text-text-primary text-base">
+                  עסקאות בסיכון
+                </h2>
+                <p className="text-xs text-text-secondary">
+                  ללא פעילות 14+ ימים
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-warning/10 text-warning">
+              {rottingDeals.length} עסקאות
+            </span>
+          </div>
+          <div className="space-y-2">
+            {rottingDeals.map((deal: any) => (
+              <div
+                key={deal.id}
+                onClick={() => navigate("/deals")}
+                className="flex items-center gap-3 p-3 bg-surface-secondary/50 rounded-xl hover:bg-surface-secondary transition-colors cursor-pointer group"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary truncate">
+                    {deal.title}
+                  </p>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    {deal.contact?.name || "—"}{" "}
+                    {deal.owner && `· ${deal.owner}`}
+                  </p>
+                </div>
+                <div className="text-left flex-shrink-0">
+                  <p className="text-sm font-bold text-text-primary">
+                    ₪{deal.value.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] font-bold text-danger">
+                    {deal.daysSinceUpdate} ימים ללא פעילות
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Today's Tasks Widget */}
       <TodaysTasksWidget />

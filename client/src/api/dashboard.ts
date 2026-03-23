@@ -36,6 +36,15 @@ export interface DashboardData {
     contact: { id: string; firstName: string; lastName: string } | null;
     deal: { id: string; title: string } | null;
   }>;
+  rottingDeals?: Array<{
+    id: string;
+    title: string;
+    stage: string;
+    value: number;
+    contact: { id: string; name: string } | null;
+    owner: string | null;
+    daysSinceUpdate: number;
+  }>;
 }
 
 export function getDashboard() {

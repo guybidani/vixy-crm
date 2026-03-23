@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { X, Trash2, Tag, ArrowRight } from "lucide-react";
 
 interface BulkActionBarProps {
@@ -7,6 +8,7 @@ interface BulkActionBarProps {
   onChangeStatus?: () => void;
   onAddTag?: () => void;
   deleting?: boolean;
+  children?: ReactNode;
 }
 
 export default function BulkActionBar({
@@ -16,6 +18,7 @@ export default function BulkActionBar({
   onChangeStatus,
   onAddTag,
   deleting,
+  children,
 }: BulkActionBarProps) {
   if (selectedCount === 0) return null;
 
@@ -44,6 +47,8 @@ export default function BulkActionBar({
           שנה סטטוס
         </button>
       )}
+
+      {children}
 
       {onDelete && (
         <button

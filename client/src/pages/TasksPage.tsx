@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
-import Modal from "../components/shared/Modal";
 import StatusDropdown from "../components/shared/StatusDropdown";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
@@ -26,16 +25,18 @@ import KanbanBoard, {
 import ViewToggle from "../components/shared/ViewToggle";
 import ExportButton from "../components/shared/ExportButton";
 import TaskDetailPanel from "../components/tasks/TaskDetailPanel";
+import TaskCreateModal from "../components/tasks/TaskCreateModal";
 import {
   listTasks,
   createTask,
   updateTask,
   deleteTask,
+  bulkDeleteTasks,
+  bulkUpdateTasks,
   getTasksBoard,
   type Task,
 } from "../api/tasks";
-import { listContacts } from "../api/contacts";
-import { listDeals } from "../api/deals";
+import BulkActionBar from "../components/shared/BulkActionBar";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
@@ -267,6 +268,20 @@ export default function TasksPage() {
   const searchQuery = useDebounce(searchRaw, 300);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
+  const bulkPriorityRef = useRef<HTMLDivElement>(null);
+
+  const toggleTaskSelection = (id: string) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedTaskIds(new Set());
 
   const currentMemberId = useMemo(
     () => workspaces.find((w) => w.id === currentWorkspaceId)?.memberId ?? null,
@@ -340,6 +355,53 @@ export default function TasksPage() {
       toast.success("משימה נמחקה");
     },
   });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) => bulkDeleteTasks(ids),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      toast.success(`${result.deleted} משימות נמחקו`);
+      clearSelection();
+    },
+    onError: () => toast.error("שגיאה במחיקת משימות"),
+  });
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: ({ ids, data: updateData }: { ids: string[]; data: { status?: string; priority?: string; assigneeId?: string; dueDate?: string } }) =>
+      bulkUpdateTasks(ids, updateData),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      toast.success(`${result.updated} משימות עודכנו`);
+      clearSelection();
+    },
+    onError: () => toast.error("שגיאה בעדכון משימות"),
+  });
+
+  const handleBulkDelete = () => {
+    if (!confirm(`למחוק ${selectedTaskIds.size} משימות?`)) return;
+    bulkDeleteMutation.mutate(Array.from(selectedTaskIds));
+  };
+
+  const handleBulkMarkDone = () => {
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { status: "DONE" } });
+  };
+
+  const handleBulkPriority = (priority: string) => {
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { priority } });
+    setShowBulkPriorityMenu(false);
+  };
+
+  // Close bulk priority menu on outside click
+  useEffect(() => {
+    if (!showBulkPriorityMenu) return;
+    function handler(e: MouseEvent) {
+      if (bulkPriorityRef.current && !bulkPriorityRef.current.contains(e.target as Node)) setShowBulkPriorityMenu(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showBulkPriorityMenu]);
 
   const todoTasks = tasks.filter((t) => t.status === "TODO");
   const inProgressTasks = tasks.filter((t) => t.status === "IN_PROGRESS");
@@ -499,7 +561,8 @@ export default function TasksPage() {
                           onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
                           onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
                           inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)} />
+                          onTaskClick={(task) => setSelectedTaskId(task.id)}
+                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
                       )}
                       {inProgressTasks.length > 0 && (
                         <TaskGroup title="בתהליך" color={taskStatuses.IN_PROGRESS?.color || "#579BFC"} tasks={inProgressTasks}
@@ -509,7 +572,8 @@ export default function TasksPage() {
                           onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
                           onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
                           inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)} />
+                          onTaskClick={(task) => setSelectedTaskId(task.id)}
+                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
                       )}
                       {doneTasks.length > 0 && (
                         <TaskGroup title="הושלם" color={taskStatuses.DONE?.color || "#00CA72"} tasks={doneTasks}
@@ -518,7 +582,8 @@ export default function TasksPage() {
                           onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
                           onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
                           inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)} />
+                          onTaskClick={(task) => setSelectedTaskId(task.id)}
+                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
                       )}
                     </>
                   ) : (
@@ -532,7 +597,8 @@ export default function TasksPage() {
                       onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
                       onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
                       inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                      onTaskClick={(task) => setSelectedTaskId(task.id)} />
+                      onTaskClick={(task) => setSelectedTaskId(task.id)}
+                      selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
                   )}
                 </div>
               )}
@@ -549,16 +615,77 @@ export default function TasksPage() {
               )}
             </>
           )}
-          {showCreate && <CreateTaskModal onClose={() => setShowCreate(false)} />}
+          <TaskCreateModal
+            open={showCreate}
+            onClose={() => setShowCreate(false)}
+            onCreated={() => {
+              queryClient.invalidateQueries({ queryKey: ["tasks"] });
+              queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+            }}
+          />
         </PageShell>
       </div>
       {selectedTaskId && (
-        <div className="fixed top-0 left-0 h-full w-[400px] bg-white/95 backdrop-blur-md shadow-[-4px_0_24px_rgba(0,0,0,0.08)] border-r border-border-light z-30 overflow-y-auto animate-slide-in-left">
-          <div className="p-5">
-            <TaskDetailPanel taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
+        <>
+          {/* Mobile backdrop */}
+          <div
+            className="fixed inset-0 bg-black/20 z-30 md:hidden"
+            onClick={() => setSelectedTaskId(null)}
+            aria-hidden="true"
+          />
+          <div className="fixed top-0 left-0 h-full w-full md:w-[400px] bg-white/95 backdrop-blur-md shadow-[-4px_0_24px_rgba(0,0,0,0.08)] border-r border-border-light z-40 overflow-y-auto animate-slide-in-left max-h-screen">
+            <div className="p-5">
+              <TaskDetailPanel taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
+            </div>
           </div>
-        </div>
+        </>
       )}
+      <BulkActionBar
+        selectedCount={selectedTaskIds.size}
+        onClear={clearSelection}
+        onDelete={handleBulkDelete}
+        deleting={bulkDeleteMutation.isPending}
+      >
+        <button
+          onClick={handleBulkMarkDone}
+          disabled={bulkUpdateMutation.isPending}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+        >
+          <CheckCircle2 size={14} />
+          סמן כמושלם
+        </button>
+        <div ref={bulkPriorityRef} className="relative">
+          <button
+            onClick={() => setShowBulkPriorityMenu((v) => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors"
+          >
+            <ChevronDown size={14} />
+            שנה עדיפות
+          </button>
+          {showBulkPriorityMenu && (
+            <div className="absolute bottom-full mb-2 right-0 bg-[#404046] rounded-lg shadow-lg border border-white/10 py-1 min-w-[130px] z-50">
+              {[
+                { key: "URGENT", label: "דחוף", color: "#FB275D" },
+                { key: "HIGH", label: "גבוה", color: "#FDAB3D" },
+                { key: "MEDIUM", label: "בינוני", color: "#579BFC" },
+                { key: "LOW", label: "נמוך", color: "#C3C6D4" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleBulkPriority(opt.key)}
+                  className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
+                >
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: opt.color }}
+                  />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </BulkActionBar>
     </div>
   );
 }
@@ -615,11 +742,13 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
 
 // --- Task group ---
 
-function TaskGroup({ title, color, tasks, onToggle, onComplete, onDelete, onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onTaskClick }: {
+function TaskGroup({ title, color, tasks, onToggle, onComplete, onDelete, onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onTaskClick, selectedIds, onToggleSelect }: {
   title: string; color: string; tasks: Task[]; onToggle: (task: Task) => void; onComplete?: (task: Task) => void;
   onDelete: (id: string) => void; onStatusChange: (id: string, status: string) => void; onPriorityChange: (id: string, priority: string) => void;
   inlineUpdate: (id: string, data: any) => void; memberOptions: { id: string; name: string }[]; onTaskClick?: (task: Task) => void;
+  selectedIds?: Set<string>; onToggleSelect?: (id: string) => void;
 }) {
+  const hasAnySelected = selectedIds && selectedIds.size > 0;
   return (
     <div className="bg-white rounded-xl shadow-card overflow-hidden">
       <div className="px-4 py-2.5 flex items-center gap-2" style={{ backgroundColor: color }}>
@@ -636,6 +765,9 @@ function TaskGroup({ title, color, tasks, onToggle, onComplete, onDelete, onStat
             onPriorityChange={(priority) => onPriorityChange(task.id, priority)}
             inlineUpdate={inlineUpdate} memberOptions={memberOptions}
             onClick={onTaskClick ? () => onTaskClick(task) : undefined}
+            selected={selectedIds?.has(task.id) ?? false}
+            onToggleSelect={onToggleSelect ? () => onToggleSelect(task.id) : undefined}
+            showCheckbox={!!hasAnySelected}
           />
         ))}
       </div>
@@ -686,17 +818,26 @@ function InlineTaskCreate() {
 
 // --- Task row ---
 
-function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onClick }: {
+function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onClick, selected, onToggleSelect, showCheckbox }: {
   task: Task; onToggle: () => void; onComplete?: () => void; onDelete: () => void;
   onStatusChange: (status: string) => void; onPriorityChange: (priority: string) => void;
   inlineUpdate: (id: string, data: any) => void; memberOptions: { id: string; name: string }[]; onClick?: () => void;
+  selected?: boolean; onToggleSelect?: () => void; showCheckbox?: boolean;
 }) {
   const { priorities } = useWorkspaceOptions();
   const isDone = task.status === "DONE";
   const isOverdue = task.dueDate && !isDone && task.status !== "CANCELLED" && new Date(task.dueDate) < new Date();
   const StatusIcon = STATUS_ICONS[task.status] || Circle;
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-border-light last:border-0 hover:bg-[#F5F6FF] transition-colors group ${isOverdue ? "bg-danger/[0.03]" : ""}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-border-light last:border-0 hover:bg-[#F5F6FF] transition-colors group ${isOverdue ? "bg-danger/[0.03]" : ""} ${selected ? "bg-primary/5" : ""}`}>
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          checked={selected ?? false}
+          onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
+          className={`w-4 h-4 rounded border-border text-primary focus:ring-primary/30 flex-shrink-0 cursor-pointer ${showCheckbox || selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+        />
+      )}
       <button onClick={(e) => { e.stopPropagation(); (onComplete || onToggle)(); }} className="flex-shrink-0 transition-colors" title={isDone ? "סמן כלא הושלם" : "סמן כהושלם"}>
         <StatusIcon size={20} className={isDone ? "text-success" : task.status === "IN_PROGRESS" ? "text-warning" : "text-text-tertiary hover:text-success"} />
       </button>
@@ -735,128 +876,4 @@ function FilterChip({ label, color, active, onClick }: { label: string; color?: 
   );
 }
 
-const REMINDER_OPTIONS = [
-  { value: 0, label: "בדיוק בזמן" },
-  { value: 5, label: "5 דקות לפני" },
-  { value: 10, label: "10 דקות לפני" },
-  { value: 15, label: "15 דקות לפני" },
-  { value: 30, label: "30 דקות לפני" },
-  { value: 60, label: "שעה לפני" },
-  { value: 120, label: "שעתיים לפני" },
-  { value: 1440, label: "יום לפני" },
-];
-
-// --- Create task modal ---
-
-function CreateTaskModal({ onClose }: { onClose: () => void }) {
-  const { priorities } = useWorkspaceOptions();
-  const queryClient = useQueryClient();
-  const [form, setForm] = useState({ title: "", description: "", priority: "MEDIUM", taskType: "TASK", dueDate: "", dueTime: "", reminderMinutes: 15, contactId: "", dealId: "" });
-  const { data: contacts } = useQuery({ queryKey: ["contacts", { limit: 100 }], queryFn: () => listContacts({ limit: 100 }) });
-  const { data: deals } = useQuery({ queryKey: ["deals", { limit: 100 }], queryFn: () => listDeals({ limit: 100 }) });
-  const mutation = useMutation({
-    mutationFn: () => createTask({ title: form.title, description: form.description || undefined, priority: form.priority, taskType: form.taskType, dueDate: form.dueDate || undefined, dueTime: form.dueTime || undefined, reminderMinutes: form.dueTime ? form.reminderMinutes : undefined, contactId: form.contactId || undefined, dealId: form.dealId || undefined }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
-      toast.success("משימה נוצרה בהצלחה!");
-      onClose();
-    },
-    onError: (err: any) => { toast.error(err?.message || "שגיאה ביצירת משימה"); },
-  });
-  function handleSubmit(e: React.FormEvent) { e.preventDefault(); mutation.mutate(); }
-  const setField = (key: string, value: string | number) => setForm((f) => ({ ...f, [key]: value }));
-  return (
-    <Modal open={true} onClose={onClose} title="משימה חדשה">
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
-        {/* Task Type selector */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">סוג משימה</label>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: "TASK", label: "משימה", icon: "📋", color: "#6161FF" },
-              { value: "CALL", label: "שיחה", icon: "📞", color: "#00CA72" },
-              { value: "EMAIL", label: "אימייל", icon: "📧", color: "#579BFC" },
-              { value: "MEETING", label: "פגישה", icon: "🤝", color: "#A25DDC" },
-              { value: "WHATSAPP", label: "וואטסאפ", icon: "💬", color: "#25D366" },
-              { value: "FOLLOW_UP", label: "מעקב", icon: "🔄", color: "#FDAB3D" },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setField("taskType", opt.value)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all"
-                style={
-                  form.taskType === opt.value
-                    ? { backgroundColor: opt.color, color: "#fff", borderColor: opt.color }
-                    : { backgroundColor: "#fff", color: opt.color, borderColor: opt.color }
-                }
-              >
-                <span>{opt.icon}</span>
-                <span>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">כותרת *</label>
-          <input type="text" value={form.title} onChange={(e) => setField("title", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">תיאור</label>
-          <textarea value={form.description} onChange={(e) => setField("description", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none" rows={3} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">עדיפות</label>
-            <select value={form.priority} onChange={(e) => setField("priority", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white">
-              {Object.entries(priorities).map(([key, val]) => <option key={key} value={key}>{val.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">תאריך יעד</label>
-            <input type="date" value={form.dueDate} onChange={(e) => setField("dueDate", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" dir="ltr" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">איש קשר</label>
-            <select value={form.contactId} onChange={(e) => setField("contactId", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white">
-              <option value="">ללא</option>
-              {contacts?.data.map((c) => <option key={c.id} value={c.id}>{c.fullName}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">עסקה</label>
-            <select value={form.dealId} onChange={(e) => setField("dealId", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white">
-              <option value="">ללא</option>
-              {deals?.data.map((d) => <option key={d.id} value={d.id}>{d.title}</option>)}
-            </select>
-          </div>
-        </div>
-        {form.dueDate && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">שעה</label>
-              <input type="time" value={form.dueTime} onChange={(e) => setField("dueTime", e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" dir="ltr" />
-            </div>
-            {form.dueTime && (
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">תזכורת</label>
-                <select value={form.reminderMinutes} onChange={(e) => setField("reminderMinutes", Number(e.target.value))} className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white">
-                  {REMINDER_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                </select>
-              </div>
-            )}
-          </div>
-        )}
-        <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm">ביטול</button>
-          <button type="submit" disabled={mutation.isPending} className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50">
-            {mutation.isPending ? "יוצר..." : "צור משימה"}
-          </button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
+// Old CreateTaskModal removed — now using TaskCreateModal component

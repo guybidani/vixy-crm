@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,6 +23,10 @@ import {
   Megaphone,
   Send,
   ExternalLink,
+  CheckCircle2,
+  Circle,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
@@ -33,6 +37,7 @@ import MondayPersonCell, {
 } from "../shared/MondayPersonCell";
 import { getContact, updateContact, deleteContact } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
+import { createActivity } from "../../api/activities";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -471,63 +476,289 @@ function InfoTab({
   );
 }
 
+type TimelineItemType = "activity" | "task_completed" | "task_upcoming";
+
+interface TimelineItem {
+  type: TimelineItemType;
+  date: Date;
+  data: any;
+}
+
+function formatDueDateLabel(date: Date): string {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffMs = target.getTime() - today.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "היום";
+  if (diffDays === 1) return "מחר";
+  if (diffDays === -1) return "אתמול";
+  return date.toLocaleDateString("he-IL");
+}
+
+function isOverdue(date: Date): boolean {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return target.getTime() < today.getTime();
+}
+
+const PRIORITY_DOT_COLORS: Record<string, string> = {
+  URGENT: "#FB275D",
+  HIGH: "#FDAB3D",
+  MEDIUM: "#579BFC",
+  LOW: "#C4C4C4",
+};
+
 function TimelineTab({ contact }: { contact: any }) {
   const { activityTypes } = useWorkspaceOptions();
-  if (!contact.activities || contact.activities.length === 0) {
-    return (
-      <p className="text-sm text-text-tertiary text-center py-8">אין פעילות</p>
-    );
-  }
+  const queryClient = useQueryClient();
+  const [noteText, setNoteText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const addNoteMutation = useMutation({
+    mutationFn: (body: string) =>
+      createActivity({ type: "NOTE", body, contactId: contact.id }),
+    onSuccess: () => {
+      setNoteText("");
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      toast.success("הערה נוספה");
+    },
+    onError: () => toast.error("שגיאה בהוספת הערה"),
+  });
+
+  const handleAddNote = () => {
+    const trimmed = noteText.trim();
+    if (!trimmed) return;
+    addNoteMutation.mutate(trimmed);
+  };
+
+  // Build unified timeline
+  const tasks: any[] = contact.tasks || [];
+  const activities: any[] = contact.activities || [];
+
+  const upcomingTasks: TimelineItem[] = tasks
+    .filter((t: any) => t.status !== "DONE" && t.status !== "CANCELLED" && t.dueDate)
+    .map((t: any) => ({
+      type: "task_upcoming" as const,
+      date: new Date(t.dueDate),
+      data: t,
+    }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const historyItems: TimelineItem[] = [
+    ...activities.map((a: any) => ({
+      type: "activity" as const,
+      date: new Date(a.createdAt),
+      data: a,
+    })),
+    ...tasks
+      .filter((t: any) => t.status === "DONE")
+      .map((t: any) => ({
+        type: "task_completed" as const,
+        date: new Date(t.completedAt || t.updatedAt || t.createdAt),
+        data: t,
+      })),
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const hasUpcoming = upcomingTasks.length > 0;
+  const hasHistory = historyItems.length > 0;
 
   return (
-    <div className="space-y-1">
-      {contact.activities.map((activity: any) => {
-        const typeInfo = activityTypes[activity.type];
-        const color = ACTIVITY_COLORS[activity.type] || "#C4C4C4";
-        return (
-          <div
-            key={activity.id}
-            className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
-            style={{ borderRightColor: color }}
+    <div className="space-y-3">
+      {/* Quick-note input */}
+      <div className="bg-surface-secondary/50 rounded-xl p-3">
+        <textarea
+          ref={textareaRef}
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              handleAddNote();
+            }
+          }}
+          placeholder="הוסף הערה..."
+          rows={2}
+          className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[10px] text-text-tertiary">
+            Ctrl+Enter לשמירה
+          </span>
+          <button
+            onClick={handleAddNote}
+            disabled={!noteText.trim() || addNoteMutation.isPending}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
           >
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5"
-              style={{ backgroundColor: color }}
-            >
-              <ActivityIcon type={activity.type} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-text-primary">
-                  {typeInfo?.label || activity.type}
-                </span>
-                <span className="text-xs text-text-tertiary">
-                  {new Date(activity.createdAt).toLocaleDateString("he-IL")}{" "}
-                  {new Date(activity.createdAt).toLocaleTimeString("he-IL", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-              {activity.subject && (
-                <p className="text-sm text-text-secondary mt-0.5">
-                  {activity.subject}
-                </p>
-              )}
-              {activity.body && (
-                <p className="text-xs text-text-tertiary mt-0.5 line-clamp-2">
-                  {activity.body}
-                </p>
-              )}
-              {activity.member?.user?.name && (
-                <span className="text-xs text-text-tertiary">
-                  — {activity.member.user.name}
-                </span>
-              )}
-            </div>
+            <Send size={12} />
+            {addNoteMutation.isPending ? "שומר..." : "הוסף"}
+          </button>
+        </div>
+      </div>
+
+      {/* Upcoming tasks section */}
+      {hasUpcoming && (
+        <div>
+          <h4 className="text-xs font-bold text-text-secondary mb-2 flex items-center gap-1.5">
+            <Clock size={12} className="text-[#6161FF]" />
+            משימות קרובות
+          </h4>
+          <div className="space-y-1">
+            {upcomingTasks.map((item) => {
+              const task = item.data;
+              const overdue = isOverdue(item.date);
+              const iconColor = overdue ? "#FDAB3D" : "#6161FF";
+              const priorityDot = PRIORITY_DOT_COLORS[task.priority] || "#C4C4C4";
+
+              return (
+                <div
+                  key={`upcoming-${task.id as string}`}
+                  className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
+                  style={{ borderRightColor: iconColor }}
+                >
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5"
+                    style={{ backgroundColor: iconColor }}
+                  >
+                    <Circle size={12} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-text-primary">
+                        {task.title}
+                      </span>
+                      <span
+                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          overdue
+                            ? "bg-[#FDAB3D]/15 text-[#FDAB3D]"
+                            : "bg-[#6161FF]/10 text-[#6161FF]"
+                        }`}
+                      >
+                        {formatDueDateLabel(item.date)}
+                      </span>
+                      <span
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: priorityDot }}
+                        title={task.priority}
+                      />
+                    </div>
+                    {task.assignee?.user?.name && (
+                      <span className="text-xs text-text-tertiary">
+                        {task.assignee.user.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      )}
+
+      {/* History section */}
+      <div>
+        {hasUpcoming && (
+          <h4 className="text-xs font-bold text-text-secondary mb-2 flex items-center gap-1.5">
+            <AlertCircle size={12} className="text-text-tertiary" />
+            היסטוריה
+          </h4>
+        )}
+
+        {!hasHistory && !hasUpcoming ? (
+          <p className="text-sm text-text-tertiary text-center py-6">אין פעילות עדיין</p>
+        ) : !hasHistory ? null : (
+          <div className="space-y-1">
+            {historyItems.map((item) => {
+              if (item.type === "activity") {
+                const activity = item.data;
+                const typeInfo = activityTypes[activity.type as string];
+                const color = ACTIVITY_COLORS[activity.type as string] || "#C4C4C4";
+                return (
+                  <div
+                    key={`activity-${activity.id as string}`}
+                    className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
+                    style={{ borderRightColor: color }}
+                  >
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5"
+                      style={{ backgroundColor: color }}
+                    >
+                      <ActivityIcon type={activity.type} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-text-primary">
+                          {typeInfo?.label || activity.type}
+                        </span>
+                        <span className="text-xs text-text-tertiary">
+                          {new Date(activity.createdAt).toLocaleDateString("he-IL")}{" "}
+                          {new Date(activity.createdAt).toLocaleTimeString("he-IL", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      {activity.subject && (
+                        <p className="text-sm text-text-secondary mt-0.5">
+                          {activity.subject}
+                        </p>
+                      )}
+                      {activity.body && (
+                        <p className="text-xs text-text-tertiary mt-0.5 line-clamp-2">
+                          {activity.body}
+                        </p>
+                      )}
+                      {activity.member?.user?.name && (
+                        <span className="text-xs text-text-tertiary">
+                          — {activity.member.user.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              }
+
+              // task_completed
+              const task = item.data;
+              return (
+                <div
+                  key={`task-done-${task.id as string}`}
+                  className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
+                  style={{ borderRightColor: "#00CA72" }}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00CA72]">
+                    <CheckCircle2 size={12} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-text-tertiary line-through">
+                        {task.title}
+                      </span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/15 text-[#00CA72]">
+                        הושלמה
+                      </span>
+                      <span className="text-xs text-text-tertiary">
+                        {item.date.toLocaleDateString("he-IL")}{" "}
+                        {item.date.toLocaleTimeString("he-IL", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    {task.assignee?.user?.name && (
+                      <span className="text-xs text-text-tertiary">
+                        {task.assignee.user.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

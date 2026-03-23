@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { enqueueAutomationTrigger } from "../queue/automation.queue";
+import { calculateUrgency } from "../utils/urgency.util";
 
 interface ListParams {
   workspaceId: string;
@@ -64,38 +65,58 @@ export async function list(params: ListParams) {
   ]);
 
   return {
-    data: tickets.map((t) => ({
-      id: t.id,
-      subject: t.subject,
-      description: t.description,
-      status: t.status,
-      priority: t.priority,
-      channel: t.channel,
-      contact: t.contact
-        ? {
-            id: t.contact.id,
-            name: `${t.contact.firstName} ${t.contact.lastName}`,
-          }
-        : null,
-      assignee: t.assignee
-        ? { id: t.assignee.id, name: t.assignee.user.name }
-        : null,
-      slaPolicy: t.slaPolicy
-        ? {
-            id: t.slaPolicy.id,
-            name: t.slaPolicy.name,
-            firstResponseMinutes: t.slaPolicy.firstResponseMinutes,
-            resolutionMinutes: t.slaPolicy.resolutionMinutes,
-          }
-        : null,
-      urgencyLevel: t.urgencyLevel,
-      firstResponseAt: t.firstResponseAt,
-      resolvedAt: t.resolvedAt,
-      csatScore: t.csatScore,
-      messageCount: t._count.messages,
-      createdAt: t.createdAt,
-      updatedAt: t.updatedAt,
-    })),
+    data: tickets.map((t) => {
+      const urgency = calculateUrgency(
+        {
+          priority: t.priority,
+          createdAt: t.createdAt,
+          firstResponseAt: t.firstResponseAt,
+          resolvedAt: t.resolvedAt,
+          status: t.status,
+        },
+        t.slaPolicy
+          ? {
+              firstResponseMinutes: t.slaPolicy.firstResponseMinutes,
+              resolutionMinutes: t.slaPolicy.resolutionMinutes,
+            }
+          : null,
+      );
+
+      return {
+        id: t.id,
+        subject: t.subject,
+        description: t.description,
+        status: t.status,
+        priority: t.priority,
+        channel: t.channel,
+        contact: t.contact
+          ? {
+              id: t.contact.id,
+              name: `${t.contact.firstName} ${t.contact.lastName}`,
+            }
+          : null,
+        assignee: t.assignee
+          ? { id: t.assignee.id, name: t.assignee.user.name }
+          : null,
+        slaPolicy: t.slaPolicy
+          ? {
+              id: t.slaPolicy.id,
+              name: t.slaPolicy.name,
+              firstResponseMinutes: t.slaPolicy.firstResponseMinutes,
+              resolutionMinutes: t.slaPolicy.resolutionMinutes,
+            }
+          : null,
+        urgencyLevel: t.urgencyLevel,
+        urgencyScore: urgency.score,
+        urgencyComputed: urgency,
+        firstResponseAt: t.firstResponseAt,
+        resolvedAt: t.resolvedAt,
+        csatScore: t.csatScore,
+        messageCount: t._count.messages,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+      };
+    }),
     pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   };
 }
@@ -129,7 +150,24 @@ export async function getById(workspaceId: string, id: string) {
   });
 
   if (!ticket) throw new AppError(404, "NOT_FOUND", "Ticket not found");
-  return ticket;
+
+  const urgency = calculateUrgency(
+    {
+      priority: ticket.priority,
+      createdAt: ticket.createdAt,
+      firstResponseAt: ticket.firstResponseAt,
+      resolvedAt: ticket.resolvedAt,
+      status: ticket.status,
+    },
+    ticket.slaPolicy
+      ? {
+          firstResponseMinutes: ticket.slaPolicy.firstResponseMinutes,
+          resolutionMinutes: ticket.slaPolicy.resolutionMinutes,
+        }
+      : null,
+  );
+
+  return { ...ticket, urgencyScore: urgency.score, urgencyComputed: urgency };
 }
 
 export async function create(
@@ -310,6 +348,17 @@ export async function board(workspaceId: string) {
   for (const s of statuses) grouped[s] = [];
 
   for (const t of tickets) {
+    const urgency = calculateUrgency(
+      {
+        priority: t.priority,
+        createdAt: t.createdAt,
+        firstResponseAt: t.firstResponseAt,
+        resolvedAt: t.resolvedAt,
+        status: t.status,
+      },
+      null, // board doesn't include slaPolicy
+    );
+
     grouped[t.status]?.push({
       id: t.id,
       subject: t.subject,
@@ -327,6 +376,8 @@ export async function board(workspaceId: string) {
         ? { id: t.assignee.id, name: t.assignee.user.name }
         : null,
       messageCount: t._count.messages,
+      urgencyScore: urgency.score,
+      urgencyComputed: urgency,
       firstResponseAt: t.firstResponseAt,
       resolvedAt: t.resolvedAt,
       createdAt: t.createdAt,

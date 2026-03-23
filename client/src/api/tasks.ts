@@ -136,3 +136,54 @@ export function deleteTask(id: string) {
 export function getTasksBoard() {
   return api<import("./contacts").BoardResponse<Task>>("/tasks/board");
 }
+
+export function bulkDeleteTasks(ids: string[]) {
+  return api<{ deleted: number }>("/tasks/bulk-delete", {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+// ─── Task Comments ───
+
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  authorId: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function listTaskComments(taskId: string) {
+  return api<TaskComment[]>(`/tasks/${taskId}/comments`);
+}
+
+export function createTaskComment(taskId: string, body: string) {
+  return api<TaskComment>(`/tasks/${taskId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function deleteTaskComment(taskId: string, commentId: string) {
+  return api<{ success: boolean }>(`/tasks/${taskId}/comments/${commentId}`, {
+    method: "DELETE",
+  });
+}
+
+export function bulkUpdateTasks(
+  ids: string[],
+  data: {
+    status?: string;
+    priority?: string;
+    assigneeId?: string;
+    dueDate?: string;
+  },
+) {
+  return api<{ updated: number }>("/tasks/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, data }),
+  });
+}

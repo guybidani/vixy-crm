@@ -1,6 +1,13 @@
 import { api } from "./client";
 import type { PaginatedResponse } from "./contacts";
 
+export interface UrgencyComputed {
+  score: number;
+  level: "low" | "medium" | "high" | "critical";
+  label: string;
+  color: string;
+}
+
 export interface Ticket {
   id: string;
   subject: string;
@@ -17,6 +24,8 @@ export interface Ticket {
     firstResponseMinutes: number;
     resolutionMinutes: number;
   } | null;
+  urgencyScore: number;
+  urgencyComputed: UrgencyComputed;
   firstResponseAt: string | null;
   resolvedAt: string | null;
   csatScore: number | null;
@@ -41,6 +50,8 @@ export interface TicketDetail {
   } | null;
   assignee: { id: string; user: { name: string } } | null;
   slaPolicy: any;
+  urgencyScore: number;
+  urgencyComputed: UrgencyComputed;
   firstResponseAt: string | null;
   resolvedAt: string | null;
   csatScore: number | null;
