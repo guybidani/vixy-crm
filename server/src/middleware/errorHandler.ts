@@ -45,8 +45,6 @@ export function errorHandler(
     error: {
       code: "INTERNAL_ERROR",
       message: "Something went wrong",
-      // Temporary debug — remove after fixing
-      debug: err.message,
     },
   });
 }
