@@ -27,7 +27,9 @@ COPY client ./client
 COPY tsconfig.base.json ./
 
 ARG VITE_API_URL=/api/v1
+ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
 WORKDIR /app/client
 RUN /app/node_modules/.bin/vite build
