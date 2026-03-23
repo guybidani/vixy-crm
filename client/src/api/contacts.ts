@@ -88,6 +88,7 @@ export function updateContact(
     source: string;
     status: string;
     leadScore: number;
+    leadHeat: string | null;
   }>,
 ) {
   return api<Contact>(`/contacts/${id}`, {

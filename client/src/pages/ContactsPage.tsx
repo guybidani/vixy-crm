@@ -28,7 +28,6 @@ import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import MondayTextCell from "../components/shared/MondayTextCell";
-import MondayNumberCell from "../components/shared/MondayNumberCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 
 // Generate consistent avatar color from name
