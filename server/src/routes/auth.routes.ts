@@ -79,7 +79,8 @@ authRouter.post(
         ip: req.ip,
       });
       res.status(201).json(body);
-    } catch (err) {
+    } catch (err: any) {
+      console.error("REGISTER ERROR:", err?.message, err?.stack?.substring(0, 500));
       next(err);
     }
   },
