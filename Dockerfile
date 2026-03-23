@@ -27,7 +27,7 @@ ARG VITE_API_URL=/api/v1
 ENV VITE_API_URL=$VITE_API_URL
 
 WORKDIR /app/client
-RUN npx vite build
+RUN /app/node_modules/.bin/vite build
 
 # ===========================
 # Stage 3: Build server (TypeScript)
@@ -41,8 +41,8 @@ COPY server ./server
 COPY tsconfig.base.json ./
 
 WORKDIR /app/server
-RUN npx prisma generate
-RUN npx tsc
+RUN /app/node_modules/.bin/prisma generate
+RUN /app/node_modules/.bin/tsc
 
 # ===========================
 # Stage 4: Production
@@ -75,4 +75,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js"]
