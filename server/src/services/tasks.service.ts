@@ -94,6 +94,8 @@ export async function list(params: ListParams) {
       dueTime: t.dueTime,
       reminderMinutes: t.reminderMinutes,
       outcomeNote: t.outcomeNote,
+      callResult: (t as any).callResult ?? null,
+      snoozedUntil: (t as any).snoozedUntil ?? null,
       assignee: t.assignee
         ? { id: t.assignee.id, name: t.assignee.user.name }
         : null,
@@ -136,6 +138,8 @@ export async function getById(workspaceId: string, id: string) {
     dueTime: task.dueTime,
     reminderMinutes: task.reminderMinutes,
     outcomeNote: task.outcomeNote,
+    callResult: (task as any).callResult ?? null,
+    snoozedUntil: (task as any).snoozedUntil ?? null,
     assignee: task.assignee
       ? { id: task.assignee.id, name: task.assignee.user.name }
       : null,
@@ -266,6 +270,8 @@ export async function update(
     reminderMinutes: number;
     assigneeId: string;
     outcomeNote: string;
+    callResult: string | null;
+    snoozedUntil: string | null;
   }>,
 ) {
   const existing = await prisma.task.findFirst({ where: { id, workspaceId } });
@@ -277,6 +283,9 @@ export async function update(
   if (data.taskType) updateData.taskType = data.taskType;
   if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
   if (data.dueTime === null) updateData.dueTime = null;
+  if (data.snoozedUntil) updateData.snoozedUntil = new Date(data.snoozedUntil);
+  if (data.snoozedUntil === null) updateData.snoozedUntil = null;
+  if (data.callResult === null) updateData.callResult = null;
   if (data.status === "DONE" && existing.status !== "DONE") {
     updateData.completedAt = new Date();
   }

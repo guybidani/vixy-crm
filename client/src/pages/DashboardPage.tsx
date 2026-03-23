@@ -12,12 +12,12 @@ import {
   Calendar,
   TrendingUp,
   AlertTriangle,
-  ArrowLeft,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { getDashboard } from "../api/dashboard";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import CalendarWidget from "../components/dashboard/CalendarWidget";
+import TodaysTasksWidget from "../components/dashboard/TodaysTasksWidget";
 
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "#C4C4C4",
@@ -47,7 +47,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { dealStages, activityTypes, priorities } = useWorkspaceOptions();
+  const { dealStages, activityTypes } = useWorkspaceOptions();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -76,7 +76,7 @@ export default function DashboardPage() {
     );
   }
 
-  const { kpis, pipeline, recentActivities, myTasks } = data;
+  const { kpis, pipeline, recentActivities } = data;
 
   return (
     <div>
@@ -255,107 +255,8 @@ export default function DashboardPage() {
         <CalendarWidget />
       </div>
 
-      {/* My Tasks */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h2 className="font-bold text-text-primary text-base">המשימות שלי</h2>
-            {/* Task stat badges */}
-            <div className="flex items-center gap-1.5">
-              {kpis.tasksOverdue > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-danger/10 text-danger">
-                  {kpis.tasksOverdue} באיחור
-                </span>
-              )}
-              {kpis.tasksToday > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/10 text-warning">
-                  {kpis.tasksToday} להיום
-                </span>
-              )}
-              {(kpis.tasksCompletedThisWeek ?? 0) > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/10 text-success">
-                  {kpis.tasksCompletedThisWeek} הושלמו השבוע
-                </span>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => navigate("/tasks")}
-            className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
-          >
-            הצג הכל
-            <ArrowLeft size={12} />
-          </button>
-        </div>
-        {myTasks.length === 0 ? (
-          <p className="text-sm text-text-tertiary text-center py-4">
-            אין משימות פתוחות
-          </p>
-        ) : (
-          <div className="space-y-1">
-            {myTasks.map((t) => {
-              const p = priorities[t.priority] || priorities.MEDIUM;
-              const isOverdue =
-                t.dueDate &&
-                t.status !== "DONE" &&
-                new Date(t.dueDate) < new Date();
-              const isDueToday =
-                t.dueDate &&
-                t.status !== "DONE" &&
-                !isOverdue &&
-                new Date(t.dueDate).toDateString() ===
-                  new Date().toDateString();
-              return (
-                <div
-                  key={t.id}
-                  className={`flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-surface-secondary/50 transition-colors cursor-pointer ${
-                    isOverdue ? "bg-danger/[0.03]" : ""
-                  }`}
-                  onClick={() => navigate("/tasks")}
-                >
-                  <div
-                    className={`w-5 h-5 rounded-md border-2 flex-shrink-0 hover:border-success cursor-pointer transition-colors ${
-                      isOverdue ? "border-danger" : "border-border"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm flex-1 ${
-                      isOverdue
-                        ? "text-danger font-medium"
-                        : "text-text-primary"
-                    }`}
-                  >
-                    {t.title}
-                  </span>
-                  <span
-                    className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full text-white min-w-[48px] text-center"
-                    style={{ backgroundColor: p.color }}
-                  >
-                    {p.label}
-                  </span>
-                  <span
-                    className={`text-xs ${
-                      isOverdue
-                        ? "text-danger font-semibold"
-                        : isDueToday
-                          ? "text-warning font-semibold"
-                          : "text-text-tertiary"
-                    }`}
-                  >
-                    {isOverdue
-                      ? "באיחור!"
-                      : isDueToday
-                        ? "היום"
-                        : t.dueDate
-                          ? formatRelativeTime(t.dueDate)
-                          : "ללא תאריך"}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* Today's Tasks Widget */}
+      <TodaysTasksWidget />
     </div>
   );
 }

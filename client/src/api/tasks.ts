@@ -2,6 +2,7 @@ import { api } from "./client";
 import type { PaginatedResponse } from "./contacts";
 
 export type TaskType = "CALL" | "EMAIL" | "MEETING" | "WHATSAPP" | "FOLLOW_UP" | "TASK";
+export type CallResult = "ANSWERED" | "VOICEMAIL" | "NO_ANSWER" | "BUSY" | "RESCHEDULED" | "NOT_RELEVANT";
 
 export interface Task {
   id: string;
@@ -14,6 +15,8 @@ export interface Task {
   dueTime: string | null;
   reminderMinutes: number | null;
   outcomeNote: string | null;
+  callResult: CallResult | null;
+  snoozedUntil: string | null;
   assignee: { id: string; name: string } | null;
   contact: { id: string; name: string } | null;
   deal: { id: string; title: string } | null;
@@ -102,11 +105,27 @@ export function updateTask(
     reminderMinutes: number;
     assigneeId: string;
     outcomeNote: string;
+    callResult: string | null;
+    snoozedUntil: string | null;
   }>,
 ) {
   return api<Task>(`/tasks/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
+  });
+}
+
+export function snoozeTask(id: string, until: string) {
+  return api<Task>(`/tasks/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ snoozedUntil: until }),
+  });
+}
+
+export function completeTask(id: string, data: { callResult?: CallResult; outcomeNote?: string }) {
+  return api<Task>(`/tasks/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "DONE", ...data }),
   });
 }
 

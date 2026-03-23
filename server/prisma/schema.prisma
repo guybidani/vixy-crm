@@ -296,6 +296,15 @@ enum TaskType {
   TASK
 }
 
+enum CallResult {
+  ANSWERED
+  VOICEMAIL
+  NO_ANSWER
+  BUSY
+  RESCHEDULED
+  NOT_RELEVANT
+}
+
 model Task {
   id          String     @id @default(uuid())
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -320,6 +329,8 @@ model Task {
   reminderMinutes        Int?       @default(15) @map("reminder_minutes")
   completedAt            DateTime?  @map("completed_at")
   outcomeNote            String?    @map("outcome_note")
+  callResult             CallResult? @map("call_result")
+  snoozedUntil           DateTime?  @map("snoozed_until")
   googleCalendarEventId  String?    @map("google_calendar_event_id")
   createdAt              DateTime   @default(now()) @map("created_at")
   updatedAt              DateTime   @updatedAt @map("updated_at")

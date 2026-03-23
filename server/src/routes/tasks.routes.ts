@@ -41,6 +41,8 @@ const updateSchema = z.object({
   reminderMinutes: z.number().int().min(0).max(10080).optional(),
   assigneeId: z.string().uuid().optional(),
   outcomeNote: z.string().optional(),
+  callResult: z.enum(["ANSWERED","VOICEMAIL","NO_ANSWER","BUSY","RESCHEDULED","NOT_RELEVANT"]).optional().nullable(),
+  snoozedUntil: z.string().datetime().optional().nullable(),
 });
 
 tasksRouter.get("/", async (req, res, next) => {
