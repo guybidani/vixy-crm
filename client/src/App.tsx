@@ -41,6 +41,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AutomationsPage = lazy(() => import("./pages/AutomationsPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
 const ImportPage = lazy(() => import("./pages/ImportPage"));
+const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 function SuspenseFallback() {
@@ -345,6 +346,7 @@ function App() {
             <Route path="documents" element={withErrorBoundary(<DocumentsPage />)} />
             <Route path="knowledge" element={withErrorBoundary(<KnowledgeBasePage />)} />
             <Route path="boards/:id" element={withErrorBoundary(<BoardPage />)} />
+            <Route path="templates" element={withErrorBoundary(<TemplatesPage />)} />
             <Route path="automations" element={withErrorBoundary(<AutomationsPage />)} />
             <Route path="import" element={withErrorBoundary(<ImportPage />)} />
             <Route path="settings" element={withErrorBoundary(<SettingsPage />)} />
