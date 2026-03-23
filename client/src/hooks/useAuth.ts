@@ -30,6 +30,7 @@ interface AuthState {
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
+  googleLogin: (idToken: string) => Promise<void>;
   register: (data: {
     email: string;
     password: string;
@@ -108,6 +109,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const googleLogin = useCallback(async (idToken: string) => {
+    const res = await authApi.googleLogin(idToken);
+    setTokens(res.accessToken);
+    markSession();
+
+    const storedWs = getWorkspaceId();
+    const wsId =
+      storedWs && res.workspaces.some((w) => w.id === storedWs)
+        ? storedWs
+        : res.workspaces[0]?.id || null;
+
+    if (wsId) setWorkspaceId(wsId);
+
+    setState({
+      user: res.user,
+      workspaces: res.workspaces,
+      currentWorkspaceId: wsId,
+      isLoading: false,
+      isAuthenticated: true,
+    });
+  }, []);
+
   const register = useCallback(
     async (data: {
       email: string;
@@ -151,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value: {
         ...state,
         login,
+        googleLogin,
         register,
         logout,
         selectWorkspace,

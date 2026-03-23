@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
+import GoogleLoginButton from "../components/shared/GoogleLoginButton";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -101,6 +102,28 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-border-light" />
+          <span className="text-xs text-text-tertiary">או</span>
+          <div className="flex-1 h-px bg-border-light" />
+        </div>
+
+        {/* Google Sign In */}
+        <GoogleLoginButton
+          text="signin_with"
+          onSuccess={async (idToken) => {
+            try {
+              await googleLogin(idToken);
+              toast.success("התחברת בהצלחה!");
+              navigate("/dashboard");
+            } catch (err: any) {
+              toast.error(err?.message || "שגיאה בהתחברות עם Google");
+            }
+          }}
+          onError={(msg) => toast.error(msg)}
+        />
 
         <p className="text-center text-text-secondary text-sm mt-6">
           אין לכם חשבון?{" "}

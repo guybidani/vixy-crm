@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../db/client";
 import { config } from "../config";
 import { AppError } from "../middleware/errorHandler";
+import { OAuth2Client } from "google-auth-library";
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MINUTES = 15;
@@ -145,6 +146,11 @@ export async function login(email: string, password: string) {
     throw new AppError(401, "INVALID_CREDENTIALS", "Invalid email or password");
   }
 
+  // Google-only user trying password login
+  if (!user.passwordHash) {
+    throw new AppError(401, "USE_GOOGLE_LOGIN", "This account uses Google login. Please sign in with Google.");
+  }
+
   // Check account lockout
   if (user.lockedUntil && user.lockedUntil > new Date()) {
     const minutesLeft = Math.ceil(
@@ -248,6 +254,10 @@ export async function changePassword(
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw new AppError(404, "USER_NOT_FOUND", "User not found");
+  }
+
+  if (!user.passwordHash) {
+    throw new AppError(400, "NO_PASSWORD", "This account uses Google login and has no password set");
   }
 
   const valid = await bcrypt.compare(currentPassword, user.passwordHash);
@@ -422,6 +432,169 @@ export async function inviteMember(
   });
 
   return { memberId: member.id, userId: user.id, role: member.role };
+}
+
+const googleClient = new OAuth2Client(config.google.clientId);
+
+export async function googleLogin(idToken: string) {
+  // Verify the Google ID token
+  const ticket = await googleClient.verifyIdToken({
+    idToken,
+    audience: config.google.clientId,
+  });
+  const payload = ticket.getPayload();
+  if (!payload || !payload.email) {
+    throw new AppError(401, "INVALID_GOOGLE_TOKEN", "Invalid Google token");
+  }
+
+  const { sub: googleId, email, name, picture } = payload;
+
+  // Look up user by googleId or email
+  let user = await prisma.user.findFirst({
+    where: { OR: [{ googleId }, { email }] },
+    include: {
+      memberships: {
+        include: {
+          workspace: {
+            select: { id: true, name: true, slug: true, logoUrl: true },
+          },
+        },
+      },
+    },
+  });
+
+  let isNewUser = false;
+
+  if (user) {
+    // Link Google account if not yet linked
+    if (!user.googleId) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { googleId, avatarUrl: user.avatarUrl || picture },
+      });
+    }
+  } else {
+    // Create new user + workspace
+    isNewUser = true;
+    const displayName = name || email.split("@")[0];
+
+    const slug =
+      displayName
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
+        .replace(/^-|-$/g, "") || `ws-${Date.now()}`;
+
+    let finalSlug = slug;
+    const existingSlug = await prisma.workspace.findUnique({
+      where: { slug },
+    });
+    if (existingSlug) {
+      finalSlug = `${slug}-${Date.now().toString(36)}`;
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          googleId,
+          name: displayName,
+          avatarUrl: picture,
+        },
+      });
+
+      const workspace = await tx.workspace.create({
+        data: {
+          name: `${displayName}`,
+          slug: finalSlug,
+          ownerId: newUser.id,
+          settings: {
+            currency: "ILS",
+            timezone: "Asia/Jerusalem",
+            businessHours: {
+              start: "09:00",
+              end: "18:00",
+              days: [0, 1, 2, 3, 4],
+            },
+          },
+        },
+      });
+
+      await tx.workspaceMember.create({
+        data: {
+          workspaceId: workspace.id,
+          userId: newUser.id,
+          role: "OWNER",
+          joinedAt: new Date(),
+        },
+      });
+
+      await tx.slaPolicy.create({
+        data: {
+          workspaceId: workspace.id,
+          name: "ברירת מחדל",
+          firstResponseMinutes: 60,
+          resolutionMinutes: 480,
+          businessHoursOnly: true,
+          isDefault: true,
+        },
+      });
+
+      return { user: newUser, workspace };
+    });
+
+    user = await prisma.user.findUnique({
+      where: { id: result.user.id },
+      include: {
+        memberships: {
+          include: {
+            workspace: {
+              select: { id: true, name: true, slug: true, logoUrl: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new AppError(500, "USER_CREATE_FAILED", "Failed to create user");
+    }
+  }
+
+  if (!user.isActive) {
+    throw new AppError(401, "USER_INACTIVE", "Account is deactivated");
+  }
+
+  // Reset failed attempts if any
+  if (user.failedLoginAttempts > 0) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockedUntil: null },
+    });
+  }
+
+  const accessToken = generateAccessToken(user.id, user.email);
+  const refreshToken = await createRefreshToken(user.id);
+
+  const workspaces = user.memberships.map((m) => ({
+    id: m.workspace.id,
+    name: m.workspace.name,
+    slug: m.workspace.slug,
+    logoUrl: m.workspace.logoUrl,
+    role: m.role,
+  }));
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+    },
+    workspaces,
+    accessToken,
+    refreshToken,
+    isNewUser,
+  };
 }
 
 export async function getWorkspaceMembers(workspaceId: string) {

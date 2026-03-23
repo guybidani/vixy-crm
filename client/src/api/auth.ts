@@ -51,6 +51,17 @@ export function login(email: string, password: string) {
   });
 }
 
+export interface GoogleLoginResponse extends LoginResponse {
+  isNewUser: boolean;
+}
+
+export function googleLogin(idToken: string) {
+  return api<GoogleLoginResponse>("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  });
+}
+
 export function logout() {
   return api("/auth/logout", { method: "POST" }).catch(() => {});
 }

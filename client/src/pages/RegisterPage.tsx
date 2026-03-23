@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
+import GoogleLoginButton from "../components/shared/GoogleLoginButton";
 
 type PasswordStrength = "none" | "weak" | "medium" | "strong";
 
@@ -42,7 +43,7 @@ function suggestWorkspaceName(userName: string): string {
 }
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -325,6 +326,28 @@ export default function RegisterPage() {
             </div>
           )}
         </form>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-border-light" />
+          <span className="text-xs text-text-tertiary">או</span>
+          <div className="flex-1 h-px bg-border-light" />
+        </div>
+
+        {/* Google Sign Up */}
+        <GoogleLoginButton
+          text="signup_with"
+          onSuccess={async (idToken) => {
+            try {
+              await googleLogin(idToken);
+              setShowSuccess(true);
+              setTimeout(() => navigate("/dashboard"), 1500);
+            } catch (err: any) {
+              toast.error(err?.message || "שגיאה בהרשמה עם Google");
+            }
+          }}
+          onError={(msg) => toast.error(msg)}
+        />
 
         <p className="text-center text-text-secondary text-sm mt-6">
           כבר יש לכם חשבון?{" "}

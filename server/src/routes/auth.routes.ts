@@ -113,6 +113,32 @@ authRouter.post(
   },
 );
 
+// POST /api/v1/auth/google — sign in / sign up with Google ID token
+const googleSchema = z.object({
+  idToken: z.string().min(1),
+});
+
+authRouter.post(
+  "/google",
+  authLimiter,
+  validate(googleSchema),
+  async (req, res, next) => {
+    try {
+      const result = await authService.googleLogin(req.body.idToken);
+      const { refreshToken, ...body } = result;
+      setRefreshCookie(res, refreshToken);
+      audit({
+        userId: result.user.id,
+        action: result.isNewUser ? "user.register_google" : "user.login_google",
+        ip: req.ip,
+      });
+      res.status(result.isNewUser ? 201 : 200).json(body);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // POST /api/v1/auth/refresh — reads refresh token from httpOnly cookie
 authRouter.post("/refresh", authLimiter, async (req, res, next) => {
   try {
