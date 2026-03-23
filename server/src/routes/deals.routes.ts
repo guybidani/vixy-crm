@@ -49,6 +49,12 @@ const updateSchema = z.object({
   expectedClose: z.string().optional(),
   notes: z.string().optional(),
   lostReason: z.string().optional(),
+  bantData: z.object({
+    budget: z.string().optional(),
+    authority: z.string().optional(),
+    need: z.string().optional(),
+    timeline: z.string().optional(),
+  }).optional().nullable(),
 });
 
 // GET /api/v1/deals

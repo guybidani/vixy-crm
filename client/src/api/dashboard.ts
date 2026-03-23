@@ -50,3 +50,17 @@ export interface DashboardData {
 export function getDashboard() {
   return api<DashboardData>("/dashboard");
 }
+
+export interface TeamMemberPerformance {
+  memberId: string;
+  name: string;
+  activitiesCount: number;
+  callsCount: number;
+  dealsWon: number;
+  dealsWonValue: number;
+  tasksCompleted: number;
+}
+
+export function getTeamPerformance() {
+  return api<TeamMemberPerformance[]>("/dashboard/team-performance");
+}

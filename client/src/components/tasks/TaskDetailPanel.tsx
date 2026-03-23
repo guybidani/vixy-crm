@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import SnoozeDropdown from "../shared/SnoozeDropdown";
 import {
   X,
   Calendar,
@@ -21,6 +22,8 @@ import {
   TrendingUp,
   Tag,
   Send,
+  Headphones,
+  Layers,
 } from "lucide-react";
 
 const TASK_TYPE_OPTIONS = [
@@ -31,6 +34,13 @@ const TASK_TYPE_OPTIONS = [
   { value: "WHATSAPP", label: "וואטסאפ", icon: "💬", color: "#25D366" },
   { value: "FOLLOW_UP", label: "מעקב", icon: "🔄", color: "#FDAB3D" },
 ];
+
+const TASK_CONTEXT_OPTIONS = [
+  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00CA72" },
+  { value: "SERVICE", label: "שירות", icon: Headphones, color: "#FDAB3D" },
+  { value: "GENERAL", label: "כללי", icon: Layers, color: "#C3C6D4" },
+];
+
 import toast from "react-hot-toast";
 import StatusDropdown from "../shared/StatusDropdown";
 import MondayPersonCell, {
@@ -204,8 +214,18 @@ export default function TaskDetailPanel({
   }
 
   const isDone = task.status === "DONE";
+  const isCancelled = task.status === "CANCELLED";
   const isOverdue =
-    task.dueDate && !isDone && new Date(task.dueDate) < new Date();
+    task.dueDate && !isDone && !isCancelled && (() => {
+      const due = new Date(task.dueDate!); due.setHours(0, 0, 0, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      return due < today;
+    })();
+  const overdueDays = isOverdue && task.dueDate ? (() => {
+    const due = new Date(task.dueDate!); due.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
+  })() : 0;
   const StatusIcon = STATUS_ICONS[task.status] || Circle;
   const priorityInfo = priorities[task.priority];
 
@@ -288,19 +308,31 @@ export default function TaskDetailPanel({
                 </span>
               ) : null;
             })()}
+            {(() => {
+              const tc = TASK_CONTEXT_OPTIONS.find(o => o.value === (task.taskContext || "GENERAL"));
+              return tc && tc.value !== "GENERAL" ? (
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white" style={{ backgroundColor: tc.color }}>
+                  {tc.label}
+                </span>
+              ) : null;
+            })()}
             {task.dueTime && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-secondary flex items-center gap-0.5">
                 <Clock size={9} /> {task.dueTime}
               </span>
             )}
             {isOverdue && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-danger/10 text-danger">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-danger/10 text-danger flex items-center gap-0.5">
+                <AlertTriangle size={9} />
                 באיחור!
               </span>
             )}
           </div>
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {!isDone && (
+            <SnoozeDropdown taskId={taskId} variant="button" />
+          )}
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="p-2 rounded-lg text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors"
@@ -417,6 +449,35 @@ export default function TaskDetailPanel({
             </div>
           </div>
 
+          {/* Task Context */}
+          <div className="flex items-center justify-between py-2">
+            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+              <Layers size={13} />
+              הקשר
+            </label>
+            <div className="flex flex-wrap gap-1">
+              {TASK_CONTEXT_OPTIONS.map((opt) => {
+                const Icon = opt.icon;
+                const isActive = (task.taskContext || "GENERAL") === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => updateMutation.mutate({ taskContext: opt.value })}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border transition-all"
+                    style={
+                      isActive
+                        ? { backgroundColor: opt.color, color: "#fff", borderColor: opt.color }
+                        : { backgroundColor: "transparent", color: opt.color, borderColor: opt.color }
+                    }
+                  >
+                    <Icon size={11} />
+                    <span>{opt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Due Date + Time */}
           <div className="flex items-center justify-between py-2">
             <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
@@ -435,6 +496,12 @@ export default function TaskDetailPanel({
                 className="text-xs border border-border-light rounded px-2 py-1 focus:outline-none focus:border-primary bg-white"
                 title="שעת יעד"
               />
+              {isOverdue && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-danger/10 text-danger flex items-center gap-1">
+                  <AlertTriangle size={10} />
+                  {overdueDays} ימים באיחור
+                </span>
+              )}
             </div>
           </div>
 

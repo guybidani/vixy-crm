@@ -24,6 +24,28 @@ const createSchema = z.object({
   metadata: z.any().optional(),
 });
 
+activitiesRouter.get("/recent-contacts", async (req, res, next) => {
+  try {
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Not a workspace member" },
+      });
+    }
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const data = await activitiesService.getRecentContacts(
+      req.workspaceId!,
+      member.id,
+      limit,
+    );
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 activitiesRouter.get("/", async (req, res, next) => {
   try {
     const activities = await activitiesService.list({

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -25,6 +25,7 @@ import {
   type Contact,
 } from "../api/contacts";
 import { listCompanies } from "../api/companies";
+import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import MondayTextCell from "../components/shared/MondayTextCell";
@@ -63,11 +64,12 @@ export default function ContactsPage() {
     null,
   );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [needsFollowUp, setNeedsFollowUp] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: [
       "contacts",
-      { search: debouncedSearch, page, statusFilter, sortBy, sortDir },
+      { search: debouncedSearch, page, statusFilter, sortBy, sortDir, needsFollowUp },
     ],
     queryFn: () =>
       listContacts({
@@ -76,6 +78,7 @@ export default function ContactsPage() {
         status: statusFilter || undefined,
         sortBy,
         sortDir,
+        needsFollowUp: needsFollowUp || undefined,
       }),
     enabled: viewMode === "table",
   });
@@ -122,6 +125,26 @@ export default function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("סטטוס עודכן");
     },
+  });
+
+  // Quick activity logging
+  const quickActivityTypes = [
+    { type: "CALL" as const, icon: Phone, color: "#00CA72", label: "שיחה", subject: (n: string) => `שיחה עם ${n}`, toast: "שיחה נרשמה ✓", tooltip: "רשום שיחה" },
+    { type: "EMAIL" as const, icon: Mail, color: "#579BFC", label: "אימייל", subject: (n: string) => `אימייל ל-${n}`, toast: "אימייל נרשם ✓", tooltip: "רשום אימייל" },
+    { type: "MEETING" as const, icon: Calendar, color: "#A25DDC", label: "פגישה", subject: (n: string) => `פגישה עם ${n}`, toast: "פגישה נרשמה ✓", tooltip: "רשום פגישה" },
+    { type: "WHATSAPP" as const, icon: MessageSquare, color: "#25D366", label: "ווטסאפ", subject: (n: string) => `ווטסאפ ל-${n}`, toast: "ווטסאפ נרשם ✓", tooltip: "רשום ווטסאפ" },
+  ];
+
+  const quickLogMutation = useMutation({
+    mutationFn: (data: { type: string; subject: string; contactId: string }) =>
+      createActivity(data),
+    onSuccess: (_data, variables) => {
+      const actType = quickActivityTypes.find((a) => a.type === variables.type);
+      toast.success(actType?.toast || "פעילות נרשמה ✓");
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    },
+    onError: () => toast.error("שגיאה ברישום פעילות"),
   });
 
   // Kanban columns
@@ -307,12 +330,74 @@ export default function ContactsPage() {
               e.stopPropagation();
               setSelectedContactId(row.id);
             }}
-            className="flex items-center gap-1 text-[11px] text-text-tertiary hover:text-primary px-2 py-1 rounded-md hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/30 transition-all group"
+            className="flex items-center gap-1 text-[11px] text-text-tertiary hover:text-primary px-2 py-1 rounded-md hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/30 transition-all group/tag"
           >
-            <Tag size={11} className="opacity-50 group-hover:opacity-100" />
+            <Tag size={11} className="opacity-50 group-hover/tag:opacity-100" />
             <span>הוסף תגית</span>
           </button>
         ),
+    },
+    {
+      key: "nextFollowUpDate",
+      label: "תאריך מעקב",
+      sortable: true,
+      width: "140px",
+      render: (row: Contact) => {
+        if (!row.nextFollowUpDate) {
+          return <span className="text-[11px] text-text-tertiary">—</span>;
+        }
+        const fuDate = new Date(row.nextFollowUpDate);
+        fuDate.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const diff = Math.round((fuDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        let colorClass = "text-text-secondary";
+        let badge: React.ReactNode = null;
+        if (diff < 0) {
+          colorClass = "text-danger font-bold";
+          badge = <AlertTriangle size={10} className="text-danger" />;
+        } else if (diff === 0) {
+          colorClass = "text-warning font-bold";
+          badge = <Calendar size={10} className="text-warning" />;
+        }
+        return (
+          <span className={`flex items-center gap-1 text-[11px] ${colorClass}`}>
+            {badge}
+            {fuDate.toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+          </span>
+        );
+      },
+    },
+    {
+      key: "__quickActions",
+      label: "",
+      width: "120px",
+      render: (row: Contact) => (
+        <div
+          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+        >
+          {quickActivityTypes.map((act) => {
+            const Icon = act.icon;
+            return (
+              <button
+                key={act.type}
+                title={act.tooltip}
+                onClick={() =>
+                  quickLogMutation.mutate({
+                    type: act.type,
+                    subject: act.subject(row.fullName),
+                    contactId: row.id,
+                  })
+                }
+                className="p-1 rounded-md hover:bg-black/5 transition-colors"
+              >
+                <Icon size={16} style={{ color: act.color }} />
+              </button>
+            );
+          })}
+        </div>
+      ),
     },
   ];
 
@@ -372,6 +457,16 @@ export default function ContactsPage() {
                 }}
               />
             ))}
+            <span className="text-border text-xs select-none">|</span>
+            <FilterChip
+              label="דורש מעקב"
+              color="#FF4D4F"
+              active={needsFollowUp}
+              onClick={() => {
+                setNeedsFollowUp(!needsFollowUp);
+                setPage(1);
+              }}
+            />
           </div>
 
           <DataTable

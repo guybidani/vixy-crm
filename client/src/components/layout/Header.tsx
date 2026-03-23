@@ -8,27 +8,32 @@ import SearchDropdown from "./SearchDropdown";
 interface HeaderProps {
   sidebarCollapsed: boolean;
   onQuickAdd: () => void;
+  onCommandPalette: () => void;
   onMobileMenuToggle?: () => void;
 }
 
-export default function Header({ sidebarCollapsed, onQuickAdd, onMobileMenuToggle }: HeaderProps) {
+export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette, onMobileMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
-  // Ctrl+K shortcut
+  // Ctrl+K = QuickAdd, Ctrl+Shift+K = CommandPalette
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
-        onQuickAdd();
+        if (e.shiftKey) {
+          onCommandPalette();
+        } else {
+          onQuickAdd();
+        }
       }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [onQuickAdd]);
+  }, [onQuickAdd, onCommandPalette]);
 
   // Focus mobile search input when opened
   useEffect(() => {

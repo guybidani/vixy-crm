@@ -13,6 +13,10 @@ import {
   AlertTriangle,
   Search,
   ChevronDown,
+  Repeat,
+  TrendingUp,
+  Headphones,
+  Layers,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
@@ -26,6 +30,7 @@ import ViewToggle from "../components/shared/ViewToggle";
 import ExportButton from "../components/shared/ExportButton";
 import TaskDetailPanel from "../components/tasks/TaskDetailPanel";
 import TaskCreateModal from "../components/tasks/TaskCreateModal";
+import SnoozeDropdown from "../components/shared/SnoozeDropdown";
 import {
   listTasks,
   createTask,
@@ -47,6 +52,19 @@ const STATUS_ICONS: Record<string, typeof Circle> = {
   IN_PROGRESS: Clock,
   DONE: CheckCircle2,
   CANCELLED: Ban,
+};
+
+const TASK_CONTEXT_OPTIONS = [
+  { key: "", label: "הכל", color: "#6161FF", icon: null },
+  { key: "SALES", label: "מכירות", color: "#00CA72", icon: TrendingUp },
+  { key: "SERVICE", label: "שירות", color: "#FDAB3D", icon: Headphones },
+  { key: "GENERAL", label: "כללי", color: "#C3C6D4", icon: Layers },
+];
+
+const TASK_CONTEXT_BADGE: Record<string, { label: string; color: string }> = {
+  SALES: { label: "מכירות", color: "#00CA72" },
+  SERVICE: { label: "שירות", color: "#FDAB3D" },
+  GENERAL: { label: "כללי", color: "#C3C6D4" },
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -75,13 +93,13 @@ function getDueDateInfo(dueDate: string | null, status: string): DueDateInfo {
   today.setHours(0, 0, 0, 0);
   const diff = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   if (diff < 0 && status !== "DONE" && status !== "CANCELLED") {
-    return { label: "באיחור", colorClass: "text-danger font-semibold", icon: "warning", bgClass: "bg-danger/5" };
+    return { label: "באיחור", colorClass: "text-danger font-bold", icon: "warning", bgClass: "bg-danger/5" };
   }
   if (diff === 0) {
-    return { label: "היום", colorClass: "text-warning font-semibold", icon: "clock", bgClass: "bg-warning/5" };
+    return { label: "היום", colorClass: "text-warning font-bold", icon: "clock", bgClass: "bg-warning/5" };
   }
   if (diff === 1) {
-    return { label: "מחר", colorClass: "text-blue-500 font-semibold", icon: "calendar", bgClass: "bg-blue-50" };
+    return { label: "מחר", colorClass: "text-blue-500 font-bold", icon: "calendar", bgClass: "bg-blue-50" };
   }
   if (diff <= 3) {
     return { label: due.toLocaleDateString("he-IL", { day: "numeric", month: "short" }), colorClass: "text-orange-500", icon: "calendar", bgClass: "" };
@@ -259,6 +277,7 @@ export default function TasksPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [taskTypeFilter, setTaskTypeFilter] = useState("");
+  const [contextFilter, setContextFilter] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("dueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -297,11 +316,12 @@ export default function TasksPage() {
   const memberOptions = (members || []).map((m) => ({ id: m.memberId, name: m.name }));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks", { statusFilter, taskTypeFilter, page, sortBy, sortDir, myTasksOnly }],
+    queryKey: ["tasks", { statusFilter, taskTypeFilter, contextFilter, page, sortBy, sortDir, myTasksOnly }],
     queryFn: () =>
       listTasks({
         status: statusFilter || undefined,
         taskType: taskTypeFilter || undefined,
+        taskContext: contextFilter || undefined,
         page,
         sortBy,
         sortDir,
@@ -335,11 +355,12 @@ export default function TasksPage() {
     () => Object.entries(taskStatuses).map(([key, info]) => {
       let items = boardData?.statuses[key] || [];
       if (priorityFilter) items = items.filter((t) => t.priority === priorityFilter);
+      if (contextFilter) items = items.filter((t) => t.taskContext === contextFilter);
       if (myTasksOnly && currentMemberId) items = items.filter((t) => t.assignee?.id === currentMemberId);
       if (searchQuery.trim()) items = items.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
       return { key, label: info.label, color: info.color, items };
     }),
-    [taskStatuses, boardData, priorityFilter, myTasksOnly, currentMemberId, searchQuery],
+    [taskStatuses, boardData, priorityFilter, contextFilter, myTasksOnly, currentMemberId, searchQuery],
   );
 
   function handleKanbanDragEnd(itemId: string, _fromColumn: string, toColumn: string) {
@@ -476,6 +497,29 @@ export default function TasksPage() {
           }
         >
           <StatsBar tasks={allTasks} />
+          {/* Context filter tabs */}
+          <div className="flex flex-wrap items-center gap-2">
+            {TASK_CONTEXT_OPTIONS.map((opt) => {
+              const Icon = opt.icon;
+              const isActive = contextFilter === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => { setContextFilter(opt.key); setPage(1); }}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    isActive
+                      ? "text-white shadow-sm"
+                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                  }`}
+                  style={isActive ? { backgroundColor: opt.color, borderColor: opt.color } : undefined}
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
+                  {Icon && <Icon size={12} />}
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <FilterChip label="הכל" active={!statusFilter} onClick={() => { setStatusFilter(""); setPage(1); }} />
             {Object.entries(taskStatuses).map(([key, val]) => (
@@ -697,10 +741,15 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
   const isDone = task.status === "DONE";
   const priorityInfo = priorities[task.priority];
   const borderColor = PRIORITY_COLORS[task.priority] || "#C3C6D4";
+  const isTaskOverdue = task.dueDate && !isDone && task.status !== "CANCELLED" && (() => {
+    const due = new Date(task.dueDate!); due.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return due < today;
+  })();
   return (
     <div
-      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-card-hover hover:-translate-y-0.5"}`}
-      style={{ borderLeftColor: isDragging ? "#6161FF" : borderColor }}
+      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-danger" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-card-hover hover:-translate-y-0.5"}`}
+      style={{ borderLeftColor: isDragging ? "#6161FF" : isTaskOverdue ? "#FF4D4F" : borderColor }}
     >
       <span className={`font-semibold text-sm block mb-1.5 ${isDone ? "line-through text-text-tertiary" : "text-text-primary"}`}>{task.title}</span>
       {task.description && <p className="text-xs text-text-tertiary truncate mb-2">{task.description}</p>}
@@ -717,12 +766,36 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
             </span>
           );
         })()}
+        {task.taskContext && task.taskContext !== "GENERAL" && (() => {
+          const ctx = TASK_CONTEXT_BADGE[task.taskContext];
+          return ctx ? (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: ctx.color }}
+            >
+              {ctx.label}
+            </span>
+          ) : null;
+        })()}
       </div>
       <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
         <div className="flex items-center gap-1">
           {task.contact && <span className="text-[11px] text-text-secondary truncate max-w-[80px]">{task.contact.name}</span>}
         </div>
         <div className="flex items-center gap-2">
+          {task.isRecurring && (
+            <span
+              className="text-primary/70"
+              title={`משימה חוזרת - ${
+                task.recurrenceType === "DAILY" ? "יומי" :
+                task.recurrenceType === "WEEKLY" ? "שבועי" :
+                task.recurrenceType === "BIWEEKLY" ? "דו-שבועי" :
+                task.recurrenceType === "MONTHLY" ? "חודשי" : ""
+              }`}
+            >
+              <Repeat size={11} />
+            </span>
+          )}
           <DueDateBadge dueDate={task.dueDate} status={task.status} compact />
           {task.dueDate && <span title="מסונכרן עם Google Calendar" className="cursor-default text-[11px] leading-none">📅</span>}
           {task.assignee ? (
@@ -829,7 +902,7 @@ function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStat
   const isOverdue = task.dueDate && !isDone && task.status !== "CANCELLED" && new Date(task.dueDate) < new Date();
   const StatusIcon = STATUS_ICONS[task.status] || Circle;
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-border-light last:border-0 hover:bg-[#F5F6FF] transition-colors group ${isOverdue ? "bg-danger/[0.03]" : ""} ${selected ? "bg-primary/5" : ""}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-border-light last:border-0 hover:bg-[#F5F6FF] transition-colors group ${isOverdue ? "bg-danger/5" : ""} ${selected ? "bg-primary/5" : ""}`}>
       {onToggleSelect && (
         <input
           type="checkbox"
@@ -846,8 +919,32 @@ function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStat
         {task.description && <p className="text-xs text-text-tertiary mt-0.5 truncate">{task.description}</p>}
       </div>
       <StatusDropdown value={task.priority} options={priorities} onChange={onPriorityChange} />
+      {task.taskContext && task.taskContext !== "GENERAL" && (() => {
+        const ctx = TASK_CONTEXT_BADGE[task.taskContext];
+        return ctx ? (
+          <span
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white flex-shrink-0"
+            style={{ backgroundColor: ctx.color }}
+          >
+            {ctx.label}
+          </span>
+        ) : null;
+      })()}
       <div className="flex items-center gap-3 flex-shrink-0">
         {task.contact && <span className="text-xs text-text-secondary hidden sm:inline">{task.contact.name}</span>}
+        {task.isRecurring && (
+          <span
+            className="flex items-center gap-0.5 text-[11px] text-primary/70 bg-primary/5 px-1.5 py-0.5 rounded"
+            title={`משימה חוזרת - ${
+              task.recurrenceType === "DAILY" ? "יומי" :
+              task.recurrenceType === "WEEKLY" ? "שבועי" :
+              task.recurrenceType === "BIWEEKLY" ? "דו-שבועי" :
+              task.recurrenceType === "MONTHLY" ? "חודשי" : ""
+            }`}
+          >
+            <Repeat size={11} />
+          </span>
+        )}
         <DueDateBadge dueDate={task.dueDate} status={task.status} />
         <MondayPersonCell
           value={task.assignee ? { id: task.assignee.id, name: task.assignee.name } : null}
@@ -855,6 +952,7 @@ function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStat
           options={memberOptions}
           placeholder="נציג"
         />
+        {!isDone && <SnoozeDropdown taskId={task.id} />}
         <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 rounded hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" title="מחק משימה">
           <X size={14} className="text-danger" />
         </button>

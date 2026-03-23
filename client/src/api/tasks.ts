@@ -2,6 +2,7 @@ import { api } from "./client";
 import type { PaginatedResponse } from "./contacts";
 
 export type TaskType = "CALL" | "EMAIL" | "MEETING" | "WHATSAPP" | "FOLLOW_UP" | "TASK";
+export type TaskContext = "SALES" | "SERVICE" | "GENERAL";
 export type CallResult = "ANSWERED" | "VOICEMAIL" | "NO_ANSWER" | "BUSY" | "RESCHEDULED" | "NOT_RELEVANT";
 
 export interface Task {
@@ -11,12 +12,15 @@ export interface Task {
   status: "TODO" | "IN_PROGRESS" | "DONE" | "CANCELLED";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   taskType: TaskType;
+  taskContext: TaskContext;
   dueDate: string | null;
   dueTime: string | null;
   reminderMinutes: number | null;
   outcomeNote: string | null;
   callResult: CallResult | null;
   snoozedUntil: string | null;
+  isRecurring: boolean;
+  recurrenceType: string | null;
   assignee: { id: string; name: string } | null;
   contact: { id: string; name: string } | null;
   deal: { id: string; title: string } | null;
@@ -46,6 +50,7 @@ export function listTasks(params?: {
   limit?: number;
   status?: string;
   taskType?: string;
+  taskContext?: string;
   assigneeId?: string;
   contactId?: string;
   dealId?: string;
@@ -60,6 +65,7 @@ export function listTasks(params?: {
   if (params?.limit) searchParams.set("limit", String(params.limit));
   if (params?.status) searchParams.set("status", params.status);
   if (params?.taskType) searchParams.set("taskType", params.taskType);
+  if (params?.taskContext) searchParams.set("taskContext", params.taskContext);
   if (params?.assigneeId) searchParams.set("assigneeId", params.assigneeId);
   if (params?.contactId) searchParams.set("contactId", params.contactId);
   if (params?.dealId) searchParams.set("dealId", params.dealId);
@@ -78,6 +84,7 @@ export function createTask(data: {
   description?: string;
   priority?: string;
   taskType?: string;
+  taskContext?: string;
   dueDate?: string;
   dueTime?: string;
   reminderMinutes?: number;
@@ -85,6 +92,10 @@ export function createTask(data: {
   dealId?: string;
   ticketId?: string;
   assigneeId?: string;
+  isRecurring?: boolean;
+  recurrenceType?: string;
+  recurrenceDay?: number;
+  recurrenceEndDate?: string;
 }) {
   return api<Task>("/tasks", {
     method: "POST",
@@ -100,6 +111,7 @@ export function updateTask(
     status: string;
     priority: string;
     taskType: string;
+    taskContext: string;
     dueDate: string;
     dueTime: string | null;
     reminderMinutes: number;

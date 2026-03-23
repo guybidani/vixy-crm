@@ -1,6 +1,29 @@
 import { api } from "./client";
 import type { PaginatedResponse } from "./contacts";
 
+export interface BantData {
+  budget?: string;
+  authority?: string;
+  need?: string;
+  timeline?: string;
+}
+
+export interface DealHealthBreakdown {
+  activityRecency: { score: number; daysSince: number | null; label: string };
+  nextTask: { score: number; hasTask: boolean; label: string };
+  bantCompletion: { score: number; filled: number; total: number; label: string };
+  stageVelocity: { score: number; daysSinceMove: number; label: string };
+  contactEngagement: { score: number; count: number; label: string };
+}
+
+export interface DealHealth {
+  score: number;
+  level: "healthy" | "warning" | "critical";
+  label: string;
+  color: string;
+  breakdown: DealHealthBreakdown;
+}
+
 export interface Deal {
   id: string;
   title: string;
@@ -15,7 +38,7 @@ export interface Deal {
     | "CLOSED_LOST";
   priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   probability: number;
-  contact: { id: string; name: string } | null;
+  contact: { id: string; name: string; phone: string | null } | null;
   company: { id: string; name: string } | null;
   assignee: { id: string; name: string } | null;
   expectedClose: string | null;
@@ -24,7 +47,9 @@ export interface Deal {
   lastActivityAt: string | null;
   lostReason: string | null;
   notes: string | null;
+  bantData: BantData | null;
   nextTask?: any;
+  health?: DealHealth;
   tags: Array<{ id: string; name: string; color: string }>;
   createdAt: string;
 }
@@ -130,6 +155,7 @@ export function updateDeal(
     expectedClose: string;
     notes: string;
     lostReason: string;
+    bantData: BantData | null;
   }>,
 ) {
   return api<Deal>(`/deals/${id}`, {

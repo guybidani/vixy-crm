@@ -15,6 +15,7 @@ interface ListParams {
   limit?: number;
   status?: string;
   taskType?: string;
+  taskContext?: string;
   assigneeId?: string;
   contactId?: string;
   dealId?: string;
@@ -40,6 +41,7 @@ export async function list(params: ListParams) {
     limit = 50,
     status,
     taskType,
+    taskContext,
     assigneeId,
     contactId,
     dealId,
@@ -56,6 +58,7 @@ export async function list(params: ListParams) {
 
   if (status) where.status = status as any;
   if (taskType) where.taskType = taskType as any;
+  if (taskContext) where.taskContext = taskContext as any;
   if (assigneeId) where.assigneeId = assigneeId;
   if (contactId) where.contactId = contactId;
   if (dealId) where.dealId = dealId;
@@ -90,6 +93,7 @@ export async function list(params: ListParams) {
       status: t.status,
       priority: t.priority,
       taskType: t.taskType,
+      taskContext: t.taskContext,
       dueDate: t.dueDate,
       dueTime: t.dueTime,
       reminderMinutes: t.reminderMinutes,
@@ -107,6 +111,8 @@ export async function list(params: ListParams) {
         : null,
       deal: t.deal,
       createdBy: t.createdBy.user.name,
+      isRecurring: t.isRecurring,
+      recurrenceType: t.recurrenceType,
       completedAt: t.completedAt,
       createdAt: t.createdAt,
     })),
@@ -134,6 +140,7 @@ export async function getById(workspaceId: string, id: string) {
     status: task.status,
     priority: task.priority,
     taskType: task.taskType,
+    taskContext: task.taskContext,
     dueDate: task.dueDate,
     dueTime: task.dueTime,
     reminderMinutes: task.reminderMinutes,
@@ -166,6 +173,7 @@ export async function create(
     description?: string;
     priority?: string;
     taskType?: string;
+    taskContext?: string;
     dueDate?: string;
     dueTime?: string;
     reminderMinutes?: number;
@@ -173,9 +181,22 @@ export async function create(
     dealId?: string;
     ticketId?: string;
     assigneeId?: string;
+    isRecurring?: boolean;
+    recurrenceType?: string;
+    recurrenceDay?: number;
+    recurrenceEndDate?: string;
   },
 ) {
   const effectiveAssigneeId = data.assigneeId || memberId;
+
+  // Auto-detect task context: deal → SALES, ticket → SERVICE, otherwise use provided or GENERAL
+  const effectiveTaskContext = data.taskContext
+    ? data.taskContext
+    : data.dealId
+      ? "SALES"
+      : data.ticketId
+        ? "SERVICE"
+        : "GENERAL";
 
   const task = await prisma.task.create({
     data: {
@@ -184,6 +205,7 @@ export async function create(
       description: data.description,
       priority: (data.priority as any) || "MEDIUM",
       taskType: (data.taskType as any) || "TASK",
+      taskContext: effectiveTaskContext as any,
       dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       dueTime: data.dueTime,
       reminderMinutes: data.reminderMinutes ?? 15,
@@ -192,6 +214,10 @@ export async function create(
       ticketId: data.ticketId,
       assigneeId: effectiveAssigneeId,
       createdById: memberId,
+      isRecurring: data.isRecurring ?? false,
+      recurrenceType: data.isRecurring ? data.recurrenceType : undefined,
+      recurrenceDay: data.isRecurring ? data.recurrenceDay : undefined,
+      recurrenceEndDate: data.isRecurring && data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : undefined,
     },
     include: {
       assignee: { include: { user: { select: { name: true } } } },
@@ -275,6 +301,86 @@ export async function create(
   return task;
 }
 
+/**
+ * When a recurring task is marked DONE, create the next occurrence.
+ */
+export async function createNextRecurrence(taskId: string, workspaceId: string) {
+  const task = await prisma.task.findFirst({ where: { id: taskId, workspaceId } });
+  if (!task || !task.isRecurring || !task.recurrenceType) return null;
+
+  // Don't create if recurrence end date has passed
+  if (task.recurrenceEndDate && new Date() > task.recurrenceEndDate) return null;
+
+  // Calculate next due date based on current task's dueDate
+  const baseDueDate = task.dueDate ? new Date(task.dueDate) : new Date();
+  let nextDueDate: Date;
+
+  switch (task.recurrenceType) {
+    case "DAILY":
+      nextDueDate = new Date(baseDueDate);
+      nextDueDate.setDate(nextDueDate.getDate() + 1);
+      break;
+    case "WEEKLY":
+      nextDueDate = new Date(baseDueDate);
+      nextDueDate.setDate(nextDueDate.getDate() + 7);
+      break;
+    case "BIWEEKLY":
+      nextDueDate = new Date(baseDueDate);
+      nextDueDate.setDate(nextDueDate.getDate() + 14);
+      break;
+    case "MONTHLY":
+      nextDueDate = new Date(baseDueDate);
+      nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+      break;
+    default:
+      return null;
+  }
+
+  // Don't create if next due date is past the end date
+  if (task.recurrenceEndDate && nextDueDate > task.recurrenceEndDate) return null;
+
+  // The parent is either the task's own parent (if it's a child) or the task itself
+  const parentId = task.parentTaskId || task.id;
+
+  const nextTask = await prisma.task.create({
+    data: {
+      workspaceId,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      taskType: task.taskType,
+      assigneeId: task.assigneeId,
+      createdById: task.createdById,
+      contactId: task.contactId,
+      dealId: task.dealId,
+      ticketId: task.ticketId,
+      dueDate: nextDueDate,
+      dueTime: task.dueTime,
+      reminderMinutes: task.reminderMinutes,
+      isRecurring: true,
+      recurrenceType: task.recurrenceType,
+      recurrenceDay: task.recurrenceDay,
+      recurrenceEndDate: task.recurrenceEndDate,
+      parentTaskId: parentId,
+    },
+  });
+
+  // Schedule reminder for the new task if applicable
+  if (nextTask.dueDate && nextTask.dueTime) {
+    scheduleTaskReminder(
+      nextTask.id,
+      workspaceId,
+      nextTask.assigneeId,
+      nextTask.title,
+      nextTask.dueDate,
+      nextTask.dueTime,
+      nextTask.reminderMinutes ?? 15,
+    ).catch(() => {});
+  }
+
+  return nextTask;
+}
+
 export async function update(
   workspaceId: string,
   id: string,
@@ -284,6 +390,7 @@ export async function update(
     status: string;
     priority: string;
     taskType: string;
+    taskContext: string;
     dueDate: string;
     dueTime: string | null;
     reminderMinutes: number;
@@ -291,6 +398,10 @@ export async function update(
     outcomeNote: string;
     callResult: string | null;
     snoozedUntil: string | null;
+    isRecurring: boolean;
+    recurrenceType: string;
+    recurrenceDay: number;
+    recurrenceEndDate: string;
   }>,
 ) {
   const existing = await prisma.task.findFirst({ where: { id, workspaceId } });
@@ -300,11 +411,13 @@ export async function update(
   if (data.status) updateData.status = data.status;
   if (data.priority) updateData.priority = data.priority;
   if (data.taskType) updateData.taskType = data.taskType;
+  if (data.taskContext) updateData.taskContext = data.taskContext;
   if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
   if (data.dueTime === null) updateData.dueTime = null;
   if (data.snoozedUntil) updateData.snoozedUntil = new Date(data.snoozedUntil);
   if (data.snoozedUntil === null) updateData.snoozedUntil = null;
   if (data.callResult === null) updateData.callResult = null;
+  if (data.recurrenceEndDate) updateData.recurrenceEndDate = new Date(data.recurrenceEndDate);
   if (data.status === "DONE" && existing.status !== "DONE") {
     updateData.completedAt = new Date();
   }
@@ -354,6 +467,11 @@ export async function update(
 
     // Task completed → cancel any pending reminder
     cancelTaskReminder(id).catch(() => {});
+
+    // Auto-create next recurrence if recurring
+    if (existing.isRecurring) {
+      createNextRecurrence(id, workspaceId).catch(() => {});
+    }
 
     // Auto-create activity on task completion (linked to contact/deal)
     if (updated.contactId || updated.dealId) {
@@ -465,7 +583,10 @@ export async function board(workspaceId: string) {
       description: t.description,
       status: t.status,
       priority: t.priority,
+      taskContext: t.taskContext,
       dueDate: t.dueDate,
+      isRecurring: t.isRecurring,
+      recurrenceType: t.recurrenceType,
       completedAt: t.completedAt,
       assignee: t.assignee
         ? { id: t.assignee.id, name: t.assignee.user.name }

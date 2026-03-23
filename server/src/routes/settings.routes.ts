@@ -85,6 +85,57 @@ settingsRouter.put(
   },
 );
 
+// ─── Snooze Options ───
+
+const snoozeOptionSchema = z.object({
+  label: z.string().min(1),
+  minutes: z.number().int(),
+  special: z.string().min(1).optional(),
+}).refine(
+  (opt) => opt.minutes > 0 || (opt.minutes === -1 && !!opt.special),
+  { message: "minutes must be > 0, or -1 with a special field" },
+);
+
+const snoozeOptionsSchema = z.object({
+  snoozeOptions: z.array(snoozeOptionSchema).min(1).max(10),
+});
+
+// GET /settings/snooze-options — any workspace member can read
+settingsRouter.get("/snooze-options", async (req, res, next) => {
+  try {
+    const data = await settingsService.getSnoozeOptions(req.workspaceId!);
+    res.json({ snoozeOptions: data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /settings/snooze-options — OWNER or ADMIN only
+settingsRouter.patch(
+  "/snooze-options",
+  requireRole("OWNER", "ADMIN"),
+  validate(snoozeOptionsSchema),
+  async (req, res, next) => {
+    try {
+      const result = await settingsService.updateSnoozeOptions(
+        req.workspaceId!,
+        req.body.snoozeOptions,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.snooze_options.update",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        ip: req.ip,
+      });
+      res.json({ snoozeOptions: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // GET /settings/options — any workspace member can read
 settingsRouter.get("/options", async (req, res, next) => {
   try {

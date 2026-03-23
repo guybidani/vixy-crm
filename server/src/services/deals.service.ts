@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { enqueueAutomationTrigger } from "../queue/automation.queue";
+import { calculateDealHealth, type DealHealthResult } from "../utils/dealHealth.util";
 
 interface ListParams {
   workspaceId: string;
@@ -13,6 +14,35 @@ interface ListParams {
   contactId?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+}
+
+// Stage-gated task templates: auto-created when a deal moves to a new stage
+const STAGE_TASKS: Record<
+  string,
+  Array<{ title: string; taskType: string; delayDays: number }>
+> = {
+  QUALIFIED: [
+    { title: "הכן הצעת מחיר", taskType: "TASK", delayDays: 0 },
+    { title: "שיחת הכשרה עם הלקוח", taskType: "CALL", delayDays: 1 },
+  ],
+  PROPOSAL: [
+    { title: "שלח הצעה ללקוח", taskType: "EMAIL", delayDays: 0 },
+    { title: "מעקב על הצעה", taskType: "FOLLOW_UP", delayDays: 3 },
+  ],
+  NEGOTIATION: [
+    { title: "שיחת סגירה", taskType: "CALL", delayDays: 0 },
+    { title: "הכן חוזה", taskType: "TASK", delayDays: 1 },
+  ],
+  CLOSED_WON: [
+    { title: "שלח אישור עסקה", taskType: "EMAIL", delayDays: 0 },
+    { title: "אונבורדינג לקוח חדש", taskType: "MEETING", delayDays: 2 },
+  ],
+};
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 }
 
 const STAGE_PROBABILITY: Record<string, number> = {
@@ -66,14 +96,24 @@ export async function list(params: ListParams) {
     where.contactId = contactId;
   }
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
   const [deals, total] = await Promise.all([
     prisma.deal.findMany({
       where,
       include: {
-        contact: { select: { id: true, firstName: true, lastName: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
         company: { select: { id: true, name: true } },
         assignee: { include: { user: { select: { name: true } } } },
         tags: { include: { tag: true } },
+        tasks: {
+          where: { status: { not: "DONE" } },
+          select: { id: true },
+        },
+        activities: {
+          where: { createdAt: { gte: thirtyDaysAgo } },
+          select: { id: true },
+        },
       },
       orderBy: { [sortBy]: sortDir },
       skip: (page - 1) * limit,
@@ -83,40 +123,57 @@ export async function list(params: ListParams) {
   ]);
 
   return {
-    data: deals.map((d) => ({
-      id: d.id,
-      title: d.title,
-      value: d.value ? Number(d.value) : 0,
-      currency: d.currency,
-      stage: d.stage,
-      priority: d.priority,
-      probability: d.probability,
-      contact: d.contact
-        ? {
-            id: d.contact.id,
-            name: `${d.contact.firstName} ${d.contact.lastName}`,
-          }
-        : null,
-      company: d.company,
-      assignee: d.assignee
-        ? { id: d.assignee.id, name: d.assignee.user.name }
-        : null,
-      expectedClose: d.expectedClose,
-      stageChangedAt: d.stageChangedAt,
-      daysInStage: Math.floor(
-        (Date.now() - new Date(d.stageChangedAt).getTime()) /
-          (1000 * 60 * 60 * 24),
-      ),
-      lastActivityAt: d.lastActivityAt,
-      lostReason: d.lostReason,
-      notes: d.notes,
-      tags: d.tags.map((t) => ({
-        id: t.tag.id,
-        name: t.tag.name,
-        color: t.tag.color,
-      })),
-      createdAt: d.createdAt,
-    })),
+    data: deals.map((d) => {
+      const health = calculateDealHealth({
+        lastActivityAt: d.lastActivityAt,
+        openTaskCount: d.tasks.length,
+        bantFields: {
+          budget: d.value !== null && Number(d.value) > 0,
+          authority: !!d.contactId,
+          need: !!d.notes && d.notes.trim().length > 0,
+          timeline: !!d.expectedClose,
+        },
+        stageChangedAt: d.stageChangedAt,
+        recentActivityCount: d.activities.length,
+      });
+
+      return {
+        id: d.id,
+        title: d.title,
+        value: d.value ? Number(d.value) : 0,
+        currency: d.currency,
+        stage: d.stage,
+        priority: d.priority,
+        probability: d.probability,
+        contact: d.contact
+          ? {
+              id: d.contact.id,
+              name: `${d.contact.firstName} ${d.contact.lastName}`,
+              phone: d.contact.phone || null,
+            }
+          : null,
+        company: d.company,
+        assignee: d.assignee
+          ? { id: d.assignee.id, name: d.assignee.user.name }
+          : null,
+        expectedClose: d.expectedClose,
+        stageChangedAt: d.stageChangedAt,
+        daysInStage: Math.floor(
+          (Date.now() - new Date(d.stageChangedAt).getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
+        lastActivityAt: d.lastActivityAt,
+        lostReason: d.lostReason,
+        notes: d.notes,
+        tags: d.tags.map((t) => ({
+          id: t.tag.id,
+          name: t.tag.name,
+          color: t.tag.color,
+        })),
+        health,
+        createdAt: d.createdAt,
+      };
+    }),
     pagination: {
       page,
       limit,
@@ -127,10 +184,12 @@ export async function list(params: ListParams) {
 }
 
 export async function pipeline(workspaceId: string) {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
   const deals = await prisma.deal.findMany({
     where: { workspaceId },
     include: {
-      contact: { select: { id: true, firstName: true, lastName: true } },
+      contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
       company: { select: { id: true, name: true } },
       assignee: { include: { user: { select: { name: true } } } },
       tags: { include: { tag: true } },
@@ -138,6 +197,10 @@ export async function pipeline(workspaceId: string) {
         where: { status: { not: "DONE" } },
         orderBy: { dueDate: "asc" },
         take: 1,
+      },
+      activities: {
+        where: { createdAt: { gte: thirtyDaysAgo } },
+        select: { id: true },
       },
     },
     orderBy: { createdAt: "asc" },
@@ -163,6 +226,18 @@ export async function pipeline(workspaceId: string) {
       (Date.now() - new Date(d.stageChangedAt).getTime()) /
         (1000 * 60 * 60 * 24),
     );
+    const health = calculateDealHealth({
+      lastActivityAt: d.lastActivityAt,
+      openTaskCount: d.tasks.length,
+      bantFields: {
+        budget: d.value !== null && Number(d.value) > 0,
+        authority: !!d.contactId,
+        need: !!d.notes && d.notes.trim().length > 0,
+        timeline: !!d.expectedClose,
+      },
+      stageChangedAt: d.stageChangedAt,
+      recentActivityCount: d.activities.length,
+    });
     grouped[d.stage]?.push({
       id: d.id,
       title: d.title,
@@ -175,6 +250,7 @@ export async function pipeline(workspaceId: string) {
         ? {
             id: d.contact.id,
             name: `${d.contact.firstName} ${d.contact.lastName}`,
+            phone: d.contact.phone || null,
           }
         : null,
       company: d.company,
@@ -185,6 +261,7 @@ export async function pipeline(workspaceId: string) {
       stageChangedAt: d.stageChangedAt,
       daysInStage,
       nextTask: d.tasks[0] || null,
+      health,
       tags: d.tags.map((t) => ({
         id: t.tag.id,
         name: t.tag.name,
@@ -241,6 +318,25 @@ export async function getById(workspaceId: string, id: string) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
   }
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const openTaskCount = deal.tasks.filter((t) => t.status !== "DONE").length;
+  const recentActivityCount = deal.activities.filter(
+    (a) => new Date(a.createdAt) >= thirtyDaysAgo,
+  ).length;
+
+  const health = calculateDealHealth({
+    lastActivityAt: deal.lastActivityAt,
+    openTaskCount,
+    bantFields: {
+      budget: deal.value !== null && Number(deal.value) > 0,
+      authority: !!deal.contactId,
+      need: !!deal.notes && deal.notes.trim().length > 0,
+      timeline: !!deal.expectedClose,
+    },
+    stageChangedAt: deal.stageChangedAt,
+    recentActivityCount,
+  });
+
   return {
     ...deal,
     value: deal.value ? Number(deal.value) : 0,
@@ -248,6 +344,7 @@ export async function getById(workspaceId: string, id: string) {
       (Date.now() - new Date(deal.stageChangedAt).getTime()) /
         (1000 * 60 * 60 * 24),
     ),
+    health,
   };
 }
 
@@ -284,7 +381,7 @@ export async function create(
       notes: data.notes,
     },
     include: {
-      contact: { select: { id: true, firstName: true, lastName: true } },
+      contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
       company: { select: { id: true, name: true } },
       assignee: { include: { user: { select: { name: true } } } },
     },
@@ -321,6 +418,7 @@ export async function update(
     expectedClose: string;
     notes: string;
     lostReason: string;
+    bantData: Record<string, string> | null;
   }>,
 ) {
   const existing = await prisma.deal.findFirst({
@@ -355,14 +453,55 @@ export async function update(
     where: { id },
     data: updateData,
     include: {
-      contact: { select: { id: true, firstName: true, lastName: true } },
+      contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
       company: { select: { id: true, name: true } },
       assignee: { include: { user: { select: { name: true } } } },
     },
   });
 
-  // Fire automation triggers
+  // Stage change side-effects (fire-and-forget)
   if (data.stage && data.stage !== existing.stage) {
+    const oldStage = existing.stage;
+    const newStage = data.stage;
+
+    // 1. Auto-create tasks for the new stage
+    const templates = STAGE_TASKS[newStage];
+    if (templates && templates.length > 0) {
+      const now = new Date();
+      Promise.all(
+        templates.map((tpl) =>
+          prisma.task.create({
+            data: {
+              workspaceId,
+              title: tpl.title,
+              taskType: tpl.taskType as any,
+              dueDate: addDays(now, tpl.delayDays),
+              dueTime: "09:00",
+              contactId: existing.contactId,
+              dealId: id,
+              assigneeId: existing.assigneeId,
+              createdById: existing.assigneeId,
+            },
+          }),
+        ),
+      ).catch(() => {});
+    }
+
+    // 2. Log STATUS_CHANGE activity
+    prisma.activity
+      .create({
+        data: {
+          workspaceId,
+          type: "STATUS_CHANGE",
+          subject: `שלב עסקה שונה: ${oldStage} → ${newStage}`,
+          contactId: existing.contactId,
+          dealId: id,
+          memberId: existing.assigneeId,
+        },
+      })
+      .catch(() => {});
+
+    // 3. Fire automation trigger
     enqueueAutomationTrigger({
       workspaceId,
       trigger: "DEAL_STAGE_CHANGED",
@@ -374,7 +513,7 @@ export async function update(
         value: existing.value ? Number(existing.value) : 0,
         priority: updated.priority,
       },
-      previousData: { stage: existing.stage },
+      previousData: { stage: oldStage },
     }).catch(() => {});
   }
 

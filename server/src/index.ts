@@ -20,6 +20,8 @@ import {
   setAutomationWorkerIO,
 } from "./queue/automation.worker";
 import { reminderWorker, setReminderWorkerIO } from "./queue/reminder.worker";
+import { registerDigestScheduler } from "./queue/digest.queue";
+import { digestWorker, setDigestWorkerIO } from "./queue/digest.worker";
 
 const logger = pino({
   transport:
@@ -226,10 +228,13 @@ httpServer.listen(config.port, async () => {
     setWorkerIO(io);
     setAutomationWorkerIO(io);
     setReminderWorkerIO(io);
+    setDigestWorkerIO(io);
     await registerFollowUpScheduler();
+    await registerDigestScheduler();
     logger.info("Follow-up automation scheduler registered");
     logger.info("Automation workflow worker started");
     logger.info("Task reminder worker started");
+    logger.info("Daily digest scheduler registered");
   } catch (err) {
     logger.warn(
       "Failed to initialize follow-up scheduler (Redis may be unavailable)",

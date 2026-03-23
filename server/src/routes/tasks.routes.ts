@@ -9,12 +9,14 @@ import { cancelTaskReminder } from "../queue/reminder.queue";
 export const tasksRouter = Router();
 
 const TASK_TYPES = ["CALL", "EMAIL", "MEETING", "WHATSAPP", "FOLLOW_UP", "TASK"] as const;
+const TASK_CONTEXTS = ["SALES", "SERVICE", "GENERAL"] as const;
 
 const createSchema = z.object({
   title: z.string().min(1, "כותרת נדרשת"),
   description: z.string().optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   taskType: z.enum(TASK_TYPES).optional(),
+  taskContext: z.enum(TASK_CONTEXTS).optional(),
   dueDate: z.string().optional(),
   dueTime: z
     .string()
@@ -25,6 +27,10 @@ const createSchema = z.object({
   dealId: z.string().uuid().optional(),
   ticketId: z.string().uuid().optional(),
   assigneeId: z.string().uuid().optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceType: z.enum(["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+  recurrenceDay: z.number().min(0).max(31).optional(),
+  recurrenceEndDate: z.string().datetime().optional(),
 });
 
 const updateSchema = z.object({
@@ -33,6 +39,7 @@ const updateSchema = z.object({
   status: z.enum(["TODO", "IN_PROGRESS", "DONE", "CANCELLED"]).optional(),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
   taskType: z.enum(TASK_TYPES).optional(),
+  taskContext: z.enum(TASK_CONTEXTS).optional(),
   dueDate: z.string().optional(),
   dueTime: z
     .string()
@@ -44,6 +51,10 @@ const updateSchema = z.object({
   outcomeNote: z.string().optional(),
   callResult: z.enum(["ANSWERED","VOICEMAIL","NO_ANSWER","BUSY","RESCHEDULED","NOT_RELEVANT"]).optional().nullable(),
   snoozedUntil: z.string().datetime().optional().nullable(),
+  isRecurring: z.boolean().optional(),
+  recurrenceType: z.enum(["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"]).optional(),
+  recurrenceDay: z.number().min(0).max(31).optional(),
+  recurrenceEndDate: z.string().datetime().optional(),
 });
 
 tasksRouter.get("/", async (req, res, next) => {
@@ -63,6 +74,7 @@ tasksRouter.get("/", async (req, res, next) => {
       limit: Math.min(Number(req.query.limit) || 50, 100),
       status: req.query.status as string,
       taskType: req.query.taskType as string,
+      taskContext: req.query.taskContext as string,
       assigneeId: myAssigneeId,
       contactId: req.query.contactId as string,
       dealId: req.query.dealId as string,

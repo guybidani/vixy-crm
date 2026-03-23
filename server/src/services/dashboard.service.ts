@@ -1,5 +1,102 @@
 import { prisma } from "../db/client";
 
+/** Sunday 00:00 of the current week (Israeli work-week start) */
+function getThisWeekSunday(): Date {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - day);
+  sunday.setHours(0, 0, 0, 0);
+  return sunday;
+}
+
+export interface TeamMemberPerformance {
+  memberId: string;
+  name: string;
+  activitiesCount: number;
+  callsCount: number;
+  dealsWon: number;
+  dealsWonValue: number;
+  tasksCompleted: number;
+}
+
+export async function getTeamPerformance(
+  workspaceId: string,
+): Promise<TeamMemberPerformance[]> {
+  const weekStart = getThisWeekSunday();
+
+  // Get all workspace members
+  const members = await prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    include: { user: { select: { name: true } } },
+  });
+
+  // Run all aggregations in parallel
+  const results = await Promise.all(
+    members.map(async (m) => {
+      const [activitiesCount, callsCount, dealsWon, dealsWonAgg, tasksCompleted] =
+        await Promise.all([
+          // Total activities this week
+          prisma.activity.count({
+            where: { workspaceId, memberId: m.id, createdAt: { gte: weekStart } },
+          }),
+          // Calls this week
+          prisma.activity.count({
+            where: {
+              workspaceId,
+              memberId: m.id,
+              type: "CALL",
+              createdAt: { gte: weekStart },
+            },
+          }),
+          // Deals closed-won this week (by assignee, stageChangedAt this week)
+          prisma.deal.count({
+            where: {
+              workspaceId,
+              assigneeId: m.id,
+              stage: "CLOSED_WON",
+              stageChangedAt: { gte: weekStart },
+            },
+          }),
+          // Sum of won deal values
+          prisma.deal.aggregate({
+            where: {
+              workspaceId,
+              assigneeId: m.id,
+              stage: "CLOSED_WON",
+              stageChangedAt: { gte: weekStart },
+            },
+            _sum: { value: true },
+          }),
+          // Tasks completed this week
+          prisma.task.count({
+            where: {
+              workspaceId,
+              assigneeId: m.id,
+              status: "DONE",
+              completedAt: { gte: weekStart },
+            },
+          }),
+        ]);
+
+      return {
+        memberId: m.id,
+        name: m.user.name,
+        activitiesCount,
+        callsCount,
+        dealsWon,
+        dealsWonValue: dealsWonAgg._sum.value?.toNumber() || 0,
+        tasksCompleted,
+      };
+    }),
+  );
+
+  // Sort by activitiesCount DESC
+  results.sort((a, b) => b.activitiesCount - a.activitiesCount);
+
+  return results;
+}
+
 export async function getDashboardStats(workspaceId: string) {
   const [
     contactsTotal,

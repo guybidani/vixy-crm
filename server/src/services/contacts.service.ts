@@ -12,6 +12,7 @@ const SORTABLE_FIELDS = [
   "leadScore",
   "createdAt",
   "updatedAt",
+  "nextFollowUpDate",
 ] as const;
 
 interface ListParams {
@@ -23,6 +24,7 @@ interface ListParams {
   companyId?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+  needsFollowUp?: boolean;
 }
 
 export async function list(params: ListParams) {
@@ -35,6 +37,7 @@ export async function list(params: ListParams) {
     companyId,
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
+    needsFollowUp,
   } = params;
   const sortBy = SORTABLE_FIELDS.includes(rawSortBy as any)
     ? rawSortBy
@@ -55,6 +58,11 @@ export async function list(params: ListParams) {
   }
   if (companyId) {
     where.companyId = companyId;
+  }
+  if (needsFollowUp) {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    where.nextFollowUpDate = { not: null, lte: today };
   }
 
   const [contacts, total] = await Promise.all([
@@ -94,6 +102,7 @@ export async function list(params: ListParams) {
         name: t.tag.name,
         color: t.tag.color,
       })),
+      nextFollowUpDate: c.nextFollowUpDate,
       createdBy: c.createdBy.user.name,
       createdAt: c.createdAt,
     })),
@@ -162,6 +171,7 @@ export async function create(
     source?: string;
     status?: string;
     leadScore?: number;
+    nextFollowUpDate?: string | null;
   },
 ) {
   const contact = await prisma.contact.create({
@@ -177,6 +187,7 @@ export async function create(
       source: data.source,
       status: (data.status as any) || "LEAD",
       leadScore: data.leadScore || 0,
+      nextFollowUpDate: data.nextFollowUpDate ? new Date(data.nextFollowUpDate) : undefined,
     },
     include: {
       company: { select: { id: true, name: true } },
@@ -215,6 +226,7 @@ export async function update(
     status: string;
     leadScore: number;
     leadHeat: string;
+    nextFollowUpDate: string | null;
   }>,
 ) {
   const existing = await prisma.contact.findFirst({
@@ -224,13 +236,17 @@ export async function update(
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
 
+  const { nextFollowUpDate, ...restData } = data;
   const updated = await prisma.contact.update({
     where: { id },
     data: {
-      ...data,
-      status: data.status as any,
-      leadHeat: data.leadHeat as any,
+      ...restData,
+      status: restData.status as any,
+      leadHeat: restData.leadHeat as any,
       lastActivityAt: new Date(),
+      ...(nextFollowUpDate !== undefined && {
+        nextFollowUpDate: nextFollowUpDate ? new Date(nextFollowUpDate) : null,
+      }),
     },
     include: {
       company: { select: { id: true, name: true } },

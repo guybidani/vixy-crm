@@ -20,6 +20,7 @@ const createSchema = z.object({
     .optional(),
   leadScore: z.number().min(0).max(100).optional(),
   leadHeat: z.enum(["HOT", "WARM", "LUKEWARM", "COLD", "FROZEN"]).optional().nullable(),
+  nextFollowUpDate: z.string().datetime().optional().nullable(),
 });
 
 const updateSchema = createSchema.partial();
@@ -36,6 +37,7 @@ contactsRouter.get("/", async (req, res, next) => {
       companyId: req.query.companyId as string,
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
+      needsFollowUp: req.query.needsFollowUp === "true",
     });
     res.json(result);
   } catch (err) {

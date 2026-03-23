@@ -20,6 +20,7 @@ import {
   Navigation,
   Calendar,
   Plug2,
+  AlarmClock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -30,6 +31,7 @@ import TagsTab from "../components/settings/TagsTab";
 import NavPermissionsTab from "../components/settings/NavPermissionsTab";
 import CalendarTab from "../components/settings/CalendarTab";
 import IntegrationsTab from "../components/settings/IntegrationsTab";
+import SnoozeSettingsTab from "../components/settings/SnoozeSettingsTab";
 import { useAuth } from "../hooks/useAuth";
 import { getWorkspaceMembers, inviteMember } from "../api/auth";
 import {
@@ -65,6 +67,7 @@ const BASE_TABS: SettingsTab[] = [
   { key: "options", label: "אפשרויות תצוגה", icon: Palette, color: "#66CCFF" },
   { key: "tags", label: "תגיות", icon: Tag, color: "#579BFC" },
   { key: "calendar", label: "Google Calendar", icon: Calendar, color: "#4285F4" },
+  { key: "snooze", label: "הגדרות דחייה", icon: AlarmClock, color: "#FF642E", adminOnly: true },
   { key: "integrations", label: "אינטגרציות", icon: Plug2, color: "#00CA72" },
   { key: "nav-permissions", label: "הרשאות ניווט", icon: Navigation, color: "#FB275D", adminOnly: true },
 ];
@@ -132,6 +135,7 @@ export default function SettingsPage() {
       {tab === "options" && <OptionsTab />}
       {tab === "tags" && <TagsTab />}
       {tab === "calendar" && <CalendarTab />}
+      {tab === "snooze" && <SnoozeSettingsTab />}
       {tab === "integrations" && <IntegrationsTab />}
       {tab === "nav-permissions" && <NavPermissionsTab />}
     </PageShell>

@@ -43,6 +43,20 @@ export const NAV_ITEMS = [
     dot: "#A25DDC",
   },
   {
+    key: "history",
+    label: "היסטוריה",
+    icon: "Clock",
+    path: "/history",
+    dot: "#FF642E",
+  },
+  {
+    key: "analytics",
+    label: "דוחות",
+    icon: "BarChart3",
+    path: "/analytics",
+    dot: "#6161FF",
+  },
+  {
     key: "tickets",
     label: "פניות",
     icon: "Ticket",
@@ -62,6 +76,13 @@ export const NAV_ITEMS = [
     icon: "BookOpen",
     path: "/knowledge",
     dot: "#66CCFF",
+  },
+  {
+    key: "templates",
+    label: "תבניות",
+    icon: "FileText",
+    path: "/templates",
+    dot: "#FF642E",
   },
   {
     key: "automations",

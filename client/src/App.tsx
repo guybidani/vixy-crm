@@ -14,6 +14,7 @@ import { cn } from "./lib/utils";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
 import QuickAdd from "./components/shared/QuickAdd";
+import CommandPalette from "./components/shared/CommandPalette";
 import ShortcutsHelp from "./components/shared/ShortcutsHelp";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import LoginPage from "./pages/LoginPage";
@@ -26,6 +27,7 @@ import CompanyDetailPage from "./pages/CompanyDetailPage";
 import DealsPage from "./pages/DealsPage";
 import LeadsPage from "./pages/LeadsPage";
 import TasksPage from "./pages/TasksPage";
+import HistoryPage from "./pages/HistoryPage";
 import TicketsPage from "./pages/TicketsPage";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import DocumentsPage from "./pages/DocumentsPage";
@@ -33,6 +35,7 @@ import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import BoardPage from "./pages/BoardPage";
 import SettingsPage from "./pages/SettingsPage";
 import AutomationsPage from "./pages/AutomationsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 import LandingPage from "./pages/LandingPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -96,6 +99,7 @@ function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | null>(null);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const openQuickAdd = useCallback(() => {
     setQuickAddType(null);
     setQuickAddOpen(true);
@@ -103,6 +107,9 @@ function AppLayout() {
   const openQuickAddWithType = useCallback((type?: "task" | "contact" | "deal") => {
     setQuickAddType(type ?? null);
     setQuickAddOpen(true);
+  }, []);
+  const openCommandPalette = useCallback(() => {
+    setCommandPaletteOpen(true);
   }, []);
   const { currentWorkspaceId } = useAuth();
 
@@ -140,6 +147,7 @@ function AppLayout() {
       <Header
         sidebarCollapsed={sidebarCollapsed}
         onQuickAdd={openQuickAdd}
+        onCommandPalette={openCommandPalette}
         onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
       <main
@@ -157,6 +165,11 @@ function AppLayout() {
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
         initialType={quickAddType}
+      />
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onQuickAdd={openQuickAddWithType}
       />
       <ShortcutsHelp open={showShortcutsHelp} onClose={closeShortcutsHelp} />
     </div>
@@ -251,6 +264,8 @@ function App() {
           <Route path="deals" element={<DealsPage />} />
           <Route path="leads" element={<LeadsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="tickets" element={<TicketsPage />} />
           <Route path="tickets/:id" element={<TicketDetailPage />} />
           <Route path="documents" element={<DocumentsPage />} />

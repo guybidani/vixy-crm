@@ -18,6 +18,7 @@ import { getDashboard } from "../api/dashboard";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import CalendarWidget from "../components/dashboard/CalendarWidget";
 import TodaysTasksWidget from "../components/dashboard/TodaysTasksWidget";
+import TeamLeaderboard from "../components/dashboard/TeamLeaderboard";
 
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "#C4C4C4",
@@ -248,6 +249,11 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Team Leaderboard */}
+      <div className="grid grid-cols-1 gap-4 mb-6">
+        <TeamLeaderboard />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">

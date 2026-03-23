@@ -10,21 +10,21 @@ export async function listCannedResponses(
 
   return prisma.cannedResponse.findMany({
     where,
-    orderBy: { title: "asc" },
+    orderBy: { name: "asc" },
   });
 }
 
 export async function createCannedResponse(
   workspaceId: string,
-  data: { title: string; body: string; category?: string; memberId?: string },
+  data: { name: string; body: string; category?: string; createdById: string },
 ) {
   return prisma.cannedResponse.create({
     data: {
       workspaceId,
-      title: data.title,
+      name: data.name,
       body: data.body,
       category: data.category,
-      memberId: data.memberId,
+      createdById: data.createdById,
     },
   });
 }
@@ -32,7 +32,7 @@ export async function createCannedResponse(
 export async function updateCannedResponse(
   workspaceId: string,
   id: string,
-  data: Partial<{ title: string; body: string; category: string }>,
+  data: Partial<{ name: string; body: string; category: string }>,
 ) {
   const existing = await prisma.cannedResponse.findFirst({
     where: { id, workspaceId },

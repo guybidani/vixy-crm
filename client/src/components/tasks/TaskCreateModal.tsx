@@ -8,6 +8,10 @@ import {
   Search,
   X,
   ChevronDown,
+  Repeat,
+  TrendingUp,
+  Headphones,
+  Layers,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "../shared/Modal";
@@ -29,10 +33,14 @@ interface TaskCreateModalProps {
 }
 
 type TaskTypeOption = "CALL" | "MEETING" | "WHATSAPP" | "TASK";
+type TaskContextOption = "SALES" | "SERVICE" | "GENERAL";
+
+type RecurrenceType = "DAILY" | "WEEKLY" | "BIWEEKLY" | "MONTHLY";
 
 interface FormState {
   title: string;
   taskType: TaskTypeOption;
+  taskContext: TaskContextOption;
   description: string;
   dueDate: string;
   dueTime: string;
@@ -41,6 +49,10 @@ interface FormState {
   reminderMinutes: number | "";
   contactId: string;
   dealId: string;
+  isRecurring: boolean;
+  recurrenceType: RecurrenceType;
+  recurrenceDay: number | "";
+  recurrenceEndDate: string;
 }
 
 // ── Constants ──
@@ -55,6 +67,17 @@ const TASK_TYPES: {
   { value: "MEETING", label: "פגישה", icon: Calendar, color: "#A25DDC" },
   { value: "WHATSAPP", label: "ווטסאפ", icon: MessageSquare, color: "#25D366" },
   { value: "TASK", label: "כללי", icon: CheckSquare, color: "#579BFC" },
+];
+
+const TASK_CONTEXTS: {
+  value: TaskContextOption;
+  label: string;
+  icon: typeof TrendingUp;
+  color: string;
+}[] = [
+  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00CA72" },
+  { value: "SERVICE", label: "שירות", icon: Headphones, color: "#FDAB3D" },
+  { value: "GENERAL", label: "כללי", icon: Layers, color: "#C3C6D4" },
 ];
 
 const PRIORITY_OPTIONS: {
@@ -73,6 +96,21 @@ const REMINDER_OPTIONS: { value: number; label: string }[] = [
   { value: 30, label: "30 דק׳" },
   { value: 60, label: "שעה" },
   { value: 120, label: "2 שעות" },
+];
+
+const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
+  { value: "DAILY", label: "יומי" },
+  { value: "WEEKLY", label: "שבועי" },
+  { value: "BIWEEKLY", label: "דו-שבועי" },
+  { value: "MONTHLY", label: "חודשי" },
+];
+
+const WEEKDAYS: { value: number; label: string }[] = [
+  { value: 0, label: "א׳" },
+  { value: 1, label: "ב׳" },
+  { value: 2, label: "ג׳" },
+  { value: 3, label: "ד׳" },
+  { value: 4, label: "ה׳" },
 ];
 
 // ── Helpers ──
@@ -229,6 +267,7 @@ export default function TaskCreateModal({
   const [form, setForm] = useState<FormState>({
     title: "",
     taskType: "TASK",
+    taskContext: initialDealId ? "SALES" : "GENERAL",
     description: "",
     dueDate: "",
     dueTime: "",
@@ -237,6 +276,10 @@ export default function TaskCreateModal({
     reminderMinutes: 15,
     contactId: initialContactId || "",
     dealId: initialDealId || "",
+    isRecurring: false,
+    recurrenceType: "WEEKLY",
+    recurrenceDay: "",
+    recurrenceEndDate: "",
   });
 
   // Reset form when modal opens
@@ -245,6 +288,7 @@ export default function TaskCreateModal({
       setForm({
         title: "",
         taskType: "TASK",
+        taskContext: initialDealId ? "SALES" : "GENERAL",
         description: "",
         dueDate: "",
         dueTime: "",
@@ -253,6 +297,10 @@ export default function TaskCreateModal({
         reminderMinutes: 15,
         contactId: initialContactId || "",
         dealId: initialDealId || "",
+        isRecurring: false,
+        recurrenceType: "WEEKLY",
+        recurrenceDay: "",
+        recurrenceEndDate: "",
       });
       setTimeout(() => titleRef.current?.focus(), 100);
     }
@@ -303,6 +351,7 @@ export default function TaskCreateModal({
         description: form.description || undefined,
         priority: form.priority,
         taskType: form.taskType,
+        taskContext: form.taskContext,
         dueDate: form.dueDate || undefined,
         dueTime: form.dueTime || undefined,
         reminderMinutes:
@@ -312,6 +361,10 @@ export default function TaskCreateModal({
         assigneeId: form.assigneeId || undefined,
         contactId: form.contactId || undefined,
         dealId: form.dealId || undefined,
+        isRecurring: form.isRecurring || undefined,
+        recurrenceType: form.isRecurring ? form.recurrenceType : undefined,
+        recurrenceDay: form.isRecurring && form.recurrenceDay !== "" ? form.recurrenceDay : undefined,
+        recurrenceEndDate: form.isRecurring && form.recurrenceEndDate ? new Date(form.recurrenceEndDate).toISOString() : undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
@@ -388,6 +441,43 @@ export default function TaskCreateModal({
                   >
                     <Icon size={14} />
                     <span>{tt.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Task Context — sales / service / general */}
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-2">
+              הקשר
+            </label>
+            <div className="flex gap-2">
+              {TASK_CONTEXTS.map((tc) => {
+                const Icon = tc.icon;
+                const isActive = form.taskContext === tc.value;
+                return (
+                  <button
+                    key={tc.value}
+                    type="button"
+                    onClick={() => setField("taskContext", tc.value)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
+                    style={
+                      isActive
+                        ? {
+                            backgroundColor: tc.color,
+                            color: "#fff",
+                            borderColor: tc.color,
+                          }
+                        : {
+                            backgroundColor: "#fff",
+                            color: tc.color,
+                            borderColor: `${tc.color}60`,
+                          }
+                    }
+                  >
+                    <Icon size={14} />
+                    <span>{tc.label}</span>
                   </button>
                 );
               })}
@@ -529,6 +619,119 @@ export default function TaskCreateModal({
             </div>
           </div>
 
+          {/* Recurring task */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                type="button"
+                onClick={() => setField("isRecurring", !form.isRecurring)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all ${
+                  form.isRecurring
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white text-text-secondary border-border hover:border-primary hover:text-primary"
+                }`}
+              >
+                <Repeat size={14} />
+                <span>חזרה</span>
+              </button>
+              {form.isRecurring && (
+                <span className="text-[11px] text-text-tertiary">משימה חוזרת</span>
+              )}
+            </div>
+            {form.isRecurring && (
+              <div className="space-y-3 p-3 bg-surface-secondary/50 rounded-lg border border-border-light">
+                {/* Recurrence type */}
+                <div>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                    תדירות
+                  </label>
+                  <div className="flex gap-2">
+                    {RECURRENCE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setField("recurrenceType", opt.value);
+                          setField("recurrenceDay", "");
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                          form.recurrenceType === opt.value
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weekly: day of week selector (Sun-Thu) */}
+                {form.recurrenceType === "WEEKLY" && (
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                      יום בשבוע
+                    </label>
+                    <div className="flex gap-1.5">
+                      {WEEKDAYS.map((day) => (
+                        <button
+                          key={day.value}
+                          type="button"
+                          onClick={() => setField("recurrenceDay", day.value)}
+                          className={`w-9 h-9 rounded-lg text-xs font-bold border transition-all ${
+                            form.recurrenceDay === day.value
+                              ? "bg-primary text-white border-primary"
+                              : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                          }`}
+                        >
+                          {day.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Monthly: day of month input */}
+                {form.recurrenceType === "MONTHLY" && (
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                      יום בחודש
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={28}
+                      value={form.recurrenceDay}
+                      onChange={(e) =>
+                        setField(
+                          "recurrenceDay",
+                          e.target.value ? Math.min(28, Math.max(1, Number(e.target.value))) : "",
+                        )
+                      }
+                      placeholder="1-28"
+                      className="w-24 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      dir="ltr"
+                    />
+                  </div>
+                )}
+
+                {/* End date */}
+                <div>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                    עד תאריך (אופציונלי)
+                  </label>
+                  <input
+                    type="date"
+                    value={form.recurrenceEndDate}
+                    onChange={(e) => setField("recurrenceEndDate", e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Assignee — searchable member dropdown */}
           <SearchableDropdown
             label="אחראי"
@@ -554,7 +757,10 @@ export default function TaskCreateModal({
               label="עסקה"
               placeholder="בחר עסקה..."
               value={form.dealId}
-              onChange={(id) => setField("dealId", id)}
+              onChange={(id) => {
+                setField("dealId", id);
+                if (id) setField("taskContext", "SALES");
+              }}
               items={deals?.data || []}
               getLabel={(d) => d.title}
               isLoading={dealsLoading}

@@ -32,6 +32,7 @@ const WORKSPACE_SCOPED_MODELS = [
   "Document",
   "DocumentLink",
   "Board",
+  "SavedView",
   "Workflow",
   "Notification",
   "NotificationPreference",

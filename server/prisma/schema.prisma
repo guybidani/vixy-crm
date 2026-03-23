@@ -75,6 +75,7 @@ model Workspace {
   notifications       Notification[]
   notifPreferences    NotificationPreference[]
   calendarIntegrations CalendarIntegration[]
+  savedViews          SavedView[]
 
   @@map("workspaces")
 }
@@ -100,6 +101,8 @@ model WorkspaceMember {
   boardAccess     BoardAccess[]
   calendarIntegration CalendarIntegration?
   taskComments    TaskComment[]
+  savedViews      SavedView[]
+  createdTemplates CannedResponse[] @relation("TemplateCreator")
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
@@ -128,7 +131,8 @@ model Contact {
   status         ContactStatus @default(LEAD)
   leadScore      Int           @default(0) @map("lead_score")
   leadHeat       LeadHeat?     @map("lead_heat")
-  lastActivityAt DateTime?     @map("last_activity_at")
+  lastActivityAt   DateTime?     @map("last_activity_at")
+  nextFollowUpDate DateTime?     @map("next_follow_up_date")
   createdBy      WorkspaceMember @relation("ContactCreator", fields: [createdById], references: [id])
   createdById    String        @map("created_by_id")
   createdAt      DateTime      @default(now()) @map("created_at")
@@ -221,6 +225,7 @@ model Deal {
   lostReason    String?   @map("lost_reason")
   lastActivityAt DateTime? @map("last_activity_at")
   notes         String?
+  bantData      Json?     @map("bant_data")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -297,6 +302,12 @@ enum TaskType {
   TASK
 }
 
+enum TaskContext {
+  SALES
+  SERVICE
+  GENERAL
+}
+
 enum CallResult {
   ANSWERED
   VOICEMAIL
@@ -315,6 +326,7 @@ model Task {
   status      TaskStatus @default(TODO)
   priority    Priority   @default(MEDIUM)
   taskType    TaskType   @default(TASK) @map("task_type")
+  taskContext  TaskContext @default(GENERAL) @map("task_context")
   dueDate     DateTime?  @map("due_date")
   contact     Contact?   @relation(fields: [contactId], references: [id])
   contactId   String?    @map("contact_id")
@@ -333,6 +345,14 @@ model Task {
   callResult             CallResult? @map("call_result")
   snoozedUntil           DateTime?  @map("snoozed_until")
   googleCalendarEventId  String?    @map("google_calendar_event_id")
+  // Recurrence
+  isRecurring       Boolean    @default(false) @map("is_recurring")
+  recurrenceType    String?    @map("recurrence_type") // DAILY, WEEKLY, BIWEEKLY, MONTHLY
+  recurrenceDay     Int?       @map("recurrence_day") // Day of week (0=Sun) or day of month
+  recurrenceEndDate DateTime?  @map("recurrence_end_date")
+  parentTaskId      String?    @map("parent_task_id")
+  parentTask        Task?      @relation("RecurringTask", fields: [parentTaskId], references: [id])
+  childTasks        Task[]     @relation("RecurringTask")
   createdAt              DateTime   @default(now()) @map("created_at")
   updatedAt              DateTime   @updatedAt @map("updated_at")
 
@@ -341,6 +361,7 @@ model Task {
   @@index([workspaceId, status])
   @@index([workspaceId, assigneeId])
   @@index([workspaceId, taskType])
+  @@index([parentTaskId])
   @@map("tasks")
 }
 
@@ -503,16 +524,23 @@ model SlaPolicy {
 // ─── Support: Canned Responses ───
 
 model CannedResponse {
-  id          String    @id @default(uuid())
+  id          String   @id @default(uuid())
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  workspaceId String    @map("workspace_id")
-  title       String
-  body        String
-  category    String?
-  memberId    String?   @map("member_id")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  workspaceId String   @map("workspace_id")
+  name        String
+  category    String   @default("GENERAL") // SALES, SERVICE, GENERAL
+  channel     String   @default("EMAIL")   // EMAIL, WHATSAPP, SMS
+  subject     String?  // Email subject line
+  body        String   @db.Text
+  variables   Json?    // [{ name: "firstName", label: "שם פרטי" }]
+  isActive    Boolean  @default(true) @map("is_active")
+  usageCount  Int      @default(0) @map("usage_count")
+  createdBy   WorkspaceMember @relation("TemplateCreator", fields: [createdById], references: [id])
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
+  @@index([workspaceId, category])
   @@map("canned_responses")
 }
 
@@ -766,6 +794,7 @@ model WorkflowRun {
 
 enum NotificationType {
   AUTOMATION
+  DAILY_DIGEST
   DEAL_UPDATE
   TASK_ASSIGNED
   TASK_DUE
@@ -976,4 +1005,25 @@ model CalendarIntegration {
   @@index([workspaceId])
   @@index([memberId])
   @@map("calendar_integrations")
+}
+
+// ─── Saved Views (Favorite Filters) ───
+
+model SavedView {
+  id          String          @id @default(uuid())
+  workspace   Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String          @map("workspace_id")
+  member      WorkspaceMember @relation(fields: [memberId], references: [id])
+  memberId    String          @map("member_id")
+  entity      String          // "contacts", "deals", "tasks", "tickets"
+  name        String
+  filters     Json            // { status: "LEAD", priority: "HIGH", ... }
+  isDefault   Boolean         @default(false) @map("is_default")
+  sortBy      String?         @map("sort_by")
+  sortDir     String?         @map("sort_dir")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@index([workspaceId, memberId, entity])
+  @@map("saved_views")
 }

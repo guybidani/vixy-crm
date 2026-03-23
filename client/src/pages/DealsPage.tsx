@@ -9,8 +9,11 @@ import {
   AlertTriangle,
   Table2,
   BarChart3,
+  HeartPulse,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getWhatsAppUrl } from "../utils/phone";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import KanbanBoard, {
@@ -42,6 +45,8 @@ import {
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import SavedViewsBar from "../components/shared/SavedViewsBar";
+import { type SavedView } from "../api/views";
 
 type ViewMode = "kanban" | "table";
 type TableTab = "table" | "chart";
@@ -54,6 +59,15 @@ export default function DealsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Saved views filter state
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
+
+  function handleSelectView(view: SavedView | null) {
+    setActiveView(view);
+    setPage(1);
+  }
 
   // Kanban data
   const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
@@ -70,8 +84,15 @@ export default function DealsPage() {
   useEffect(() => setSelectedIds(new Set()), [page, debouncedSearch]);
 
   const { data: tableData, isLoading: tableLoading } = useQuery({
-    queryKey: ["deals", { search: debouncedSearch, page }],
-    queryFn: () => listDeals({ search: debouncedSearch || undefined, page }),
+    queryKey: ["deals", { search: debouncedSearch, page, stage: viewFilters.stage, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir }],
+    queryFn: () =>
+      listDeals({
+        search: debouncedSearch || undefined,
+        page,
+        stage: viewFilters.stage,
+        sortBy: activeView?.sortBy ?? undefined,
+        sortDir: activeView?.sortDir ?? undefined,
+      }),
     enabled: viewMode === "table",
   });
 
@@ -290,6 +311,29 @@ export default function DealsPage() {
         />
       ),
     },
+    {
+      key: "health",
+      label: "בריאות",
+      width: "130px",
+      render: (row) => {
+        const h = row.health;
+        if (!h) return <span className="text-[13px] text-[#C5C7D0]">—</span>;
+        return (
+          <div className="flex items-center gap-1.5" title={`${h.score}/100`}>
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: h.color }}
+            />
+            <span
+              className="text-[12px] font-semibold"
+              style={{ color: h.color }}
+            >
+              {h.label}
+            </span>
+          </div>
+        );
+      },
+    },
   ];
 
   // Monday groups — single group with all deals
@@ -333,6 +377,17 @@ export default function DealsPage() {
         </div>
       }
     >
+      {/* Saved views bar */}
+      {viewMode === "table" && (
+        <SavedViewsBar
+          entity="deals"
+          activeViewId={activeView?.id ?? null}
+          onSelectView={handleSelectView}
+          currentFilters={viewFilters}
+          hasActiveFilters={Object.keys(viewFilters).length > 0}
+        />
+      )}
+
       {/* Monday-style tabs */}
       {viewMode === "table" && (
         <div
@@ -500,9 +555,21 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
               {deal.contact.name[0]}
             </span>
           </div>
-          <span className="text-xs text-text-secondary">
+          <span className="text-xs text-text-secondary flex-1">
             {deal.contact.name}
           </span>
+          {deal.contact.phone && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(getWhatsAppUrl(deal.contact!.phone!), "_blank");
+              }}
+              title="שלח הודעת וואטסאפ"
+              className="p-0.5 rounded hover:bg-[#25D366]/10 transition-colors"
+            >
+              <MessageSquare size={13} color="#25D366" />
+            </button>
+          )}
         </div>
       )}
 
@@ -559,6 +626,15 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
           <span className="text-[10px] text-text-tertiary font-medium">
             {deal.probability}%
           </span>
+
+          {/* Health dot */}
+          {deal.health && (
+            <span
+              className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: deal.health.color }}
+              title={`${deal.health.label} (${deal.health.score})`}
+            />
+          )}
         </div>
       </div>
 

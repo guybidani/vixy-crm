@@ -11,3 +11,12 @@ dashboardRouter.get("/", async (req, res, next) => {
     next(err);
   }
 });
+
+dashboardRouter.get("/team-performance", async (req, res, next) => {
+  try {
+    const data = await dashboardService.getTeamPerformance(req.workspaceId!);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});

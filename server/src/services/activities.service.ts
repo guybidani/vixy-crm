@@ -9,6 +9,97 @@ interface ListParams {
   limit?: number;
 }
 
+export interface RecentContactResult {
+  contact: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    email: string | null;
+  };
+  lastActivity: {
+    type: string;
+    subject: string | null;
+    createdAt: Date;
+  };
+  activityCount: number;
+}
+
+/**
+ * Returns the N most-recently-interacted-with contacts for a given member.
+ * Only real interactions (CALL, EMAIL, MEETING, WHATSAPP) are considered.
+ */
+export async function getRecentContacts(
+  workspaceId: string,
+  memberId: string,
+  limit = 10,
+): Promise<RecentContactResult[]> {
+  // Step 1: Get unique contactIds ordered by most recent interaction
+  const grouped = await prisma.activity.groupBy({
+    by: ["contactId"],
+    where: {
+      workspaceId,
+      memberId,
+      type: { in: ["CALL", "EMAIL", "MEETING", "WHATSAPP"] },
+      contactId: { not: null },
+    },
+    _max: { createdAt: true },
+    _count: { id: true },
+    orderBy: { _max: { createdAt: "desc" } },
+    take: limit,
+  });
+
+  if (grouped.length === 0) return [];
+
+  const contactIds = grouped
+    .map((g) => g.contactId)
+    .filter((id): id is string => id !== null);
+
+  // Step 2: Fetch contact details
+  const contacts = await prisma.contact.findMany({
+    where: { id: { in: contactIds } },
+    select: { id: true, firstName: true, lastName: true, phone: true, email: true },
+  });
+
+  const contactMap = new Map(contacts.map((c) => [c.id, c]));
+
+  // Step 3: Fetch the most recent activity per contact to get type & subject
+  const lastActivities = await prisma.activity.findMany({
+    where: {
+      workspaceId,
+      memberId,
+      type: { in: ["CALL", "EMAIL", "MEETING", "WHATSAPP"] },
+      contactId: { in: contactIds },
+    },
+    orderBy: { createdAt: "desc" },
+    distinct: ["contactId"],
+    select: { contactId: true, type: true, subject: true, createdAt: true },
+  });
+
+  const lastActivityMap = new Map(
+    lastActivities.map((a) => [a.contactId, a]),
+  );
+
+  // Step 4: Assemble results in the same order as grouped
+  const results: RecentContactResult[] = [];
+  for (const g of grouped) {
+    const contact = contactMap.get(g.contactId!);
+    const lastAct = lastActivityMap.get(g.contactId!);
+    if (!contact || !lastAct) continue;
+
+    results.push({
+      contact,
+      lastActivity: {
+        type: lastAct.type as string,
+        subject: lastAct.subject,
+        createdAt: lastAct.createdAt,
+      },
+      activityCount: g._count.id,
+    });
+  }
+  return results;
+}
+
 export async function list(params: ListParams) {
   const { workspaceId, contactId, dealId, ticketId, limit = 50 } = params;
 

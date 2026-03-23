@@ -17,13 +17,22 @@ import {
   Bot,
   ArrowRight,
   CheckSquare,
+  Wallet,
+  Shield,
+  Target,
+  Timer,
+  Check,
+  Circle,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { getWhatsAppUrl, getTelUrl } from "../../utils/phone";
 import {
   getDeal,
   updateDeal,
   deleteDeal,
 } from "../../api/deals";
+import type { BantData, DealHealth } from "../../api/deals";
 import TagSelector from "../shared/TagSelector";
 import MondayPersonCell, {
   type PersonOption,
@@ -260,6 +269,11 @@ export default function DealDetailPanel({
               ))}
             </select>
           </div>
+
+          {/* Health Score Badge */}
+          {deal.health && (
+            <HealthBadge health={deal.health} />
+          )}
         </div>
 
         {/* Tabs */}
@@ -435,13 +449,26 @@ export default function DealDetailPanel({
                   </a>
                 )}
                 {deal.contact?.phone && (
-                  <a
-                    href={`tel:${deal.contact.phone}`}
-                    className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
-                  >
+                  <div className="flex items-center gap-2 text-[13px] text-[#323338]">
                     <Phone size={13} className="text-[#676879]" />
-                    <span dir="ltr">{deal.contact.phone}</span>
-                  </a>
+                    <span dir="ltr" className="flex-1">{deal.contact.phone}</span>
+                    <a
+                      href={getWhatsAppUrl(deal.contact.phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="שלח הודעת וואטסאפ"
+                      className="p-1 rounded-md hover:bg-[#25D366]/10 transition-colors"
+                    >
+                      <MessageSquare size={15} color="#25D366" />
+                    </a>
+                    <a
+                      href={getTelUrl(deal.contact.phone)}
+                      title="התקשר"
+                      className="p-1 rounded-md hover:bg-[#00CA72]/10 transition-colors"
+                    >
+                      <Phone size={15} color="#00CA72" />
+                    </a>
+                  </div>
                 )}
               </div>
 
@@ -515,6 +542,15 @@ export default function DealDetailPanel({
                   )}
                 </div>
               </div>
+
+              {/* Divider */}
+              <div className="border-t border-[#E6E9EF]" />
+
+              {/* BANT Qualification */}
+              <BantSection
+                bantData={deal.bantData || null}
+                onUpdate={(bantData) => updateMut.mutate({ bantData })}
+              />
 
               {/* Divider */}
               <div className="border-t border-[#E6E9EF]" />
@@ -705,6 +741,304 @@ function DetailRow({
         <span className="text-[13px]">{label}</span>
       </div>
       <div>{children}</div>
+    </div>
+  );
+}
+
+/* Health Score Badge with breakdown tooltip */
+function HealthBadge({ health }: { health: DealHealth }) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const b = health.breakdown;
+
+  const breakdownRows = [
+    {
+      label: "פעילות אחרונה",
+      detail: b.activityRecency.label,
+      score: b.activityRecency.score,
+      max: 30,
+    },
+    {
+      label: "משימה הבאה",
+      detail: b.nextTask.label,
+      score: b.nextTask.score,
+      max: 20,
+    },
+    {
+      label: "BANT",
+      detail: b.bantCompletion.label,
+      score: b.bantCompletion.score,
+      max: 20,
+    },
+    {
+      label: "מהירות התקדמות",
+      detail: b.stageVelocity.label,
+      score: b.stageVelocity.score,
+      max: 15,
+    },
+    {
+      label: "מעורבות",
+      detail: b.contactEngagement.label,
+      score: b.contactEngagement.score,
+      max: 15,
+    },
+  ];
+
+  return (
+    <div className="relative mt-3">
+      <button
+        type="button"
+        onClick={() => setShowBreakdown((v) => !v)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors hover:bg-[#F5F6F8]"
+        style={{ borderColor: health.color + "40" }}
+      >
+        <span
+          className="w-3 h-3 rounded-full flex-shrink-0"
+          style={{ backgroundColor: health.color }}
+        />
+        <span className="text-xs font-bold" style={{ color: health.color }}>
+          {health.score}
+        </span>
+        <span className="text-xs font-semibold text-[#323338]">
+          {health.label}
+        </span>
+      </button>
+
+      {showBreakdown && (
+        <div className="absolute top-full right-0 mt-1 w-72 bg-white rounded-xl shadow-xl border border-[#E6E9EF] p-3 z-50">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[13px] font-bold text-[#323338]">
+              פירוט בריאות עסקה
+            </span>
+            <span
+              className="text-sm font-bold"
+              style={{ color: health.color }}
+            >
+              {health.score}/100
+            </span>
+          </div>
+          <div className="space-y-2.5">
+            {breakdownRows.map((row) => (
+              <div key={row.label}>
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="text-[11px] text-[#676879]">
+                    {row.label}
+                  </span>
+                  <span className="text-[11px] font-medium text-[#323338]">
+                    {row.detail}{" "}
+                    {row.score > 0 ? (
+                      <span className="text-[#10B981]">+{row.score}</span>
+                    ) : (
+                      <span className="text-[#DC2626]">+0</span>
+                    )}
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${(row.score / row.max) * 100}%`,
+                      backgroundColor:
+                        row.score === row.max
+                          ? "#10B981"
+                          : row.score > 0
+                            ? "#F59E0B"
+                            : "#DC2626",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* BANT Qualification Section */
+const AUTHORITY_OPTIONS = [
+  { value: "", label: "בחר..." },
+  { value: "decision_maker", label: "מקבל החלטות" },
+  { value: "influencer", label: "משפיע" },
+  { value: "user", label: "משתמש" },
+  { value: "unknown", label: "לא ידוע" },
+];
+
+const TIMELINE_OPTIONS = [
+  { value: "", label: "בחר..." },
+  { value: "urgent", label: "דחוף (חודש)" },
+  { value: "quarter", label: "רבעון" },
+  { value: "half_year", label: "חצי שנה" },
+  { value: "year", label: "שנה" },
+  { value: "unknown", label: "לא ידוע" },
+];
+
+interface BantSectionProps {
+  bantData: BantData | null;
+  onUpdate: (data: BantData) => void;
+}
+
+function BantSection({ bantData, onUpdate }: BantSectionProps) {
+  const data: BantData = bantData || {};
+  const [editingField, setEditingField] = useState<keyof BantData | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  const fields: Array<{
+    key: keyof BantData;
+    label: string;
+    icon: React.ReactNode;
+    type: "text" | "select";
+    placeholder?: string;
+    options?: Array<{ value: string; label: string }>;
+  }> = [
+    {
+      key: "budget",
+      label: "תקציב",
+      icon: <Wallet size={14} />,
+      type: "text",
+      placeholder: "מה התקציב?",
+    },
+    {
+      key: "authority",
+      label: "סמכות",
+      icon: <Shield size={14} />,
+      type: "select",
+      options: AUTHORITY_OPTIONS,
+    },
+    {
+      key: "need",
+      label: "צורך",
+      icon: <Target size={14} />,
+      type: "text",
+      placeholder: "מה הצורך העסקי?",
+    },
+    {
+      key: "timeline",
+      label: "לוח זמנים",
+      icon: <Timer size={14} />,
+      type: "select",
+      options: TIMELINE_OPTIONS,
+    },
+  ];
+
+  const filledCount = fields.filter((f) => !!data[f.key]).length;
+
+  function getDisplayValue(field: typeof fields[number]): string {
+    const val = data[field.key];
+    if (!val) return "";
+    if (field.type === "select" && field.options) {
+      const opt = field.options.find((o) => o.value === val);
+      return opt?.label || val;
+    }
+    return val;
+  }
+
+  function startEdit(key: keyof BantData) {
+    setEditingField(key);
+    setEditValue(data[key] || "");
+  }
+
+  function saveField(key: keyof BantData, value: string) {
+    setEditingField(null);
+    const trimmed = value.trim();
+    if (trimmed !== (data[key] || "")) {
+      onUpdate({ ...data, [key]: trimmed || undefined });
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[13px] font-semibold text-[#323338]">
+          הכשרת ליד (BANT)
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-[#676879]">
+            {filledCount}/4 הושלם
+          </span>
+          <div className="flex gap-1">
+            {fields.map((f, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full ${
+                  data[f.key] ? "bg-[#00CA72]" : "bg-[#E6E9EF]"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {fields.map((field) => {
+          const isFilled = !!data[field.key];
+          const isEditing = editingField === field.key;
+
+          return (
+            <div
+              key={field.key}
+              className="bg-[#F7F7F9] rounded-lg p-2.5 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
+              onClick={() => !isEditing && startEdit(field.key)}
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[#676879]">{field.icon}</span>
+                <span className="text-[11px] font-medium text-[#676879]">
+                  {field.label}
+                </span>
+                {isFilled ? (
+                  <Check size={12} className="text-[#00CA72] mr-auto" />
+                ) : (
+                  <Circle size={12} className="text-[#C5C7D0] mr-auto" />
+                )}
+              </div>
+
+              {isEditing ? (
+                field.type === "select" ? (
+                  <select
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => {
+                      setEditValue(e.target.value);
+                      saveField(field.key, e.target.value);
+                    }}
+                    onBlur={() => saveField(field.key, editValue)}
+                    className="w-full text-[12px] bg-white border border-[#C5C7D0] rounded px-2 py-1 outline-none focus:border-[#0073EA]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {field.options?.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={() => saveField(field.key, editValue)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveField(field.key, editValue);
+                      if (e.key === "Escape") setEditingField(null);
+                    }}
+                    placeholder={field.placeholder}
+                    className="w-full text-[12px] bg-white border border-[#C5C7D0] rounded px-2 py-1 outline-none focus:border-[#0073EA]"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )
+              ) : (
+                <p className="text-[12px] text-[#323338] truncate min-h-[20px] leading-[20px]">
+                  {getDisplayValue(field) || (
+                    <span className="text-[#C5C7D0]">
+                      {field.placeholder || "בחר..."}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,61 @@
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 
+// ─── Snooze Options ───
+
+export interface SnoozeOption {
+  label: string;
+  minutes: number;
+  special?: string;
+}
+
+export const DEFAULT_SNOOZE_OPTIONS: SnoozeOption[] = [
+  { label: "שעה", minutes: 60 },
+  { label: "שעתיים", minutes: 120 },
+  { label: "4 שעות", minutes: 240 },
+  { label: "מחר בבוקר", minutes: -1, special: "tomorrow_9am" },
+  { label: "עוד שבוע בבוקר", minutes: -1, special: "next_sunday_9am" },
+];
+
+export async function getSnoozeOptions(workspaceId: string): Promise<SnoozeOption[]> {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: { settings: true },
+  });
+  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+  const settings = (workspace.settings as Record<string, any>) || {};
+  return settings.snoozeOptions || DEFAULT_SNOOZE_OPTIONS;
+}
+
+export async function updateSnoozeOptions(
+  workspaceId: string,
+  snoozeOptions: SnoozeOption[],
+): Promise<SnoozeOption[]> {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: { settings: true },
+  });
+  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+  const existingSettings = (workspace.settings as Record<string, any>) || {};
+
+  const newSettings = {
+    ...existingSettings,
+    snoozeOptions: snoozeOptions as unknown as Record<string, any>[],
+  };
+
+  const updated = await prisma.workspace.update({
+    where: { id: workspaceId },
+    data: {
+      settings: newSettings,
+    },
+    select: { settings: true },
+  });
+
+  return (updated.settings as Record<string, any>).snoozeOptions || DEFAULT_SNOOZE_OPTIONS;
+}
+
 /** Default option configs — source of truth for labels, colors, ordering. */
 export const DEFAULT_OPTIONS = {
   dealStages: {
@@ -79,6 +134,7 @@ export async function getWorkspaceOptions(workspaceId: string) {
   return {
     customOptions: settings.customOptions || {},
     defaults: DEFAULT_OPTIONS,
+    snoozeOptions: settings.snoozeOptions || DEFAULT_SNOOZE_OPTIONS,
   };
 }
 

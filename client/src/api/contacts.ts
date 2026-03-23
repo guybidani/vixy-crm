@@ -14,6 +14,7 @@ export interface Contact {
   leadScore: number;
   leadHeat: "HOT" | "WARM" | "LUKEWARM" | "COLD" | "FROZEN" | null;
   lastActivityAt: string | null;
+  nextFollowUpDate: string | null;
   tags: Array<{ id: string; name: string; color: string }>;
   createdBy: string;
   createdAt: string;
@@ -43,6 +44,7 @@ export function listContacts(params?: {
   status?: string;
   sortBy?: string;
   sortDir?: string;
+  needsFollowUp?: boolean;
 }) {
   const searchParams = new URLSearchParams();
   if (params?.page) searchParams.set("page", String(params.page));
@@ -51,6 +53,7 @@ export function listContacts(params?: {
   if (params?.status) searchParams.set("status", params.status);
   if (params?.sortBy) searchParams.set("sortBy", params.sortBy);
   if (params?.sortDir) searchParams.set("sortDir", params.sortDir);
+  if (params?.needsFollowUp) searchParams.set("needsFollowUp", "true");
 
   const qs = searchParams.toString();
   return api<PaginatedResponse<Contact>>(`/contacts${qs ? `?${qs}` : ""}`);
@@ -89,6 +92,7 @@ export function updateContact(
     status: string;
     leadScore: number;
     leadHeat: string | null;
+    nextFollowUpDate: string | null;
   }>,
 ) {
   return api<Contact>(`/contacts/${id}`, {

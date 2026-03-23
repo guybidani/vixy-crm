@@ -27,6 +27,7 @@ import {
   Circle,
   Clock,
   AlertCircle,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
@@ -38,6 +39,7 @@ import MondayPersonCell, {
 import { getContact, updateContact, deleteContact } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
 import { createActivity } from "../../api/activities";
+import { createTask, type TaskType } from "../../api/tasks";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -357,6 +359,9 @@ function InfoTab({
           </div>
         </div>
 
+        {/* Follow-up Date */}
+        <FollowUpDateField contact={contact} />
+
         {/* Tags */}
         <div className="bg-surface-secondary/50 rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
@@ -516,6 +521,14 @@ function TimelineTab({ contact }: { contact: any }) {
   const queryClient = useQueryClient();
   const [noteText, setNoteText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [quickMode, setQuickMode] = useState<"note" | "task">("note");
+
+  // Task form state
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskDueDate, setTaskDueDate] = useState("");
+  const [taskDueTime, setTaskDueTime] = useState("");
+  const [taskType, setTaskType] = useState<TaskType>("TASK");
 
   const addNoteMutation = useMutation({
     mutationFn: (body: string) =>
@@ -528,11 +541,91 @@ function TimelineTab({ contact }: { contact: any }) {
     onError: () => toast.error("שגיאה בהוספת הערה"),
   });
 
+  const addTaskMutation = useMutation({
+    mutationFn: (data: {
+      title: string;
+      description?: string;
+      dueDate?: string;
+      dueTime?: string;
+      taskType: string;
+      contactId: string;
+    }) => createTask(data),
+    onSuccess: () => {
+      setTaskTitle("");
+      setTaskDescription("");
+      setTaskDueDate("");
+      setTaskDueTime("");
+      setTaskType("TASK");
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("משימה נוצרה");
+    },
+    onError: () => toast.error("שגיאה ביצירת משימה"),
+  });
+
   const handleAddNote = () => {
     const trimmed = noteText.trim();
     if (!trimmed) return;
     addNoteMutation.mutate(trimmed);
   };
+
+  const handleAddTask = () => {
+    const trimmed = taskTitle.trim();
+    if (!trimmed) return;
+    addTaskMutation.mutate({
+      title: trimmed,
+      description: taskDescription.trim() || undefined,
+      dueDate: taskDueDate || undefined,
+      dueTime: taskDueTime || undefined,
+      taskType,
+      contactId: contact.id,
+    });
+  };
+
+  const applyDuePreset = (preset: "1h" | "3h" | "tomorrow9" | "1w") => {
+    const now = new Date();
+    let target: Date;
+    switch (preset) {
+      case "1h":
+        target = new Date(now.getTime() + 60 * 60 * 1000);
+        break;
+      case "3h":
+        target = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+        break;
+      case "tomorrow9":
+        target = new Date(now);
+        target.setDate(target.getDate() + 1);
+        target.setHours(9, 0, 0, 0);
+        break;
+      case "1w":
+        target = new Date(now);
+        target.setDate(target.getDate() + 7);
+        target.setHours(9, 0, 0, 0);
+        break;
+    }
+    const yyyy = target.getFullYear();
+    const mm = String(target.getMonth() + 1).padStart(2, "0");
+    const dd = String(target.getDate()).padStart(2, "0");
+    setTaskDueDate(`${yyyy}-${mm}-${dd}`);
+    setTaskDueTime(
+      `${String(target.getHours()).padStart(2, "0")}:${String(target.getMinutes()).padStart(2, "0")}`,
+    );
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (quickMode === "note") handleAddNote();
+      else handleAddTask();
+    }
+  };
+
+  const TASK_TYPE_OPTIONS: { value: TaskType; label: string }[] = [
+    { value: "CALL", label: "שיחה" },
+    { value: "MEETING", label: "פגישה" },
+    { value: "FOLLOW_UP", label: "מעקב" },
+    { value: "TASK", label: "כללי" },
+  ];
 
   // Build unified timeline
   const tasks: any[] = contact.tasks || [];
@@ -567,35 +660,151 @@ function TimelineTab({ contact }: { contact: any }) {
 
   return (
     <div className="space-y-3">
-      {/* Quick-note input */}
+      {/* Quick input — Note / Task toggle */}
       <div className="bg-surface-secondary/50 rounded-xl p-3">
-        <textarea
-          ref={textareaRef}
-          value={noteText}
-          onChange={(e) => setNoteText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault();
-              handleAddNote();
-            }
-          }}
-          placeholder="הוסף הערה..."
-          rows={2}
-          className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-        />
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-[10px] text-text-tertiary">
-            Ctrl+Enter לשמירה
-          </span>
+        {/* Mode toggle */}
+        <div className="flex gap-1 mb-2">
           <button
-            onClick={handleAddNote}
-            disabled={!noteText.trim() || addNoteMutation.isPending}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+            onClick={() => setQuickMode("note")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              quickMode === "note"
+                ? "bg-primary text-white"
+                : "bg-white text-text-secondary border border-border-light hover:bg-surface-secondary"
+            }`}
           >
-            <Send size={12} />
-            {addNoteMutation.isPending ? "שומר..." : "הוסף"}
+            <StickyNote size={12} />
+            הערה
+          </button>
+          <button
+            onClick={() => setQuickMode("task")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              quickMode === "task"
+                ? "bg-primary text-white"
+                : "bg-white text-text-secondary border border-border-light hover:bg-surface-secondary"
+            }`}
+          >
+            <CheckSquare size={12} />
+            משימה
           </button>
         </div>
+
+        {quickMode === "note" ? (
+          /* ── Note mode ── */
+          <>
+            <textarea
+              ref={textareaRef}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="הוסף הערה..."
+              rows={2}
+              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[10px] text-text-tertiary">
+                Ctrl+Enter לשמירה
+              </span>
+              <button
+                onClick={handleAddNote}
+                disabled={!noteText.trim() || addNoteMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Send size={12} />
+                {addNoteMutation.isPending ? "שומר..." : "הוסף"}
+              </button>
+            </div>
+          </>
+        ) : (
+          /* ── Task mode ── */
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={taskTitle}
+              onChange={(e) => setTaskTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="כותרת המשימה *"
+              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            />
+            <textarea
+              value={taskDescription}
+              onChange={(e) => setTaskDescription(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="פרטים נוספים..."
+              rows={2}
+              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            />
+
+            {/* Due date presets */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap gap-1">
+                {(
+                  [
+                    { key: "1h", label: "עוד שעה" },
+                    { key: "3h", label: "עוד 3 שעות" },
+                    { key: "tomorrow9", label: "מחר 9:00" },
+                    { key: "1w", label: "עוד שבוע" },
+                  ] as const
+                ).map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => applyDuePreset(p.key)}
+                    className="px-2 py-1 text-[10px] font-semibold rounded-md bg-white border border-border-light text-text-secondary hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={taskDueDate}
+                  onChange={(e) => setTaskDueDate(e.target.value)}
+                  className="flex-1 bg-white border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                />
+                <input
+                  type="time"
+                  value={taskDueTime}
+                  onChange={(e) => setTaskDueTime(e.target.value)}
+                  className="w-24 bg-white border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* Task type */}
+            <div className="flex flex-wrap gap-1">
+              {TASK_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setTaskType(opt.value)}
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+                    taskType === opt.value
+                      ? "bg-primary text-white"
+                      : "bg-white border border-border-light text-text-secondary hover:bg-surface-secondary"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Submit */}
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-text-tertiary">
+                Ctrl+Enter לשמירה
+              </span>
+              <button
+                onClick={handleAddTask}
+                disabled={!taskTitle.trim() || addTaskMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Plus size={12} />
+                {addTaskMutation.isPending ? "יוצר..." : "צור משימה"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Upcoming tasks section */}
@@ -609,7 +818,7 @@ function TimelineTab({ contact }: { contact: any }) {
             {upcomingTasks.map((item) => {
               const task = item.data;
               const overdue = isOverdue(item.date);
-              const iconColor = overdue ? "#FDAB3D" : "#6161FF";
+              const iconColor = overdue ? "#FF4D4F" : "#6161FF";
               const priorityDot = PRIORITY_DOT_COLORS[task.priority] || "#C4C4C4";
 
               return (
@@ -630,9 +839,9 @@ function TimelineTab({ contact }: { contact: any }) {
                         {task.title}
                       </span>
                       <span
-                        className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                           overdue
-                            ? "bg-[#FDAB3D]/15 text-[#FDAB3D]"
+                            ? "bg-danger/10 text-danger"
                             : "bg-[#6161FF]/10 text-[#6161FF]"
                         }`}
                       >
@@ -920,6 +1129,150 @@ function RelatedTab({
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function FollowUpDateField({ contact }: { contact: any }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+
+  const updateMut = useMutation({
+    mutationFn: (data: Record<string, any>) => updateContact(contact.id, data),
+    onSuccess: (_result, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      // Auto-create a follow-up task when nextFollowUpDate is set
+      if (variables.nextFollowUpDate && variables.nextFollowUpDate !== null) {
+        const contactName = `${contact.firstName || ""} ${contact.lastName || ""}`.trim();
+        createTask({
+          title: `מעקב - ${contactName}`,
+          taskType: "FOLLOW_UP",
+          dueDate: variables.nextFollowUpDate as string,
+          dueTime: "09:00",
+          contactId: contact.id,
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["tasks"] });
+          queryClient.invalidateQueries({ queryKey: ["tasks-today-widget"] });
+          toast.success("תאריך מעקב עודכן + משימת מעקב נוצרה");
+        }).catch(() => {
+          // Contact was updated but task creation failed
+          toast.success("תאריך מעקב עודכן");
+          toast.error("שגיאה ביצירת משימת מעקב");
+        });
+      } else {
+        toast.success("תאריך מעקב עודכן");
+      }
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const followUpDate = contact.nextFollowUpDate
+    ? new Date(contact.nextFollowUpDate)
+    : null;
+
+  let statusBadge: React.ReactNode = null;
+  let dateColorClass = "text-text-secondary";
+
+  if (followUpDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const fuDate = new Date(followUpDate);
+    fuDate.setHours(0, 0, 0, 0);
+    const diff = Math.round((fuDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diff < 0) {
+      dateColorClass = "text-danger font-bold";
+      statusBadge = (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger">
+          באיחור!
+        </span>
+      );
+    } else if (diff === 0) {
+      dateColorClass = "text-warning font-bold";
+      statusBadge = (
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-warning/10 text-warning">
+          היום
+        </span>
+      );
+    }
+  }
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val) {
+      updateMut.mutate({ nextFollowUpDate: new Date(val).toISOString() });
+    } else {
+      updateMut.mutate({ nextFollowUpDate: null });
+    }
+    setEditing(false);
+  };
+
+  const handleClear = () => {
+    updateMut.mutate({ nextFollowUpDate: null });
+  };
+
+  return (
+    <div className="bg-surface-secondary/50 rounded-xl p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-bold text-text-primary text-sm flex items-center gap-1.5">
+          <Calendar size={14} className="text-primary" />
+          תאריך מעקב
+        </h3>
+        {followUpDate && (
+          <button
+            onClick={handleClear}
+            className="text-[10px] text-text-tertiary hover:text-danger transition-colors"
+          >
+            הסר
+          </button>
+        )}
+      </div>
+      {followUpDate ? (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setEditing(true)}
+            className={`text-sm ${dateColorClass} hover:underline cursor-pointer`}
+          >
+            {followUpDate.toLocaleDateString("he-IL", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </button>
+          {statusBadge}
+          {editing && (
+            <input
+              type="date"
+              autoFocus
+              defaultValue={followUpDate.toISOString().split("T")[0]}
+              onChange={handleDateChange}
+              onBlur={() => setEditing(false)}
+              className="text-xs border border-primary rounded px-2 py-1 focus:outline-none bg-white"
+            />
+          )}
+        </div>
+      ) : (
+        <>
+          {editing ? (
+            <input
+              type="date"
+              autoFocus
+              onChange={handleDateChange}
+              onBlur={() => setEditing(false)}
+              className="text-xs border border-primary rounded px-2 py-1 focus:outline-none bg-white"
+            />
+          ) : (
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover font-semibold transition-colors px-2 py-1.5 rounded-lg hover:bg-primary/5"
+            >
+              <Calendar size={12} />
+              הגדר מעקב
+            </button>
+          )}
+        </>
+      )}
     </div>
   );
 }

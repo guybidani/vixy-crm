@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   Circle,
-  Clock,
   ArrowLeft,
   Phone,
   Mail,
@@ -12,12 +11,12 @@ import {
   MessageSquare,
   RotateCcw,
   ChevronDown,
-  AlarmClockOff,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { listTasks, type Task, type CallResult } from "../../api/tasks";
 import { updateTask } from "../../api/tasks";
 import TaskOutcomeModal from "../tasks/TaskOutcomeModal";
+import SnoozeDropdown from "../shared/SnoozeDropdown";
 
 const TASK_TYPE_ICON: Record<string, React.ReactNode> = {
   CALL: <Phone size={12} />,
@@ -43,23 +42,6 @@ const PRIORITY_COLOR: Record<string, string> = {
   MEDIUM: "#6161FF",
   LOW: "#C4C4C4",
 };
-
-const SNOOZE_OPTIONS = [
-  { label: "שעה", ms: 60 * 60 * 1000 },
-  { label: "3 שעות", ms: 3 * 60 * 60 * 1000 },
-  { label: "מחר 9:00", ms: null }, // special case
-];
-
-function getSnoozeUntil(ms: number | null): string {
-  if (ms === null) {
-    // tomorrow 9am
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    d.setHours(9, 0, 0, 0);
-    return d.toISOString();
-  }
-  return new Date(Date.now() + ms).toISOString();
-}
 
 function isOverdue(task: Task) {
   if (!task.dueDate || task.status === "DONE") return false;
@@ -99,7 +81,6 @@ function formatTime(task: Task) {
 export default function TodaysTasksWidget() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [snoozingId, setSnoozingId] = useState<string | null>(null);
   const [outcomeTask, setOutcomeTask] = useState<Task | null>(null);
   const [showTomorrow, setShowTomorrow] = useState(false);
 
@@ -107,18 +88,6 @@ export default function TodaysTasksWidget() {
     queryKey: ["tasks-today-widget"],
     queryFn: () => listTasks({ myOnly: true, status: "TODO", limit: 50, sortBy: "dueDate", sortDir: "asc" }),
     refetchInterval: 60000,
-  });
-
-  const snoozeMut = useMutation({
-    mutationFn: ({ id, until }: { id: string; until: string }) =>
-      updateTask(id, { snoozedUntil: until }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks-today-widget"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("המשימה נדחתה");
-      setSnoozingId(null);
-    },
-    onError: () => toast.error("שגיאה בדחיית המשימה"),
   });
 
   const doneMut = useMutation({
@@ -152,10 +121,6 @@ export default function TodaysTasksWidget() {
       doneMut.mutate({ id: task.id });
       toast.success("משימה הושלמה ✓");
     }
-  };
-
-  const handleSnooze = (taskId: string, ms: number | null) => {
-    snoozeMut.mutate({ id: taskId, until: getSnoozeUntil(ms) });
   };
 
   if (isLoading) {
@@ -215,10 +180,7 @@ export default function TodaysTasksWidget() {
                 count={overdue.length}
                 accent="danger"
                 tasks={overdue}
-                snoozingId={snoozingId}
-                setSnoozingId={setSnoozingId}
                 onDone={handleMarkDone}
-                onSnooze={handleSnooze}
                 doneMutPending={doneMut.isPending}
               />
             )}
@@ -230,10 +192,7 @@ export default function TodaysTasksWidget() {
                 count={today.length}
                 accent="warning"
                 tasks={today}
-                snoozingId={snoozingId}
-                setSnoozingId={setSnoozingId}
                 onDone={handleMarkDone}
-                onSnooze={handleSnooze}
                 doneMutPending={doneMut.isPending}
               />
             )}
@@ -257,10 +216,7 @@ export default function TodaysTasksWidget() {
                     count={0}
                     accent="primary"
                     tasks={tomorrow}
-                    snoozingId={snoozingId}
-                    setSnoozingId={setSnoozingId}
                     onDone={handleMarkDone}
-                    onSnooze={handleSnooze}
                     doneMutPending={doneMut.isPending}
                     hideHeader
                   />
@@ -291,16 +247,13 @@ interface TaskGroupProps {
   count: number;
   accent: "danger" | "warning" | "primary";
   tasks: Task[];
-  snoozingId: string | null;
-  setSnoozingId: (id: string | null) => void;
   onDone: (task: Task) => void;
-  onSnooze: (id: string, ms: number | null) => void;
   doneMutPending: boolean;
   hideHeader?: boolean;
 }
 
 function TaskGroup({
-  label, count, accent, tasks, snoozingId, setSnoozingId, onDone, onSnooze, doneMutPending, hideHeader
+  label, count, accent, tasks, onDone, doneMutPending, hideHeader
 }: TaskGroupProps) {
   const accentClasses = {
     danger: "text-danger",
@@ -322,10 +275,7 @@ function TaskGroup({
             key={task.id}
             task={task}
             accent={accent}
-            snoozingId={snoozingId}
-            setSnoozingId={setSnoozingId}
             onDone={onDone}
-            onSnooze={onSnooze}
             doneMutPending={doneMutPending}
           />
         ))}
@@ -337,21 +287,17 @@ function TaskGroup({
 interface TaskRowProps {
   task: Task;
   accent: "danger" | "warning" | "primary";
-  snoozingId: string | null;
-  setSnoozingId: (id: string | null) => void;
   onDone: (task: Task) => void;
-  onSnooze: (id: string, ms: number | null) => void;
   doneMutPending: boolean;
 }
 
-function TaskRow({ task, accent, snoozingId, setSnoozingId, onDone, onSnooze, doneMutPending }: TaskRowProps) {
+function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
   const time = formatTime(task);
   const typeColor = TASK_TYPE_COLOR[task.taskType] ?? "#6161FF";
   const priorityColor = PRIORITY_COLOR[task.priority] ?? "#C4C4C4";
-  const isSnoozeOpen = snoozingId === task.id;
 
   return (
-    <div className="group relative flex items-center gap-2.5 py-2 px-2.5 rounded-lg hover:bg-surface-secondary/60 transition-colors">
+    <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-lg hover:bg-surface-secondary/60 transition-colors ${accent === "danger" ? "bg-danger/5" : ""}`}>
       {/* Left border accent */}
       <div
         className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full opacity-60"
@@ -391,31 +337,8 @@ function TaskRow({ task, accent, snoozingId, setSnoozingId, onDone, onSnooze, do
         </span>
       )}
 
-      {/* Snooze button */}
-      <div className="relative flex-shrink-0">
-        <button
-          onClick={() => setSnoozingId(isSnoozeOpen ? null : task.id)}
-          className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-surface-tertiary transition-all"
-          title="דחה משימה"
-        >
-          <AlarmClockOff size={12} className="text-text-secondary" />
-        </button>
-
-        {isSnoozeOpen && (
-          <div className="absolute left-0 top-7 z-20 bg-white rounded-xl shadow-glass border border-border py-1 min-w-[140px]">
-            {SNOOZE_OPTIONS.map(opt => (
-              <button
-                key={opt.label}
-                onClick={() => { onSnooze(task.id, opt.ms); setSnoozingId(null); }}
-                className="w-full text-right px-3 py-1.5 text-xs hover:bg-surface-secondary transition-colors flex items-center gap-2"
-              >
-                <Clock size={11} className="text-text-tertiary flex-shrink-0" />
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Snooze dropdown */}
+      <SnoozeDropdown taskId={task.id} />
     </div>
   );
 }
