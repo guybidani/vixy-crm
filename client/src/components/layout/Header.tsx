@@ -60,8 +60,8 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       className={cn(
         "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
         // Mobile: full width. Desktop: offset by sidebar
-        "right-0 md:right-60",
-        sidebarCollapsed && "md:right-16",
+        "right-0 md:right-[220px]",
+        sidebarCollapsed && "md:right-14",
       )}
     >
       {/* Search — desktop: always visible, mobile: icon toggles input */}
