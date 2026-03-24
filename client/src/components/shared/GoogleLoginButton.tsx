@@ -53,7 +53,7 @@ export default function GoogleLoginButton({
       type: "standard",
       theme: "outline",
       size: "large",
-      width: "100%",
+      width: 400,
       text,
       shape: "rectangular",
       logo_alignment: "center",
