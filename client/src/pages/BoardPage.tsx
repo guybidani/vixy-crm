@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Lock, Shield } from "lucide-react";
+import { Pencil, Lock, Shield, PanelRightOpen } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
@@ -311,15 +311,26 @@ export default function BoardPage() {
               );
             }
             return (
-              <span
-                className="text-[13px] font-medium text-[#323338] cursor-text hover:text-[#0073EA] transition-colors"
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setEditingCell({ itemId: row.id, colKey: "name" });
-                  setEditValue(row.name);
-                }}
-              >
-                {row.name || "—"}
+              <span className="group/name flex items-center gap-1.5 w-full">
+                <span
+                  className="text-[13px] font-medium text-[#323338] cursor-text hover:text-[#0073EA] transition-colors flex-1 truncate"
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setEditingCell({ itemId: row.id, colKey: "name" });
+                    setEditValue(row.name);
+                  }}
+                >
+                  {row.name || "—"}
+                </span>
+                <PanelRightOpen
+                  size={13}
+                  className="flex-shrink-0 text-[#9699A6] opacity-0 group-hover/name:opacity-100 hover:text-[#0073EA] transition-all cursor-pointer"
+                  title="פתח פרטים"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedItemId(row.id);
+                  }}
+                />
               </span>
             );
           },
