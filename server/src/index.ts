@@ -74,6 +74,7 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false, // Allow loading cross-origin images
+    crossOriginOpenerPolicy: false, // Allow Google sign-in popup to communicate back
   }),
 );
 
