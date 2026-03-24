@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAutoSave } from "../../hooks/useAutoSave";
@@ -25,6 +25,9 @@ import {
   Check,
   Circle,
   MessageSquare,
+  Send,
+  Pencil,
+  HeartPulse,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl, getTelUrl } from "../../utils/phone";
@@ -60,6 +63,49 @@ const ACTIVITY_ICONS: Record<string, any> = {
   SYSTEM: Bot,
 };
 
+// ── Avatar helpers ──────────────────────────────────────────────────────────
+
+const AVATAR_COLORS = [
+  "#0073EA", "#FF5AC4", "#FDAB3D", "#00CA72", "#A25DDC",
+  "#037F4C", "#E2445C", "#579BFC", "#FF642E", "#CAB641",
+];
+
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string): string {
+  return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function Avatar({ name, size = 28 }: { name: string; size?: number }) {
+  return (
+    <div
+      className="flex items-center justify-center rounded-full text-white font-semibold flex-shrink-0 select-none"
+      style={{ width: size, height: size, backgroundColor: avatarColor(name), fontSize: size * 0.38 }}
+    >
+      {getInitials(name)}
+    </div>
+  );
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "עכשיו";
+  if (diffMin < 60) return `לפני ${diffMin} דקות`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `לפני ${diffHr} שעות`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays < 7) return `לפני ${diffDays} ימים`;
+  return date.toLocaleDateString("he-IL");
+}
+
+// ── Main Component ──────────────────────────────────────────────────────────
+
 export default function DealDetailPanel({
   dealId,
   onClose,
@@ -68,13 +114,26 @@ export default function DealDetailPanel({
   const { dealStages, priorities, activityTypes } = useWorkspaceOptions();
   const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"details" | "activity">("details");
+  const [activeTab, setActiveTab] = useState<"activity" | "details" | "tasks">("activity");
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState("");
   const [autoSaving, setAutoSaving] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [nameHovered, setNameHovered] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState("");
+  const [newActivityText, setNewActivityText] = useState("");
+  const activityEndRef = useRef<HTMLDivElement>(null);
+  const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Animate in on mount
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const { data: deal, isLoading } = useQuery({
     queryKey: ["deal", dealId],
@@ -116,6 +175,7 @@ export default function DealDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       toast.success("עסקה עודכנה");
       setEditingField(null);
+      setEditingName(false);
     },
   });
 
@@ -130,12 +190,16 @@ export default function DealDetailPanel({
     },
   });
 
-  // Sync notes state when deal loads
+  // Sync notes & name state when deal loads
   useEffect(() => {
     if (deal?.notes !== undefined) setNotes(deal.notes || "");
   }, [deal?.notes]);
 
-  // Auto-save notes 1.5s after typing stops
+  useEffect(() => {
+    if (deal?.title) setNameValue(deal.title);
+  }, [deal?.title]);
+
+  // Auto-save notes
   useAutoSave(notes, (val) => {
     setAutoSaving(true);
     updateMut.mutate({ notes: val }, {
@@ -143,9 +207,31 @@ export default function DealDetailPanel({
     });
   }, { enabled: editingNotes && notes !== (deal?.notes || "") });
 
-  function startEditNotes() {
-    setEditingNotes(true);
-    setNotes(deal?.notes || "");
+  // Close on Escape
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !editingName && !editingField) {
+        handleClose();
+      }
+    },
+    [editingName, editingField], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Auto-focus activity textarea
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      activityTextareaRef.current?.focus();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, []);
+
+  function handleClose() {
+    setVisible(false);
+    setTimeout(onClose, 300);
   }
 
   function startEdit(field: string, value: string) {
@@ -157,8 +243,6 @@ export default function DealDetailPanel({
     const val = editValues[field];
     if (field === "value") {
       updateMut.mutate({ value: Number(val) });
-    } else if (field === "title") {
-      updateMut.mutate({ title: val });
     } else if (field === "probability") {
       updateMut.mutate({ probability: Number(val) });
     } else if (field === "expectedClose") {
@@ -166,15 +250,20 @@ export default function DealDetailPanel({
     }
   }
 
+  function postNote() {
+    const text = newActivityText.trim();
+    if (!text) return;
+    // For now, we add to notes as a quick update (future: dedicated API)
+    updateMut.mutate({ notes: `${deal?.notes ? deal.notes + "\n\n" : ""}${new Date().toLocaleDateString("he-IL")}: ${text}` });
+    setNewActivityText("");
+  }
+
   if (isLoading) {
     return (
       <>
-        <div
-          className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-          onClick={onClose}
-        />
-        <div className="fixed top-0 left-0 h-full w-[480px] bg-white shadow-2xl z-50 flex items-center justify-center">
-          <p className="text-text-secondary">טוען...</p>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} />
+        <div className="fixed top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl z-50 flex items-center justify-center">
+          <p className="text-[#676879]">טוען...</p>
         </div>
       </>
     );
@@ -183,9 +272,9 @@ export default function DealDetailPanel({
   if (!deal) {
     return (
       <>
-        <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
-        <div className="fixed top-0 left-0 h-full w-[480px] bg-white shadow-2xl z-50 flex items-center justify-center">
-          <p className="text-text-secondary">עסקה לא נמצאה</p>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} />
+        <div className="fixed top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl z-50 flex items-center justify-center">
+          <p className="text-[#676879]">עסקה לא נמצאה</p>
         </div>
       </>
     );
@@ -198,529 +287,604 @@ export default function DealDetailPanel({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/20 z-40 transition-opacity"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/30 z-40 transition-opacity duration-300"
+        style={{ opacity: visible ? 1 : 0 }}
+        onClick={handleClose}
       />
 
       {/* Panel */}
-      <div className="fixed top-0 left-0 h-full w-[480px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-left duration-200">
-        {/* Header */}
-        <div className="p-4 border-b border-[#E6E9EF]">
-          <div className="flex items-start justify-between mb-3">
-            {editingField === "title" ? (
-              <input
-                autoFocus
-                value={editValues.title}
-                onChange={(e) =>
-                  setEditValues({ ...editValues, title: e.target.value })
-                }
-                onBlur={() => saveField("title")}
-                onKeyDown={(e) => e.key === "Enter" && saveField("title")}
-                className="text-lg font-bold text-[#323338] flex-1 border-b-2 border-primary outline-none bg-transparent"
-              />
-            ) : (
-              <h2
-                className="text-lg font-bold text-[#323338] cursor-pointer hover:text-primary transition-colors flex-1"
-                onClick={() => startEdit("title", deal.title)}
-              >
-                {deal.title}
-              </h2>
-            )}
-            <div className="flex items-center gap-1 mr-2">
+      <div
+        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl w-full"
+        style={{
+          maxWidth: 900,
+          transform: visible ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 300ms ease-out",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ── Top bar ── */}
+        <div className="flex-shrink-0 border-b border-[#E6E9EF] bg-white">
+          {/* Close + delete row */}
+          <div className="flex items-center justify-between px-6 pt-4 pb-1">
+            <div className="flex items-center gap-2 text-[12px] text-[#676879]">
+              <span className="font-semibold text-[#323338]">עסקאות</span>
+              <ArrowRight size={12} className="opacity-40" />
+              <span className="text-[#9699A6]">
+                {stageInfo?.label || deal.stage}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="p-1.5 rounded-lg hover:bg-red-50 text-[#676879] hover:text-red-500 transition-colors"
+                title="מחק עסקה"
               >
                 <Trash2 size={16} />
               </button>
               <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-[#F5F6F8] text-[#676879] transition-colors"
+                onClick={handleClose}
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+                aria-label="סגור"
               >
                 <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Stage + Priority pills */}
-          <div className="flex items-center gap-2">
+          {/* Deal name (editable) */}
+          <div className="px-6 pb-1">
+            {editingName ? (
+              <input
+                autoFocus
+                value={nameValue}
+                onChange={(e) => setNameValue(e.target.value)}
+                onBlur={() => {
+                  if (nameValue.trim() && nameValue !== deal.title) {
+                    updateMut.mutate({ title: nameValue.trim() });
+                  } else {
+                    setEditingName(false);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  if (e.key === "Escape") {
+                    setNameValue(deal.title);
+                    setEditingName(false);
+                  }
+                }}
+                className="text-[24px] font-semibold text-[#323338] w-full border-b-2 border-[#0073EA] outline-none bg-transparent py-0.5"
+              />
+            ) : (
+              <div
+                className="relative inline-flex items-center gap-2 group cursor-text"
+                onMouseEnter={() => setNameHovered(true)}
+                onMouseLeave={() => setNameHovered(false)}
+                onClick={() => setEditingName(true)}
+              >
+                <h2 className="text-[24px] font-semibold text-[#323338] leading-tight">
+                  {deal.title}
+                </h2>
+                <Pencil
+                  size={14}
+                  className="text-[#9699A6] flex-shrink-0 transition-opacity"
+                  style={{ opacity: nameHovered ? 1 : 0 }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Stage + Priority + BANT row */}
+          <div className="flex items-center gap-2 px-6 pb-3 flex-wrap">
             <select
               value={deal.stage}
               onChange={(e) => updateMut.mutate({ stage: e.target.value })}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer text-white"
+              className="text-[12px] font-semibold px-3 py-1 rounded-full border-none cursor-pointer text-white outline-none"
               style={{ backgroundColor: stageInfo?.color || "#C4C4C4" }}
             >
               {Object.entries(dealStages).map(([key, val]) => (
-                <option key={key} value={key}>
-                  {val.label}
-                </option>
+                <option key={key} value={key}>{val.label}</option>
               ))}
             </select>
             <select
               value={deal.priority}
               onChange={(e) => updateMut.mutate({ priority: e.target.value })}
-              className="text-xs font-semibold px-3 py-1.5 rounded-full border-none cursor-pointer text-white"
+              className="text-[12px] font-semibold px-3 py-1 rounded-full border-none cursor-pointer text-white outline-none"
               style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}
             >
               {Object.entries(priorities).map(([key, val]) => (
-                <option key={key} value={key}>
-                  {val.label}
-                </option>
+                <option key={key} value={key}>{val.label}</option>
               ))}
             </select>
+            {deal.health && (
+              <HealthBadge health={deal.health} />
+            )}
           </div>
 
-          {/* Health Score Badge */}
-          {deal.health && (
-            <HealthBadge health={deal.health} />
-          )}
-        </div>
+          {/* Quick action buttons (Monday-style) */}
+          <div className="flex items-center gap-2 px-6 pb-3" dir="rtl">
+            <button
+              onClick={() => {
+                setActiveTab("activity");
+                setTimeout(() => activityTextareaRef.current?.focus(), 50);
+              }}
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[6px] transition-colors shadow-sm"
+            >
+              <MessageSquare size={14} />
+              עדכן
+            </button>
+            <button
+              onClick={() => setActiveTab("activity")}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
+            >
+              <PhoneCall size={14} className="text-[#676879]" />
+              פעילות ({deal.activities?.length || 0})
+            </button>
+            {deal.expectedClose && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#676879]">
+                <Calendar size={14} />
+                {new Date(deal.expectedClose).toLocaleDateString("he-IL", { day: "numeric", month: "short", year: "numeric" })}
+              </div>
+            )}
+          </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-[#E6E9EF]">
-          <button
-            onClick={() => setActiveTab("details")}
-            className={`flex-1 py-2.5 text-[13px] font-medium transition-colors ${
-              activeTab === "details"
-                ? "text-[#0073EA] border-b-2 border-[#0073EA]"
-                : "text-[#676879] hover:text-[#323338]"
-            }`}
-          >
-            פרטים
-          </button>
-          <button
-            onClick={() => setActiveTab("activity")}
-            className={`flex-1 py-2.5 text-[13px] font-medium transition-colors ${
-              activeTab === "activity"
-                ? "text-[#0073EA] border-b-2 border-[#0073EA]"
-                : "text-[#676879] hover:text-[#323338]"
-            }`}
-          >
-            פעילות ({deal.activities?.length || 0})
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "details" ? (
-            <div className="p-4 space-y-5">
-              {/* Value */}
-              <DetailRow icon={<DollarSign size={15} />} label="סכום">
-                {editingField === "value" ? (
-                  <input
-                    autoFocus
-                    type="number"
-                    value={editValues.value}
-                    onChange={(e) =>
-                      setEditValues({ ...editValues, value: e.target.value })
-                    }
-                    onBlur={() => saveField("value")}
-                    onKeyDown={(e) => e.key === "Enter" && saveField("value")}
-                    className="w-24 text-sm border-b border-primary outline-none bg-transparent text-left"
-                    dir="ltr"
-                  />
-                ) : (
-                  <span
-                    className="font-bold text-[#323338] cursor-pointer hover:text-primary"
-                    onClick={() => startEdit("value", String(deal.value || 0))}
-                    dir="ltr"
-                  >
-                    ₪{(deal.value || 0).toLocaleString()}
-                  </span>
-                )}
-              </DetailRow>
-
-              {/* Probability */}
-              <DetailRow
-                icon={
-                  <span className="text-xs font-bold text-[#676879]">%</span>
-                }
-                label="סיכוי סגירה"
+          {/* Tabs */}
+          <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl">
+            {(
+              [
+                { key: "activity", label: "פעילות" },
+                { key: "details", label: "הערות" },
+                { key: "tasks", label: `משימות${deal.tasks?.length ? ` (${deal.tasks.length})` : ""}` },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
+                  activeTab === tab.key
+                    ? "border-[#0073EA] text-[#0073EA]"
+                    : "border-transparent text-[#676879] hover:text-[#323338] hover:border-[#D0D4E4]"
+                }`}
               >
-                {editingField === "probability" ? (
-                  <input
-                    autoFocus
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={editValues.probability}
-                    onChange={(e) =>
-                      setEditValues({
-                        ...editValues,
-                        probability: e.target.value,
-                      })
-                    }
-                    onBlur={() => saveField("probability")}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && saveField("probability")
-                    }
-                    className="w-16 text-sm border-b border-primary outline-none bg-transparent text-left"
-                    dir="ltr"
-                  />
-                ) : (
-                  <div
-                    className="flex items-center gap-2 cursor-pointer group"
-                    onClick={() =>
-                      startEdit("probability", String(deal.probability || 0))
-                    }
-                  >
-                    <div className="w-20 h-[5px] bg-[#F5F6F8] rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${deal.probability}%`,
-                          backgroundColor:
-                            deal.probability >= 70
-                              ? "#00CA72"
-                              : deal.probability >= 40
-                                ? "#FDAB3D"
-                                : "#C4C4C4",
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Body: 2-column layout ── */}
+        <div className="flex-1 flex overflow-hidden min-h-0" dir="rtl">
+          {/* LEFT: Activity/Feed column */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {activeTab === "activity" && (
+              <>
+                {/* Activity list */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                  {isLoading ? (
+                    <div className="text-center py-12 text-[#9699A6] text-[13px]">טוען...</div>
+                  ) : !deal.activities || deal.activities.length === 0 ? (
+                    <div className="text-center py-16 px-6">
+                      <div className="w-14 h-14 bg-[#EDF3FB] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Send size={22} className="text-[#0073EA]" />
+                      </div>
+                      <p className="text-[15px] font-semibold text-[#323338] mb-1.5">
+                        עדיין אין פעילות
+                      </p>
+                      <p className="text-[13px] text-[#9699A6]">
+                        הוסף עדכון ראשון לעסקה
+                      </p>
+                    </div>
+                  ) : (
+                    deal.activities.map((activity, idx) => {
+                      const actType = activityTypes[activity.type];
+                      const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
+                      return (
+                        <div key={activity.id} className="flex gap-3 relative">
+                          {/* Timeline line */}
+                          {idx < deal.activities.length - 1 && (
+                            <div className="absolute right-4 top-8 bottom-0 w-px bg-[#E6E9EF]" />
+                          )}
+                          {/* Avatar / icon */}
+                          <div
+                            className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                            style={{ backgroundColor: (actType?.color || "#C4C4C4") + "20" }}
+                          >
+                            <Icon size={14} style={{ color: actType?.color || "#C4C4C4" }} />
+                          </div>
+                          {/* Bubble */}
+                          <div className="flex-1 min-w-0 pb-4">
+                            <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm">
+                              <div className="flex items-baseline gap-2 mb-1">
+                                <span className="text-[13px] font-semibold text-[#323338]">
+                                  {actType?.label || activity.type}
+                                </span>
+                                <span className="text-[11px] text-[#9699A6]">
+                                  {new Date(activity.createdAt).toLocaleDateString("he-IL", {
+                                    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                                  })}
+                                </span>
+                              </div>
+                              {activity.description && (
+                                <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
+                                  {activity.description}
+                                </p>
+                              )}
+                              {activity.member && (
+                                <p className="text-[11px] text-[#9699A6] mt-0.5">
+                                  {activity.member.user.name}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={activityEndRef} />
+                </div>
+
+                {/* New activity input */}
+                <div className="flex-shrink-0 border-t border-[#E6E9EF] px-5 py-4 bg-white">
+                  <div className="flex gap-3 items-start">
+                    <Avatar name="אני" size={34} />
+                    <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
+                      <textarea
+                        ref={activityTextareaRef}
+                        className="w-full px-4 pt-3 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
+                        placeholder="כתוב עדכון..."
+                        rows={3}
+                        value={newActivityText}
+                        onChange={(e) => setNewActivityText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                            e.preventDefault();
+                            postNote();
+                          }
                         }}
                       />
+                      <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                        <span className="text-[11px] text-[#C3C6D4]">Ctrl+Enter לשליחה</span>
+                        <button
+                          onClick={postNote}
+                          disabled={!newActivityText.trim()}
+                          className="px-5 py-1.5 bg-[#0073EA] text-white text-[13px] font-semibold rounded-[6px] hover:bg-[#0060C2] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+                        >
+                          עדכן
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-sm text-[#323338] group-hover:text-primary">
-                      {deal.probability}%
-                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeTab === "details" && (
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[13px] font-semibold text-[#323338]">הערות</span>
+                    {!editingNotes && (
+                      <button
+                        onClick={() => { setEditingNotes(true); setNotes(deal?.notes || ""); }}
+                        className="text-xs text-[#676879] hover:text-[#0073EA] transition-colors"
+                      >
+                        ערוך
+                      </button>
+                    )}
+                  </div>
+                  {editingNotes ? (
+                    <div className="space-y-2">
+                      <textarea
+                        autoFocus
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        onBlur={() => {
+                          if (notes === (deal?.notes || "")) setEditingNotes(false);
+                        }}
+                        className="w-full min-h-[180px] px-3 py-2 text-sm border border-[#C5C7D0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] resize-y"
+                        placeholder="הוסף הערות..."
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-[#9699A6]">
+                          {autoSaving ? "שומר..." : "נשמר אוטומטית"}
+                        </span>
+                        <button
+                          onClick={() => setEditingNotes(false)}
+                          className="px-3 py-1.5 text-xs text-[#676879] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+                        >
+                          סגור
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p
+                      className="text-sm text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F5F6F8] rounded-lg p-2 -m-2 transition-colors min-h-[80px]"
+                      onClick={() => { setEditingNotes(true); setNotes(deal?.notes || ""); }}
+                    >
+                      {deal.notes || "לחץ להוספת הערות..."}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "tasks" && (
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                {deal.tasks && deal.tasks.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {deal.tasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl bg-white border border-[#E6E9EF] hover:border-[#C5C7D0] transition-colors"
+                      >
+                        <CheckSquare
+                          size={15}
+                          className={task.status === "DONE" ? "text-[#00CA72]" : "text-[#C5C7D0]"}
+                        />
+                        <span
+                          className={`text-[13px] flex-1 ${
+                            task.status === "DONE" ? "line-through text-[#C5C7D0]" : "text-[#323338]"
+                          }`}
+                        >
+                          {task.title}
+                        </span>
+                        {task.dueDate && (
+                          <span className="text-[11px] text-[#676879] flex items-center gap-0.5">
+                            <Calendar size={11} />
+                            {new Date(task.dueDate).toLocaleDateString("he-IL")}
+                          </span>
+                        )}
+                        {task.assignee && (
+                          <Avatar name={task.assignee.user.name} size={20} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-[#9699A6] text-[13px]">
+                    אין משימות לעסקה זו
                   </div>
                 )}
-              </DetailRow>
+              </div>
+            )}
+          </div>
 
-              {/* Expected Close */}
-              <DetailRow icon={<Calendar size={15} />} label="תאריך סגירה צפוי">
-                <input
-                  type="date"
-                  value={
-                    deal.expectedClose
-                      ? new Date(deal.expectedClose).toISOString().split("T")[0]
-                      : ""
-                  }
-                  onChange={(e) =>
-                    updateMut.mutate({ expectedClose: e.target.value })
-                  }
-                  className="text-sm text-[#323338] bg-transparent border-none outline-none cursor-pointer"
-                  dir="ltr"
-                />
-              </DetailRow>
+          {/* RIGHT: Deal fields sidebar */}
+          <div
+            className="flex-shrink-0 overflow-y-auto bg-[#FAFBFC] border-r border-[#E6E9EF]"
+            style={{ width: 292 }}
+          >
+            <div className="p-4 space-y-5">
+              {/* Deal financials */}
+              <div>
+                <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest mb-2">
+                  פרטי עסקה
+                </p>
+                <div className="bg-white rounded-xl border border-[#E6E9EF] overflow-hidden px-3">
+                  {/* Value */}
+                  <FieldRow icon={<DollarSign size={14} />} label="סכום">
+                    {editingField === "value" ? (
+                      <input
+                        autoFocus
+                        type="number"
+                        value={editValues.value}
+                        onChange={(e) => setEditValues({ ...editValues, value: e.target.value })}
+                        onBlur={() => saveField("value")}
+                        onKeyDown={(e) => e.key === "Enter" && saveField("value")}
+                        className="w-24 text-[13px] border-b border-[#0073EA] outline-none bg-transparent"
+                        dir="ltr"
+                      />
+                    ) : (
+                      <span
+                        className="text-[13px] font-bold text-[#323338] cursor-pointer hover:text-[#0073EA]"
+                        onClick={() => startEdit("value", String(deal.value || 0))}
+                        dir="ltr"
+                      >
+                        ₪{(deal.value || 0).toLocaleString()}
+                      </span>
+                    )}
+                  </FieldRow>
 
-              {/* Days in stage */}
-              <DetailRow icon={<Clock size={15} />} label="ימים בשלב">
-                <span
-                  className={`font-semibold text-sm ${
-                    deal.daysInStage >= 14
-                      ? "text-[#FB275D]"
-                      : deal.daysInStage >= 7
-                        ? "text-[#FDAB3D]"
-                        : "text-[#676879]"
-                  }`}
-                >
-                  {deal.daysInStage} ימים
-                </span>
-              </DetailRow>
+                  {/* Probability */}
+                  <FieldRow icon={<span className="text-[11px] font-bold text-[#676879]">%</span>} label="סיכוי">
+                    <div
+                      className="flex items-center gap-2 cursor-pointer group"
+                      onClick={() => startEdit("probability", String(deal.probability || 0))}
+                    >
+                      {editingField === "probability" ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={editValues.probability}
+                          onChange={(e) => setEditValues({ ...editValues, probability: e.target.value })}
+                          onBlur={() => saveField("probability")}
+                          onKeyDown={(e) => e.key === "Enter" && saveField("probability")}
+                          className="w-14 text-[13px] border-b border-[#0073EA] outline-none bg-transparent"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <>
+                          <div className="w-16 h-[4px] bg-[#F5F6F8] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${deal.probability}%`,
+                                backgroundColor: deal.probability >= 70 ? "#00CA72" : deal.probability >= 40 ? "#FDAB3D" : "#C4C4C4",
+                              }}
+                            />
+                          </div>
+                          <span className="text-[13px] text-[#323338] group-hover:text-[#0073EA]">
+                            {deal.probability}%
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </FieldRow>
 
-              {/* Divider */}
-              <div className="border-t border-[#E6E9EF]" />
+                  {/* Close date */}
+                  <FieldRow icon={<Calendar size={14} />} label="תאריך סגירה">
+                    <input
+                      type="date"
+                      value={deal.expectedClose ? new Date(deal.expectedClose).toISOString().split("T")[0] : ""}
+                      onChange={(e) => updateMut.mutate({ expectedClose: e.target.value })}
+                      className="text-[13px] text-[#323338] bg-transparent border-none outline-none cursor-pointer"
+                      dir="ltr"
+                    />
+                  </FieldRow>
+
+                  {/* Days in stage */}
+                  <FieldRow icon={<Clock size={14} />} label="ימים בשלב">
+                    <span
+                      className={`text-[13px] font-semibold ${
+                        deal.daysInStage >= 14 ? "text-[#FB275D]" : deal.daysInStage >= 7 ? "text-[#FDAB3D]" : "text-[#676879]"
+                      }`}
+                    >
+                      {deal.daysInStage} ימים
+                    </span>
+                  </FieldRow>
+                </div>
+              </div>
 
               {/* Contact */}
-              <div className="bg-[#F7F7F9] rounded-xl p-3.5 space-y-2.5">
-                <div className="flex items-center gap-2 mb-2">
-                  <User size={15} className="text-[#676879]" />
-                  <span className="text-[13px] text-[#676879]">איש קשר</span>
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <User size={12} className="text-[#0073EA]" />
+                  <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest">
+                    איש קשר
+                  </p>
                 </div>
-                <MondayPersonCell
-                  value={
-                    deal.contact
-                      ? {
-                          id: deal.contact.id,
-                          name: `${deal.contact.firstName} ${deal.contact.lastName}`,
-                        }
-                      : null
-                  }
-                  options={contactOptions}
-                  onChange={(id) => updateMut.mutate({ contactId: id! })}
-                  placeholder="בחר איש קשר"
-                />
-                {deal.contact?.email && (
-                  <a
-                    href={`mailto:${deal.contact.email}`}
-                    className="flex items-center gap-2 text-[13px] text-[#323338] hover:text-primary transition-colors"
-                  >
-                    <Mail size={13} className="text-[#676879]" />
-                    <span dir="ltr">{deal.contact.email}</span>
-                  </a>
-                )}
-                {deal.contact?.phone && (
-                  <div className="flex items-center gap-2 text-[13px] text-[#323338]">
-                    <Phone size={13} className="text-[#676879]" />
-                    <span dir="ltr" className="flex-1">{deal.contact.phone}</span>
+                <div className="bg-white border border-[#E6E9EF] rounded-xl p-3 space-y-2.5">
+                  <MondayPersonCell
+                    value={
+                      deal.contact
+                        ? { id: deal.contact.id, name: `${deal.contact.firstName} ${deal.contact.lastName}` }
+                        : null
+                    }
+                    options={contactOptions}
+                    onChange={(id) => updateMut.mutate({ contactId: id! })}
+                    placeholder="בחר איש קשר"
+                  />
+                  {deal.contact?.email && (
                     <a
-                      href={getWhatsAppUrl(deal.contact.phone)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="שלח הודעת וואטסאפ"
-                      className="p-1 rounded-md hover:bg-[#25D366]/10 transition-colors"
+                      href={`mailto:${deal.contact.email}`}
+                      className="flex items-center gap-2 text-[12px] text-[#323338] hover:text-[#0073EA] transition-colors"
                     >
-                      <MessageSquare size={15} color="#25D366" />
+                      <Mail size={12} className="text-[#676879] flex-shrink-0" />
+                      <span dir="ltr" className="truncate">{deal.contact.email}</span>
                     </a>
-                    <a
-                      href={getTelUrl(deal.contact.phone)}
-                      title="התקשר"
-                      className="p-1 rounded-md hover:bg-[#00CA72]/10 transition-colors"
-                    >
-                      <Phone size={15} color="#00CA72" />
-                    </a>
-                  </div>
-                )}
+                  )}
+                  {deal.contact?.phone && (
+                    <div className="flex items-center gap-2 text-[12px] text-[#323338]">
+                      <Phone size={12} className="text-[#676879] flex-shrink-0" />
+                      <span dir="ltr" className="flex-1">{deal.contact.phone}</span>
+                      <a
+                        href={getWhatsAppUrl(deal.contact.phone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1 rounded hover:bg-[#25D366]/10 transition-colors"
+                        title="וואטסאפ"
+                      >
+                        <MessageSquare size={13} color="#25D366" />
+                      </a>
+                      <a
+                        href={getTelUrl(deal.contact.phone)}
+                        className="p-1 rounded hover:bg-[#00CA72]/10 transition-colors"
+                        title="התקשר"
+                      >
+                        <Phone size={13} color="#00CA72" />
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Company */}
-              <div className="bg-[#F7F7F9] rounded-xl p-3.5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Building2 size={15} className="text-[#676879]" />
-                  <span className="text-[13px] text-[#676879]">חברה</span>
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Building2 size={12} className="text-[#676879]" />
+                  <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest">
+                    חברה
+                  </p>
                 </div>
-                <MondayPersonCell
-                  value={
-                    deal.company
-                      ? { id: deal.company.id, name: deal.company.name }
-                      : null
-                  }
-                  options={companyOptions}
-                  onChange={(id) => updateMut.mutate({ companyId: id })}
-                  placeholder="בחר חברה"
-                />
+                <div className="bg-white border border-[#E6E9EF] rounded-xl p-3">
+                  <MondayPersonCell
+                    value={deal.company ? { id: deal.company.id, name: deal.company.name } : null}
+                    options={companyOptions}
+                    onChange={(id) => updateMut.mutate({ companyId: id })}
+                    placeholder="בחר חברה"
+                  />
+                </div>
               </div>
 
               {/* Assignee */}
-              <DetailRow icon={<User size={15} />} label="אחראי">
-                <MondayPersonCell
-                  value={
-                    deal.assignee
-                      ? {
-                          id: deal.assignee.id,
-                          name: deal.assignee.user.name,
-                        }
-                      : null
-                  }
-                  options={memberOptions}
-                  onChange={(id) => updateMut.mutate({ assigneeId: id! })}
-                  placeholder="בחר אחראי"
-                />
-              </DetailRow>
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <User size={12} className="text-[#676879]" />
+                  <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest">
+                    אחראי
+                  </p>
+                </div>
+                <div className="bg-white border border-[#E6E9EF] rounded-xl p-3">
+                  <MondayPersonCell
+                    value={
+                      deal.assignee
+                        ? { id: deal.assignee.id, name: deal.assignee.user.name }
+                        : null
+                    }
+                    options={memberOptions}
+                    onChange={(id) => updateMut.mutate({ assigneeId: id! })}
+                    placeholder="בחר אחראי"
+                  />
+                </div>
+              </div>
 
               {/* Tags */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[13px] font-semibold text-[#323338]">
-                    תגיות
-                  </span>
-                  <TagSelector
-                    entityType="deal"
-                    entityId={deal.id}
-                    currentTags={
-                      deal.tags?.map((t: any) => ({
-                        id: t.id,
-                        name: t.name,
-                        color: t.color,
-                      })) || []
-                    }
+                <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest mb-2">
+                  תגיות
+                </p>
+                <div className="bg-white border border-[#E6E9EF] rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex gap-1.5 flex-wrap">
+                      {deal.tags?.map((t: any) => (
+                        <span
+                          key={t.id}
+                          className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white"
+                          style={{ backgroundColor: t.color }}
+                        >
+                          {t.name}
+                        </span>
+                      ))}
+                      {(!deal.tags || deal.tags.length === 0) && (
+                        <span className="text-[12px] text-[#9699A6]">אין תגיות</span>
+                      )}
+                    </div>
+                    <TagSelector
+                      entityType="deal"
+                      entityId={deal.id}
+                      currentTags={deal.tags?.map((t: any) => ({ id: t.id, name: t.name, color: t.color })) || []}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* BANT */}
+              <div>
+                <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest mb-2">
+                  BANT
+                </p>
+                <div className="bg-white border border-[#E6E9EF] rounded-xl p-3">
+                  <BantSection
+                    bantData={deal.bantData || null}
+                    onUpdate={(bantData) => updateMut.mutate({ bantData })}
                   />
                 </div>
-                <div className="flex gap-1.5 flex-wrap">
-                  {deal.tags?.map((t: any) => (
-                    <span
-                      key={t.id}
-                      className="text-xs font-semibold px-2.5 py-0.5 rounded-full text-white"
-                      style={{ backgroundColor: t.color }}
-                    >
-                      {t.name}
-                    </span>
-                  ))}
-                  {(!deal.tags || deal.tags.length === 0) && (
-                    <span className="text-[11px] text-[#676879]">
-                      אין תגיות
-                    </span>
-                  )}
-                </div>
               </div>
-
-              {/* Divider */}
-              <div className="border-t border-[#E6E9EF]" />
-
-              {/* BANT Qualification */}
-              <BantSection
-                bantData={deal.bantData || null}
-                onUpdate={(bantData) => updateMut.mutate({ bantData })}
-              />
-
-              {/* Divider */}
-              <div className="border-t border-[#E6E9EF]" />
-
-              {/* Notes */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[13px] font-semibold text-[#323338]">
-                    הערות
-                  </span>
-                  {!editingNotes && (
-                    <button
-                      onClick={startEditNotes}
-                      className="text-xs text-[#676879] hover:text-primary transition-colors"
-                    >
-                      ערוך
-                    </button>
-                  )}
-                </div>
-                {editingNotes ? (
-                  <div className="space-y-2">
-                    <textarea
-                      autoFocus
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      onBlur={() => {
-                        if (notes === (deal?.notes || "")) setEditingNotes(false);
-                      }}
-                      className="w-full min-h-[100px] px-3 py-2 text-sm border border-[#C5C7D0] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-y"
-                      placeholder="הוסף הערות..."
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-text-tertiary">
-                        {autoSaving ? "שומר..." : "נשמר אוטומטית"}
-                      </span>
-                      <button
-                        onClick={() => setEditingNotes(false)}
-                        className="px-3 py-1.5 text-xs text-[#676879] hover:bg-[#F5F6F8] rounded-lg transition-colors"
-                      >
-                        סגור
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p
-                    className="text-sm text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F5F6F8] rounded-lg p-2 -m-2 transition-colors min-h-[40px]"
-                    onClick={startEditNotes}
-                  >
-                    {deal.notes || "לחץ להוספת הערות..."}
-                  </p>
-                )}
-              </div>
-
-              {/* Tasks */}
-              {deal.tasks && deal.tasks.length > 0 && (
-                <>
-                  <div className="border-t border-[#E6E9EF]" />
-                  <div>
-                    <span className="text-[13px] font-semibold text-[#323338] block mb-2">
-                      משימות
-                    </span>
-                    <div className="space-y-1.5">
-                      {deal.tasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[#F5F6F8] transition-colors"
-                        >
-                          <CheckSquare
-                            size={14}
-                            className={
-                              task.status === "DONE"
-                                ? "text-[#00CA72]"
-                                : "text-[#C5C7D0]"
-                            }
-                          />
-                          <span
-                            className={`text-[13px] flex-1 ${
-                              task.status === "DONE"
-                                ? "line-through text-[#C5C7D0]"
-                                : "text-[#323338]"
-                            }`}
-                          >
-                            {task.title}
-                          </span>
-                          {task.dueDate && (
-                            <span className="text-[11px] text-[#676879]">
-                              {new Date(task.dueDate).toLocaleDateString(
-                                "he-IL",
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
-          ) : (
-            /* Activity Tab */
-            <div className="p-4">
-              {deal.activities && deal.activities.length > 0 ? (
-                <div className="space-y-0">
-                  {deal.activities.map((activity, idx) => {
-                    const actType = activityTypes[activity.type];
-                    const Icon = ACTIVITY_ICONS[activity.type] || StickyNote;
-                    return (
-                      <div key={activity.id} className="flex gap-3 relative">
-                        {/* Timeline line */}
-                        {idx < deal.activities.length - 1 && (
-                          <div className="absolute right-[15px] top-8 bottom-0 w-px bg-[#E6E9EF]" />
-                        )}
-                        {/* Icon */}
-                        <div
-                          className="w-[30px] h-[30px] rounded-full flex items-center justify-center flex-shrink-0 z-10"
-                          style={{
-                            backgroundColor:
-                              (actType?.color || "#C4C4C4") + "20",
-                          }}
-                        >
-                          <Icon
-                            size={14}
-                            style={{
-                              color: actType?.color || "#C4C4C4",
-                            }}
-                          />
-                        </div>
-                        {/* Content */}
-                        <div className="flex-1 pb-4">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[13px] font-medium text-[#323338]">
-                              {actType?.label || activity.type}
-                            </span>
-                            <span className="text-[11px] text-[#676879]">
-                              {new Date(activity.createdAt).toLocaleDateString(
-                                "he-IL",
-                                {
-                                  day: "numeric",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
-                            </span>
-                          </div>
-                          {activity.description && (
-                            <p className="text-[13px] text-[#676879]">
-                              {activity.description}
-                            </p>
-                          )}
-                          {activity.member && (
-                            <p className="text-[11px] text-[#9699A6] mt-0.5">
-                              {activity.member.user.name}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-sm text-[#676879]">אין פעילות עדיין</p>
-                </div>
-              )}
-            </div>
-          )}
+          </div>
         </div>
       </div>
-
 
       <ConfirmDialog
         open={showDeleteConfirm}
@@ -739,8 +903,9 @@ export default function DealDetailPanel({
   );
 }
 
-/* Small helper row */
-function DetailRow({
+// ── FieldRow helper ──────────────────────────────────────────────────────────
+
+function FieldRow({
   icon,
   label,
   children,
@@ -750,114 +915,67 @@ function DetailRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-[#676879]">
+    <div className="flex items-start gap-2 py-2.5 border-b border-[#F0F0F5] last:border-0">
+      <div className="w-20 flex-shrink-0 flex items-center gap-1.5 text-[#9699A6] pt-0.5">
         {icon}
-        <span className="text-[13px]">{label}</span>
+        <span className="text-[11px] font-medium uppercase tracking-wide truncate">{label}</span>
       </div>
-      <div>{children}</div>
+      <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 }
 
-/* Health Score Badge with breakdown tooltip */
+// ── Health Score Badge ────────────────────────────────────────────────────────
+
 function HealthBadge({ health }: { health: DealHealth }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
   const b = health.breakdown;
 
   const breakdownRows = [
-    {
-      label: "פעילות אחרונה",
-      detail: b.activityRecency.label,
-      score: b.activityRecency.score,
-      max: 30,
-    },
-    {
-      label: "משימה הבאה",
-      detail: b.nextTask.label,
-      score: b.nextTask.score,
-      max: 20,
-    },
-    {
-      label: "BANT",
-      detail: b.bantCompletion.label,
-      score: b.bantCompletion.score,
-      max: 20,
-    },
-    {
-      label: "מהירות התקדמות",
-      detail: b.stageVelocity.label,
-      score: b.stageVelocity.score,
-      max: 15,
-    },
-    {
-      label: "מעורבות",
-      detail: b.contactEngagement.label,
-      score: b.contactEngagement.score,
-      max: 15,
-    },
+    { label: "פעילות אחרונה", detail: b.activityRecency.label, score: b.activityRecency.score, max: 30 },
+    { label: "משימה הבאה", detail: b.nextTask.label, score: b.nextTask.score, max: 20 },
+    { label: "BANT", detail: b.bantCompletion.label, score: b.bantCompletion.score, max: 20 },
+    { label: "מהירות התקדמות", detail: b.stageVelocity.label, score: b.stageVelocity.score, max: 15 },
+    { label: "מעורבות", detail: b.contactEngagement.label, score: b.contactEngagement.score, max: 15 },
   ];
 
   return (
-    <div className="relative mt-3">
+    <div className="relative">
       <button
         type="button"
         onClick={() => setShowBreakdown((v) => !v)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors hover:bg-[#F5F6F8]"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-colors hover:bg-[#F5F6F8]"
         style={{ borderColor: health.color + "40" }}
       >
-        <span
-          className="w-3 h-3 rounded-full flex-shrink-0"
-          style={{ backgroundColor: health.color }}
-        />
-        <span className="text-xs font-bold" style={{ color: health.color }}>
+        <HeartPulse size={13} style={{ color: health.color }} />
+        <span className="text-[11px] font-bold" style={{ color: health.color }}>
           {health.score}
         </span>
-        <span className="text-xs font-semibold text-[#323338]">
-          {health.label}
-        </span>
+        <span className="text-[11px] font-semibold text-[#323338]">{health.label}</span>
       </button>
 
       {showBreakdown && (
         <div className="absolute top-full right-0 mt-1 w-72 bg-white rounded-xl shadow-xl border border-[#E6E9EF] p-3 z-50">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] font-bold text-[#323338]">
-              פירוט בריאות עסקה
-            </span>
-            <span
-              className="text-sm font-bold"
-              style={{ color: health.color }}
-            >
-              {health.score}/100
-            </span>
+            <span className="text-[13px] font-bold text-[#323338]">פירוט בריאות עסקה</span>
+            <span className="text-sm font-bold" style={{ color: health.color }}>{health.score}/100</span>
           </div>
           <div className="space-y-2.5">
             {breakdownRows.map((row) => (
               <div key={row.label}>
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-[11px] text-[#676879]">
-                    {row.label}
-                  </span>
+                  <span className="text-[11px] text-[#676879]">{row.label}</span>
                   <span className="text-[11px] font-medium text-[#323338]">
                     {row.detail}{" "}
-                    {row.score > 0 ? (
-                      <span className="text-[#10B981]">+{row.score}</span>
-                    ) : (
-                      <span className="text-[#DC2626]">+0</span>
-                    )}
+                    {row.score > 0 ? <span className="text-[#10B981]">+{row.score}</span> : <span className="text-[#DC2626]">+0</span>}
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full transition-all"
+                    className="h-full rounded-full"
                     style={{
                       width: `${(row.score / row.max) * 100}%`,
-                      backgroundColor:
-                        row.score === row.max
-                          ? "#10B981"
-                          : row.score > 0
-                            ? "#F59E0B"
-                            : "#DC2626",
+                      backgroundColor: row.score === row.max ? "#10B981" : row.score > 0 ? "#F59E0B" : "#DC2626",
                     }}
                   />
                 </div>
@@ -870,7 +988,8 @@ function HealthBadge({ health }: { health: DealHealth }) {
   );
 }
 
-/* BANT Qualification Section */
+// ── BANT Section ─────────────────────────────────────────────────────────────
+
 const AUTHORITY_OPTIONS = [
   { value: "", label: "בחר..." },
   { value: "decision_maker", label: "מקבל החלטות" },
@@ -906,34 +1025,10 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
     placeholder?: string;
     options?: Array<{ value: string; label: string }>;
   }> = [
-    {
-      key: "budget",
-      label: "תקציב",
-      icon: <Wallet size={14} />,
-      type: "text",
-      placeholder: "מה התקציב?",
-    },
-    {
-      key: "authority",
-      label: "סמכות",
-      icon: <Shield size={14} />,
-      type: "select",
-      options: AUTHORITY_OPTIONS,
-    },
-    {
-      key: "need",
-      label: "צורך",
-      icon: <Target size={14} />,
-      type: "text",
-      placeholder: "מה הצורך העסקי?",
-    },
-    {
-      key: "timeline",
-      label: "לוח זמנים",
-      icon: <Timer size={14} />,
-      type: "select",
-      options: TIMELINE_OPTIONS,
-    },
+    { key: "budget", label: "תקציב", icon: <Wallet size={13} />, type: "text", placeholder: "מה התקציב?" },
+    { key: "authority", label: "סמכות", icon: <Shield size={13} />, type: "select", options: AUTHORITY_OPTIONS },
+    { key: "need", label: "צורך", icon: <Target size={13} />, type: "text", placeholder: "מה הצורך?" },
+    { key: "timeline", label: "לוח זמנים", icon: <Timer size={13} />, type: "select", options: TIMELINE_OPTIONS },
   ];
 
   const filledCount = fields.filter((f) => !!data[f.key]).length;
@@ -942,8 +1037,7 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
     const val = data[field.key];
     if (!val) return "";
     if (field.type === "select" && field.options) {
-      const opt = field.options.find((o) => o.value === val);
-      return opt?.label || val;
+      return field.options.find((o) => o.value === val)?.label || val;
     }
     return val;
   }
@@ -963,28 +1057,22 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[13px] font-semibold text-[#323338]">
-          הכשרת ליד (BANT)
-        </span>
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[12px] font-semibold text-[#323338]">הכשרת ליד</span>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[#676879]">
-            {filledCount}/4 הושלם
-          </span>
-          <div className="flex gap-1">
+          <span className="text-[11px] text-[#676879]">{filledCount}/4</span>
+          <div className="flex gap-0.5">
             {fields.map((f, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full ${
-                  data[f.key] ? "bg-[#00CA72]" : "bg-[#E6E9EF]"
-                }`}
+                className={`w-2 h-2 rounded-full ${data[f.key] ? "bg-[#00CA72]" : "bg-[#E6E9EF]"}`}
               />
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {fields.map((field) => {
           const isFilled = !!data[field.key];
           const isEditing = editingField === field.key;
@@ -992,19 +1080,13 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
           return (
             <div
               key={field.key}
-              className="bg-[#F7F7F9] rounded-lg p-2.5 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
+              className="bg-[#F7F7F9] rounded-lg p-2 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
               onClick={() => !isEditing && startEdit(field.key)}
             >
-              <div className="flex items-center gap-1.5 mb-1.5">
+              <div className="flex items-center gap-1 mb-1">
                 <span className="text-[#676879]">{field.icon}</span>
-                <span className="text-[11px] font-medium text-[#676879]">
-                  {field.label}
-                </span>
-                {isFilled ? (
-                  <Check size={12} className="text-[#00CA72] mr-auto" />
-                ) : (
-                  <Circle size={12} className="text-[#C5C7D0] mr-auto" />
-                )}
+                <span className="text-[10px] font-medium text-[#676879]">{field.label}</span>
+                {isFilled ? <Check size={10} className="text-[#00CA72] mr-auto" /> : <Circle size={10} className="text-[#C5C7D0] mr-auto" />}
               </div>
 
               {isEditing ? (
@@ -1012,18 +1094,13 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
                   <select
                     autoFocus
                     value={editValue}
-                    onChange={(e) => {
-                      setEditValue(e.target.value);
-                      saveField(field.key, e.target.value);
-                    }}
+                    onChange={(e) => { setEditValue(e.target.value); saveField(field.key, e.target.value); }}
                     onBlur={() => saveField(field.key, editValue)}
-                    className="w-full text-[12px] bg-white border border-[#C5C7D0] rounded px-2 py-1 outline-none focus:border-[#0073EA]"
+                    className="w-full text-[11px] bg-white border border-[#C5C7D0] rounded px-1.5 py-0.5 outline-none focus:border-[#0073EA]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {field.options?.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 ) : (
@@ -1037,16 +1114,14 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
                       if (e.key === "Escape") setEditingField(null);
                     }}
                     placeholder={field.placeholder}
-                    className="w-full text-[12px] bg-white border border-[#C5C7D0] rounded px-2 py-1 outline-none focus:border-[#0073EA]"
+                    className="w-full text-[11px] bg-white border border-[#C5C7D0] rounded px-1.5 py-0.5 outline-none focus:border-[#0073EA]"
                     onClick={(e) => e.stopPropagation()}
                   />
                 )
               ) : (
-                <p className="text-[12px] text-[#323338] truncate min-h-[20px] leading-[20px]">
+                <p className="text-[11px] text-[#323338] truncate min-h-[16px] leading-[16px]">
                   {getDisplayValue(field) || (
-                    <span className="text-[#C5C7D0]">
-                      {field.placeholder || "בחר..."}
-                    </span>
+                    <span className="text-[#C5C7D0]">{field.placeholder || "בחר..."}</span>
                   )}
                 </p>
               )}

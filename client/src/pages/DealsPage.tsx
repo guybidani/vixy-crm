@@ -12,6 +12,8 @@ import {
   BarChart3,
   HeartPulse,
   MessageSquare,
+  Calendar,
+  User,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
@@ -522,49 +524,66 @@ export default function DealsPage() {
 
 /* ── Deal Kanban Card ──────────────────────────────── */
 
+// Stable avatar color per name (Monday.com palette)
+const CARD_AVATAR_COLORS = [
+  "#0073EA", "#FF5AC4", "#FDAB3D", "#00CA72", "#A25DDC",
+  "#037F4C", "#E2445C", "#579BFC", "#FF642E", "#CAB641",
+];
+function cardAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return CARD_AVATAR_COLORS[Math.abs(hash) % CARD_AVATAR_COLORS.length];
+}
+
 function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
+  const { dealStages } = useWorkspaceOptions();
   const isRotting = deal.daysInStage >= 7;
   const isSeverelyRotting = deal.daysInStage >= 14;
   const isClosedStage =
     deal.stage === "CLOSED_WON" || deal.stage === "CLOSED_LOST";
+  const stageInfo = dealStages[deal.stage];
+
+  // Format expected close date
+  const closeDate = deal.expectedClose
+    ? new Date(deal.expectedClose).toLocaleDateString("he-IL", { day: "numeric", month: "short" })
+    : null;
+  const isOverdue = deal.expectedClose && !isClosedStage
+    ? new Date(deal.expectedClose) < new Date()
+    : false;
 
   return (
     <div
-      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${
+      className={`bg-white rounded-xl p-3.5 border transition-all select-none ${
         isDragging
-          ? "shadow-lg opacity-90 border-l-primary"
-          : isClosedStage
-            ? "border-l-border-light"
-            : isSeverelyRotting
-              ? "border-l-danger bg-red-50/30"
-              : isRotting
-                ? "border-l-warning bg-yellow-50/30"
-                : "border-l-transparent hover:shadow-md hover:border-l-primary"
+          ? "shadow-2xl rotate-1 scale-105 opacity-95 border-[#0073EA]/40"
+          : isSeverelyRotting && !isClosedStage
+            ? "shadow-sm border-[#FB275D]/30 hover:shadow-md"
+            : isRotting && !isClosedStage
+              ? "shadow-sm border-[#FDAB3D]/40 hover:shadow-md"
+              : "shadow-sm border-[#E6E9EF] hover:shadow-md hover:border-[#C5C7D0]"
       }`}
     >
-      {/* Title + Value */}
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-semibold text-sm text-text-primary leading-tight">
+      {/* Title */}
+      <div className="mb-2.5">
+        <span className="font-semibold text-[13px] text-[#323338] leading-snug block">
           {deal.title}
-        </span>
-        <span className="font-bold text-sm text-primary whitespace-nowrap">
-          ₪{deal.value.toLocaleString()}
         </span>
       </div>
 
-      {/* Contact */}
+      {/* Contact row with avatar */}
       {deal.contact && (
-        <div className="flex items-center gap-1.5 mb-1">
+        <div className="flex items-center gap-1.5 mb-1.5">
           <div
-            className="w-5 h-5 rounded-full bg-[#6161FF] flex items-center justify-center"
+            className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: cardAvatarColor(deal.contact.name) }}
             role="img"
             aria-label={deal.contact.name}
           >
             <span className="text-white text-[8px] font-bold">
-              {deal.contact.name[0]}
+              {deal.contact.name[0].toUpperCase()}
             </span>
           </div>
-          <span className="text-xs text-text-secondary flex-1">
+          <span className="text-[12px] text-[#676879] flex-1 truncate">
             {deal.contact.name}
           </span>
           {deal.contact.phone && (
@@ -574,9 +593,9 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
                 window.open(getWhatsAppUrl(deal.contact!.phone!), "_blank");
               }}
               title="שלח הודעת וואטסאפ"
-              className="p-0.5 rounded hover:bg-[#25D366]/10 transition-colors"
+              className="p-0.5 rounded hover:bg-[#25D366]/10 transition-colors flex-shrink-0"
             >
-              <MessageSquare size={13} color="#25D366" />
+              <MessageSquare size={12} color="#25D366" />
             </button>
           )}
         </div>
@@ -584,59 +603,68 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
 
       {/* Company */}
       {deal.company && (
-        <div className="flex items-center gap-1.5 mb-1">
-          <Building2 size={11} className="text-text-tertiary" />
-          <span className="text-xs text-text-secondary">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <Building2 size={11} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-[11px] text-[#676879] truncate">
             {deal.company.name}
           </span>
         </div>
       )}
 
-      {/* Bottom row */}
-      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
-        {/* Assignee */}
+      {/* Value + Stage pill */}
+      <div className="flex items-center gap-2 mt-2.5 mb-2.5">
+        <span className="font-bold text-[13px] text-[#323338]">
+          ₪{(deal.value || 0).toLocaleString()}
+        </span>
+        {stageInfo && (
+          <span
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white flex-shrink-0"
+            style={{ backgroundColor: stageInfo.color }}
+          >
+            {stageInfo.label}
+          </span>
+        )}
+      </div>
+
+      {/* Bottom row: assignee + close date + health */}
+      <div className="flex items-center justify-between pt-2 border-t border-[#F0F0F5]">
+        {/* Left: assignee avatar */}
         <div className="flex items-center gap-1">
-          {deal.assignee && (
+          {deal.assignee ? (
             <div
-              className="w-5 h-5 bg-primary-light rounded-full flex items-center justify-center"
-              role="img"
-              aria-label={deal.assignee.name}
+              className="w-[20px] h-[20px] rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-white"
+              style={{ backgroundColor: cardAvatarColor(deal.assignee.name) }}
+              title={deal.assignee.name}
             >
-              <span className="text-primary text-[9px] font-bold">
-                {deal.assignee.name[0]}
+              <span className="text-white text-[8px] font-bold">
+                {deal.assignee.name[0].toUpperCase()}
               </span>
+            </div>
+          ) : (
+            <div className="w-[20px] h-[20px] rounded-full border border-dashed border-[#C5C7D0] flex items-center justify-center">
+              <User size={10} className="text-[#C5C7D0]" />
             </div>
           )}
         </div>
 
-        {/* Days in stage + rotting */}
-        <div className="flex items-center gap-2">
-          {!isClosedStage && (
-            <div
-              className={`flex items-center gap-0.5 text-[10px] font-semibold ${
-                isSeverelyRotting
-                  ? "text-danger"
-                  : isRotting
-                    ? "text-warning"
-                    : "text-text-tertiary"
-              }`}
-            >
-              {isRotting && (
-                <AlertTriangle
-                  size={10}
-                  className={isSeverelyRotting ? "animate-pulse" : ""}
-                />
-              )}
-              <Clock size={10} />
-              <span>{deal.daysInStage}d</span>
+        {/* Right: close date + rotting indicator + health */}
+        <div className="flex items-center gap-1.5">
+          {!isClosedStage && isRotting && (
+            <AlertTriangle
+              size={11}
+              className={`flex-shrink-0 ${isSeverelyRotting ? "text-[#FB275D] animate-pulse" : "text-[#FDAB3D]"}`}
+            />
+          )}
+
+          {closeDate && (
+            <div className={`flex items-center gap-0.5 text-[10px] font-medium ${isOverdue ? "text-[#FB275D]" : "text-[#676879]"}`}>
+              <Calendar size={10} className="flex-shrink-0" />
+              <span>{closeDate}</span>
             </div>
           )}
 
-          <span className="text-[10px] text-text-tertiary font-medium">
-            {deal.probability}%
-          </span>
+          <span className="text-[10px] text-[#9699A6]">{deal.probability}%</span>
 
-          {/* Health dot */}
           {deal.health && (
             <span
               className="inline-block w-2 h-2 rounded-full flex-shrink-0"
@@ -647,10 +675,11 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
         </div>
       </div>
 
-      {/* Next task indicator */}
+      {/* Next task */}
       {deal.nextTask && (
-        <div className="mt-2 px-2 py-1.5 bg-surface-secondary rounded-lg text-[10px] text-text-secondary truncate">
-          <CheckSquareIcon /> {deal.nextTask.title}
+        <div className="mt-2 px-2 py-1.5 bg-[#F7F8FA] rounded-lg text-[10px] text-[#676879] truncate flex items-center gap-1">
+          <CheckSquareIcon />
+          {deal.nextTask.title}
         </div>
       )}
     </div>

@@ -153,29 +153,48 @@ function DroppableColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex-shrink-0 w-72 flex flex-col rounded-xl overflow-hidden transition-all ${
-        isOver ? "ring-2 ring-primary/30 shadow-lg" : "bg-surface-secondary/40"
+      className={`flex-shrink-0 w-[280px] flex flex-col rounded-xl overflow-hidden transition-all ${
+        isOver ? "ring-2 shadow-lg" : ""
       }`}
+      style={isOver ? { ringColor: color + "50" } : undefined}
     >
-      <div className="px-3 py-2.5" style={{ backgroundColor: color }}>
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-sm text-white">{label}</span>
-          <span className="text-[11px] font-semibold text-white/80 bg-white/20 px-2 py-0.5 rounded-full">
+      {/* Monday-style column header */}
+      <div
+        className="px-3 py-2.5 bg-white border border-b-0 rounded-t-xl"
+        style={{ borderColor: "#E6E9EF", borderTopColor: color, borderTopWidth: 3 }}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: color }}
+            />
+            <span className="font-semibold text-[13px] text-[#323338] truncate">{label}</span>
+          </div>
+          <span
+            className="text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 text-white"
+            style={{ backgroundColor: color }}
+          >
             {count}
           </span>
         </div>
         {aggregate && (
-          <p className="text-[11px] text-white/70 mt-0.5">{aggregate}</p>
+          <p className="text-[12px] font-semibold text-[#676879] mt-1.5 pr-4">{aggregate}</p>
         )}
       </div>
 
-      <div className="flex-1 p-2 space-y-2 overflow-y-auto max-h-[60vh]">
+      <div
+        className={`flex-1 p-2 space-y-2 overflow-y-auto max-h-[65vh] bg-[#F7F8FA] border border-t-0 rounded-b-xl ${
+          isOver ? "bg-[#EDF3FB]" : ""
+        }`}
+        style={{ borderColor: "#E6E9EF" }}
+      >
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : count === 0 ? (
-          <div className="text-center text-text-tertiary text-xs py-8 opacity-50">
+          <div className="text-center text-[#9699A6] text-xs py-10">
             {emptyText}
           </div>
         ) : (
