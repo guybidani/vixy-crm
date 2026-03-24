@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X,
@@ -129,7 +129,32 @@ export default function BoardItemDetailPanel({
       )
     : contacts.slice(0, 20);
 
+  const updateTextareaRef = useRef<HTMLTextAreaElement>(null);
+
   // ── Effects ──
+
+  // Close on Escape key
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !editingName) {
+        onClose();
+      }
+    },
+    [onClose, editingName],
+  );
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Auto-focus updates textarea when panel opens
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateTextareaRef.current?.focus();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (item) {
@@ -428,7 +453,7 @@ export default function BoardItemDetailPanel({
 
       {/* Panel */}
       <div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-200"
+        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-200 w-full sm:w-auto"
         style={{ width: "min(900px, 90vw)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -568,6 +593,7 @@ export default function BoardItemDetailPanel({
                     <Avatar name="אני" size={32} />
                     <div className="flex-1 bg-[#F5F6F8] rounded-lg border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white transition-all overflow-hidden">
                       <textarea
+                        ref={updateTextareaRef}
                         className="w-full px-3 pt-2.5 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
                         placeholder="כתוב עדכון..."
                         rows={3}
@@ -577,6 +603,10 @@ export default function BoardItemDetailPanel({
                           if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                             e.preventDefault();
                             postUpdate();
+                          }
+                          // Escape key when textarea focused should close panel
+                          if (e.key === "Escape" && !newUpdateText.trim()) {
+                            onClose();
                           }
                         }}
                       />
