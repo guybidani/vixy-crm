@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Lock, Shield, PanelRightOpen, Link2 } from "lucide-react";
+import { Pencil, Lock, Shield, PanelRightOpen, Link2, List, Columns2, CalendarDays } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
@@ -15,7 +15,6 @@ import MondayBoard, {
 import KanbanBoard, {
   type KanbanColumn,
 } from "../components/shared/KanbanBoard";
-import ViewToggle from "../components/shared/ViewToggle";
 import ColumnEditorModal from "../components/boards/ColumnEditorModal";
 import {
   getBoard,
@@ -289,7 +288,44 @@ export default function BoardPage() {
   const canManagePermissions = userRole === "OWNER" || userRole === "ADMIN";
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
+
+  // ── View mode — persisted per board ──
+  const [viewMode, setViewMode] = useState<"kanban" | "table">(() => {
+    try {
+      const stored = localStorage.getItem(`board:${id}:viewMode`);
+      return (stored === "kanban" ? "kanban" : "table") as "kanban" | "table";
+    } catch {
+      return "table";
+    }
+  });
+  const handleViewModeChange = (mode: "kanban" | "table") => {
+    setViewMode(mode);
+    try { localStorage.setItem(`board:${id}:viewMode`, mode); } catch {}
+  };
+
+  // ── Group by — persisted per board ──
+  const [groupByKey, setGroupByKey] = useState<string | null>(() => {
+    try { return localStorage.getItem(`board:${id}:groupBy`) || null; } catch { return null; }
+  });
+  const handleGroupByChange = (key: string | null) => {
+    setGroupByKey(key);
+    try {
+      if (key) localStorage.setItem(`board:${id}:groupBy`, key);
+      else localStorage.removeItem(`board:${id}:groupBy`);
+    } catch {}
+  };
+
+  // ── Active filters — persisted per board ──
+  const [activeFilters, setActiveFilters] = useState<Array<{ column: string; values: string[] }>>(() => {
+    try {
+      const stored = localStorage.getItem(`board:${id}:filters`);
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
+  const handleFiltersChange = (filters: Array<{ column: string; values: string[] }>) => {
+    setActiveFilters(filters);
+    try { localStorage.setItem(`board:${id}:filters`, JSON.stringify(filters)); } catch {}
+  };
   const [editingCell, setEditingCell] = useState<{
     itemId: string;
     colKey: string;
@@ -898,7 +934,6 @@ export default function BoardPage() {
       title={boardTitle}
       actions={
         <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
           {canManagePermissions && (
             <button
               onClick={() => setPermissionsOpen(true)}
@@ -923,6 +958,50 @@ export default function BoardPage() {
         </div>
       }
     >
+      {/* ── Monday.com-style View Switcher ── */}
+      <div className="flex items-end border-b border-[#E6E9EF] mb-4 -mt-2">
+        {/* Table tab */}
+        <button
+          onClick={() => handleViewModeChange("table")}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors relative ${
+            viewMode === "table"
+              ? "text-[#0073EA]"
+              : "text-[#676879] hover:text-[#323338]"
+          }`}
+        >
+          <List size={15} />
+          טבלה
+          {viewMode === "table" && (
+            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0073EA] rounded-t" />
+          )}
+        </button>
+        {/* Kanban tab */}
+        <button
+          onClick={() => handleViewModeChange("kanban")}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors relative ${
+            viewMode === "kanban"
+              ? "text-[#0073EA]"
+              : "text-[#676879] hover:text-[#323338]"
+          }`}
+        >
+          <Columns2 size={15} />
+          קנבאן
+          {viewMode === "kanban" && (
+            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0073EA] rounded-t" />
+          )}
+        </button>
+        {/* Calendar tab — coming soon */}
+        <button
+          disabled
+          className="flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium text-[#C3C6D4] cursor-not-allowed relative"
+          title="בקרוב"
+        >
+          <CalendarDays size={15} />
+          לוח שנה
+          <span className="text-[10px] bg-[#F5F6F8] text-[#9699A6] px-1.5 py-0.5 rounded-full font-normal">בקרוב</span>
+        </button>
+      </div>
+
       {/* Board empty state */}
       {!isLoading &&
         board &&
@@ -1003,6 +1082,10 @@ export default function BoardPage() {
               )
               .map((c) => ({ key: c.key, label: c.label })) || []
           }
+          groupByKey={groupByKey}
+          onGroupByChange={handleGroupByChange}
+          activeFilters={activeFilters}
+          onFiltersChange={handleFiltersChange}
         />
       ) : /* Kanban View */
       kanbanColumns.length > 0 ? (
