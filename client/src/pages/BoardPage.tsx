@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Lock, Shield, PanelRightOpen } from "lucide-react";
+import { Pencil, Lock, Shield, PanelRightOpen, Link2 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
@@ -33,6 +33,178 @@ import {
   type BoardItem,
   type BoardColumn,
 } from "../api/boards";
+import { getWorkspaceMembers } from "../api/auth";
+
+// ── Avatar helpers ────────────────────────────────────────────────
+
+function hashColor(name: string): string {
+  const palette = [
+    "#0073EA", "#00CA72", "#A25DDC", "#FF642E", "#FDAB3D",
+    "#6161FF", "#FB275D", "#579BFC", "#33D391", "#FF7575",
+  ];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return palette[Math.abs(h) % palette.length];
+}
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
+
+interface WorkspaceMember {
+  memberId: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface PersonCellProps {
+  value: string; // comma-separated memberIds
+  members: WorkspaceMember[];
+  onChange: (val: string) => void;
+}
+
+function PersonCell({ value, members, onChange }: PersonCellProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selectedIds = value ? value.split(",").filter(Boolean) : [];
+  const selectedMembers = selectedIds
+    .map((id) => members.find((m) => m.memberId === id))
+    .filter((m): m is WorkspaceMember => !!m);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  function toggle(memberId: string) {
+    const ids = new Set(selectedIds);
+    if (ids.has(memberId)) ids.delete(memberId);
+    else ids.add(memberId);
+    onChange([...ids].join(","));
+  }
+
+  const avatarSize = "w-6 h-6 text-[10px]";
+
+  return (
+    <div ref={ref} className="relative flex items-center">
+      {/* Stacked avatars */}
+      <button
+        className="flex items-center -space-x-1.5 focus:outline-none"
+        onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
+        title="שנה אחראי"
+      >
+        {selectedMembers.length === 0 ? (
+          <span className={`${avatarSize} rounded-full border-2 border-dashed border-[#C3C6D4] flex items-center justify-center text-[#C3C6D4] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors`}>
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1c-3.3 0-6 1.8-6 4v.5h12V13c0-2.2-2.7-4-6-4z"/></svg>
+          </span>
+        ) : (
+          <>
+            {selectedMembers.slice(0, 3).map((m, i) => (
+              <span
+                key={m.memberId}
+                className={`${avatarSize} rounded-full border-2 border-white flex items-center justify-center font-semibold text-white`}
+                style={{ backgroundColor: hashColor(m.name), zIndex: 3 - i }}
+                title={m.name}
+              >
+                {initials(m.name)}
+              </span>
+            ))}
+            {selectedMembers.length > 3 && (
+              <span className={`${avatarSize} rounded-full border-2 border-white bg-[#E6E9EF] text-[#676879] flex items-center justify-center font-semibold`}>
+                +{selectedMembers.length - 3}
+              </span>
+            )}
+          </>
+        )}
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-xl min-w-[180px] py-1" onClick={(e) => e.stopPropagation()}>
+          {members.length === 0 ? (
+            <p className="px-3 py-2 text-[12px] text-[#9699A6]">אין חברי צוות</p>
+          ) : (
+            members.map((m) => {
+              const selected = selectedIds.includes(m.memberId);
+              return (
+                <button
+                  key={m.memberId}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 hover:bg-[#F5F6F8] text-left ${selected ? "bg-[#EEF4FF]" : ""}`}
+                  onClick={() => toggle(m.memberId)}
+                >
+                  <span
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                    style={{ backgroundColor: hashColor(m.name) }}
+                  >
+                    {initials(m.name)}
+                  </span>
+                  <span className="text-[12px] text-[#323338] truncate flex-1">{m.name}</span>
+                  {selected && (
+                    <svg className="w-3.5 h-3.5 text-[#0073EA] flex-shrink-0" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 12L2 7.5l1.4-1.4 3.1 3.1 5.6-5.6L13.5 5z"/></svg>
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface LinkCellProps {
+  value: string;
+  onEdit: () => void;
+}
+
+function LinkCell({ value, onEdit }: LinkCellProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  let domain = "";
+  try {
+    const url = value.startsWith("http") ? value : `https://${value}`;
+    domain = new URL(url).hostname;
+  } catch {
+    domain = value;
+  }
+  const href = value.startsWith("http") ? value : `https://${value}`;
+
+  return (
+    <div className="relative flex items-center min-w-0">
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center gap-1 px-2 py-0.5 bg-[#EEF4FF] hover:bg-[#DDEEFF] border border-[#C3D9FF] rounded-full text-[11px] font-medium text-[#0073EA] truncate max-w-full transition-colors"
+        onClick={(e) => e.stopPropagation()}
+        onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(); }}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <Link2 size={10} className="flex-shrink-0" />
+        <span className="truncate">{domain || value}</span>
+      </a>
+      {showTooltip && domain && (
+        <div className="absolute bottom-full left-0 mb-1 z-50 bg-[#323338] text-white text-[11px] rounded-lg px-2.5 py-1.5 shadow-lg whitespace-nowrap pointer-events-none">
+          {domain}
+          <div className="absolute top-full left-4 border-4 border-transparent border-t-[#323338]" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Flattened row type for MondayBoard ───────────────────────────
 
 // Flattened row type for MondayBoard
 interface BoardRow {
@@ -73,6 +245,9 @@ function buildRows(board: Board): MondayGroup<BoardRow>[] {
             break;
           case "CHECKBOX":
             row[colDef.key] = val.jsonValue;
+            break;
+          case "PERSON":
+            row[colDef.key] = val.textValue; // comma-separated memberIds
             break;
           default:
             row[colDef.key] = val.textValue;
@@ -132,6 +307,13 @@ export default function BoardPage() {
     queryKey: ["board", id],
     queryFn: () => getBoard(id!),
     enabled: !!id,
+  });
+
+  const { data: wsMembers = [] } = useQuery({
+    queryKey: ["workspaceMembers", currentWorkspaceId],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId,
+    staleTime: 60_000,
   });
 
   // ── Mutations ──
@@ -479,7 +661,82 @@ export default function BoardPage() {
               };
             }
 
-            // TEXT, EMAIL, PHONE, LINK, PERSON — inline text edit
+            // PERSON column — avatar picker
+            if (col.type === "PERSON") {
+              return {
+                key: col.key,
+                label: col.label,
+                width: col.width || "120px",
+                render: (row: BoardRow) => (
+                  <PersonCell
+                    value={row[col.key] || ""}
+                    members={wsMembers}
+                    onChange={(val) => handleCellEdit(row.id, col, val)}
+                  />
+                ),
+              };
+            }
+
+            // LINK column — chip with tooltip, double-click to edit
+            if (col.type === "LINK") {
+              return {
+                key: col.key,
+                label: col.label,
+                width: col.width || "160px",
+                render: (row: BoardRow) => {
+                  const val = row[col.key];
+                  if (
+                    editingCell?.itemId === row.id &&
+                    editingCell?.colKey === col.key
+                  ) {
+                    return (
+                      <input
+                        autoFocus
+                        className="w-full bg-transparent text-[13px] text-[#323338] outline-none border-b border-[#0073EA] py-0.5"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={() => {
+                          if (editValue !== (val || "")) {
+                            handleCellEdit(row.id, col, editValue);
+                          }
+                          setEditingCell(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter")
+                            (e.target as HTMLInputElement).blur();
+                          if (e.key === "Escape") setEditingCell(null);
+                        }}
+                      />
+                    );
+                  }
+                  if (val) {
+                    return (
+                      <LinkCell
+                        value={val}
+                        onEdit={() => {
+                          setEditingCell({ itemId: row.id, colKey: col.key });
+                          setEditValue(String(val || ""));
+                        }}
+                      />
+                    );
+                  }
+                  return (
+                    <span
+                      className="text-[13px] text-[#9699A6] cursor-text"
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCell({ itemId: row.id, colKey: col.key });
+                        setEditValue("");
+                      }}
+                    >
+                      —
+                    </span>
+                  );
+                },
+              };
+            }
+
+            // TEXT, EMAIL, PHONE — inline text edit
             return {
               key: col.key,
               label: col.label,
@@ -510,25 +767,6 @@ export default function BoardPage() {
                   );
                 }
                 const val = row[col.key];
-                if (col.type === "LINK" && val) {
-                  return (
-                    <a
-                      href={val}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-[13px] text-[#0073EA] hover:underline truncate block"
-                      onClick={(e) => e.stopPropagation()}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        setEditingCell({ itemId: row.id, colKey: col.key });
-                        setEditValue(String(val || ""));
-                      }}
-                    >
-                      {val}
-                    </a>
-                  );
-                }
                 return (
                   <span
                     className="text-[13px] text-[#323338] cursor-text truncate block"

@@ -6,16 +6,16 @@ import Modal from "../shared/Modal";
 import { addBoardColumn } from "../../api/boards";
 
 const COLUMN_TYPES = [
-  { value: "TEXT", label: "טקסט" },
-  { value: "NUMBER", label: "מספר" },
-  { value: "STATUS", label: "סטטוס" },
-  { value: "DATE", label: "תאריך" },
-  { value: "PERSON", label: "אחראי" },
-  { value: "EMAIL", label: "אימייל" },
-  { value: "PHONE", label: "טלפון" },
-  { value: "LINK", label: "קישור" },
-  { value: "PRIORITY", label: "עדיפות" },
-  { value: "CHECKBOX", label: "צ'קבוקס" },
+  { value: "TEXT",     label: "טקסט",    icon: "T" },
+  { value: "NUMBER",   label: "מספר",    icon: "#" },
+  { value: "DATE",     label: "תאריך",   icon: "📅" },
+  { value: "STATUS",   label: "סטטוס",   icon: "●" },
+  { value: "PRIORITY", label: "עדיפות",  icon: "⚑" },
+  { value: "CHECKBOX", label: "צ'קבוקס", icon: "☑" },
+  { value: "EMAIL",    label: "אימייל",  icon: "✉" },
+  { value: "PHONE",    label: "טלפון",   icon: "📞" },
+  { value: "LINK",     label: "קישור",   icon: "🔗" },
+  { value: "PERSON",   label: "אחראי",   icon: "👤" },
 ] as const;
 
 const DEFAULT_COLORS = [
@@ -101,9 +101,9 @@ export default function ColumnEditorModal({
       open={open}
       onClose={onClose}
       title="הוסף עמודה"
-      maxWidth="max-w-[460px]"
+      maxWidth="max-w-[520px]"
     >
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-5">
         {/* Column Name */}
         <div>
           <label className="block text-sm font-medium text-[#323338] mb-1.5">
@@ -118,26 +118,52 @@ export default function ColumnEditorModal({
           />
         </div>
 
-        {/* Column Type */}
+        {/* Column Type — icon card grid */}
         <div>
-          <label className="block text-sm font-medium text-[#323338] mb-1.5">
-            סוג
+          <label className="block text-sm font-medium text-[#323338] mb-2">
+            סוג עמודה
           </label>
-          <div className="grid grid-cols-5 gap-1.5">
-            {COLUMN_TYPES.map((ct) => (
-              <button
-                key={ct.value}
-                onClick={() => setType(ct.value)}
-                className={cn(
-                  "px-2 py-2 text-[12px] font-medium rounded-lg border transition-all text-center",
-                  type === ct.value
-                    ? "border-[#0073EA] bg-[#0073EA]/5 text-[#0073EA]"
-                    : "border-[#E6E9EF] text-[#676879] hover:border-[#C3C6D4]",
-                )}
-              >
-                {ct.label}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            {COLUMN_TYPES.map((ct) => {
+              const selected = type === ct.value;
+              const isEmoji = ct.icon.length > 1; // multi-char = emoji
+              return (
+                <button
+                  key={ct.value}
+                  onClick={() => setType(ct.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-center hover:shadow-sm",
+                    selected
+                      ? "border-[#0073EA] bg-[#EEF4FF] shadow-sm"
+                      : "border-[#E6E9EF] bg-white hover:border-[#C3C6D4]",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex items-center justify-center rounded-lg font-bold leading-none",
+                      isEmoji
+                        ? "text-[22px] w-9 h-9"
+                        : "w-9 h-9 text-[18px]",
+                      selected
+                        ? isEmoji ? "" : "text-[#0073EA]"
+                        : isEmoji ? "" : "text-[#676879]",
+                      !isEmoji && selected && "bg-[#0073EA]/10",
+                      !isEmoji && !selected && "bg-[#F5F6F8]",
+                    )}
+                  >
+                    {ct.icon}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium leading-tight",
+                      selected ? "text-[#0073EA]" : "text-[#676879]",
+                    )}
+                  >
+                    {ct.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
