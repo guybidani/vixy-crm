@@ -63,6 +63,21 @@ const inviteSchema = z.object({
   role: z.enum(["ADMIN", "AGENT"]),
 });
 
+const updateWorkspaceSchema = z.object({
+  name: z.string().min(1).optional(),
+  logoUrl: z.string().url().nullable().optional(),
+  timezone: z.string().optional(),
+});
+
+const updateProfileSchema = z.object({
+  name: z.string().min(1).optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+});
+
+const changeMemberRoleSchema = z.object({
+  role: z.enum(["ADMIN", "AGENT"]),
+});
+
 // POST /api/v1/auth/register
 authRouter.post(
   "/register",
@@ -280,6 +295,103 @@ authRouter.post(
         ip: req.ip,
       });
       res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /api/v1/auth/workspaces/:id — update workspace (OWNER/ADMIN)
+authRouter.patch(
+  "/workspaces/:id",
+  requireAuth,
+  validate(updateWorkspaceSchema),
+  async (req, res, next) => {
+    try {
+      const result = await authService.updateWorkspace(
+        req.params.id as string,
+        req.user!.userId,
+        req.body,
+      );
+      audit({
+        workspaceId: req.params.id as string,
+        userId: req.user!.userId,
+        action: "workspace.update",
+        entityType: "Workspace",
+        entityId: req.params.id as string,
+        ip: req.ip,
+      });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /api/v1/auth/me — update own profile
+authRouter.patch(
+  "/me",
+  requireAuth,
+  validate(updateProfileSchema),
+  async (req, res, next) => {
+    try {
+      const result = await authService.updateUserProfile(req.user!.userId, req.body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /api/v1/auth/workspaces/:id/members/:memberId — change member role
+authRouter.patch(
+  "/workspaces/:id/members/:memberId",
+  requireAuth,
+  validate(changeMemberRoleSchema),
+  async (req, res, next) => {
+    try {
+      const result = await authService.changeMemberRole(
+        req.params.id as string,
+        req.user!.userId,
+        req.params.memberId as string,
+        req.body.role,
+      );
+      audit({
+        workspaceId: req.params.id as string,
+        userId: req.user!.userId,
+        action: "member.role_change",
+        entityType: "WorkspaceMember",
+        entityId: req.params.memberId as string,
+        metadata: { newRole: req.body.role },
+        ip: req.ip,
+      });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /api/v1/auth/workspaces/:id/members/:memberId — remove member
+authRouter.delete(
+  "/workspaces/:id/members/:memberId",
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      await authService.removeMember(
+        req.params.id as string,
+        req.user!.userId,
+        req.params.memberId as string,
+      );
+      audit({
+        workspaceId: req.params.id as string,
+        userId: req.user!.userId,
+        action: "member.remove",
+        entityType: "WorkspaceMember",
+        entityId: req.params.memberId as string,
+        ip: req.ip,
+      });
+      res.json({ ok: true });
     } catch (err) {
       next(err);
     }

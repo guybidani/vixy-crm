@@ -99,3 +99,37 @@ export function inviteMember(
     body: JSON.stringify({ email, role }),
   });
 }
+
+export function updateWorkspace(
+  workspaceId: string,
+  data: { name?: string; logoUrl?: string | null; timezone?: string },
+) {
+  return api<WorkspaceInfo>(`/auth/workspaces/${workspaceId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateProfile(data: { name?: string; avatarUrl?: string | null }) {
+  return api<User>("/auth/me", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function changeMemberRole(
+  workspaceId: string,
+  memberId: string,
+  role: "ADMIN" | "AGENT",
+) {
+  return api<{ memberId: string; role: string }>(
+    `/auth/workspaces/${workspaceId}/members/${memberId}`,
+    { method: "PATCH", body: JSON.stringify({ role }) },
+  );
+}
+
+export function removeMember(workspaceId: string, memberId: string) {
+  return api(`/auth/workspaces/${workspaceId}/members/${memberId}`, {
+    method: "DELETE",
+  });
+}

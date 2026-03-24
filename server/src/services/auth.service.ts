@@ -602,7 +602,7 @@ export async function getWorkspaceMembers(workspaceId: string) {
     where: { workspaceId },
     include: {
       user: {
-        select: { id: true, email: true, name: true, avatarUrl: true },
+        select: { id: true, email: true, name: true, avatarUrl: true, updatedAt: true },
       },
     },
     orderBy: { invitedAt: "asc" },
@@ -616,5 +616,97 @@ export async function getWorkspaceMembers(workspaceId: string) {
     avatarUrl: m.user.avatarUrl,
     role: m.role,
     joinedAt: m.joinedAt,
+    lastActive: m.user.updatedAt,
   }));
+}
+
+export async function changeMemberRole(
+  workspaceId: string,
+  callerUserId: string,
+  memberId: string,
+  newRole: "ADMIN" | "AGENT",
+) {
+  // Caller must be OWNER or ADMIN
+  const caller = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
+  });
+  if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can change roles");
+
+  const target = await prisma.workspaceMember.findFirst({
+    where: { id: memberId, workspaceId },
+  });
+  if (!target) throw new AppError(404, "NOT_FOUND", "Member not found");
+  if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "Cannot change owner role");
+  // ADMIN cannot demote/promote another ADMIN (only OWNER can)
+  if (caller.role === "ADMIN" && target.role === "ADMIN")
+    throw new AppError(403, "FORBIDDEN", "Only workspace owner can modify admin roles");
+
+  const updated = await prisma.workspaceMember.update({
+    where: { id: memberId },
+    data: { role: newRole },
+  });
+  return { memberId: updated.id, role: updated.role };
+}
+
+export async function removeMember(
+  workspaceId: string,
+  callerUserId: string,
+  memberId: string,
+) {
+  const caller = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
+  });
+  if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can remove members");
+
+  const target = await prisma.workspaceMember.findFirst({
+    where: { id: memberId, workspaceId },
+  });
+  if (!target) throw new AppError(404, "NOT_FOUND", "Member not found");
+  if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "Cannot remove workspace owner");
+  if (target.id === caller.id) throw new AppError(400, "BAD_REQUEST", "Cannot remove yourself");
+
+  await prisma.workspaceMember.delete({ where: { id: memberId } });
+  return { ok: true };
+}
+
+export async function updateWorkspace(
+  workspaceId: string,
+  callerUserId: string,
+  data: { name?: string; logoUrl?: string; timezone?: string },
+) {
+  const caller = await prisma.workspaceMember.findFirst({
+    where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
+  });
+  if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can update workspace");
+
+  const settings: Record<string, unknown> = {};
+  if (data.timezone) settings.timezone = data.timezone;
+
+  const updateData: Record<string, unknown> = {};
+  if (data.name) updateData.name = data.name;
+  if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl;
+  if (data.timezone) updateData.settings = settings;
+
+  const ws = await prisma.workspace.update({
+    where: { id: workspaceId },
+    data: updateData,
+    select: { id: true, name: true, slug: true, logoUrl: true, settings: true },
+  });
+  return ws;
+}
+
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; avatarUrl?: string },
+) {
+  const updateData: Record<string, unknown> = {};
+  if (data.name) updateData.name = data.name;
+  if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: updateData,
+    select: { id: true, email: true, name: true, avatarUrl: true },
+  });
+  return user;
 }

@@ -22,6 +22,14 @@ import {
   Calendar,
   Plug2,
   AlarmClock,
+  Settings2,
+  Lock,
+  ChevronDown,
+  Check,
+  X,
+  Globe,
+  Building2,
+  CheckCircle2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -34,7 +42,14 @@ import CalendarTab from "../components/settings/CalendarTab";
 import IntegrationsTab from "../components/settings/IntegrationsTab";
 import SnoozeSettingsTab from "../components/settings/SnoozeSettingsTab";
 import { useAuth } from "../hooks/useAuth";
-import { getWorkspaceMembers, inviteMember } from "../api/auth";
+import {
+  getWorkspaceMembers,
+  inviteMember,
+  changeMemberRole,
+  removeMember,
+  updateWorkspace,
+  updateProfile,
+} from "../api/auth";
 import {
   listCannedResponses,
   createCannedResponse,
@@ -60,8 +75,10 @@ interface SettingsTab {
 }
 
 const BASE_TABS: SettingsTab[] = [
+  { key: "general", label: "כללי", icon: Settings2, color: "#6161FF", adminOnly: true },
   { key: "profile", label: "פרופיל", icon: User, color: "#6161FF" },
-  { key: "members", label: "חברי צוות", icon: Users, color: "#00CA72" },
+  { key: "members", label: "חברי צוות", icon: Users, color: "#00CA72", adminOnly: true },
+  { key: "permissions", label: "הרשאות", icon: Lock, color: "#FB275D", adminOnly: true },
   { key: "canned", label: "תגובות מוכנות", icon: Zap, color: "#FDAB3D" },
   { key: "sla", label: "מדיניות SLA", icon: Shield, color: "#A25DDC" },
   { key: "automation", label: "אוטומציה", icon: Workflow, color: "#FF642E" },
@@ -128,8 +145,10 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {tab === "general" && <GeneralTab />}
       {tab === "profile" && <ProfileTab />}
       {tab === "members" && <MembersTab />}
+      {tab === "permissions" && <WorkspacePermissionsTab />}
       {tab === "canned" && <CannedResponsesTab />}
       {tab === "sla" && <SlaPoliciesTab />}
       {tab === "automation" && <AutomationTab />}
@@ -143,81 +162,237 @@ export default function SettingsPage() {
   );
 }
 
+// ─── General Tab (workspace settings) ───
+
+function GeneralTab() {
+  const { workspaces, currentWorkspaceId } = useAuth();
+  const queryClient = useQueryClient();
+  const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
+
+  const [name, setName] = useState(currentWs?.name || "");
+  const [timezone, setTimezone] = useState("Asia/Jerusalem");
+  const [editingName, setEditingName] = useState(false);
+
+  const TIMEZONES = [
+    { value: "Asia/Jerusalem", label: "ישראל (GMT+2/+3)" },
+    { value: "Europe/London", label: "לונדון (GMT+0/+1)" },
+    { value: "Europe/Berlin", label: "ברלין (GMT+1/+2)" },
+    { value: "America/New_York", label: "ניו יורק (GMT-5/-4)" },
+    { value: "America/Los_Angeles", label: "לוס אנג'לס (GMT-8/-7)" },
+    { value: "Asia/Dubai", label: "דובאי (GMT+4)" },
+  ];
+
+  const updateMut = useMutation({
+    mutationFn: (data: { name?: string; timezone?: string }) =>
+      updateWorkspace(currentWorkspaceId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success("הגדרות עודכנו");
+      setEditingName(false);
+    },
+    onError: handleMutationError,
+  });
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      {/* Workspace name */}
+      <div className="bg-white rounded-xl shadow-card p-6">
+        <h2 className="text-base font-bold text-text-primary mb-5 flex items-center gap-2">
+          <Building2 size={16} className="text-primary" />
+          פרטי סביבת עבודה
+        </h2>
+
+        {/* Logo placeholder */}
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm text-white text-2xl font-bold"
+            style={{ backgroundColor: "#6161FF" }}
+          >
+            {(name || currentWs?.name || "W").charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-text-primary">{currentWs?.name}</p>
+            <p className="text-xs text-text-tertiary font-mono">{currentWs?.slug}</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Workspace name */}
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+              שם סביבת עבודה
+            </label>
+            {editingName ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-primary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  autoFocus
+                />
+                <button
+                  onClick={() => updateMut.mutate({ name })}
+                  disabled={updateMut.isPending || !name.trim()}
+                  className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                >
+                  שמור
+                </button>
+                <button
+                  onClick={() => { setName(currentWs?.name || ""); setEditingName(false); }}
+                  className="px-3 py-2 bg-surface-tertiary text-text-secondary text-sm font-semibold rounded-lg hover:bg-border transition-colors"
+                >
+                  ביטול
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <p className="text-sm font-semibold text-text-primary flex-1">{currentWs?.name}</p>
+                <button
+                  onClick={() => setEditingName(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text-secondary border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                >
+                  <Pencil size={12} /> ערוך
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Timezone */}
+          <div>
+            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+              <Globe size={12} className="inline mr-1" />
+              אזור זמן
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              >
+                {TIMEZONES.map((tz) => (
+                  <option key={tz.value} value={tz.value}>{tz.label}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => updateMut.mutate({ timezone })}
+                disabled={updateMut.isPending}
+                className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+              >
+                שמור
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Profile Tab ───
 
 function ProfileTab() {
   const { user, workspaces, currentWorkspaceId } = useAuth();
+  const queryClient = useQueryClient();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
+  const [editingName, setEditingName] = useState(false);
+  const [name, setName] = useState(user?.name || "");
+
+  const updateMut = useMutation({
+    mutationFn: (data: { name: string }) => updateProfile(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      toast.success("פרופיל עודכן");
+      setEditingName(false);
+    },
+    onError: handleMutationError,
+  });
+
+  const avatarBg = avatarColor(user?.name || "");
 
   return (
-    <div className="space-y-4">
-      {/* User Info */}
+    <div className="space-y-4 max-w-2xl">
+      {/* Personal info */}
       <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-4">
-          פרטים אישיים
-        </h2>
-        <div className="flex items-center gap-4">
+        <h2 className="text-base font-bold text-text-primary mb-5">פרטים אישיים</h2>
+        <div className="flex items-start gap-5">
+          {/* Avatar */}
           <div
-            className="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-sm"
+            className="w-16 h-16 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"
+            style={{ backgroundColor: avatarBg }}
             role="img"
             aria-label={user?.name || "משתמש"}
           >
             <span className="text-white text-2xl font-bold">
-              {user?.name?.charAt(0) || "?"}
+              {(name || user?.name)?.charAt(0) || "?"}
             </span>
           </div>
-          <div className="flex-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-text-tertiary mb-1">
-                  שם מלא
-                </label>
-                <p className="text-sm font-semibold text-text-primary">
-                  {user?.name}
-                </p>
-              </div>
-              <div>
-                <label className="block text-xs text-text-tertiary mb-1">
-                  אימייל
-                </label>
-                <p className="text-sm text-text-primary">{user?.email}</p>
-              </div>
+          <div className="flex-1 space-y-4">
+            {/* Name */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">שם מלא</label>
+              {editingName ? (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-primary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => updateMut.mutate({ name })}
+                    disabled={updateMut.isPending || !name.trim()}
+                    className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                  >
+                    שמור
+                  </button>
+                  <button
+                    onClick={() => { setName(user?.name || ""); setEditingName(false); }}
+                    className="px-3 py-2 bg-surface-tertiary text-text-secondary text-sm font-semibold rounded-lg hover:bg-border transition-colors"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-semibold text-text-primary flex-1">{user?.name}</p>
+                  <button
+                    onClick={() => setEditingName(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text-secondary border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                  >
+                    <Pencil size={12} /> ערוך
+                  </button>
+                </div>
+              )}
+            </div>
+            {/* Email */}
+            <div>
+              <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+                <Mail size={12} className="inline mr-1" />
+                אימייל
+              </label>
+              <p className="text-sm text-text-primary">{user?.email}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Workspace Info */}
+      {/* Workspace membership */}
       <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-4">
-          סביבת עבודה
-        </h2>
+        <h2 className="text-base font-bold text-text-primary mb-4">סביבת עבודה נוכחית</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              שם הסביבה
-            </label>
-            <p className="text-sm font-semibold text-text-primary">
-              {currentWs?.name || "—"}
-            </p>
+            <label className="block text-xs text-text-tertiary mb-1">שם הסביבה</label>
+            <p className="text-sm font-semibold text-text-primary">{currentWs?.name || "—"}</p>
           </div>
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              סלאג
-            </label>
-            <p className="text-sm text-text-primary font-mono">
-              {currentWs?.slug || "—"}
-            </p>
+            <label className="block text-xs text-text-tertiary mb-1">סלאג</label>
+            <p className="text-sm text-text-primary font-mono">{currentWs?.slug || "—"}</p>
           </div>
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">
-              תפקיד
-            </label>
-            <p className="text-sm text-text-primary">
-              {ROLES[currentWs?.role as keyof typeof ROLES] ||
-                currentWs?.role ||
-                "—"}
-            </p>
+            <label className="block text-xs text-text-tertiary mb-1">תפקיד</label>
+            <RoleBadge role={currentWs?.role || ""} />
           </div>
         </div>
       </div>
@@ -239,14 +414,10 @@ function ProfileTab() {
                 }`}
               >
                 <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm">
-                  <span className="text-white text-sm font-bold">
-                    {ws.name.charAt(0)}
-                  </span>
+                  <span className="text-white text-sm font-bold">{ws.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-text-primary">
-                    {ws.name}
-                  </p>
+                  <p className="text-sm font-semibold text-text-primary">{ws.name}</p>
                   <p className="text-xs text-text-tertiary">
                     {ROLES[ws.role as keyof typeof ROLES] || ws.role}
                   </p>
@@ -265,14 +436,41 @@ function ProfileTab() {
   );
 }
 
+// ─── Shared role badge ───
+
+function RoleBadge({ role }: { role: string }) {
+  const ROLE_META: Record<string, { color: string; label: string }> = {
+    OWNER: { color: "#FDAB3D", label: "בעלים" },
+    ADMIN: { color: "#6161FF", label: "מנהל" },
+    AGENT: { color: "#C4C4C4", label: "נציג" },
+    MEMBER: { color: "#579BFC", label: "חבר" },
+    VIEWER: { color: "#C4C4C4", label: "צופה" },
+  };
+  const meta = ROLE_META[role] || { color: "#C4C4C4", label: role };
+  return (
+    <span
+      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full text-white"
+      style={{ backgroundColor: meta.color }}
+    >
+      {role === "OWNER" && <Crown size={10} />}
+      {meta.label}
+    </span>
+  );
+}
+
 // ─── Members Tab ───
 
 function MembersTab() {
-  const { currentWorkspaceId } = useAuth();
+  const { currentWorkspaceId, workspaces, user } = useAuth();
   const queryClient = useQueryClient();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "AGENT">("AGENT");
+  const [inviteSent, setInviteSent] = useState(false);
+  const [roleDropdown, setRoleDropdown] = useState<string | null>(null);
+
+  const currentRole = workspaces.find((w) => w.id === currentWorkspaceId)?.role;
+  const isOwnerOrAdmin = currentRole === "OWNER" || currentRole === "ADMIN";
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["workspace-members", currentWorkspaceId],
@@ -281,24 +479,46 @@ function MembersTab() {
   });
 
   const inviteMut = useMutation({
-    mutationFn: () =>
-      inviteMember(currentWorkspaceId!, inviteEmail, inviteRole),
+    mutationFn: () => inviteMember(currentWorkspaceId!, inviteEmail, inviteRole),
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["workspace-members", currentWorkspaceId],
-      });
-      toast.success("הזמנה נשלחה!");
-      setShowInvite(false);
+      queryClient.invalidateQueries({ queryKey: ["workspace-members", currentWorkspaceId] });
+      setInviteSent(true);
       setInviteEmail("");
     },
     onError: handleMutationError,
   });
 
-  const ROLE_COLORS: Record<string, { color: string; label: string }> = {
-    OWNER: { color: "#FDAB3D", label: "בעלים" },
-    ADMIN: { color: "#6161FF", label: "מנהל" },
-    AGENT: { color: "#C4C4C4", label: "נציג" },
-  };
+  const changeRoleMut = useMutation({
+    mutationFn: ({ memberId, role }: { memberId: string; role: "ADMIN" | "AGENT" }) =>
+      changeMemberRole(currentWorkspaceId!, memberId, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-members", currentWorkspaceId] });
+      toast.success("תפקיד עודכן");
+      setRoleDropdown(null);
+    },
+    onError: handleMutationError,
+  });
+
+  const removeMut = useMutation({
+    mutationFn: (memberId: string) => removeMember(currentWorkspaceId!, memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-members", currentWorkspaceId] });
+      toast.success("חבר צוות הוסר");
+    },
+    onError: handleMutationError,
+  });
+
+  function formatLastActive(date: string | undefined | null) {
+    if (!date) return "—";
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "היום";
+    if (diffDays === 1) return "אתמול";
+    if (diffDays < 7) return `לפני ${diffDays} ימים`;
+    return d.toLocaleDateString("he-IL");
+  }
 
   return (
     <div className="space-y-4">
@@ -306,25 +526,25 @@ function MembersTab() {
         <div>
           <h2 className="text-base font-bold text-text-primary">חברי צוות</h2>
           <p className="text-xs text-text-tertiary">
-            ניהול חברי הצוות בסביבת העבודה
+            {members?.length || 0} חברים בסביבת העבודה
           </p>
         </div>
-        <button
-          onClick={() => setShowInvite(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
-        >
-          <UserPlus size={16} />
-          הזמן חבר צוות
-        </button>
+        {isOwnerOrAdmin && (
+          <button
+            onClick={() => { setShowInvite(true); setInviteSent(false); }}
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          >
+            <UserPlus size={16} />
+            + הזמן חבר
+          </button>
+        )}
       </div>
 
+      {/* Members table */}
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white rounded-xl shadow-card p-4 h-16 animate-pulse"
-            />
+            <div key={i} className="bg-white rounded-xl shadow-card p-4 h-16 animate-pulse" />
           ))}
         </div>
       ) : !members || members.length === 0 ? (
@@ -334,41 +554,103 @@ function MembersTab() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-card overflow-hidden">
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-5 py-2.5 bg-surface-secondary border-b border-border-light text-[11px] font-semibold text-text-tertiary uppercase tracking-wide">
+            <span>חבר</span>
+            <span>פעיל לאחרונה</span>
+            <span>תפקיד</span>
+            {isOwnerOrAdmin && <span>פעולות</span>}
+          </div>
           <div className="divide-y divide-border-light">
             {members.map((m) => {
-              const role = ROLE_COLORS[m.role] || ROLE_COLORS.AGENT;
               const memberAvatarColor = avatarColor(m.name || "");
+              const isCurrentUser = m.userId === user?.id;
+              const canEdit = isOwnerOrAdmin && m.role !== "OWNER" && !isCurrentUser;
               return (
                 <div
                   key={m.memberId}
-                  className="px-5 py-3.5 flex items-center gap-3 hover:bg-[#F5F6FF] transition-colors"
+                  className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-[#F5F6FF] transition-colors"
                 >
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
-                    style={{ backgroundColor: memberAvatarColor }}
-                    role="img"
-                    aria-label={m.name || "חבר צוות"}
-                  >
-                    <span className="text-white text-sm font-bold">
-                      {m.name?.charAt(0) || "?"}
-                    </span>
+                  {/* Member info */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center shadow-sm flex-shrink-0"
+                      style={{ backgroundColor: memberAvatarColor }}
+                      role="img"
+                      aria-label={m.name || "חבר צוות"}
+                    >
+                      <span className="text-white text-sm font-bold">
+                        {m.name?.charAt(0) || "?"}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-text-primary truncate">
+                        {m.name} {isCurrentUser && <span className="text-[10px] text-text-tertiary font-normal">(אתה)</span>}
+                      </p>
+                      <p className="text-xs text-text-tertiary flex items-center gap-1 truncate">
+                        <Mail size={10} className="flex-shrink-0" />
+                        {m.email}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-text-primary">
-                      {m.name}
-                    </p>
-                    <p className="text-xs text-text-tertiary flex items-center gap-1">
-                      <Mail size={10} />
-                      {m.email}
-                    </p>
+
+                  {/* Last active */}
+                  <p className="text-xs text-text-tertiary">
+                    {formatLastActive((m as { lastActive?: string }).lastActive)}
+                  </p>
+
+                  {/* Role badge / dropdown */}
+                  <div className="relative">
+                    {canEdit ? (
+                      <button
+                        onClick={() => setRoleDropdown(roleDropdown === m.memberId ? null : m.memberId)}
+                        className="flex items-center gap-1 group"
+                      >
+                        <RoleBadge role={m.role} />
+                        <ChevronDown size={12} className="text-text-tertiary group-hover:text-primary transition-colors" />
+                      </button>
+                    ) : (
+                      <RoleBadge role={m.role} />
+                    )}
+                    {roleDropdown === m.memberId && (
+                      <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-border-light z-50 py-1.5 min-w-[140px]">
+                        {(["ADMIN", "AGENT"] as const).map((r) => (
+                          <button
+                            key={r}
+                            onClick={() => changeRoleMut.mutate({ memberId: m.memberId, role: r })}
+                            disabled={changeRoleMut.isPending}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#F5F6FF] transition-colors ${m.role === r ? "font-semibold text-primary" : "text-text-primary"}`}
+                          >
+                            {m.role === r && <Check size={12} className="text-primary" />}
+                            {m.role !== r && <span className="w-3" />}
+                            {r === "ADMIN" ? "מנהל" : "נציג"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span
-                    className="text-[10px] font-semibold px-2.5 py-1 rounded-full text-white flex items-center gap-1"
-                    style={{ backgroundColor: role.color }}
-                  >
-                    {m.role === "OWNER" && <Crown size={10} />}
-                    {role.label}
-                  </span>
+
+                  {/* Actions */}
+                  {isOwnerOrAdmin && (
+                    <div>
+                      {canEdit ? (
+                        <button
+                          onClick={() => {
+                            if (confirm(`להסיר את ${m.name} מסביבת העבודה?`)) {
+                              removeMut.mutate(m.memberId);
+                            }
+                          }}
+                          disabled={removeMut.isPending}
+                          className="p-1.5 rounded-md hover:bg-red-50 transition-colors group"
+                          title="הסר מחבר"
+                        >
+                          <X size={15} className="text-text-tertiary group-hover:text-danger transition-colors" />
+                        </button>
+                      ) : (
+                        <span className="w-8 block" />
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -379,64 +661,175 @@ function MembersTab() {
       {/* Invite Modal */}
       <Modal
         open={showInvite}
-        onClose={() => setShowInvite(false)}
+        onClose={() => { setShowInvite(false); setInviteSent(false); setInviteEmail(""); }}
         title="הזמנת חבר צוות"
         maxWidth="max-w-md"
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            inviteMut.mutate();
-          }}
-          className="space-y-4 p-6"
-        >
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              אימייל *
-            </label>
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="example@company.com"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              required
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              תפקיד
-            </label>
-            <select
-              value={inviteRole}
-              onChange={(e) =>
-                setInviteRole(e.target.value as "ADMIN" | "AGENT")
-              }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-            >
-              <option value="AGENT">נציג</option>
-              <option value="ADMIN">מנהל</option>
-            </select>
-          </div>
-          <div className="flex gap-3 pt-2">
+        {inviteSent ? (
+          <div className="p-8 flex flex-col items-center gap-4 text-center">
+            <div className="w-16 h-16 bg-[#E6F9F1] rounded-full flex items-center justify-center">
+              <CheckCircle2 size={32} className="text-success" />
+            </div>
+            <div>
+              <p className="text-base font-bold text-text-primary">ההזמנה נשלחה!</p>
+              <p className="text-sm text-text-tertiary mt-1">החבר החדש נוסף לסביבת העבודה</p>
+            </div>
             <button
-              type="button"
-              onClick={() => setShowInvite(false)}
-              className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+              onClick={() => { setInviteSent(false); }}
+              className="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover transition-colors"
             >
-              ביטול
-            </button>
-            <button
-              type="submit"
-              disabled={inviteMut.isPending}
-              className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
-            >
-              {inviteMut.isPending ? "שולח..." : "שלח הזמנה"}
+              הזמן עוד
             </button>
           </div>
-        </form>
+        ) : (
+          <form
+            onSubmit={(e) => { e.preventDefault(); inviteMut.mutate(); }}
+            className="space-y-4 p-6"
+          >
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">אימייל *</label>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="example@company.com"
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                required
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">תפקיד</label>
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as "ADMIN" | "AGENT")}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              >
+                <option value="AGENT">נציג — גישה לנתונים בלבד</option>
+                <option value="ADMIN">מנהל — גישה מלאה + הגדרות</option>
+              </select>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowInvite(false)}
+                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+              >
+                ביטול
+              </button>
+              <button
+                type="submit"
+                disabled={inviteMut.isPending}
+                className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {inviteMut.isPending ? "שולח..." : "שלח הזמנה"}
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
+
+      {/* Close dropdown on outside click */}
+      {roleDropdown && (
+        <div className="fixed inset-0 z-40" onClick={() => setRoleDropdown(null)} />
+      )}
+    </div>
+  );
+}
+
+// ─── Workspace Permissions Tab ───
+
+function WorkspacePermissionsTab() {
+  const { workspaces, currentWorkspaceId } = useAuth();
+  const currentRole = workspaces.find((w) => w.id === currentWorkspaceId)?.role;
+  const isOwnerOrAdmin = currentRole === "OWNER" || currentRole === "ADMIN";
+
+  // Permissions state (saved locally for now — can be persisted to workspace settings)
+  const [perms, setPerms] = useState({
+    createBoards: ["OWNER", "ADMIN"] as string[],
+    inviteMembers: ["OWNER", "ADMIN"] as string[],
+    exportData: ["OWNER", "ADMIN", "AGENT"] as string[],
+    deleteRecords: ["OWNER", "ADMIN"] as string[],
+    viewAnalytics: ["OWNER", "ADMIN", "AGENT"] as string[],
+  });
+
+  const PERM_LABELS: Record<keyof typeof perms, string> = {
+    createBoards: "יצירת בורדים חדשים",
+    inviteMembers: "הזמנת חברי צוות",
+    exportData: "ייצוא נתונים",
+    deleteRecords: "מחיקת רשומות",
+    viewAnalytics: "צפייה בדוחות",
+  };
+
+  const ALL_ROLES = ["OWNER", "ADMIN", "AGENT"] as const;
+  const ROLE_LABELS: Record<string, string> = { OWNER: "בעלים", ADMIN: "מנהל", AGENT: "נציג" };
+
+  function togglePerm(perm: keyof typeof perms, role: string) {
+    if (role === "OWNER") return; // OWNER always has all permissions
+    setPerms((prev) => {
+      const current = prev[perm];
+      const has = current.includes(role);
+      return {
+        ...prev,
+        [perm]: has ? current.filter((r) => r !== role) : [...current, role],
+      };
+    });
+  }
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="bg-white rounded-xl shadow-card p-6">
+        <h2 className="text-base font-bold text-text-primary mb-1">הרשאות סביבת עבודה</h2>
+        <p className="text-xs text-text-tertiary mb-6">קבע מי יכול לבצע כל פעולה לפי תפקיד</p>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-right text-xs font-semibold text-text-tertiary pb-3 pr-0">פעולה</th>
+                {ALL_ROLES.map((r) => (
+                  <th key={r} className="text-center text-xs font-semibold text-text-tertiary pb-3 px-4">
+                    <RoleBadge role={r} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-light">
+              {(Object.keys(perms) as (keyof typeof perms)[]).map((perm) => (
+                <tr key={perm} className="hover:bg-[#F5F6FF] transition-colors">
+                  <td className="py-3 text-sm text-text-primary font-medium">{PERM_LABELS[perm]}</td>
+                  {ALL_ROLES.map((role) => {
+                    const isChecked = perms[perm].includes(role);
+                    const isLocked = role === "OWNER"; // OWNER always has permission
+                    return (
+                      <td key={role} className="py-3 text-center px-4">
+                        <button
+                          onClick={() => isOwnerOrAdmin && !isLocked && togglePerm(perm, role)}
+                          disabled={isLocked || !isOwnerOrAdmin}
+                          className={`w-5 h-5 rounded flex items-center justify-center mx-auto transition-colors ${
+                            isChecked
+                              ? "bg-primary text-white"
+                              : "border-2 border-border hover:border-primary"
+                          } ${isLocked ? "opacity-60 cursor-not-allowed" : isOwnerOrAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+                        >
+                          {isChecked && <Check size={12} />}
+                        </button>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {!isOwnerOrAdmin && (
+          <p className="mt-4 text-xs text-text-tertiary bg-surface-secondary rounded-lg p-3 flex items-center gap-2">
+            <Lock size={12} />
+            רק בעלים ומנהלים יכולים לשנות הרשאות
+          </p>
+        )}
+      </div>
     </div>
   );
 }
