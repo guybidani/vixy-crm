@@ -107,6 +107,14 @@ interface MondayBoardProps<T extends { id: string }> {
   contextMenuItems?: (row: T) => ContextMenuItem[];
   /** Columns available for dynamic grouping */
   groupByColumns?: Array<{ key: string; label: string }>;
+  /** Controlled group-by key (lifted state for persistence) */
+  groupByKey?: string | null;
+  /** Called when user changes group-by selection */
+  onGroupByChange?: (key: string | null) => void;
+  /** Controlled active filters (lifted state for persistence) */
+  activeFilters?: Array<{ column: string; values: string[] }>;
+  /** Called when filters change */
+  onFiltersChange?: (filters: Array<{ column: string; values: string[] }>) => void;
   /** Bulk selection */
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
@@ -137,6 +145,10 @@ export default function MondayBoard<T extends { id: string }>({
   onDeleteItem,
   contextMenuItems,
   groupByColumns,
+  groupByKey: controlledGroupByKey,
+  onGroupByChange,
+  activeFilters: controlledActiveFilters,
+  onFiltersChange,
   selectedIds,
   onSelectionChange,
 }: MondayBoardProps<T>) {
@@ -162,8 +174,16 @@ export default function MondayBoard<T extends { id: string }>({
     row: T;
   } | null>(null);
 
-  // ── Group By state ──
-  const [groupByKey, setGroupByKey] = useState<string | null>(null);
+  // ── Group By state (controlled or internal) ──
+  const [internalGroupByKey, setInternalGroupByKey] = useState<string | null>(null);
+  const groupByKey = controlledGroupByKey !== undefined ? controlledGroupByKey : internalGroupByKey;
+  const setGroupByKey = (key: string | null) => {
+    if (onGroupByChange) {
+      onGroupByChange(key);
+    } else {
+      setInternalGroupByKey(key);
+    }
+  };
   const [groupByOpen, setGroupByOpen] = useState(false);
 
   // ── Column Visibility state ──
@@ -179,11 +199,22 @@ export default function MondayBoard<T extends { id: string }>({
   const boardRef = useRef<HTMLDivElement>(null);
   const cellRefs = useRef<Map<string, HTMLTableCellElement>>(new Map());
 
-  // ── Filter state ──
+  // ── Filter state (controlled or internal) ──
   const [filterOpen, setFilterOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<
+  const [internalActiveFilters, setInternalActiveFilters] = useState<
     Array<{ column: string; values: string[] }>
   >([]);
+  const activeFilters = controlledActiveFilters !== undefined ? controlledActiveFilters : internalActiveFilters;
+  const setActiveFilters = (
+    updater: Array<{ column: string; values: string[] }> | ((prev: Array<{ column: string; values: string[] }>) => Array<{ column: string; values: string[] }>)
+  ) => {
+    const newFilters = typeof updater === "function" ? updater(activeFilters) : updater;
+    if (onFiltersChange) {
+      onFiltersChange(newFilters);
+    } else {
+      setInternalActiveFilters(newFilters);
+    }
+  };
   const [filterColKey, setFilterColKey] = useState<string | null>(null);
 
   // Compute unique values per column with counts (for filter picker)
@@ -1079,6 +1110,7 @@ export default function MondayBoard<T extends { id: string }>({
                             "px-3 py-2 text-right text-[12px] font-normal text-[#676879] bg-white border-b border-[#D0D4E4] group/col relative",
                             i < visibleColumns.length - 1 &&
                               "border-l border-[#E6E9EF]",
+                            i === 0 && "sticky right-[42px] z-10 after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-[#E6E9EF]",
                           )}
                           style={col.width ? { width: col.width } : undefined}
                         >
@@ -1299,6 +1331,7 @@ export default function MondayBoard<T extends { id: string }>({
                                     "border-l border-[#E6E9EF]",
                                   isFocused &&
                                     "ring-2 ring-inset ring-[#0073EA] z-10 relative",
+                                  colIdx === 0 && "sticky right-[42px] z-[5] after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-[#E6E9EF]",
                                 )}
                                 style={
                                   col.width ? { width: col.width } : undefined

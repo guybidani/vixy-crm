@@ -64,10 +64,30 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         sidebarCollapsed && "md:right-14",
       )}
     >
-      {/* Search — desktop: always visible, mobile: icon toggles input */}
-      <div className="flex-1 max-w-lg">
-        {/* Desktop search (hidden on < 640px) */}
-        <div className="relative hidden sm:block">
+      {/* Mobile hamburger — leftmost on mobile, hidden on desktop */}
+      {onMobileMenuToggle && (
+        <button
+          onClick={onMobileMenuToggle}
+          className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary md:hidden flex-shrink-0"
+          aria-label="תפריט"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
+      {/* Logo / brand — visible on mobile only (desktop sidebar has it) */}
+      <div className="flex items-center gap-1.5 md:hidden flex-shrink-0">
+        <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center shadow-sm">
+          <span className="text-white font-bold text-sm">V</span>
+        </div>
+      </div>
+
+      {/* Spacer on mobile so icons cluster to the right */}
+      <div className="flex-1 md:hidden" />
+
+      {/* Search — desktop: always visible, mobile: hidden */}
+      <div className="hidden sm:flex flex-1 max-w-lg">
+        <div className="relative w-full">
           <Search
             size={16}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
@@ -102,75 +122,23 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
             />
           )}
         </div>
-
-        {/* Mobile search: icon-only, expands on tap */}
-        <div className="sm:hidden">
-          {mobileSearchOpen ? (
-            <div className="relative">
-              <Search
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
-              />
-              <input
-                ref={mobileSearchRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setShowSearch(e.target.value.length >= 2);
-                }}
-                onBlur={() => {
-                  if (!searchQuery) setMobileSearchOpen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setSearchQuery("");
-                    setShowSearch(false);
-                    setMobileSearchOpen(false);
-                  }
-                }}
-                placeholder="חיפוש..."
-                aria-label="חיפוש גלובלי"
-                className="w-full pr-9 pl-4 py-2 bg-surface-secondary rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
-              />
-              {showSearch && searchQuery.length >= 2 && (
-                <SearchDropdown
-                  query={searchQuery}
-                  onClose={() => {
-                    setShowSearch(false);
-                    setSearchQuery("");
-                    setMobileSearchOpen(false);
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={() => setMobileSearchOpen(true)}
-              className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary"
-              aria-label="חיפוש"
-            >
-              <Search size={18} />
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* Quick Add */}
+      {/* Quick Add — hidden on mobile */}
       <button
         onClick={onQuickAdd}
-        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+        className="hidden sm:flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
         title="הוספה מהירה (Ctrl+Shift+K)"
         aria-label="הוספה מהירה (Ctrl+Shift+K)"
       >
         <Plus size={16} />
-        <span className="hidden sm:inline">חדש</span>
+        <span>חדש</span>
       </button>
 
-      {/* Today's Tasks Clock */}
+      {/* Today's Tasks Clock — always visible */}
       <button
         onClick={() => setTodayTasksOpen(true)}
-        className="relative p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA]"
+        className="relative p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA] flex-shrink-0"
         title="משימות להיום"
         aria-label="משימות להיום"
       >
@@ -182,11 +150,11 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         )}
       </button>
 
-      {/* Notifications */}
+      {/* Notifications — always visible */}
       <NotificationCenter />
 
-      {/* User */}
-      <div className="flex items-center gap-2 border-r border-border-light pr-2 sm:pr-3">
+      {/* User — hidden on mobile */}
+      <div className="hidden sm:flex items-center gap-2 border-r border-border-light pr-2 sm:pr-3">
         <div
           className="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
           role="img"
@@ -208,17 +176,6 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
           <LogOut size={16} />
         </button>
       </div>
-
-      {/* Mobile hamburger */}
-      {onMobileMenuToggle && (
-        <button
-          onClick={onMobileMenuToggle}
-          className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary md:hidden"
-          aria-label="תפריט"
-        >
-          <Menu size={20} />
-        </button>
-      )}
     </header>
 
     {/* Today's Tasks Panel */}

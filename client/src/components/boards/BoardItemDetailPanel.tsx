@@ -612,9 +612,8 @@ export default function BoardItemDetailPanel({
 
       {/* Panel */}
       <div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl w-full"
+        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl w-full md:max-w-[900px]"
         style={{
-          maxWidth: 900,
           transform: visible ? "translateX(0)" : "translateX(100%)",
           transition: "transform 300ms ease-out",
         }}
