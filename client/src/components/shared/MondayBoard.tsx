@@ -1241,11 +1241,7 @@ export default function MondayBoard<T extends { id: string }>({
                       group.items.map((row, rowIdx) => (
                         <tr
                           key={row.id}
-                          className={cn(
-                            "group/row border-b border-[#E6E9EF] transition-colors",
-                            onRowClick && "cursor-pointer hover:bg-[#F5F6F8]",
-                          )}
-                          onClick={() => onRowClick?.(row)}
+                          className="group/row border-b border-[#E6E9EF] transition-colors hover:bg-[#F5F6F8]"
                           onContextMenu={(e) => {
                             if (contextMenuItems) {
                               e.preventDefault();
@@ -1263,12 +1259,12 @@ export default function MondayBoard<T extends { id: string }>({
                             style={{ backgroundColor: group.color }}
                           />
                           {/* Checkbox */}
-                          <td className="w-[36px] px-1 py-0 bg-white">
+                          <td className="w-[36px] px-1 py-0 bg-white group-hover/row:bg-[#F5F6F8]">
                             <input
                               type="checkbox"
                               aria-label="בחר פריט"
                               className={cn(
-                                "w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA] transition-opacity",
+                                "w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA] transition-opacity cursor-pointer",
                                 selectedIds?.has(row.id)
                                   ? "opacity-100"
                                   : "opacity-0 group-hover/row:opacity-100",
@@ -1339,7 +1335,7 @@ export default function MondayBoard<T extends { id: string }>({
 
                     {/* + Add item row (per-group or global) */}
                     {hasNewItem && (
-                      <tr className="border-b border-[#E6E9EF]">
+                      <tr>
                         <td
                           className="w-[6px] p-0"
                           style={{ backgroundColor: group.color }}
@@ -1348,7 +1344,7 @@ export default function MondayBoard<T extends { id: string }>({
                           colSpan={
                             visibleColumns.length + 1 + (onDeleteItem ? 1 : 0)
                           }
-                          className="px-3 py-[7px]"
+                          className="p-0"
                         >
                           <button
                             onClick={(e) => {
@@ -1359,9 +1355,10 @@ export default function MondayBoard<T extends { id: string }>({
                                 onNewItem?.();
                               }
                             }}
-                            className="text-[13px] text-[#C3C6D4] hover:text-[#0073EA] transition-colors"
+                            className="w-full text-right px-3 py-[8px] text-[13px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#E6F4FF]/40 transition-colors flex items-center gap-1.5"
                           >
-                            + {newItemLabel}
+                            <span className="text-[16px] leading-none font-light">+</span>
+                            <span>{newItemLabel}</span>
                           </button>
                         </td>
                       </tr>

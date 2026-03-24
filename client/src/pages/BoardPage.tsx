@@ -39,6 +39,7 @@ interface BoardRow {
   id: string;
   _item: BoardItem;
   _groupId: string;
+  _groupColor: string;
   name: string;
   [key: string]: any;
 }
@@ -53,6 +54,7 @@ function buildRows(board: Board): MondayGroup<BoardRow>[] {
         id: item.id,
         _item: item,
         _groupId: group.id,
+        _groupColor: group.color,
         name: item.name,
       };
       for (const val of item.values) {
@@ -311,17 +313,13 @@ export default function BoardPage() {
               );
             }
             return (
-              <span className="group/name flex items-center gap-1.5 w-full">
+              <span className="group/name flex items-center gap-1.5 w-full min-w-0">
+                {/* Group color dot */}
                 <span
-                  className="text-[13px] font-medium text-[#323338] cursor-text hover:text-[#0073EA] transition-colors flex-1 truncate"
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
-                    setEditingCell({ itemId: row.id, colKey: "name" });
-                    setEditValue(row.name);
-                  }}
-                >
-                  {row.name || "—"}
-                </span>
+                  className="flex-shrink-0 w-[10px] h-[10px] rounded-sm"
+                  style={{ backgroundColor: row._groupColor }}
+                />
+                {/* Open panel icon — appears on hover, to the LEFT of the name */}
                 <PanelRightOpen
                   size={13}
                   className="flex-shrink-0 text-[#9699A6] opacity-0 group-hover/name:opacity-100 hover:text-[#0073EA] transition-all cursor-pointer"
@@ -331,6 +329,21 @@ export default function BoardPage() {
                     setSelectedItemId(row.id);
                   }}
                 />
+                {/* Item name — single click opens panel, double click edits */}
+                <span
+                  className="text-[13px] font-medium text-[#323338] cursor-pointer hover:text-[#0073EA] transition-colors flex-1 truncate"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedItemId(row.id);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setEditingCell({ itemId: row.id, colKey: "name" });
+                    setEditValue(row.name);
+                  }}
+                >
+                  {row.name || "—"}
+                </span>
               </span>
             );
           },
