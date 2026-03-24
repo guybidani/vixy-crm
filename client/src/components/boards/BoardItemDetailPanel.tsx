@@ -9,6 +9,11 @@ import {
   Send,
   ExternalLink,
   ChevronRight,
+  Pencil,
+  Plus,
+  Bell,
+  Calendar as CalendarIcon,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -85,6 +90,98 @@ function Avatar({ name, size = 28 }: { name: string; size?: number }) {
   );
 }
 
+// ── Sub-component: ToggleSwitch ───────────────────────────────────────
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="relative inline-flex items-center flex-shrink-0 h-5 w-9 rounded-full transition-colors duration-200 focus:outline-none"
+      style={{ backgroundColor: checked ? "#0073EA" : "#D0D4E4" }}
+    >
+      <span
+        className="inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-200"
+        style={{ transform: checked ? "translateX(18px)" : "translateX(2px)" }}
+      />
+    </button>
+  );
+}
+
+// ── Sub-component: StatusPill with popover ────────────────────────────
+
+interface StatusOption {
+  key: string;
+  label: string;
+  color: string;
+}
+
+function StatusPillField({
+  value,
+  options,
+  onChange,
+}: {
+  value: string | null;
+  options: StatusOption[];
+  onChange: (key: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const currentOpt = options.find((o) => o.key === value);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="px-3 py-1 rounded-full text-[12px] font-semibold transition-all hover:opacity-90 active:scale-95"
+        style={
+          currentOpt
+            ? { backgroundColor: currentOpt.color, color: "#fff" }
+            : { backgroundColor: "#E6E9EF", color: "#676879" }
+        }
+      >
+        {currentOpt?.label ?? "—"}
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1 right-0 bg-white border border-[#E6E9EF] rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
+          {options.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => {
+                onChange(opt.key);
+                setOpen(false);
+              }}
+              className="w-full text-right px-3 py-1.5 hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
+            >
+              <span
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: opt.color }}
+              />
+              <span className="text-[13px] text-[#323338]">{opt.label}</span>
+              {opt.key === value && (
+                <span className="mr-auto text-[#0073EA] text-[11px]">✓</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────
 
 export default function BoardItemDetailPanel({
@@ -97,12 +194,20 @@ export default function BoardItemDetailPanel({
   const qc = useQueryClient();
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
+  const [nameHovered, setNameHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<"updates" | "files" | "activity">("updates");
   const [newUpdateText, setNewUpdateText] = useState("");
   const [updates, setUpdates] = useState<Update[]>([]);
   const [contactSearch, setContactSearch] = useState("");
   const [contactDropdownOpen, setContactDropdownOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
   const updatesEndRef = useRef<HTMLDivElement>(null);
+
+  // Animate in on mount
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // ── Queries ──
 
@@ -137,10 +242,10 @@ export default function BoardItemDetailPanel({
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape" && !editingName) {
-        onClose();
+        handleClose();
       }
     },
-    [onClose, editingName],
+    [editingName], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
@@ -152,7 +257,7 @@ export default function BoardItemDetailPanel({
   useEffect(() => {
     const timer = setTimeout(() => {
       updateTextareaRef.current?.focus();
-    }, 250);
+    }, 350);
     return () => clearTimeout(timer);
   }, []);
 
@@ -171,7 +276,6 @@ export default function BoardItemDetailPanel({
             stored.map((u: any) => ({ ...u, createdAt: new Date(u.createdAt) })),
           );
         } else if (val?.textValue) {
-          // Migrate plain text to update object
           setUpdates([
             {
               id: "legacy-1",
@@ -184,6 +288,13 @@ export default function BoardItemDetailPanel({
       }
     }
   }, [item, columns]);
+
+  // ── Animated close ──
+
+  function handleClose() {
+    setVisible(false);
+    setTimeout(onClose, 300);
+  }
 
   // ── Mutations ──
 
@@ -271,7 +382,6 @@ export default function BoardItemDetailPanel({
     setUpdates(nextUpdates);
     setNewUpdateText("");
 
-    // Persist to the notes/updates column as JSON
     const updatesCol = columns.find(
       (c) => c.key === "notes" || c.key === "updates" || c.label.includes("הערות"),
     );
@@ -288,7 +398,6 @@ export default function BoardItemDetailPanel({
       ]);
     }
 
-    // Scroll to bottom
     setTimeout(() => {
       updatesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 50);
@@ -321,122 +430,101 @@ export default function BoardItemDetailPanel({
     const value = getItemValue(col);
 
     return (
-      <div key={col.id} className="mb-1">
-        <div className="text-[11px] font-medium text-[#9699A6] uppercase tracking-wide mb-1">
+      <div key={col.id} className="flex items-start gap-2 py-2.5 border-b border-[#F0F0F5] last:border-0">
+        {/* Label */}
+        <div className="w-24 flex-shrink-0 text-[11px] font-medium text-[#9699A6] uppercase tracking-wide pt-1 truncate">
           {col.label}
         </div>
 
-        {(col.type === "STATUS" || col.type === "PRIORITY") && (() => {
-          const opts = col.options || [];
-          const currentOpt = opts.find((o) => o.key === value);
-          return (
-            <div className="flex flex-wrap gap-1">
-              {opts.map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => saveValue(col, opt.key)}
-                  className="px-2.5 py-0.5 rounded-full text-[12px] font-medium transition-all"
-                  style={{
-                    backgroundColor: value === opt.key ? opt.color : `${opt.color}20`,
-                    color: value === opt.key ? "#fff" : opt.color,
-                    border: `1px solid ${opt.color}55`,
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-              {!currentOpt && value && (
-                <span
-                  className="px-2.5 py-0.5 rounded-full text-[12px]"
-                  style={{ backgroundColor: "#E6E9EF", color: "#676879" }}
-                >
-                  {value}
-                </span>
-              )}
-            </div>
-          );
-        })()}
+        {/* Value */}
+        <div className="flex-1 min-w-0">
+          {(col.type === "STATUS" || col.type === "PRIORITY") && (
+            <StatusPillField
+              value={value}
+              options={col.options || []}
+              onChange={(key) => saveValue(col, key)}
+            />
+          )}
 
-        {col.type === "CHECKBOX" && (
-          <input
-            type="checkbox"
-            className="w-4 h-4 rounded accent-[#0073EA]"
-            checked={!!value}
-            onChange={(e) => saveValue(col, e.target.checked)}
-          />
-        )}
+          {col.type === "CHECKBOX" && (
+            <ToggleSwitch
+              checked={!!value}
+              onChange={(v) => saveValue(col, v)}
+            />
+          )}
 
-        {col.type === "DATE" && (
-          <input
-            type="date"
-            className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1.5 outline-none border border-transparent focus:border-[#0073EA] transition-colors"
-            value={value ? new Date(value).toISOString().split("T")[0] : ""}
-            onChange={(e) => saveValue(col, e.target.value)}
-          />
-        )}
-
-        {col.type === "NUMBER" && (
-          <input
-            type="number"
-            className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1.5 outline-none border border-transparent focus:border-[#0073EA] transition-colors"
-            defaultValue={value ?? ""}
-            onBlur={(e) => saveValue(col, e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            }}
-          />
-        )}
-
-        {col.type === "LINK" && (
-          <div className="flex items-center gap-1.5">
-            {value ? (
-              <a
-                href={value}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[13px] text-[#0073EA] hover:underline flex items-center gap-1 truncate"
-              >
-                <ExternalLink size={11} />
-                {value}
-              </a>
-            ) : (
-              <input
-                type="url"
-                className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1.5 outline-none border border-transparent focus:border-[#0073EA] transition-colors"
-                defaultValue=""
-                placeholder="https://..."
-                onBlur={(e) => saveValue(col, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                }}
-              />
-            )}
-          </div>
-        )}
-
-        {col.type !== "STATUS" &&
-          col.type !== "PRIORITY" &&
-          col.type !== "CHECKBOX" &&
-          col.type !== "DATE" &&
-          col.type !== "NUMBER" &&
-          col.type !== "LINK" && (
+          {col.type === "DATE" && (
             <input
-              type={
-                col.type === "EMAIL"
-                  ? "email"
-                  : col.type === "PHONE"
-                  ? "tel"
-                  : "text"
-              }
-              className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1.5 outline-none border border-transparent focus:border-[#0073EA] transition-colors"
+              type="date"
+              className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
+              value={value ? new Date(value).toISOString().split("T")[0] : ""}
+              onChange={(e) => saveValue(col, e.target.value)}
+            />
+          )}
+
+          {col.type === "NUMBER" && (
+            <input
+              type="number"
+              className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
               defaultValue={value ?? ""}
-              placeholder="—"
               onBlur={(e) => saveValue(col, e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") (e.target as HTMLInputElement).blur();
               }}
             />
           )}
+
+          {col.type === "LINK" && (
+            <div className="flex items-center gap-1.5">
+              {value ? (
+                <a
+                  href={value}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[13px] text-[#0073EA] hover:underline flex items-center gap-1 truncate"
+                >
+                  <ExternalLink size={11} />
+                  {value}
+                </a>
+              ) : (
+                <input
+                  type="url"
+                  className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
+                  defaultValue=""
+                  placeholder="https://..."
+                  onBlur={(e) => saveValue(col, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          {col.type !== "STATUS" &&
+            col.type !== "PRIORITY" &&
+            col.type !== "CHECKBOX" &&
+            col.type !== "DATE" &&
+            col.type !== "NUMBER" &&
+            col.type !== "LINK" && (
+              <input
+                type={
+                  col.type === "EMAIL"
+                    ? "email"
+                    : col.type === "PHONE"
+                    ? "tel"
+                    : "text"
+                }
+                className="w-full text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 outline-none border border-transparent hover:bg-[#F5F6F8] focus:bg-white focus:border-[#0073EA] transition-colors cursor-pointer focus:cursor-text"
+                defaultValue={value ?? ""}
+                placeholder="—"
+                onBlur={(e) => saveValue(col, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                }}
+              />
+            )}
+        </div>
       </div>
     );
   }
@@ -447,14 +535,19 @@ export default function BoardItemDetailPanel({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/25 z-40 transition-opacity"
-        onClick={onClose}
+        className="fixed inset-0 bg-black/30 z-40 transition-opacity duration-300"
+        style={{ opacity: visible ? 1 : 0 }}
+        onClick={handleClose}
       />
 
       {/* Panel */}
       <div
-        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-200 w-full sm:w-auto"
-        style={{ width: "min(900px, 90vw)" }}
+        className="fixed top-0 right-0 h-full z-50 flex flex-col bg-white shadow-2xl w-full"
+        style={{
+          maxWidth: 900,
+          transform: visible ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 300ms ease-out",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Top bar ── */}
@@ -462,14 +555,14 @@ export default function BoardItemDetailPanel({
           {/* Breadcrumb row */}
           <div className="flex items-center justify-between px-6 pt-4 pb-1">
             <div className="flex items-center gap-1.5 text-[12px] text-[#676879]">
-              <span className="hover:text-[#323338] cursor-pointer transition-colors">
+              <span className="hover:text-[#323338] cursor-pointer transition-colors font-medium">
                 {board?.name || "בורד"}
               </span>
-              <ChevronRight size={12} className="opacity-50" />
+              <ChevronRight size={12} className="opacity-40" />
               <span className="text-[#9699A6]">{itemGroup?.name || "קבוצה"}</span>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors"
               aria-label="סגור"
             >
@@ -498,24 +591,61 @@ export default function BoardItemDetailPanel({
                     setEditingName(false);
                   }
                 }}
-                className="text-[22px] font-bold text-[#323338] w-full border-b-2 border-[#0073EA] outline-none bg-transparent py-0.5"
+                className="text-[24px] font-semibold text-[#323338] w-full border-b-2 border-[#0073EA] outline-none bg-transparent py-0.5"
               />
             ) : (
-              <h2
-                className="text-[22px] font-bold text-[#323338] cursor-text hover:text-[#0073EA] transition-colors leading-tight"
+              <div
+                className="relative inline-flex items-center gap-2 group cursor-text"
+                onMouseEnter={() => setNameHovered(true)}
+                onMouseLeave={() => setNameHovered(false)}
                 onClick={() => {
                   setNameValue(item?.name || "");
                   setEditingName(true);
                 }}
-                title="לחץ לעריכת שם"
               >
-                {isLoading ? "טוען..." : item?.name || "פריט"}
-              </h2>
+                <h2
+                  className="text-[24px] font-semibold text-[#323338] leading-tight"
+                  title="לחץ לעריכת שם"
+                >
+                  {isLoading ? "טוען..." : item?.name || "פריט"}
+                </h2>
+                <Pencil
+                  size={14}
+                  className="text-[#9699A6] transition-opacity flex-shrink-0"
+                  style={{ opacity: nameHovered ? 1 : 0 }}
+                />
+              </div>
             )}
           </div>
 
+          {/* Monday.com action buttons row */}
+          <div className="flex items-center gap-2 px-6 pb-3" dir="rtl">
+            <button
+              onClick={() => {
+                setActiveTab("updates");
+                setTimeout(() => updateTextareaRef.current?.focus(), 50);
+              }}
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[6px] transition-colors shadow-sm"
+            >
+              <MessageSquare size={14} />
+              עדכן
+            </button>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors">
+              <User size={14} className="text-[#676879]" />
+              אנשים
+            </button>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors">
+              <CalendarIcon size={14} className="text-[#676879]" />
+              תאריך
+            </button>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors">
+              <Bell size={14} className="text-[#676879]" />
+              תזכורת
+            </button>
+          </div>
+
           {/* Tabs */}
-          <div className="flex gap-1 px-6">
+          <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl">
             {(
               [
                 { key: "updates", label: "עדכונים" },
@@ -526,10 +656,10 @@ export default function BoardItemDetailPanel({
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 text-[13px] font-medium border-b-2 transition-colors ${
+                className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === tab.key
                     ? "border-[#0073EA] text-[#0073EA]"
-                    : "border-transparent text-[#676879] hover:text-[#323338]"
+                    : "border-transparent text-[#676879] hover:text-[#323338] hover:border-[#D0D4E4]"
                 }`}
               >
                 {tab.label}
@@ -539,35 +669,35 @@ export default function BoardItemDetailPanel({
         </div>
 
         {/* ── Body: 2-column layout ── */}
-        <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="flex-1 flex overflow-hidden min-h-0" dir="rtl">
           {/* LEFT: Updates feed */}
-          <div className="flex-1 flex flex-col overflow-hidden border-l border-[#E6E9EF]" dir="rtl">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {activeTab === "updates" && (
               <>
                 {/* Updates list */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                   {isLoading ? (
                     <div className="text-center py-12 text-[#9699A6] text-[13px]">
                       טוען...
                     </div>
                   ) : updates.length === 0 ? (
-                    <div className="text-center py-16">
-                      <div className="w-12 h-12 bg-[#F5F6F8] rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Send size={20} className="text-[#9699A6]" />
+                    <div className="text-center py-16 px-6">
+                      <div className="w-14 h-14 bg-[#EDF3FB] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Send size={22} className="text-[#0073EA]" />
                       </div>
-                      <p className="text-[14px] font-medium text-[#323338] mb-1">
-                        אין עדכונים עדיין
+                      <p className="text-[15px] font-semibold text-[#323338] mb-1.5">
+                        עדיין אין עדכונים
                       </p>
-                      <p className="text-[12px] text-[#9699A6]">
-                        כתוב עדכון ראשון בתיבה למטה
+                      <p className="text-[13px] text-[#9699A6]">
+                        היה הראשון לכתוב!
                       </p>
                     </div>
                   ) : (
                     updates.map((upd) => (
                       <div key={upd.id} className="flex gap-3">
-                        <Avatar name={upd.author} size={32} />
+                        <Avatar name={upd.author} size={34} />
                         <div className="flex-1 min-w-0">
-                          <div className="bg-[#F5F6F8] rounded-lg rounded-tr-none px-4 py-3">
+                          <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm">
                             <div className="flex items-baseline gap-2 mb-1.5">
                               <span className="text-[13px] font-semibold text-[#323338]">
                                 {upd.author}
@@ -588,13 +718,13 @@ export default function BoardItemDetailPanel({
                 </div>
 
                 {/* Input area */}
-                <div className="flex-shrink-0 border-t border-[#E6E9EF] p-4 bg-white">
+                <div className="flex-shrink-0 border-t border-[#E6E9EF] px-5 py-4 bg-white">
                   <div className="flex gap-3 items-start">
-                    <Avatar name="אני" size={32} />
-                    <div className="flex-1 bg-[#F5F6F8] rounded-lg border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white transition-all overflow-hidden">
+                    <Avatar name="אני" size={34} />
+                    <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
                       <textarea
                         ref={updateTextareaRef}
-                        className="w-full px-3 pt-2.5 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
+                        className="w-full px-4 pt-3 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
                         placeholder="כתוב עדכון..."
                         rows={3}
                         value={newUpdateText}
@@ -604,20 +734,19 @@ export default function BoardItemDetailPanel({
                             e.preventDefault();
                             postUpdate();
                           }
-                          // Escape key when textarea focused should close panel
                           if (e.key === "Escape" && !newUpdateText.trim()) {
-                            onClose();
+                            handleClose();
                           }
                         }}
                       />
-                      <div className="flex items-center justify-between px-3 pb-2">
-                        <span className="text-[11px] text-[#9699A6]">
+                      <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                        <span className="text-[11px] text-[#C3C6D4]">
                           Ctrl+Enter לשליחה
                         </span>
                         <button
                           onClick={postUpdate}
                           disabled={!newUpdateText.trim()}
-                          className="px-4 py-1.5 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="px-5 py-1.5 bg-[#0073EA] text-white text-[13px] font-semibold rounded-[6px] hover:bg-[#0060C2] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                         >
                           עדכן
                         </button>
@@ -629,21 +758,21 @@ export default function BoardItemDetailPanel({
             )}
 
             {activeTab === "files" && (
-              <div className="flex-1 flex flex-col items-center justify-center text-[#9699A6]">
-                <div className="w-12 h-12 bg-[#F5F6F8] rounded-full flex items-center justify-center mb-3">
-                  <LinkIcon size={20} />
+              <div className="flex-1 flex flex-col items-center justify-center text-[#9699A6] gap-3">
+                <div className="w-14 h-14 bg-[#EDF3FB] rounded-full flex items-center justify-center">
+                  <LinkIcon size={22} className="text-[#0073EA]" />
                 </div>
-                <p className="text-[14px] font-medium text-[#323338]">אין קבצים מצורפים</p>
-                <p className="text-[12px] mt-1">גרור קובץ לכאן כדי לצרף</p>
+                <p className="text-[14px] font-semibold text-[#323338]">אין קבצים מצורפים</p>
+                <p className="text-[12px] text-[#9699A6]">גרור קובץ לכאן כדי לצרף</p>
               </div>
             )}
 
             {activeTab === "activity" && (
-              <div className="flex-1 overflow-y-auto p-5" dir="rtl">
-                <div className="space-y-2">
+              <div className="flex-1 overflow-y-auto px-5 py-4">
+                <div className="space-y-1">
                   {item && (
-                    <div className="flex items-center gap-3 py-2 border-b border-[#F0F0F5]">
-                      <div className="w-6 h-6 rounded-full bg-[#0073EA20] flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-center gap-3 py-2.5 border-b border-[#F0F0F5]">
+                      <div className="w-7 h-7 rounded-full bg-[#EDF3FB] flex items-center justify-center flex-shrink-0">
                         <div className="w-2 h-2 rounded-full bg-[#0073EA]" />
                       </div>
                       <div>
@@ -655,8 +784,8 @@ export default function BoardItemDetailPanel({
                     </div>
                   )}
                   {updates.map((upd) => (
-                    <div key={upd.id} className="flex items-start gap-3 py-2 border-b border-[#F0F0F5]">
-                      <Avatar name={upd.author} size={22} />
+                    <div key={upd.id} className="flex items-start gap-3 py-2.5 border-b border-[#F0F0F5]">
+                      <Avatar name={upd.author} size={24} />
                       <div>
                         <span className="text-[13px] text-[#323338]">
                           <strong>{upd.author}</strong> הוסיף עדכון
@@ -678,37 +807,33 @@ export default function BoardItemDetailPanel({
           {/* RIGHT: Column fields sidebar */}
           <div
             className="flex-shrink-0 overflow-y-auto bg-[#FAFBFC] border-r border-[#E6E9EF]"
-            style={{ width: 280 }}
-            dir="rtl"
+            style={{ width: 288 }}
           >
-            <div className="p-4 space-y-4">
+            <div className="p-5 space-y-5">
               {/* Section: Column values */}
               <div>
-                <p className="text-[11px] font-semibold text-[#9699A6] uppercase tracking-widest mb-3">
+                <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest mb-2">
                   פרטי פריט
                 </p>
-                <div className="space-y-3">
+                <div className="bg-white rounded-xl border border-[#E6E9EF] overflow-hidden px-3">
                   {columns.map((col) => renderFieldRow(col))}
                 </div>
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-[#E6E9EF]" />
-
               {/* Section: Linked contact */}
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <User size={13} className="text-[#0073EA]" />
-                  <p className="text-[11px] font-semibold text-[#9699A6] uppercase tracking-widest">
+                  <User size={12} className="text-[#0073EA]" />
+                  <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest">
                     לקוח מקושר
                   </p>
                 </div>
 
                 {linkedContact ? (
-                  <div className="bg-white border border-[#E6E9EF] rounded-lg p-3">
+                  <div className="bg-white border border-[#E6E9EF] rounded-xl p-3 shadow-sm">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Avatar name={linkedContact.fullName} size={28} />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar name={linkedContact.fullName} size={30} />
                         <div className="min-w-0">
                           <p className="text-[13px] font-semibold text-[#323338] truncate">
                             {linkedContact.fullName}
@@ -736,7 +861,7 @@ export default function BoardItemDetailPanel({
                             updateValuesMut.mutate([{ columnId: col.id, textValue: null }]);
                           }
                         }}
-                        className="text-[11px] text-[#9699A6] hover:text-[#D83A52] transition-colors flex-shrink-0"
+                        className="text-[11px] text-[#9699A6] hover:text-[#D83A52] transition-colors flex-shrink-0 mt-0.5"
                       >
                         הסר
                       </button>
@@ -744,23 +869,29 @@ export default function BoardItemDetailPanel({
                   </div>
                 ) : (
                   <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="חיפוש לקוח..."
-                      value={contactSearch}
-                      onChange={(e) => setContactSearch(e.target.value)}
-                      onFocus={() => setContactDropdownOpen(true)}
-                      className="w-full px-3 py-2 text-[13px] border border-[#D0D4E4] rounded-[4px] focus:outline-none focus:border-[#0073EA] transition-colors bg-white"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="חיפוש לקוח..."
+                        value={contactSearch}
+                        onChange={(e) => setContactSearch(e.target.value)}
+                        onFocus={() => setContactDropdownOpen(true)}
+                        className="w-full pl-3 pr-9 py-2 text-[13px] border border-[#D0D4E4] rounded-[8px] focus:outline-none focus:border-[#0073EA] focus:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all bg-white"
+                      />
+                      <Plus
+                        size={15}
+                        className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none"
+                      />
+                    </div>
                     {contactDropdownOpen && (
                       <>
                         <div
                           className="fixed inset-0 z-10"
                           onClick={() => setContactDropdownOpen(false)}
                         />
-                        <div className="absolute top-full mt-1 right-0 left-0 bg-white border border-[#D0D4E4] rounded-lg shadow-xl z-20 max-h-48 overflow-y-auto">
+                        <div className="absolute top-full mt-1.5 right-0 left-0 bg-white border border-[#D0D4E4] rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
                           {filteredContacts.length === 0 ? (
-                            <p className="text-[12px] text-[#676879] px-3 py-2">
+                            <p className="text-[12px] text-[#676879] px-3 py-3 text-center">
                               לא נמצאו תוצאות
                             </p>
                           ) : (
@@ -770,7 +901,7 @@ export default function BoardItemDetailPanel({
                                 onClick={() => linkContact(c.id)}
                                 className="w-full text-right px-3 py-2 hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
                               >
-                                <Avatar name={c.fullName} size={22} />
+                                <Avatar name={c.fullName} size={24} />
                                 <div className="text-right">
                                   <p className="text-[13px] text-[#323338]">{c.fullName}</p>
                                   {c.email && (
