@@ -442,6 +442,53 @@ boardsRouter.put(
   },
 );
 
+// ── Item Comments ──────────────────────────────────────────────────
+
+const createCommentSchema = z.object({
+  body: z.string().min(1, "תוכן ההערה נדרש"),
+});
+
+// GET /boards/:id/items/:itemId/comments
+boardsRouter.get("/:id/items/:itemId/comments", async (req, res, next) => {
+  try {
+    const comments = await boardsService.getItemComments(
+      req.workspaceId!,
+      req.params.id as string,
+      req.params.itemId as string,
+    );
+    res.json(comments);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /boards/:id/items/:itemId/comments
+boardsRouter.post(
+  "/:id/items/:itemId/comments",
+  requireBoardPermission("EDITOR"),
+  validate(createCommentSchema),
+  async (req, res, next) => {
+    try {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      if (!member) {
+        return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
+      }
+      const comment = await boardsService.createItemComment(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        member.id,
+        req.body.body,
+      );
+      res.status(201).json(comment);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ── Board Access / Permissions ────────────────────────────────────
 
 const setBoardAccessSchema = z.object({

@@ -262,6 +262,36 @@ export function updateBoardItemValues(
   });
 }
 
+// ── Board Item Comments ─────────────────────────────────────────
+
+export interface BoardItemComment {
+  id: string;
+  itemId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: {
+    id: string;
+    user: {
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+  };
+}
+
+export function getBoardItemComments(boardId: string, itemId: string) {
+  return api<BoardItemComment[]>(`/boards/${boardId}/items/${itemId}/comments`);
+}
+
+export function createBoardItemComment(boardId: string, itemId: string, body: string) {
+  return api<BoardItemComment>(`/boards/${boardId}/items/${itemId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+}
+
 // ── Board Access / Permissions ──────────────────────────────────────
 
 export function getBoardAccess(boardId: string) {

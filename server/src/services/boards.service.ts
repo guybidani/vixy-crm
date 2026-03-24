@@ -564,3 +564,56 @@ export async function getBoardMembers(workspaceId: string, boardId: string) {
     orderBy: { grantedAt: "asc" },
   });
 }
+
+// ══════════════════════════════════════════════════════════════════
+// BOARD ITEM COMMENTS
+// ══════════════════════════════════════════════════════════════════
+
+export async function getItemComments(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+) {
+  // Verify the board belongs to this workspace
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItemComment.findMany({
+    where: { itemId },
+    include: {
+      author: {
+        include: {
+          user: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function createItemComment(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  authorId: string,
+  body: string,
+) {
+  // Verify the board belongs to this workspace
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  // Verify the item belongs to this board
+  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
+
+  return prisma.boardItemComment.create({
+    data: { itemId, authorId, body },
+    include: {
+      author: {
+        include: {
+          user: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+}

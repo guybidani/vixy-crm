@@ -20,18 +20,14 @@ import {
   getBoard,
   updateBoardItem,
   updateBoardItemValues,
+  getBoardItemComments,
+  createBoardItemComment,
   type BoardColumn,
+  type BoardItemComment,
 } from "../../api/boards";
 import { listContacts } from "../../api/contacts";
 
 // ── Types ──────────────────────────────────────────────────────────
-
-interface Update {
-  id: string;
-  text: string;
-  author: string;
-  createdAt: Date;
-}
 
 interface BoardItemDetailPanelProps {
   boardId: string;
@@ -197,7 +193,6 @@ export default function BoardItemDetailPanel({
   const [nameHovered, setNameHovered] = useState(false);
   const [activeTab, setActiveTab] = useState<"updates" | "files" | "activity">("updates");
   const [newUpdateText, setNewUpdateText] = useState("");
-  const [updates, setUpdates] = useState<Update[]>([]);
   const [contactSearch, setContactSearch] = useState("");
   const [contactDropdownOpen, setContactDropdownOpen] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -218,6 +213,11 @@ export default function BoardItemDetailPanel({
 
   const item = board?.groups.flatMap((g) => g.items).find((i) => i.id === itemId);
   const itemGroup = board?.groups.find((g) => g.items.some((i) => i.id === itemId));
+
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: ["board-item-comments", boardId, itemId],
+    queryFn: () => getBoardItemComments(boardId, itemId),
+  });
 
   const { data: contactsData } = useQuery({
     queryKey: ["contacts", { limit: 200 }],
@@ -264,30 +264,8 @@ export default function BoardItemDetailPanel({
   useEffect(() => {
     if (item) {
       setNameValue(item.name);
-      // Load stored updates from a notes/updates column if any
-      const updatesCol = columns.find(
-        (c) => c.key === "notes" || c.key === "updates" || c.label.includes("הערות"),
-      );
-      if (updatesCol) {
-        const val = item.values.find((v) => v.columnId === updatesCol.id);
-        const stored = val?.jsonValue;
-        if (Array.isArray(stored)) {
-          setUpdates(
-            stored.map((u: any) => ({ ...u, createdAt: new Date(u.createdAt) })),
-          );
-        } else if (val?.textValue) {
-          setUpdates([
-            {
-              id: "legacy-1",
-              text: val.textValue,
-              author: "משתמש",
-              createdAt: new Date(item.createdAt),
-            },
-          ]);
-        }
-      }
     }
-  }, [item, columns]);
+  }, [item]);
 
   // ── Animated close ──
 
@@ -321,6 +299,19 @@ export default function BoardItemDetailPanel({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["board", boardId] });
       onUpdated();
+    },
+  });
+
+  const createCommentMut = useMutation({
+    mutationFn: (body: string) => createBoardItemComment(boardId, itemId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-comments", boardId, itemId] });
+      setTimeout(() => {
+        updatesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
+    },
+    onError: () => {
+      toast.error("שגיאה בשמירת העדכון");
     },
   });
 
@@ -370,37 +361,8 @@ export default function BoardItemDetailPanel({
   function postUpdate() {
     const text = newUpdateText.trim();
     if (!text) return;
-
-    const newUpdate: Update = {
-      id: `upd-${Date.now()}`,
-      text,
-      author: "אני",
-      createdAt: new Date(),
-    };
-
-    const nextUpdates = [...updates, newUpdate];
-    setUpdates(nextUpdates);
     setNewUpdateText("");
-
-    const updatesCol = columns.find(
-      (c) => c.key === "notes" || c.key === "updates" || c.label.includes("הערות"),
-    );
-    if (updatesCol) {
-      updateValuesMut.mutate([
-        {
-          columnId: updatesCol.id,
-          jsonValue: nextUpdates.map((u) => ({
-            ...u,
-            createdAt: u.createdAt.toISOString(),
-          })),
-          textValue: null,
-        },
-      ]);
-    }
-
-    setTimeout(() => {
-      updatesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
+    createCommentMut.mutate(text);
   }
 
   function linkContact(contactId: string) {
@@ -676,11 +638,11 @@ export default function BoardItemDetailPanel({
               <>
                 {/* Updates list */}
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-                  {isLoading ? (
+                  {commentsLoading ? (
                     <div className="text-center py-12 text-[#9699A6] text-[13px]">
                       טוען...
                     </div>
-                  ) : updates.length === 0 ? (
+                  ) : comments.length === 0 ? (
                     <div className="text-center py-16 px-6">
                       <div className="w-14 h-14 bg-[#EDF3FB] rounded-full flex items-center justify-center mx-auto mb-4">
                         <Send size={22} className="text-[#0073EA]" />
@@ -693,21 +655,21 @@ export default function BoardItemDetailPanel({
                       </p>
                     </div>
                   ) : (
-                    updates.map((upd) => (
-                      <div key={upd.id} className="flex gap-3">
-                        <Avatar name={upd.author} size={34} />
+                    comments.map((comment: BoardItemComment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <Avatar name={comment.author.user.name} size={34} />
                         <div className="flex-1 min-w-0">
                           <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm">
                             <div className="flex items-baseline gap-2 mb-1.5">
                               <span className="text-[13px] font-semibold text-[#323338]">
-                                {upd.author}
+                                {comment.author.user.name}
                               </span>
                               <span className="text-[11px] text-[#9699A6]">
-                                {formatRelativeTime(upd.createdAt)}
+                                {formatRelativeTime(new Date(comment.createdAt))}
                               </span>
                             </div>
                             <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
-                              {upd.text}
+                              {comment.body}
                             </p>
                           </div>
                         </div>
@@ -745,10 +707,10 @@ export default function BoardItemDetailPanel({
                         </span>
                         <button
                           onClick={postUpdate}
-                          disabled={!newUpdateText.trim()}
+                          disabled={!newUpdateText.trim() || createCommentMut.isPending}
                           className="px-5 py-1.5 bg-[#0073EA] text-white text-[13px] font-semibold rounded-[6px] hover:bg-[#0060C2] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                         >
-                          עדכן
+                          {createCommentMut.isPending ? "שומר..." : "עדכן"}
                         </button>
                       </div>
                     </div>
@@ -783,18 +745,18 @@ export default function BoardItemDetailPanel({
                       </div>
                     </div>
                   )}
-                  {updates.map((upd) => (
-                    <div key={upd.id} className="flex items-start gap-3 py-2.5 border-b border-[#F0F0F5]">
-                      <Avatar name={upd.author} size={24} />
+                  {comments.map((comment: BoardItemComment) => (
+                    <div key={comment.id} className="flex items-start gap-3 py-2.5 border-b border-[#F0F0F5]">
+                      <Avatar name={comment.author.user.name} size={24} />
                       <div>
                         <span className="text-[13px] text-[#323338]">
-                          <strong>{upd.author}</strong> הוסיף עדכון
+                          <strong>{comment.author.user.name}</strong> הוסיף עדכון
                         </span>
                         <p className="text-[12px] text-[#676879] mt-0.5 line-clamp-2">
-                          {upd.text}
+                          {comment.body}
                         </p>
                         <span className="text-[11px] text-[#9699A6]">
-                          {formatRelativeTime(upd.createdAt)}
+                          {formatRelativeTime(new Date(comment.createdAt))}
                         </span>
                       </div>
                     </div>

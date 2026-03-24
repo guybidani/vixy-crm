@@ -99,9 +99,10 @@ model WorkspaceMember {
   activities      Activity[]
   createdContacts  Contact[]  @relation("ContactCreator")
   createdDocuments Document[] @relation("DocumentCreator")
-  boardAccess     BoardAccess[]
+  boardAccess      BoardAccess[]
   calendarIntegration CalendarIntegration?
-  taskComments    TaskComment[]
+  taskComments     TaskComment[]
+  boardItemComments BoardItemComment[]
   savedViews      SavedView[]
   createdTemplates CannedResponse[] @relation("TemplateCreator")
 
@@ -951,10 +952,25 @@ model BoardItem {
   order     Int        @default(0)
   createdAt DateTime   @default(now()) @map("created_at")
 
-  values BoardItemValue[]
+  values   BoardItemValue[]
+  comments BoardItemComment[]
 
   @@index([groupId, order])
   @@map("board_items")
+}
+
+model BoardItemComment {
+  id        String          @id @default(uuid())
+  item      BoardItem       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId    String          @map("item_id")
+  author    WorkspaceMember @relation(fields: [authorId], references: [id])
+  authorId  String          @map("author_id")
+  body      String          @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  @@index([itemId])
+  @@map("board_item_comments")
 }
 
 model BoardItemValue {
