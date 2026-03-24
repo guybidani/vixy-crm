@@ -47,6 +47,7 @@ boardsRouter.get("/templates", (_req, res) => {
   const templates = Object.entries(BOARD_TEMPLATES).map(([key, t]) => ({
     key,
     name: t.name,
+    description: t.description,
     icon: t.icon,
     color: t.color,
     columnCount: t.columns.length,

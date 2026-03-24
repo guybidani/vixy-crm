@@ -5,6 +5,7 @@ import { api } from "./client";
 export interface BoardTemplate {
   key: string;
   name: string;
+  description?: string;
   icon: string;
   color: string;
   columnCount: number;
