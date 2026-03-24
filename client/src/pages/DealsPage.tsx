@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
+import { getAvatarColor } from "../utils/avatar";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import KanbanBoard, {
@@ -626,16 +627,6 @@ export default function DealsPage() {
 
 /* ── Deal Kanban Card ──────────────────────────────── */
 
-// Stable avatar color per name (Monday.com palette)
-const CARD_AVATAR_COLORS = [
-  "#0073EA", "#FF5AC4", "#FDAB3D", "#00CA72", "#A25DDC",
-  "#037F4C", "#E2445C", "#579BFC", "#FF642E", "#CAB641",
-];
-function cardAvatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return CARD_AVATAR_COLORS[Math.abs(hash) % CARD_AVATAR_COLORS.length];
-}
 
 function DealCard({
   deal,
@@ -698,7 +689,7 @@ function DealCard({
         <div className="flex items-center gap-1.5 mb-1.5">
           <div
             className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: cardAvatarColor(deal.contact.name) }}
+            style={{ backgroundColor: getAvatarColor(deal.contact.name) }}
             role="img"
             aria-label={deal.contact.name}
           >
@@ -756,7 +747,7 @@ function DealCard({
           {deal.assignee ? (
             <div
               className="w-[20px] h-[20px] rounded-full flex items-center justify-center flex-shrink-0 ring-1 ring-white"
-              style={{ backgroundColor: cardAvatarColor(deal.assignee.name) }}
+              style={{ backgroundColor: getAvatarColor(deal.assignee.name) }}
               title={deal.assignee.name}
             >
               <span className="text-white text-[8px] font-bold">

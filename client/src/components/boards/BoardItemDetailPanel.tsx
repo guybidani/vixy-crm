@@ -41,6 +41,7 @@ import {
   type BoardItemFile,
 } from "../../api/boards";
 import { listContacts } from "../../api/contacts";
+import { getAvatarColor as avatarColor, getInitials } from "../../utils/avatar";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -67,25 +68,6 @@ function formatRelativeTime(date: Date): string {
   return date.toLocaleDateString("he-IL");
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-// Stable colors per user name
-const AVATAR_COLORS = [
-  "#0073EA", "#FF5AC4", "#FDAB3D", "#00CA72", "#A25DDC",
-  "#037F4C", "#E2445C", "#579BFC", "#FF642E", "#CAB641",
-];
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
 
 // ── Sub-component: Avatar ─────────────────────────────────────────────
 

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl, getTelUrl } from "../../utils/phone";
+import { getAvatarColor as avatarColor, getInitials } from "../../utils/avatar";
 import {
   getDeal,
   updateDeal,
@@ -64,21 +65,6 @@ const ACTIVITY_ICONS: Record<string, any> = {
 };
 
 // ── Avatar helpers ──────────────────────────────────────────────────────────
-
-const AVATAR_COLORS = [
-  "#0073EA", "#FF5AC4", "#FDAB3D", "#00CA72", "#A25DDC",
-  "#037F4C", "#E2445C", "#579BFC", "#FF642E", "#CAB641",
-];
-
-function avatarColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function getInitials(name: string): string {
-  return name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
-}
 
 function Avatar({ name, size = 28 }: { name: string; size?: number }) {
   return (

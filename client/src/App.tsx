@@ -21,6 +21,7 @@ import GlobalSearch from "./components/shared/GlobalSearch";
 import CommandPalette from "./components/shared/CommandPalette";
 import ShortcutsHelp from "./components/shared/ShortcutsHelp";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import PageSkeleton from "./components/shared/PageSkeleton";
 
 // Lazy-loaded page components
 const LoginPage = lazy(() => import("./pages/LoginPage"));
@@ -48,11 +49,7 @@ const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 
 function SuspenseFallback() {
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
+  return <PageSkeleton />;
 }
 
 class RouteErrorBoundary extends Component<
