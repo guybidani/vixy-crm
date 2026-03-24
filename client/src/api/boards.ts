@@ -67,6 +67,18 @@ export interface BoardGroup {
   items: BoardItem[];
 }
 
+// ── Automation Types ────────────────────────────────────────────────
+
+export type AutomationTrigger = "STATUS_CHANGE" | "ITEM_CREATED" | "DATE_ARRIVED";
+
+export interface AutomationConfig {
+  id: string;
+  templateId: AutomationTrigger;
+  enabled: boolean;
+  columnId?: string;      // for STATUS_CHANGE / DATE_ARRIVED
+  triggerValue?: string;  // for STATUS_CHANGE — which status value
+}
+
 export interface Board {
   id: string;
   workspaceId: string;
@@ -76,6 +88,7 @@ export interface Board {
   color: string;
   templateKey: string | null;
   isPrivate: boolean;
+  automations: AutomationConfig[] | null;
   columns: BoardColumn[];
   groups: BoardGroup[];
   createdAt: string;
@@ -404,4 +417,13 @@ export function uploadBoardItemFile(boardId: string, itemId: string, file: File)
 
 export function deleteBoardItemFile(boardId: string, itemId: string, fileId: string) {
   return api(`/boards/${boardId}/items/${itemId}/files/${fileId}`, { method: "DELETE" });
+}
+
+// ── Automations ─────────────────────────────────────────────────
+
+export function saveBoardAutomations(boardId: string, automations: AutomationConfig[]) {
+  return api<Board>(`/boards/${boardId}/automations`, {
+    method: "PUT",
+    body: JSON.stringify({ automations }),
+  });
 }

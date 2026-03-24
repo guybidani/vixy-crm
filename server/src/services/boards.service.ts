@@ -142,6 +142,7 @@ export async function update(
     icon: string;
     color: string;
     isPrivate: boolean;
+    automations: any;
   }>,
 ) {
   const existing = await prisma.board.findFirst({ where: { id, workspaceId } });

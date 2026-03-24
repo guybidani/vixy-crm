@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Lock, Shield, PanelRightOpen, Link2, List, Columns2, CalendarDays } from "lucide-react";
+import { Pencil, Lock, Shield, PanelRightOpen, Link2, List, Columns2, CalendarDays, Zap } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
+import BoardAutomationsPanel from "../components/boards/BoardAutomationsPanel";
 import PageShell from "../components/layout/PageShell";
 import MondayBoard, {
   MondayStatusCell,
@@ -28,9 +29,11 @@ import {
   updateBoardColumn,
   deleteBoardColumn,
   deleteBoardItem,
+  saveBoardAutomations,
   type Board,
   type BoardItem,
   type BoardColumn,
+  type AutomationConfig,
 } from "../api/boards";
 import { getWorkspaceMembers } from "../api/auth";
 
@@ -287,6 +290,7 @@ export default function BoardPage() {
   const userRole = currentWs?.role;
   const canManagePermissions = userRole === "OWNER" || userRole === "ADMIN";
   const [permissionsOpen, setPermissionsOpen] = useState(false);
+  const [automationsOpen, setAutomationsOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   // ── View mode — persisted per board ──
@@ -396,6 +400,14 @@ export default function BoardPage() {
   const addGroupMut = useMutation({
     mutationFn: () => addBoardGroup(id!, { name: "קבוצה חדשה" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+  });
+
+  const saveAutomationsMut = useMutation({
+    mutationFn: (automations: AutomationConfig[]) => saveBoardAutomations(id!, automations),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board", id] });
+      setAutomationsOpen(false);
+    },
   });
 
   const updateGroupMut = useMutation({
@@ -944,6 +956,13 @@ export default function BoardPage() {
             </button>
           )}
           <button
+            onClick={() => setAutomationsOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] hover:border-[#FDAB3D] hover:text-[#FDAB3D] transition-colors"
+          >
+            <Zap size={14} />
+            אוטומציות
+          </button>
+          <button
             onClick={() => setColumnEditorOpen(true)}
             className="px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
           >
@@ -1200,6 +1219,18 @@ export default function BoardPage() {
           boardId={board.id}
           boardName={board.name}
           isPrivate={board.isPrivate ?? false}
+        />
+      )}
+
+      {/* Board Automations Panel */}
+      {board && (
+        <BoardAutomationsPanel
+          open={automationsOpen}
+          onClose={() => setAutomationsOpen(false)}
+          columns={board.columns}
+          automations={(board.automations as AutomationConfig[]) ?? []}
+          onSave={(automations) => saveAutomationsMut.mutate(automations)}
+          saving={saveAutomationsMut.isPending}
         />
       )}
 

@@ -599,6 +599,31 @@ boardsRouter.patch(
   },
 );
 
+// ── Automations ───────────────────────────────────────────────────
+
+const updateAutomationsSchema = z.object({
+  automations: z.array(z.any()),
+});
+
+// PUT /boards/:id/automations - save all automations for a board
+boardsRouter.put(
+  "/:id/automations",
+  requireBoardPermission('ADMIN'),
+  validate(updateAutomationsSchema),
+  async (req, res, next) => {
+    try {
+      const board = await boardsService.update(
+        req.workspaceId!,
+        req.params.id as string,
+        { automations: req.body.automations },
+      );
+      res.json(board);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ── Sub-Items ─────────────────────────────────────────────────────
 
 const createSubItemSchema = z.object({
