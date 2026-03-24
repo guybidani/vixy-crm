@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "../hooks/useDebounce";
@@ -9,31 +9,33 @@ import {
   Phone,
   Globe,
   Smartphone,
+  Search,
+  Send,
+  Eye,
+  X,
+  Clock,
+  Zap,
+  CheckCircle2,
+  User,
+  AlertCircle,
 } from "lucide-react";
-import UrgencyScoreBadge from "../components/shared/UrgencyScoreBadge";
 import toast from "react-hot-toast";
-import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import StatusDropdown from "../components/shared/StatusDropdown";
-import MondayTextCell from "../components/shared/MondayTextCell";
-import MondayPersonCell from "../components/shared/MondayPersonCell";
-import DataTable from "../components/shared/DataTable";
-import KanbanBoard, {
-  type KanbanColumn as KanbanCol,
-} from "../components/shared/KanbanBoard";
-import ViewToggle from "../components/shared/ViewToggle";
-import ExportButton from "../components/shared/ExportButton";
 import {
   listTickets,
   createTicket,
+  getTicket,
   updateTicket,
-  getTicketsBoard,
+  addTicketMessage,
   type Ticket,
+  type TicketDetail,
+  type TicketMessage,
 } from "../api/tickets";
 import { listContacts } from "../api/contacts";
+import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
-import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useAuth } from "../hooks/useAuth";
 
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
@@ -44,463 +46,893 @@ const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   portal: <Smartphone size={12} />,
 };
 
+const STATUS_TABS = [
+  { key: "", label: "כל הפניות" },
+  { key: "OPEN", label: "פתוחות" },
+  { key: "PENDING", label: "בטיפול" },
+  { key: "NEW", label: "ממתינות" },
+  { key: "RESOLVED,CLOSED", label: "נסגרו" },
+] as const;
+
+// Priority border colors
+const PRIORITY_BORDER: Record<string, string> = {
+  URGENT: "#FB275D",
+  HIGH: "#FDAB3D",
+  MEDIUM: "#6161FF",
+  LOW: "#C4C4C4",
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "עכשיו";
+  if (mins < 60) return `לפני ${mins} דק'`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `לפני ${hours} ש'`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `לפני ${days} ימים`;
+  return new Date(dateStr).toLocaleDateString("he-IL");
+}
+
+function isUrgentOverdue(ticket: Ticket): boolean {
+  if (ticket.priority !== "URGENT") return false;
+  if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") return false;
+  const hours = (Date.now() - new Date(ticket.createdAt).getTime()) / 3600000;
+  return hours > 4;
+}
+
+function SlaCountdown({ ticket }: { ticket: Ticket }) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const elapsed = now - new Date(ticket.createdAt).getTime();
+  const slaMs = 4 * 3600000;
+  const remaining = slaMs - elapsed;
+  if (remaining <= 0) {
+    const over = Math.floor(-remaining / 60000);
+    const h = Math.floor(over / 60);
+    const m = over % 60;
+    return (
+      <span className="flex items-center gap-1 text-[10px] font-bold text-danger">
+        <AlertCircle size={10} />
+        {h > 0 ? `+${h}:${String(m).padStart(2, "0")}` : `+${m} דק'`}
+      </span>
+    );
+  }
+  const remMin = Math.floor(remaining / 60000);
+  const h = Math.floor(remMin / 60);
+  const m = remMin % 60;
+  return (
+    <span className="flex items-center gap-1 text-[10px] font-semibold text-danger">
+      <Clock size={10} />
+      {h > 0 ? `${h}:${String(m).padStart(2, "0")}` : `${m} דק'`}
+    </span>
+  );
+}
+
 export default function TicketsPage() {
   const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
+
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  const inlineUpdate = useInlineUpdate(updateTicket, [
-    ["tickets"],
-    ["tickets-board"],
-  ]);
-  const { data: members } = useQuery({
-    queryKey: ["members"],
-    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
-    enabled: !!currentWorkspaceId,
-  });
-  const memberOptions = (members || []).map((m) => ({
-    id: m.memberId,
-    name: m.name,
-  }));
+  useEffect(() => setPage(1), [debouncedSearch, statusFilter]);
 
-  useEffect(() => setPage(1), [debouncedSearch]);
+  // Build status param — handle combined "RESOLVED,CLOSED"
+  const statusParam = statusFilter === "RESOLVED,CLOSED" ? undefined : statusFilter || undefined;
+  const closedFilter = statusFilter === "RESOLVED,CLOSED";
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tickets", { search: debouncedSearch, statusFilter, page, sortBy, sortDir }],
+    queryKey: ["tickets", { search: debouncedSearch, statusFilter, page }],
     queryFn: () =>
       listTickets({
         search: debouncedSearch || undefined,
-        status: statusFilter || undefined,
+        status: statusParam,
         page,
-        sortBy,
-        sortDir,
+        limit: 50,
+        sortBy: "createdAt",
+        sortDir: "desc",
       }),
-    enabled: viewMode === "table",
   });
 
-  // Board data
-  const { data: boardData, isLoading: boardLoading } = useQuery({
-    queryKey: ["tickets-board"],
-    queryFn: getTicketsBoard,
-    enabled: viewMode === "kanban",
-  });
+  // Filter resolved/closed client-side when that tab is active
+  const allRows = data?.data || [];
+  const rows = closedFilter
+    ? allRows.filter((t) => t.status === "RESOLVED" || t.status === "CLOSED")
+    : allRows;
+
+  // Sort: urgency score desc
+  const sortedRows = [...rows].sort(
+    (a, b) => (b.urgencyScore ?? 0) - (a.urgencyScore ?? 0),
+  );
+
+  // Auto-select first ticket
+  useEffect(() => {
+    if (!selectedId && sortedRows.length > 0) {
+      setSelectedId(sortedRows[0].id);
+    }
+  }, [sortedRows.length]);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       updateTicket(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      queryClient.invalidateQueries({ queryKey: ["tickets-board"] });
+      queryClient.invalidateQueries({ queryKey: ["ticket", selectedId] });
       toast.success("סטטוס עודכן");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
-  // Kanban columns
-  const kanbanColumns: KanbanCol<Ticket>[] = Object.entries(ticketStatuses).map(
-    ([key, info]) => ({
-      key,
-      label: info.label,
-      color: info.color,
-      items: boardData?.statuses[key] || [],
-    }),
-  );
+  return (
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-surface-secondary -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
+      {/* ── Left: Ticket List ── */}
+      <div className="w-[340px] flex-shrink-0 flex flex-col border-l border-border bg-white">
+        {/* Header */}
+        <div className="px-4 pt-4 pb-2 border-b border-border-light">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[15px] font-bold text-text-primary">קריאות</h2>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all"
+            >
+              <Plus size={13} />
+              חדשה
+            </button>
+          </div>
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search
+              size={14}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש קריאות..."
+              className="w-full pr-8 pl-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-surface-secondary"
+            />
+          </div>
+          {/* Status Tabs */}
+          <div className="flex gap-1 flex-wrap">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => { setStatusFilter(tab.key); setPage(1); }}
+                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all ${
+                  statusFilter === tab.key
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-surface-secondary text-text-secondary hover:bg-border"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-  function handleKanbanDragEnd(
-    itemId: string,
-    _fromColumn: string,
-    toColumn: string,
-  ) {
-    statusMutation.mutate({ id: itemId, status: toColumn });
-  }
+        {/* Ticket List */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32 text-text-tertiary text-sm">
+              טוען...
+            </div>
+          ) : sortedRows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-text-tertiary text-sm gap-2">
+              <MessageSquare size={24} className="opacity-30" />
+              אין קריאות
+            </div>
+          ) : (
+            sortedRows.map((ticket) => (
+              <TicketListItem
+                key={ticket.id}
+                ticket={ticket}
+                isSelected={selectedId === ticket.id}
+                onClick={() => setSelectedId(ticket.id)}
+                ticketStatuses={ticketStatuses}
+                priorities={priorities}
+                ticketChannels={ticketChannels}
+              />
+            ))
+          )}
+          {/* Load more */}
+          {data?.pagination && data.pagination.page < data.pagination.pages && (
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              className="w-full py-2 text-xs text-primary hover:bg-primary/5 transition-colors"
+            >
+              טען עוד...
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Right: Ticket Detail Panel ── */}
+      <div className="flex-1 overflow-hidden">
+        {selectedId ? (
+          <TicketDetailPanel
+            ticketId={selectedId}
+            onNavigateFull={() => navigate(`/tickets/${selectedId}`)}
+            onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-text-tertiary gap-3">
+            <MessageSquare size={48} className="opacity-20" />
+            <p className="text-sm">בחר קריאה מהרשימה</p>
+          </div>
+        )}
+      </div>
+
+      {showCreate && (
+        <CreateTicketModal
+          onClose={() => setShowCreate(false)}
+          onCreated={(id) => { setSelectedId(id); queryClient.invalidateQueries({ queryKey: ["tickets"] }); }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ───── Ticket List Item ───── */
+function TicketListItem({
+  ticket,
+  isSelected,
+  onClick,
+  ticketStatuses,
+  priorities,
+  ticketChannels,
+}: {
+  ticket: Ticket;
+  isSelected: boolean;
+  onClick: () => void;
+  ticketStatuses: Record<string, { label: string; color: string }>;
+  priorities: Record<string, { label: string; color: string }>;
+  ticketChannels: Record<string, { label: string; color: string }>;
+}) {
+  const priorityColor = PRIORITY_BORDER[ticket.priority] || "#C4C4C4";
+  const statusInfo = ticketStatuses[ticket.status];
+  const overdueUrgent = isUrgentOverdue(ticket);
+
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full text-right px-3 py-3 border-b border-border-light transition-colors relative flex gap-0 ${
+        isSelected
+          ? "bg-primary/5 border-r-[3px] border-r-primary"
+          : "hover:bg-surface-secondary border-r-[3px]"
+      }`}
+      style={{
+        borderRightColor: isSelected ? "#6161FF" : priorityColor,
+      }}
+    >
+      <div className="flex-1 min-w-0">
+        {/* Subject + time */}
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <span className="text-[13px] font-semibold text-text-primary truncate leading-tight">
+            {ticket.subject}
+          </span>
+          <span className="text-[10px] text-text-tertiary whitespace-nowrap flex-shrink-0">
+            {timeAgo(ticket.createdAt)}
+          </span>
+        </div>
+        {/* Contact */}
+        {ticket.contact && (
+          <div className="flex items-center gap-1 mb-1.5">
+            <div
+              className="w-4 h-4 rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0"
+            >
+              <span className="text-white text-[8px] font-bold">
+                {ticket.contact.name[0]}
+              </span>
+            </div>
+            <span className="text-[11px] text-text-secondary truncate">
+              {ticket.contact.name}
+            </span>
+          </div>
+        )}
+        {/* Bottom row: status chip + SLA */}
+        <div className="flex items-center gap-1.5">
+          {statusInfo && (
+            <span
+              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: statusInfo.color }}
+            >
+              {statusInfo.label}
+            </span>
+          )}
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+            style={{ backgroundColor: priorityColor }}
+          >
+            {priorities[ticket.priority]?.label || ticket.priority}
+          </span>
+          {ticket.messageCount > 0 && (
+            <span className="flex items-center gap-0.5 text-[10px] text-text-tertiary">
+              <MessageSquare size={10} />
+              {ticket.messageCount}
+            </span>
+          )}
+          {overdueUrgent && (
+            <SlaCountdown ticket={ticket} />
+          )}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/* ───── Ticket Detail Panel ───── */
+function TicketDetailPanel({
+  ticketId,
+  onNavigateFull,
+  onStatusChange,
+}: {
+  ticketId: string;
+  onNavigateFull: () => void;
+  onStatusChange: (id: string, status: string) => void;
+}) {
+  const { ticketStatuses, priorities } = useWorkspaceOptions();
+  const { currentWorkspaceId } = useAuth();
+  const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { data: ticket, isLoading } = useQuery({
+    queryKey: ["ticket", ticketId],
+    queryFn: () => getTicket(ticketId),
+    enabled: !!ticketId,
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ["members"],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId,
+  });
 
   const priorityMutation = useMutation({
-    mutationFn: ({ id, priority }: { id: string; priority: string }) =>
-      updateTicket(id, { priority }),
+    mutationFn: (priority: string) => updateTicket(ticketId, { priority }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("עדיפות עודכנה");
     },
   });
 
-  const handleSort = (key: string) => {
-    if (sortBy === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(key);
-      setSortDir("asc");
+  const assignMutation = useMutation({
+    mutationFn: (assigneeId: string) => updateTicket(ticketId, { assigneeId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      toast.success("נציג שויך");
+    },
+  });
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, [ticket?.messages?.length]);
 
-  const columns = [
-    {
-      key: "subject",
-      label: "נושא",
-      sortable: true,
-      render: (row: Ticket) => (
-        <div>
-          <MondayTextCell
-            value={row.subject}
-            onChange={(val) => inlineUpdate(row.id, { subject: val })}
-            placeholder="נושא פנייה"
-          />
-          {row.description && (
-            <p className="text-xs text-text-tertiary truncate max-w-xs mt-0.5">
-              {row.description}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      label: "סטטוס",
-      sortable: true,
-      render: (row: Ticket) => (
-        <StatusDropdown
-          value={row.status}
-          options={ticketStatuses}
-          onChange={(status) => statusMutation.mutate({ id: row.id, status })}
-        />
-      ),
-    },
-    {
-      key: "priority",
-      label: "עדיפות",
-      sortable: true,
-      render: (row: Ticket) => (
-        <StatusDropdown
-          value={row.priority}
-          options={priorities}
-          onChange={(priority) =>
-            priorityMutation.mutate({ id: row.id, priority })
-          }
-        />
-      ),
-    },
-    {
-      key: "urgencyScore",
-      label: "דחיפות",
-      width: "130px",
-      render: (row: Ticket) => (
-        <UrgencyScoreBadge urgency={row.urgencyComputed} />
-      ),
-    },
-    {
-      key: "contact",
-      label: "איש קשר",
-      render: (row: Ticket) =>
-        row.contact ? (
-          <div className="flex items-center gap-2">
-            <div
-              className="w-6 h-6 rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0"
-              role="img"
-              aria-label={row.contact.name}
-            >
-              <span className="text-white text-[10px] font-bold">
-                {row.contact.name[0]}
-              </span>
-            </div>
-            <span className="text-sm">{row.contact.name}</span>
-          </div>
-        ) : (
-          "—"
-        ),
-    },
-    {
-      key: "channel",
-      label: "ערוץ",
-      render: (row: Ticket) => {
-        const color = ticketChannels[row.channel]?.color || "#C4C4C4";
-        const icon = CHANNEL_ICONS[row.channel];
-        return (
-          <div className="flex items-center gap-1.5">
-            <div
-              className="w-5 h-5 rounded flex items-center justify-center text-white"
-              style={{ backgroundColor: color }}
-            >
-              {icon}
-            </div>
-            <span className="text-xs text-text-secondary">
-              {ticketChannels[row.channel]?.label || row.channel}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "assignee",
-      label: "נציג",
-      render: (row: Ticket) => (
-        <MondayPersonCell
-          value={
-            row.assignee
-              ? { id: row.assignee.id, name: row.assignee.name }
-              : null
-          }
-          onChange={(id) => inlineUpdate(row.id, { assigneeId: id! })}
-          options={memberOptions}
-          placeholder="לא שויך"
-        />
-      ),
-    },
-    {
-      key: "messageCount",
-      label: "הודעות",
-      width: "80px",
-      render: (row: Ticket) => (
-        <div className="flex items-center gap-1 text-text-secondary">
-          <MessageSquare size={12} />
-          <span className="text-xs font-medium">{row.messageCount}</span>
-        </div>
-      ),
-    },
-    {
-      key: "createdAt",
-      label: "נוצר",
-      sortable: true,
-      render: (row: Ticket) => {
-        const created = new Date(row.createdAt);
-        const now = new Date();
-        const diffHrs = Math.floor(
-          (now.getTime() - created.getTime()) / (1000 * 60 * 60),
-        );
-        // SLA indicator: show hours for recent, date for older
-        const isRecent = diffHrs < 24;
-        return (
-          <span
-            className={`text-xs ${isRecent ? "text-warning font-semibold" : "text-text-tertiary"}`}
-          >
-            {isRecent
-              ? `לפני ${diffHrs}ש`
-              : created.toLocaleDateString("he-IL")}
-          </span>
-        );
-      },
-    },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+        טוען...
+      </div>
+    );
+  }
 
-  // Default client-side sort by urgency score DESC
-  const tableData = (() => {
-    const rows = data?.data || [];
-    if (sortBy === "createdAt" && sortDir === "desc" && !statusFilter) {
-      // Default view: sort by urgency score descending
-      return [...rows].sort(
-        (a, b) => (b.urgencyScore ?? 0) - (a.urgencyScore ?? 0),
-      );
-    }
-    return rows;
-  })();
+  if (!ticket) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+        קריאה לא נמצאה
+      </div>
+    );
+  }
 
-  const allTickets = data?.pagination.total || 0;
-
-  return (
-    <PageShell
-      title="פניות"
-      subtitle={`${allTickets} פניות`}
-      actions={
-        <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-          <ExportButton
-            entity="tickets"
-            filters={{ status: statusFilter, search }}
-          />
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
-          >
-            <Plus size={16} />
-            פנייה חדשה
-          </button>
-        </div>
-      }
-    >
-      {viewMode === "kanban" ? (
-        <KanbanBoard<Ticket>
-          columns={kanbanColumns}
-          renderCard={(ticket, isDragging) => (
-            <TicketCard ticket={ticket} isDragging={isDragging} />
-          )}
-          onDragEnd={handleKanbanDragEnd}
-          onCardClick={(ticket) => navigate(`/tickets/${ticket.id}`)}
-          loading={boardLoading}
-          emptyText="אין פניות"
-        />
-      ) : (
-        <>
-          {/* Status filter chips */}
-          <div className="flex gap-2 flex-wrap">
-            <FilterChip
-              label="הכל"
-              active={!statusFilter}
-              onClick={() => {
-                setStatusFilter("");
-                setPage(1);
-              }}
-            />
-            {Object.entries(ticketStatuses).map(([key, val]) => (
-              <FilterChip
-                key={key}
-                label={val.label}
-                color={val.color}
-                active={statusFilter === key}
-                onClick={() => {
-                  setStatusFilter(key);
-                  setPage(1);
-                }}
-              />
-            ))}
-          </div>
-
-          <DataTable
-            columns={columns}
-            data={tableData}
-            loading={isLoading}
-            search={search}
-            onSearchChange={(s) => {
-              setSearch(s);
-              setPage(1);
-            }}
-            searchPlaceholder="חיפוש פניות..."
-            pagination={data?.pagination}
-            onPageChange={setPage}
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSortChange={handleSort}
-            onRowClick={(row) => navigate(`/tickets/${row.id}`)}
-            rowStyle={(row) => ({
-              borderRight: `3px solid ${row.urgencyComputed?.color ?? "transparent"}`,
-            })}
-          />
-        </>
-      )}
-
-      {showCreate && <CreateTicketModal onClose={() => setShowCreate(false)} />}
-    </PageShell>
-  );
-}
-
-function TicketCard({
-  ticket,
-  isDragging,
-}: {
-  ticket: Ticket;
-  isDragging?: boolean;
-}) {
-  const { priorities, ticketChannels } = useWorkspaceOptions();
+  const statusInfo = ticketStatuses[ticket.status];
   const priorityInfo = priorities[ticket.priority];
-  const channelColor = ticketChannels[ticket.channel]?.color || "#C4C4C4";
-  const channelIcon = CHANNEL_ICONS[ticket.channel];
-  const channelLabel = ticketChannels[ticket.channel]?.label || ticket.channel;
+  const slaInfo = ticket.slaPolicy ? getSlaInfo(ticket) : null;
+  const createdHoursAgo = (Date.now() - new Date(ticket.createdAt).getTime()) / 3600000;
+  const showSlaAlert =
+    ticket.priority === "URGENT" &&
+    ticket.status !== "RESOLVED" &&
+    ticket.status !== "CLOSED" &&
+    createdHoursAgo > 4;
 
   return (
-    <div
-      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${
-        isDragging
-          ? "shadow-lg opacity-90 border-l-primary"
-          : "border-l-transparent hover:shadow-md hover:border-l-primary"
-      }`}
-    >
-      {/* Subject */}
-      <span className="font-semibold text-sm text-text-primary block mb-1 truncate">
-        {ticket.subject}
-      </span>
+    <div className="flex h-full overflow-hidden">
+      {/* ── Main: thread + reply ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top: ticket header */}
+        <div className="px-5 py-3 border-b border-border bg-white flex items-start gap-3 flex-shrink-0">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-[15px] font-bold text-text-primary truncate">
+              {ticket.subject}
+            </h2>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              {/* Status dropdown */}
+              <StatusDropdown
+                value={ticket.status}
+                options={ticketStatuses}
+                onChange={(s) => onStatusChange(ticketId, s)}
+              />
+              {/* Priority dropdown */}
+              <StatusDropdown
+                value={ticket.priority}
+                options={priorities}
+                onChange={(p) => priorityMutation.mutate(p)}
+              />
+              {/* Contact link */}
+              {ticket.contact && (
+                <span className="flex items-center gap-1 text-xs text-primary cursor-pointer hover:underline"
+                  onClick={onNavigateFull}
+                >
+                  <User size={12} />
+                  {ticket.contact.firstName} {ticket.contact.lastName}
+                </span>
+              )}
+              {showSlaAlert && (
+                <span className="flex items-center gap-1 text-xs font-bold text-danger bg-danger/10 px-2 py-0.5 rounded-full">
+                  <AlertCircle size={12} />
+                  SLA הופר
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Quick actions */}
+          <div className="flex gap-1.5 flex-shrink-0">
+            {ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
+              <button
+                onClick={() => onStatusChange(ticketId, "RESOLVED")}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-success hover:bg-success/90 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                <CheckCircle2 size={13} />
+                נפתר
+              </button>
+            )}
+            {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
+              <button
+                onClick={() => onStatusChange(ticketId, "OPEN")}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-warning hover:bg-warning/90 text-white text-xs font-semibold rounded-lg transition-colors"
+              >
+                פתח מחדש
+              </button>
+            )}
+          </div>
+        </div>
 
-      {ticket.description && (
-        <p className="text-xs text-text-tertiary truncate mb-2">
-          {ticket.description}
-        </p>
-      )}
+        {/* Description */}
+        {ticket.description && (
+          <div className="mx-4 mt-3 mb-0 bg-white rounded-xl shadow-card p-3 flex-shrink-0">
+            <p className="text-xs text-text-tertiary font-medium mb-1">תיאור</p>
+            <p className="text-sm text-text-secondary whitespace-pre-wrap">
+              {ticket.description}
+            </p>
+          </div>
+        )}
 
-      {/* Priority + Channel badges */}
-      <div className="flex items-center gap-1.5 mb-2">
-        <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
-          style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}
-        >
-          {priorityInfo?.label || ticket.priority}
-        </span>
-        <div
-          className="flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
-          style={{ backgroundColor: channelColor }}
-        >
-          {channelIcon}
-          <span className="mr-0.5">{channelLabel}</span>
+        {/* Message thread */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          {ticket.messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-text-tertiary gap-2">
+              <MessageSquare size={32} className="opacity-20" />
+              <p className="text-sm">אין הודעות עדיין</p>
+            </div>
+          ) : (
+            ticket.messages.map((msg: TicketMessage) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Reply composer */}
+        <div className="flex-shrink-0 border-t border-border bg-white">
+          <ReplyComposer ticketId={ticketId} ticket={ticket} />
         </div>
       </div>
 
-      {/* Bottom row */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border-light">
-        {/* Contact */}
-        <div className="flex items-center gap-1">
-          {ticket.contact ? (
-            <>
-              <div
-                className="w-5 h-5 rounded-full bg-[#6161FF] flex items-center justify-center"
-                role="img"
-                aria-label={ticket.contact.name}
-              >
-                <span className="text-white text-[8px] font-bold">
-                  {ticket.contact.name[0]}
-                </span>
-              </div>
-              <span className="text-[11px] text-text-secondary truncate max-w-[80px]">
-                {ticket.contact.name}
-              </span>
-            </>
-          ) : (
-            <span className="text-[11px] text-text-tertiary">ללא קשר</span>
+      {/* ── Right sidebar: metadata ── */}
+      <div className="w-[220px] flex-shrink-0 border-r border-border bg-white overflow-y-auto">
+        <div className="p-3 space-y-4">
+          {/* SLA alert */}
+          {showSlaAlert && (
+            <div className="bg-danger/10 border border-danger/30 rounded-xl p-3">
+              <p className="text-[11px] font-bold text-danger flex items-center gap-1 mb-1">
+                <AlertCircle size={12} />
+                SLA הופר
+              </p>
+              <p className="text-[10px] text-danger/80">
+                קריאה דחופה פתוחה מעל 4 שעות
+              </p>
+              <SlaCountdown ticket={{
+                id: ticket.id,
+                priority: ticket.priority as any,
+                status: ticket.status as any,
+                createdAt: ticket.createdAt,
+                urgencyScore: 0,
+                urgencyComputed: ticket.urgencyComputed,
+                subject: ticket.subject,
+                description: ticket.description,
+                urgencyLevel: "CRITICAL" as any,
+                channel: ticket.channel,
+                contact: ticket.contact ? { id: ticket.contact.id, name: `${ticket.contact.firstName} ${ticket.contact.lastName}` } : null,
+                assignee: ticket.assignee ? { id: ticket.assignee.id, name: ticket.assignee.user.name } : null,
+                slaPolicy: null,
+                firstResponseAt: ticket.firstResponseAt,
+                resolvedAt: ticket.resolvedAt,
+                csatScore: ticket.csatScore,
+                messageCount: ticket.messages.length,
+                updatedAt: ticket.updatedAt,
+              }} />
+            </div>
           )}
-        </div>
 
-        {/* Message count */}
-        <div className="flex items-center gap-1 text-text-tertiary">
-          <MessageSquare size={10} />
-          <span className="text-[10px] font-medium">{ticket.messageCount}</span>
+          {/* Contact */}
+          {ticket.contact && (
+            <div>
+              <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+                איש קשר
+              </p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-[9px] font-bold">
+                      {ticket.contact.firstName[0]}
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium text-text-primary">
+                    {ticket.contact.firstName} {ticket.contact.lastName}
+                  </span>
+                </div>
+                {ticket.contact.email && (
+                  <div className="flex items-center gap-1 text-[11px] text-text-secondary">
+                    <Mail size={11} className="text-text-tertiary flex-shrink-0" />
+                    <span dir="ltr" className="truncate">{ticket.contact.email}</span>
+                  </div>
+                )}
+                {ticket.contact.phone && (
+                  <div className="flex items-center gap-1 text-[11px] text-text-secondary">
+                    <Phone size={11} className="text-text-tertiary flex-shrink-0" />
+                    <span dir="ltr">{ticket.contact.phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Ticket details */}
+          <div>
+            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+              פרטי קריאה
+            </p>
+            <div className="space-y-2">
+              <MetaRow label="נוצר">
+                <span className="text-[11px] text-text-secondary">
+                  {new Date(ticket.createdAt).toLocaleDateString("he-IL")}
+                </span>
+              </MetaRow>
+              <MetaRow label="עודכן">
+                <span className="text-[11px] text-text-secondary">
+                  {timeAgo(ticket.updatedAt)}
+                </span>
+              </MetaRow>
+              <MetaRow label="ערוץ">
+                <span className="text-[11px] text-text-secondary capitalize">
+                  {ticket.channel}
+                </span>
+              </MetaRow>
+              {/* Assignee */}
+              <MetaRow label="נציג">
+                <select
+                  value={ticket.assignee?.id || ""}
+                  onChange={(e) => assignMutation.mutate(e.target.value)}
+                  className="text-[11px] text-text-primary bg-surface-secondary border border-border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 max-w-[100px]"
+                >
+                  <option value="">לא שויך</option>
+                  {(members || []).map((m) => (
+                    <option key={m.memberId} value={m.memberId}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </MetaRow>
+              {ticket.firstResponseAt && (
+                <MetaRow label="תגובה ראשונה">
+                  <span className="text-[11px] text-text-secondary">
+                    {timeAgo(ticket.firstResponseAt)}
+                  </span>
+                </MetaRow>
+              )}
+              {ticket.resolvedAt && (
+                <MetaRow label="נפתר">
+                  <span className="text-[11px] text-success">
+                    {timeAgo(ticket.resolvedAt)}
+                  </span>
+                </MetaRow>
+              )}
+              {ticket.csatScore && (
+                <MetaRow label="שביעות רצון">
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <span
+                        key={i}
+                        className={`text-xs ${i <= ticket.csatScore! ? "text-warning" : "text-text-tertiary"}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </MetaRow>
+              )}
+            </div>
+          </div>
+
+          {/* SLA policy */}
+          {slaInfo && (
+            <div>
+              <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+                SLA
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-[10px] text-text-tertiary mb-0.5">תגובה ראשונה</p>
+                  <p className={`text-[11px] font-semibold flex items-center gap-1 ${
+                    slaInfo.responseBreached ? "text-danger" : "text-success"
+                  }`}>
+                    <Clock size={10} />
+                    {slaInfo.responseBreached
+                      ? `איחור ${formatSlaTime(slaInfo.responseOverdue)}`
+                      : ticket.firstResponseAt
+                        ? "✓ עמד ב-SLA"
+                        : `נותרו ${formatSlaTime(slaInfo.responseRemaining)}`}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-tertiary mb-0.5">פתרון</p>
+                  <p className={`text-[11px] font-semibold flex items-center gap-1 ${
+                    slaInfo.resolutionBreached ? "text-danger" : "text-success"
+                  }`}>
+                    <Clock size={10} />
+                    {slaInfo.resolutionBreached
+                      ? `איחור ${formatSlaTime(slaInfo.resolutionOverdue)}`
+                      : ticket.resolvedAt
+                        ? "✓ עמד ב-SLA"
+                        : `נותרו ${formatSlaTime(slaInfo.resolutionRemaining)}`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function FilterChip({
-  label,
-  color,
-  active,
-  onClick,
-}: {
-  label: string;
-  color?: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+/* ───── Message Bubble ───── */
+function MessageBubble({ message }: { message: TicketMessage }) {
+  const isAgent = message.senderType === "agent";
+  const isInternal = message.isInternal;
+
   return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-        active
-          ? "text-white shadow-sm"
-          : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
-      }`}
-      style={active ? { backgroundColor: color || "#6161FF" } : undefined}
-    >
-      {label}
-    </button>
+    <div className={`flex ${isAgent ? "justify-start" : "justify-end"}`}>
+      <div
+        className={`max-w-[75%] rounded-xl px-4 py-2.5 shadow-sm ${
+          isInternal
+            ? "bg-yellow-50 border border-yellow-200"
+            : isAgent
+              ? "bg-white border border-border-light"
+              : "bg-primary text-white"
+        }`}
+      >
+        <div className="flex items-center gap-1.5 mb-1">
+          {isInternal && <Eye size={10} className="text-warning" />}
+          <span
+            className={`text-[10px] font-medium ${
+              isInternal
+                ? "text-warning"
+                : isAgent
+                  ? "text-text-tertiary"
+                  : "text-white/70"
+            }`}
+          >
+            {isInternal ? "הערה פנימית" : isAgent ? "נציג" : "לקוח"}
+          </span>
+          <span className={`text-[9px] mr-auto ${
+            isAgent && !isInternal ? "text-text-tertiary" : isInternal ? "text-text-tertiary" : "text-white/50"
+          }`}>
+            {new Date(message.createdAt).toLocaleTimeString("he-IL", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+        <p
+          className={`text-sm whitespace-pre-wrap ${
+            isInternal
+              ? "text-text-primary"
+              : isAgent
+                ? "text-text-primary"
+                : "text-white"
+          }`}
+        >
+          {message.body}
+        </p>
+      </div>
+    </div>
   );
 }
 
-function CreateTicketModal({ onClose }: { onClose: () => void }) {
-  const { priorities, ticketChannels } = useWorkspaceOptions();
+/* ───── Reply Composer ───── */
+function ReplyComposer({
+  ticketId,
+  ticket,
+}: {
+  ticketId: string;
+  ticket: TicketDetail;
+}) {
   const queryClient = useQueryClient();
+  const [body, setBody] = useState("");
+  const [isInternal, setIsInternal] = useState(false);
+  const [showCanned, setShowCanned] = useState(false);
+
+  const { data: cannedResponses } = useQuery({
+    queryKey: ["canned-responses"],
+    queryFn: () => listCannedResponses(),
+    enabled: showCanned,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => addTicketMessage(ticketId, { body, isInternal }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      setBody("");
+      toast.success(isInternal ? "הערה פנימית נוספה" : "תגובה נשלחה");
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בשליחת הודעה"),
+  });
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!body.trim()) return;
+    mutation.mutate();
+  }
+
+  function insertCannedResponse(canned: CannedResponse) {
+    let text = canned.body;
+    if (ticket.contact) {
+      text = text.replace(/\{\{contact\.firstName\}\}/g, ticket.contact.firstName);
+      text = text.replace(/\{\{contact\.lastName\}\}/g, ticket.contact.lastName);
+    }
+    if (ticket.assignee) {
+      text = text.replace(/\{\{agent\.name\}\}/g, ticket.assignee.user.name);
+    }
+    setBody(text);
+    setShowCanned(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="p-3">
+      {/* Type toggle */}
+      <div className="flex items-center gap-1.5 mb-2">
+        <button
+          type="button"
+          onClick={() => setIsInternal(false)}
+          className={`text-xs px-2 py-1 rounded-md transition-colors ${
+            !isInternal ? "bg-primary text-white" : "text-text-secondary hover:bg-surface-secondary"
+          }`}
+        >
+          תגובה ללקוח
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsInternal(true)}
+          className={`text-xs px-2 py-1 rounded-md transition-colors flex items-center gap-1 ${
+            isInternal ? "bg-warning text-white" : "text-text-secondary hover:bg-surface-secondary"
+          }`}
+        >
+          <Eye size={11} />
+          הערה פנימית
+        </button>
+        {/* Canned responses */}
+        <div className="mr-auto relative">
+          <button
+            type="button"
+            onClick={() => setShowCanned(!showCanned)}
+            className="text-xs px-2 py-1 rounded-md transition-colors text-purple-600 hover:bg-purple-50 flex items-center gap-1"
+          >
+            <Zap size={11} />
+            מוכן
+          </button>
+          {showCanned && (
+            <div className="absolute left-0 bottom-full mb-1 bg-white rounded-xl shadow-modal border border-border z-20 w-72 max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-border-light flex items-center justify-between">
+                <span className="text-xs font-semibold text-text-primary">תגובות מוכנות</span>
+                <button type="button" onClick={() => setShowCanned(false)} className="p-0.5 rounded hover:bg-surface-secondary">
+                  <X size={12} className="text-text-tertiary" />
+                </button>
+              </div>
+              {cannedResponses && cannedResponses.length > 0 ? (
+                cannedResponses.map((cr) => (
+                  <button
+                    key={cr.id}
+                    type="button"
+                    onClick={() => insertCannedResponse(cr)}
+                    className="w-full text-right px-3 py-2 hover:bg-surface-secondary transition-colors border-b border-border-light last:border-0"
+                  >
+                    <div className="text-xs font-medium text-text-primary">{cr.title}</div>
+                    <p className="text-[10px] text-text-tertiary truncate mt-0.5">{cr.body.slice(0, 60)}...</p>
+                  </button>
+                ))
+              ) : (
+                <p className="text-xs text-text-tertiary text-center py-4">אין תגובות מוכנות</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Text area + send */}
+      <div className="flex gap-2">
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              handleSubmit(e as any);
+            }
+          }}
+          placeholder={isInternal ? "הערה פנימית (לא נראית ללקוח)..." : "כתוב תגובה... (Ctrl+Enter לשליחה)"}
+          className={`flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 resize-none ${
+            isInternal
+              ? "border-yellow-200 bg-yellow-50/50 focus:ring-warning/30 focus:border-warning"
+              : "border-border focus:ring-primary/30 focus:border-primary"
+          }`}
+          rows={2}
+        />
+        <button
+          type="submit"
+          disabled={!body.trim() || mutation.isPending}
+          className={`px-3 self-end rounded-lg text-white font-semibold text-sm transition-colors disabled:opacity-50 flex items-center gap-1 py-2 ${
+            isInternal ? "bg-warning hover:bg-warning/90" : "bg-primary hover:bg-primary-hover"
+          }`}
+        >
+          <Send size={14} />
+          שלח
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/* ───── Metadata Row ───── */
+function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-1">
+      <span className="text-[10px] text-text-tertiary flex-shrink-0">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+/* ───── Create Ticket Modal ───── */
+function CreateTicketModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated?: (id: string) => void;
+}) {
+  const { priorities, ticketChannels } = useWorkspaceOptions();
   const [form, setForm] = useState({
     subject: "",
     description: "",
@@ -525,31 +957,22 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
         channel: form.channel,
         contactId: form.contactId || undefined,
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      toast.success("פנייה נוצרה בהצלחה!");
+    onSuccess: (ticket) => {
+      toast.success("קריאה נוצרה בהצלחה!");
+      onCreated?.(ticket.id);
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת פנייה");
-    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה ביצירת קריאה"),
   });
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    mutation.mutate();
-  }
 
   const setField = (key: string, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <Modal open={true} onClose={onClose} title="פנייה חדשה">
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
+    <Modal open={true} onClose={onClose} title="קריאה חדשה">
+      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            נושא *
-          </label>
+          <label className="block text-sm font-medium text-text-primary mb-1">נושא *</label>
           <input
             type="text"
             value={form.subject}
@@ -558,11 +981,8 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             required
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            תיאור
-          </label>
+          <label className="block text-sm font-medium text-text-primary mb-1">תיאור</label>
           <textarea
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
@@ -570,46 +990,34 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             rows={3}
           />
         </div>
-
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              עדיפות
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-1">עדיפות</label>
             <select
               value={form.priority}
               onChange={(e) => setField("priority", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
               {Object.entries(priorities).map(([key, val]) => (
-                <option key={key} value={key}>
-                  {val.label}
-                </option>
+                <option key={key} value={key}>{val.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
-              ערוץ
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-1">ערוץ</label>
             <select
               value={form.channel}
               onChange={(e) => setField("channel", e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
             >
               {Object.entries(ticketChannels).map(([key, val]) => (
-                <option key={key} value={key}>
-                  {val.label}
-                </option>
+                <option key={key} value={key}>{val.label}</option>
               ))}
             </select>
           </div>
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            איש קשר
-          </label>
+          <label className="block text-sm font-medium text-text-primary mb-1">איש קשר</label>
           <select
             value={form.contactId}
             onChange={(e) => setField("contactId", e.target.value)}
@@ -617,13 +1025,10 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
           >
             <option value="">ללא</option>
             {contacts?.data.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.fullName}
-              </option>
+              <option key={c.id} value={c.id}>{c.fullName}</option>
             ))}
           </select>
         </div>
-
         <div className="flex gap-3 pt-2">
           <button
             type="button"
@@ -637,10 +1042,44 @@ function CreateTicketModal({ onClose }: { onClose: () => void }) {
             disabled={mutation.isPending}
             className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
           >
-            {mutation.isPending ? "יוצר..." : "צור פנייה"}
+            {mutation.isPending ? "יוצר..." : "צור קריאה"}
           </button>
         </div>
       </form>
     </Modal>
   );
+}
+
+/* ───── SLA helpers ───── */
+function formatSlaTime(minutes: number): string {
+  if (minutes < 60) return `${minutes} דקות`;
+  const hours = Math.floor(minutes / 60);
+  const rem = minutes % 60;
+  if (rem === 0) return `${hours} שעות`;
+  return `${hours}:${String(rem).padStart(2, "0")}`;
+}
+
+function getSlaInfo(ticket: TicketDetail) {
+  const sla = ticket.slaPolicy;
+  if (!sla) return null;
+  const createdAt = new Date(ticket.createdAt).getTime();
+  const now = Date.now();
+  const elapsedMinutes = (now - createdAt) / 60000;
+
+  const responseBreached = !ticket.firstResponseAt && elapsedMinutes > sla.firstResponseMinutes;
+  const responseRemaining = Math.max(0, Math.round(sla.firstResponseMinutes - elapsedMinutes));
+  const responseOverdue = Math.max(0, Math.round(elapsedMinutes - sla.firstResponseMinutes));
+
+  const resolutionBreached = !ticket.resolvedAt && elapsedMinutes > sla.resolutionMinutes;
+  const resolutionRemaining = Math.max(0, Math.round(sla.resolutionMinutes - elapsedMinutes));
+  const resolutionOverdue = Math.max(0, Math.round(elapsedMinutes - sla.resolutionMinutes));
+
+  return {
+    responseBreached,
+    responseRemaining,
+    responseOverdue,
+    resolutionBreached,
+    resolutionRemaining,
+    resolutionOverdue,
+  };
 }

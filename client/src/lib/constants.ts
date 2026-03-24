@@ -65,8 +65,8 @@ export const NAV_ITEMS = [
   },
   {
     key: "tickets",
-    label: "פניות",
-    icon: "Ticket",
+    label: "קריאות",
+    icon: "Headphones",
     path: "/tickets",
     dot: "#FB275D",
   },
