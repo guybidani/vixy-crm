@@ -900,11 +900,12 @@ model Board {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
-  isPrivate Boolean       @default(false) @map("is_private")
-  columns   BoardColumn[]
-  groups    BoardGroup[]
-  items     BoardItem[]
-  access    BoardAccess[]
+  isPrivate   Boolean       @default(false) @map("is_private")
+  automations Json?
+  columns     BoardColumn[]
+  groups      BoardGroup[]
+  items       BoardItem[]
+  access      BoardAccess[]
 
   @@index([workspaceId])
   @@map("boards")
