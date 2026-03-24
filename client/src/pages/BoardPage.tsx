@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Lock, Shield } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
+import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
 import PageShell from "../components/layout/PageShell";
 import MondayBoard, {
   MondayStatusCell,
@@ -118,6 +119,7 @@ export default function BoardPage() {
   } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [columnEditorOpen, setColumnEditorOpen] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [addingItemGroup, setAddingItemGroup] = useState<string | null>(null);
   const [newItemName, setNewItemName] = useState("");
   // Board name inline editing
@@ -708,6 +710,7 @@ export default function BoardPage() {
               deleteColMut.mutate(colId);
             }
           }}
+          onRowClick={(row: BoardRow) => setSelectedItemId(row.id)}
           onDeleteItem={(row: BoardRow) => {
             deleteItemMut.mutate(row.id);
           }}
@@ -759,6 +762,7 @@ export default function BoardPage() {
             </div>
           )}
           onDragEnd={handleKanbanDragEnd}
+          onCardClick={(row: BoardRow) => setSelectedItemId(row.id)}
           loading={isLoading}
           emptyText="אין פריטים"
         />
@@ -836,6 +840,17 @@ export default function BoardPage() {
           boardId={board.id}
           boardName={board.name}
           isPrivate={board.isPrivate ?? false}
+        />
+      )}
+
+      {/* Board Item Detail Panel */}
+      {selectedItemId && board && (
+        <BoardItemDetailPanel
+          boardId={id!}
+          itemId={selectedItemId}
+          columns={board.columns}
+          onClose={() => setSelectedItemId(null)}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["board", id] })}
         />
       )}
     </PageShell>

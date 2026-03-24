@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Plus, LogOut, Menu } from "lucide-react";
+import { Search, Plus, LogOut, Menu, Clock } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
 import NotificationCenter from "./NotificationCenter";
 import SearchDropdown from "./SearchDropdown";
+import TodayTasksPanel from "./TodayTasksPanel";
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -17,6 +18,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [todayTasksOpen, setTodayTasksOpen] = useState(false);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
   // Ctrl+K = QuickAdd, Ctrl+Shift+K = CommandPalette
@@ -43,6 +45,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   }, [mobileSearchOpen]);
 
   return (
+    <>
     <header
       className={cn(
         "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
@@ -154,6 +157,16 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         <span className="hidden sm:inline">חדש</span>
       </button>
 
+      {/* Today's Tasks Clock */}
+      <button
+        onClick={() => setTodayTasksOpen(true)}
+        className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA]"
+        title="משימות להיום"
+        aria-label="משימות להיום"
+      >
+        <Clock size={18} />
+      </button>
+
       {/* Notifications */}
       <NotificationCenter />
 
@@ -192,5 +205,11 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         </button>
       )}
     </header>
+
+    {/* Today's Tasks Panel */}
+    {todayTasksOpen && (
+      <TodayTasksPanel onClose={() => setTodayTasksOpen(false)} />
+    )}
+  </>
   );
 }
