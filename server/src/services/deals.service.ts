@@ -165,6 +165,7 @@ export async function list(params: ListParams) {
         ),
         lastActivityAt: d.lastActivityAt,
         lostReason: d.lostReason,
+        closedAt: d.closedAt,
         notes: d.notes,
         tags: d.tags.map((t) => ({
           id: t.tag.id,
@@ -261,6 +262,9 @@ export async function pipeline(workspaceId: string) {
       expectedClose: d.expectedClose,
       stageChangedAt: d.stageChangedAt,
       daysInStage,
+      lastActivityAt: d.lastActivityAt,
+      lostReason: d.lostReason,
+      closedAt: d.closedAt,
       nextTask: d.tasks[0] || null,
       health,
       tags: d.tags.map((t) => ({
@@ -279,7 +283,51 @@ export async function pipeline(workspaceId: string) {
     totalValue: grouped[stage].reduce((sum, d) => sum + d.value, 0),
   }));
 
-  return { stages: grouped, totals: stageTotals };
+  // Forecast calculations
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+  const openStages = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION"];
+
+  // Forecast = open deals with expectedClose this month × probability
+  const forecastThisMonth = deals
+    .filter((d) => {
+      if (!openStages.includes(d.stage)) return false;
+      if (!d.expectedClose) return false;
+      const ec = new Date(d.expectedClose);
+      return ec >= startOfMonth && ec <= endOfMonth;
+    })
+    .reduce((sum, d) => sum + (d.value ? Number(d.value) : 0) * (d.probability / 100), 0);
+
+  // Won this month = CLOSED_WON with closedAt in this month
+  const wonThisMonthDeals = await prisma.deal.findMany({
+    where: {
+      workspaceId,
+      stage: "CLOSED_WON",
+      closedAt: { gte: startOfMonth, lte: endOfMonth },
+    },
+    select: { value: true },
+  });
+  const wonThisMonth = wonThisMonthDeals.reduce(
+    (sum, d) => sum + (d.value ? Number(d.value) : 0),
+    0,
+  );
+
+  // Total pipeline = all open deals
+  const totalPipeline = deals
+    .filter((d) => openStages.includes(d.stage))
+    .reduce((sum, d) => sum + (d.value ? Number(d.value) : 0), 0);
+
+  return {
+    stages: grouped,
+    totals: stageTotals,
+    forecast: {
+      forecastThisMonth: Math.round(forecastThisMonth),
+      wonThisMonth: Math.round(wonThisMonth),
+      totalPipeline: Math.round(totalPipeline),
+    },
+  };
 }
 
 export async function getById(workspaceId: string, id: string) {

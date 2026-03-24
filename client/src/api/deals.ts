@@ -46,6 +46,7 @@ export interface Deal {
   daysInStage: number;
   lastActivityAt: string | null;
   lostReason: string | null;
+  closedAt: string | null;
   notes: string | null;
   bantData: BantData | null;
   nextTask?: any;
@@ -61,6 +62,11 @@ export interface PipelineResponse {
     count: number;
     totalValue: number;
   }>;
+  forecast: {
+    forecastThisMonth: number;
+    wonThisMonth: number;
+    totalPipeline: number;
+  };
 }
 
 export function listDeals(params?: {

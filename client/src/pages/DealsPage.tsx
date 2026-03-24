@@ -10,10 +10,12 @@ import {
   AlertTriangle,
   Table2,
   BarChart3,
-  HeartPulse,
   MessageSquare,
   Calendar,
   User,
+  TrendingUp,
+  CheckCircle2,
+  Layers,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
@@ -73,11 +75,47 @@ export default function DealsPage() {
     setPage(1);
   }
 
+  // Loss reason modal state
+  const [lostModal, setLostModal] = useState<{ dealId: string } | null>(null);
+  const [lossReason, setLossReason] = useState("price");
+  const [lossNote, setLossNote] = useState("");
+
+  // Won/Lost mutations
+  const wonMutation = useMutation({
+    mutationFn: (id: string) =>
+      updateDeal(id, { stage: "CLOSED_WON" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      toast.success("עסקה נסגרה בהצלחה! 🎉");
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+  });
+
+  const lostMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      updateDeal(id, { stage: "CLOSED_LOST", lostReason: reason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      toast.success("עסקה סומנה כהפסד");
+      setLostModal(null);
+      setLossNote("");
+      setLossReason("price");
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+  });
+
+  function handleLostSubmit() {
+    if (!lostModal) return;
+    const reason = lossNote.trim() ? `${lossReason}: ${lossNote.trim()}` : lossReason;
+    lostMutation.mutate({ id: lostModal.dealId, reason });
+  }
+
   // Kanban data
   const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
     queryKey: ["deals-pipeline"],
     queryFn: getDealsPipeline,
-    enabled: viewMode === "kanban",
   });
 
   // Table data
@@ -382,6 +420,9 @@ export default function DealsPage() {
         </div>
       }
     >
+      {/* Forecast Bar */}
+      <ForecastBar forecast={pipelineData?.forecast} />
+
       {/* Saved views bar */}
       {viewMode === "table" && (
         <SavedViewsBar
@@ -444,7 +485,12 @@ export default function DealsPage() {
         <KanbanBoard<Deal>
           columns={kanbanColumns}
           renderCard={(deal, isDragging) => (
-            <DealCard deal={deal} isDragging={isDragging} />
+            <DealCard
+              deal={deal}
+              isDragging={isDragging}
+              onWon={(id) => wonMutation.mutate(id)}
+              onLost={(id) => setLostModal({ dealId: id })}
+            />
           )}
           onDragEnd={handleKanbanDragEnd}
           onCardClick={(deal) => setSelectedDealId(deal.id)}
@@ -525,6 +571,55 @@ export default function DealsPage() {
         cancelText="ביטול"
         variant="danger"
       />
+
+      {/* Loss Reason Modal */}
+      {lostModal && (
+        <Modal open={true} onClose={() => setLostModal(null)} title="סיבת הפסד">
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">סיבה *</label>
+              <select
+                value={lossReason}
+                onChange={(e) => setLossReason(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              >
+                <option value="price">מחיר</option>
+                <option value="competition">תחרות</option>
+                <option value="timing">תזמון</option>
+                <option value="no_budget">אין תקציב</option>
+                <option value="other">אחר</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">הערה (אופציונלי)</label>
+              <textarea
+                value={lossNote}
+                onChange={(e) => setLossNote(e.target.value)}
+                rows={3}
+                placeholder="פרט את הסיבה..."
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+              />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setLostModal(null)}
+                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+              >
+                ביטול
+              </button>
+              <button
+                type="button"
+                onClick={handleLostSubmit}
+                disabled={lostMutation.isPending}
+                className="flex-1 py-2 bg-[#E2445C] hover:bg-[#C7364E] text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+              >
+                {lostMutation.isPending ? "שומר..." : "סמן כהפסד"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </PageShell>
   );
 }
@@ -542,12 +637,33 @@ function cardAvatarColor(name: string): string {
   return CARD_AVATAR_COLORS[Math.abs(hash) % CARD_AVATAR_COLORS.length];
 }
 
-function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
+function DealCard({
+  deal,
+  isDragging,
+  onWon,
+  onLost,
+}: {
+  deal: Deal;
+  isDragging?: boolean;
+  onWon?: (id: string) => void;
+  onLost?: (id: string) => void;
+}) {
   const { dealStages } = useWorkspaceOptions();
   const isRotting = deal.daysInStage >= 7;
   const isSeverelyRotting = deal.daysInStage >= 14;
   const isClosedStage =
     deal.stage === "CLOSED_WON" || deal.stage === "CLOSED_LOST";
+
+  // Deal age (days since created)
+  const dealAgeDays = Math.floor(
+    (Date.now() - new Date(deal.createdAt).getTime()) / (1000 * 60 * 60 * 24),
+  );
+  const ageColor =
+    dealAgeDays < 30
+      ? "text-[#00CA72]"
+      : dealAgeDays < 60
+        ? "text-[#FDAB3D]"
+        : "text-[#FB275D]";
   const stageInfo = dealStages[deal.stage];
 
   // Format expected close date
@@ -689,6 +805,39 @@ function DealCard({ deal, isDragging }: { deal: Deal; isDragging?: boolean }) {
           {deal.nextTask.title}
         </div>
       )}
+
+      {/* Deal age */}
+      {!isClosedStage && (
+        <div className={`mt-2 text-[10px] font-medium ${ageColor}`}>
+          בצינור {dealAgeDays} ימים
+        </div>
+      )}
+
+      {/* Won / Lost action buttons — only for open deals */}
+      {!isClosedStage && (onWon || onLost) && (
+        <div className="mt-2.5 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
+          {onWon && (
+            <button
+              onClick={() => onWon(deal.id)}
+              className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold rounded-md bg-[#E8F9F0] text-[#037F4C] hover:bg-[#00CA72] hover:text-white transition-colors"
+              title="סגור כזכייה"
+            >
+              <span>✓</span>
+              <span>סגר כזכייה</span>
+            </button>
+          )}
+          {onLost && (
+            <button
+              onClick={() => onLost(deal.id)}
+              className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold rounded-md bg-[#FDECEE] text-[#E2445C] hover:bg-[#E2445C] hover:text-white transition-colors"
+              title="סגור כהפסד"
+            >
+              <span>✗</span>
+              <span>סגר כהפסד</span>
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -709,6 +858,49 @@ function CheckSquareIcon() {
       <polyline points="9 11 12 14 22 4" />
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
+  );
+}
+
+/* ── Forecast Bar ─────────────────────────────────── */
+
+function ForecastBar({
+  forecast,
+}: {
+  forecast?: { forecastThisMonth: number; wonThisMonth: number; totalPipeline: number };
+}) {
+  const fmt = (n: number) =>
+    `₪${Math.round(n).toLocaleString("he-IL")}`;
+
+  return (
+    <div className="flex items-center gap-3 mb-4 p-3 bg-white border border-[#E6E9EF] rounded-xl shadow-sm">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#EFF5FF] flex-1 min-w-0">
+        <TrendingUp size={15} className="text-[#0073EA] flex-shrink-0" />
+        <div className="min-w-0">
+          <div className="text-[10px] text-[#676879] font-medium truncate">תחזית החודש</div>
+          <div className="text-[13px] font-bold text-[#0073EA] truncate">
+            {forecast ? fmt(forecast.forecastThisMonth) : "—"}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#E8F9F0] flex-1 min-w-0">
+        <CheckCircle2 size={15} className="text-[#037F4C] flex-shrink-0" />
+        <div className="min-w-0">
+          <div className="text-[10px] text-[#676879] font-medium truncate">נסגר החודש</div>
+          <div className="text-[13px] font-bold text-[#037F4C] truncate">
+            {forecast ? fmt(forecast.wonThisMonth) : "—"}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F7F0FF] flex-1 min-w-0">
+        <Layers size={15} className="text-[#A25DDC] flex-shrink-0" />
+        <div className="min-w-0">
+          <div className="text-[10px] text-[#676879] font-medium truncate">הצינור הכולל</div>
+          <div className="text-[13px] font-bold text-[#A25DDC] truncate">
+            {forecast ? fmt(forecast.totalPipeline) : "—"}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
