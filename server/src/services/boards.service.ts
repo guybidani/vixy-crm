@@ -617,3 +617,124 @@ export async function createItemComment(
     },
   });
 }
+
+// ══════════════════════════════════════════════════════════════════
+// SUB-ITEMS
+// ══════════════════════════════════════════════════════════════════
+
+export async function getSubItems(
+  workspaceId: string,
+  boardId: string,
+  parentItemId: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItem.findMany({
+    where: { parentItemId, boardId },
+    orderBy: { order: "asc" },
+  });
+}
+
+export async function createSubItem(
+  workspaceId: string,
+  boardId: string,
+  parentItemId: string,
+  name: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const parent = await prisma.boardItem.findFirst({ where: { id: parentItemId, boardId } });
+  if (!parent) throw new AppError(404, "NOT_FOUND", "Parent item not found");
+
+  const maxOrder = await prisma.boardItem.aggregate({
+    where: { parentItemId },
+    _max: { order: true },
+  });
+
+  return prisma.boardItem.create({
+    data: {
+      boardId,
+      groupId: parent.groupId,
+      parentItemId,
+      name,
+      order: (maxOrder._max.order ?? -1) + 1,
+    },
+  });
+}
+
+export async function updateSubItem(
+  workspaceId: string,
+  boardId: string,
+  subItemId: string,
+  data: Partial<{ name: string; done: boolean }>,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItem.update({ where: { id: subItemId }, data });
+}
+
+export async function deleteSubItem(
+  workspaceId: string,
+  boardId: string,
+  subItemId: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItem.delete({ where: { id: subItemId } });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ITEM FILES
+// ══════════════════════════════════════════════════════════════════
+
+export async function getItemFiles(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItemFile.findMany({
+    where: { itemId },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
+export async function createItemFile(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  uploadedById: string,
+  fileData: {
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  },
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
+
+  return prisma.boardItemFile.create({
+    data: { itemId, uploadedById, ...fileData },
+  });
+}
+
+export async function deleteItemFile(
+  workspaceId: string,
+  boardId: string,
+  fileId: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItemFile.delete({ where: { id: fileId } });
+}

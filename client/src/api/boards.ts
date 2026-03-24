@@ -321,3 +321,87 @@ export function toggleBoardPrivacy(boardId: string, isPrivate: boolean) {
     body: JSON.stringify({ isPrivate }),
   });
 }
+
+// ── Board Item Sub-Items ────────────────────────────────────────
+
+export interface BoardSubItem {
+  id: string;
+  boardId: string;
+  groupId: string;
+  parentItemId: string;
+  name: string;
+  order: number;
+  done: boolean;
+  createdAt: string;
+}
+
+export function getBoardItemSubItems(boardId: string, itemId: string) {
+  return api<BoardSubItem[]>(`/boards/${boardId}/items/${itemId}/subitems`);
+}
+
+export function createBoardItemSubItem(boardId: string, itemId: string, name: string) {
+  return api<BoardSubItem>(`/boards/${boardId}/items/${itemId}/subitems`, {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function updateBoardItemSubItem(
+  boardId: string,
+  itemId: string,
+  subItemId: string,
+  data: Partial<{ name: string; done: boolean }>,
+) {
+  return api<BoardSubItem>(`/boards/${boardId}/items/${itemId}/subitems/${subItemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteBoardItemSubItem(boardId: string, itemId: string, subItemId: string) {
+  return api(`/boards/${boardId}/items/${itemId}/subitems/${subItemId}`, { method: "DELETE" });
+}
+
+// ── Board Item Files ────────────────────────────────────────────
+
+export interface BoardItemFile {
+  id: string;
+  itemId: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedById: string;
+  createdAt: string;
+}
+
+export function getBoardItemFiles(boardId: string, itemId: string) {
+  return api<BoardItemFile[]>(`/boards/${boardId}/items/${itemId}/files`);
+}
+
+export function uploadBoardItemFile(boardId: string, itemId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+  // Use raw fetch — api() sets Content-Type: application/json which breaks multipart
+  const token = localStorage.getItem("vixy_at");
+  const wsId = localStorage.getItem("workspaceId");
+  return fetch(`/api/v1/boards/${boardId}/items/${itemId}/files`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(wsId ? { "X-Workspace-Id": wsId } : {}),
+    },
+    body: formData,
+  }).then(async (r) => {
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err?.error?.message || "שגיאה בהעלאת קובץ");
+    }
+    return r.json() as Promise<BoardItemFile>;
+  });
+}
+
+export function deleteBoardItemFile(boardId: string, itemId: string, fileId: string) {
+  return api(`/boards/${boardId}/items/${itemId}/files/${fileId}`, { method: "DELETE" });
+}

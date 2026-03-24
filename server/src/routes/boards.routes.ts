@@ -6,6 +6,7 @@ import { audit } from "../services/audit.service";
 import * as boardsService from "../services/boards.service";
 import { BOARD_TEMPLATES } from "../services/board-templates";
 import { prisma } from "../db/client";
+import { upload } from "../middleware/upload";
 
 export const boardsRouter = Router();
 
@@ -592,6 +593,158 @@ boardsRouter.patch(
         ip: req.ip,
       });
       res.json(board);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── Sub-Items ─────────────────────────────────────────────────────
+
+const createSubItemSchema = z.object({
+  name: z.string().min(1, "שם תת-פריט נדרש"),
+});
+
+const updateSubItemSchema = z.object({
+  name: z.string().min(1).optional(),
+  done: z.boolean().optional(),
+});
+
+// GET /boards/:id/items/:itemId/subitems
+boardsRouter.get("/:id/items/:itemId/subitems", async (req, res, next) => {
+  try {
+    const subItems = await boardsService.getSubItems(
+      req.workspaceId!,
+      req.params.id as string,
+      req.params.itemId as string,
+    );
+    res.json(subItems);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /boards/:id/items/:itemId/subitems
+boardsRouter.post(
+  "/:id/items/:itemId/subitems",
+  requireBoardPermission("EDITOR"),
+  validate(createSubItemSchema),
+  async (req, res, next) => {
+    try {
+      const subItem = await boardsService.createSubItem(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.body.name,
+      );
+      res.status(201).json(subItem);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /boards/:id/items/:itemId/subitems/:subItemId
+boardsRouter.patch(
+  "/:id/items/:itemId/subitems/:subItemId",
+  requireBoardPermission("EDITOR"),
+  validate(updateSubItemSchema),
+  async (req, res, next) => {
+    try {
+      const subItem = await boardsService.updateSubItem(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.subItemId as string,
+        req.body,
+      );
+      res.json(subItem);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /boards/:id/items/:itemId/subitems/:subItemId
+boardsRouter.delete(
+  "/:id/items/:itemId/subitems/:subItemId",
+  requireBoardPermission("EDITOR"),
+  async (req, res, next) => {
+    try {
+      await boardsService.deleteSubItem(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.subItemId as string,
+      );
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── Item Files ────────────────────────────────────────────────────
+
+// GET /boards/:id/items/:itemId/files
+boardsRouter.get("/:id/items/:itemId/files", async (req, res, next) => {
+  try {
+    const files = await boardsService.getItemFiles(
+      req.workspaceId!,
+      req.params.id as string,
+      req.params.itemId as string,
+    );
+    res.json(files);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /boards/:id/items/:itemId/files  (multipart/form-data, field: "file")
+boardsRouter.post(
+  "/:id/items/:itemId/files",
+  requireBoardPermission("EDITOR"),
+  upload.single("file"),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: { code: "BAD_REQUEST", message: "No file provided" } });
+      }
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+      });
+      if (!member) {
+        return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
+      }
+      const file = await boardsService.createItemFile(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        member.id,
+        {
+          fileName: req.file.originalname,
+          fileUrl: req.file.filename,
+          fileSize: req.file.size,
+          mimeType: req.file.mimetype,
+        },
+      );
+      res.status(201).json(file);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /boards/:id/items/:itemId/files/:fileId
+boardsRouter.delete(
+  "/:id/items/:itemId/files/:fileId",
+  requireBoardPermission("EDITOR"),
+  async (req, res, next) => {
+    try {
+      await boardsService.deleteItemFile(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.fileId as string,
+      );
+      res.json({ success: true });
     } catch (err) {
       next(err);
     }

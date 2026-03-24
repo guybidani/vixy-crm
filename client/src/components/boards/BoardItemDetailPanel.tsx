@@ -14,6 +14,12 @@ import {
   Bell,
   Calendar as CalendarIcon,
   MessageSquare,
+  CheckSquare,
+  Square,
+  Trash2,
+  Upload,
+  FileText,
+  Download,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import {
@@ -22,8 +28,17 @@ import {
   updateBoardItemValues,
   getBoardItemComments,
   createBoardItemComment,
+  getBoardItemSubItems,
+  createBoardItemSubItem,
+  updateBoardItemSubItem,
+  deleteBoardItemSubItem,
+  getBoardItemFiles,
+  uploadBoardItemFile,
+  deleteBoardItemFile,
   type BoardColumn,
   type BoardItemComment,
+  type BoardSubItem,
+  type BoardItemFile,
 } from "../../api/boards";
 import { listContacts } from "../../api/contacts";
 
@@ -198,6 +213,15 @@ export default function BoardItemDetailPanel({
   const [visible, setVisible] = useState(false);
   const updatesEndRef = useRef<HTMLDivElement>(null);
 
+  // Sub-items state
+  const [newSubItemName, setNewSubItemName] = useState("");
+  const [addingSubItem, setAddingSubItem] = useState(false);
+  const subItemInputRef = useRef<HTMLInputElement>(null);
+
+  // Files state
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Animate in on mount
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true));
@@ -222,6 +246,16 @@ export default function BoardItemDetailPanel({
   const { data: contactsData } = useQuery({
     queryKey: ["contacts", { limit: 200 }],
     queryFn: () => listContacts({ limit: 200 }),
+  });
+
+  const { data: subItems = [] } = useQuery({
+    queryKey: ["board-item-subitems", boardId, itemId],
+    queryFn: () => getBoardItemSubItems(boardId, itemId),
+  });
+
+  const { data: itemFiles = [], isLoading: filesLoading } = useQuery({
+    queryKey: ["board-item-files", boardId, itemId],
+    queryFn: () => getBoardItemFiles(boardId, itemId),
   });
 
   const contacts = contactsData?.data || [];
@@ -315,6 +349,50 @@ export default function BoardItemDetailPanel({
     },
   });
 
+  const createSubItemMut = useMutation({
+    mutationFn: (name: string) => createBoardItemSubItem(boardId, itemId, name),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-subitems", boardId, itemId] });
+      setNewSubItemName("");
+      setAddingSubItem(false);
+    },
+    onError: () => toast.error("שגיאה בהוספת תת-פריט"),
+  });
+
+  const toggleSubItemMut = useMutation({
+    mutationFn: ({ subItemId, done }: { subItemId: string; done: boolean }) =>
+      updateBoardItemSubItem(boardId, itemId, subItemId, { done }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-subitems", boardId, itemId] });
+    },
+  });
+
+  const deleteSubItemMut = useMutation({
+    mutationFn: (subItemId: string) => deleteBoardItemSubItem(boardId, itemId, subItemId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-subitems", boardId, itemId] });
+    },
+    onError: () => toast.error("שגיאה במחיקת תת-פריט"),
+  });
+
+  const uploadFileMut = useMutation({
+    mutationFn: (file: File) => uploadBoardItemFile(boardId, itemId, file),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-files", boardId, itemId] });
+      toast.success("הקובץ הועלה בהצלחה");
+    },
+    onError: (e: any) => toast.error(e?.message || "שגיאה בהעלאת קובץ"),
+  });
+
+  const deleteFileMut = useMutation({
+    mutationFn: (fileId: string) => deleteBoardItemFile(boardId, itemId, fileId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["board-item-files", boardId, itemId] });
+      toast.success("הקובץ נמחק");
+    },
+    onError: () => toast.error("שגיאה במחיקת קובץ"),
+  });
+
   // ── Helpers ──
 
   function getItemValue(col: BoardColumn): any {
@@ -384,6 +462,36 @@ export default function BoardItemDetailPanel({
   const linkedContact = linkedContactId
     ? contacts.find((c) => c.id === linkedContactId)
     : null;
+
+  // ── File helpers ──
+
+  function handleFilesDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    files.forEach((f) => uploadFileMut.mutate(f));
+  }
+
+  function handleFilesInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    files.forEach((f) => uploadFileMut.mutate(f));
+    e.target.value = "";
+  }
+
+  function formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function getFileIcon(mimeType: string): string {
+    if (mimeType.startsWith("image/")) return "🖼️";
+    if (mimeType === "application/pdf") return "📄";
+    if (mimeType.includes("word")) return "📝";
+    if (mimeType.includes("excel") || mimeType.includes("spreadsheet")) return "📊";
+    if (mimeType.includes("zip")) return "🗜️";
+    return "📎";
+  }
 
   // ── Field renderers (right panel) ──
 
@@ -720,12 +828,88 @@ export default function BoardItemDetailPanel({
             )}
 
             {activeTab === "files" && (
-              <div className="flex-1 flex flex-col items-center justify-center text-[#9699A6] gap-3">
-                <div className="w-14 h-14 bg-[#EDF3FB] rounded-full flex items-center justify-center">
-                  <LinkIcon size={22} className="text-[#0073EA]" />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Drop zone */}
+                <div className="flex-shrink-0 px-5 pt-4 pb-3">
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                    onDragLeave={() => setIsDragOver(false)}
+                    onDrop={handleFilesDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all ${
+                      isDragOver
+                        ? "border-[#0073EA] bg-[#EDF3FB]"
+                        : "border-[#D0D4E4] hover:border-[#0073EA] hover:bg-[#F5F8FF]"
+                    }`}
+                  >
+                    <Upload size={20} className={isDragOver ? "text-[#0073EA]" : "text-[#9699A6]"} />
+                    <p className="text-[13px] font-medium text-[#676879]">
+                      גרור קבצים לכאן או לחץ לבחירה
+                    </p>
+                    <p className="text-[11px] text-[#C3C6D4]">מקסימום 10MB לקובץ</p>
+                    {uploadFileMut.isPending && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/80">
+                        <span className="text-[13px] text-[#0073EA] font-medium">מעלה...</span>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={handleFilesInput}
+                  />
                 </div>
-                <p className="text-[14px] font-semibold text-[#323338]">אין קבצים מצורפים</p>
-                <p className="text-[12px] text-[#9699A6]">גרור קובץ לכאן כדי לצרף</p>
+
+                {/* Files list */}
+                <div className="flex-1 overflow-y-auto px-5 pb-4">
+                  {filesLoading ? (
+                    <p className="text-center text-[13px] text-[#9699A6] py-8">טוען...</p>
+                  ) : itemFiles.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-[14px] font-semibold text-[#323338] mb-1">אין קבצים מצורפים</p>
+                      <p className="text-[12px] text-[#9699A6]">העלה קובץ ראשון באמצעות האזור למעלה</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {itemFiles.map((f: BoardItemFile) => (
+                        <div
+                          key={f.id}
+                          className="flex items-center gap-3 p-3 bg-white border border-[#E6E9EF] rounded-xl hover:border-[#C3C6D4] transition-colors group"
+                        >
+                          <span className="text-[20px] flex-shrink-0">{getFileIcon(f.mimeType)}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-medium text-[#323338] truncate">{f.fileName}</p>
+                            <p className="text-[11px] text-[#9699A6]">
+                              {formatFileSize(f.fileSize)} · {formatRelativeTime(new Date(f.createdAt))}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a
+                              href={`/uploads/${f.fileUrl}`}
+                              download={f.fileName}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1.5 text-[#676879] hover:text-[#0073EA] hover:bg-[#EDF3FB] rounded-lg transition-colors"
+                              title="הורד"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Download size={14} />
+                            </a>
+                            <button
+                              onClick={() => deleteFileMut.mutate(f.id)}
+                              className="p-1.5 text-[#676879] hover:text-[#D83A52] hover:bg-[#FFEEF0] rounded-lg transition-colors"
+                              title="מחק"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -878,6 +1062,96 @@ export default function BoardItemDetailPanel({
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Section: Sub-items */}
+              <div>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <CheckSquare size={12} className="text-[#0073EA]" />
+                  <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-widest flex-1">
+                    תת-פריטים
+                  </p>
+                  {subItems.length > 0 && (
+                    <span className="text-[10px] text-[#9699A6]">
+                      {subItems.filter((s: BoardSubItem) => s.done).length}/{subItems.length}
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-white rounded-xl border border-[#E6E9EF] overflow-hidden">
+                  {subItems.length === 0 && !addingSubItem ? (
+                    <p className="text-[12px] text-[#9699A6] px-3 py-3 text-center">אין תת-פריטים</p>
+                  ) : (
+                    <div>
+                      {subItems.map((sub: BoardSubItem) => (
+                        <div
+                          key={sub.id}
+                          className="flex items-center gap-2 px-3 py-2.5 border-b border-[#F0F0F5] last:border-0 group"
+                        >
+                          <button
+                            onClick={() => toggleSubItemMut.mutate({ subItemId: sub.id, done: !sub.done })}
+                            className="flex-shrink-0 text-[#0073EA] hover:text-[#0060C2] transition-colors"
+                          >
+                            {sub.done ? <CheckSquare size={15} /> : <Square size={15} className="text-[#C3C6D4]" />}
+                          </button>
+                          <span
+                            className={`flex-1 text-[13px] ${
+                              sub.done ? "line-through text-[#9699A6]" : "text-[#323338]"
+                            }`}
+                          >
+                            {sub.name}
+                          </span>
+                          <button
+                            onClick={() => deleteSubItemMut.mutate(sub.id)}
+                            className="opacity-0 group-hover:opacity-100 text-[#9699A6] hover:text-[#D83A52] transition-all flex-shrink-0"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {addingSubItem && (
+                    <div className="flex items-center gap-2 px-3 py-2 border-t border-[#F0F0F5]">
+                      <Square size={15} className="text-[#C3C6D4] flex-shrink-0" />
+                      <input
+                        ref={subItemInputRef}
+                        autoFocus
+                        type="text"
+                        value={newSubItemName}
+                        onChange={(e) => setNewSubItemName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newSubItemName.trim()) {
+                            createSubItemMut.mutate(newSubItemName.trim());
+                          }
+                          if (e.key === "Escape") {
+                            setAddingSubItem(false);
+                            setNewSubItemName("");
+                          }
+                        }}
+                        onBlur={() => {
+                          if (!newSubItemName.trim()) {
+                            setAddingSubItem(false);
+                          }
+                        }}
+                        placeholder="שם תת-פריט..."
+                        className="flex-1 text-[13px] text-[#323338] outline-none bg-transparent"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setAddingSubItem(true);
+                    setTimeout(() => subItemInputRef.current?.focus(), 50);
+                  }}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] text-[#0073EA] font-medium hover:bg-[#EDF3FB] rounded-lg transition-colors border border-dashed border-[#C3D8F8] hover:border-[#0073EA]"
+                >
+                  <Plus size={13} />
+                  הוסף תת-פריט
+                </button>
               </div>
             </div>
           </div>

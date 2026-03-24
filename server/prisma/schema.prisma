@@ -943,20 +943,41 @@ model BoardGroup {
 }
 
 model BoardItem {
-  id        String     @id @default(uuid())
-  board     Board      @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId   String     @map("board_id")
-  group     BoardGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId   String     @map("group_id")
-  name      String
-  order     Int        @default(0)
-  createdAt DateTime   @default(now()) @map("created_at")
+  id           String      @id @default(uuid())
+  board        Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId      String      @map("board_id")
+  group        BoardGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId      String      @map("group_id")
+  name         String
+  order        Int         @default(0)
+  done         Boolean     @default(false)
+  parentItemId String?     @map("parent_item_id")
+  parentItem   BoardItem?  @relation("SubItems", fields: [parentItemId], references: [id], onDelete: Cascade)
+  subItems     BoardItem[] @relation("SubItems")
+  createdAt    DateTime    @default(now()) @map("created_at")
 
   values   BoardItemValue[]
   comments BoardItemComment[]
+  files    BoardItemFile[]
 
   @@index([groupId, order])
+  @@index([parentItemId])
   @@map("board_items")
+}
+
+model BoardItemFile {
+  id           String    @id @default(uuid())
+  item         BoardItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId       String    @map("item_id")
+  fileName     String    @map("file_name")
+  fileUrl      String    @map("file_url")
+  fileSize     Int       @map("file_size")
+  mimeType     String    @map("mime_type")
+  uploadedById String    @map("uploaded_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@index([itemId])
+  @@map("board_item_files")
 }
 
 model BoardItemComment {
