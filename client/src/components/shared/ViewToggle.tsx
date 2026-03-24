@@ -1,11 +1,15 @@
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, LayoutDashboard } from "lucide-react";
+
+type ViewMode = "kanban" | "table" | "cards";
 
 interface ViewToggleProps {
-  viewMode: "kanban" | "table";
-  onChange: (mode: "kanban" | "table") => void;
+  viewMode: ViewMode;
+  onChange: (mode: ViewMode) => void;
+  /** When true, show the cards toggle button (default: false) */
+  showCards?: boolean;
 }
 
-export default function ViewToggle({ viewMode, onChange }: ViewToggleProps) {
+export default function ViewToggle({ viewMode, onChange, showCards = false }: ViewToggleProps) {
   return (
     <div className="flex bg-surface-secondary rounded-lg p-0.5">
       <button
@@ -30,6 +34,19 @@ export default function ViewToggle({ viewMode, onChange }: ViewToggleProps) {
       >
         <List size={16} />
       </button>
+      {showCards && (
+        <button
+          onClick={() => onChange("cards")}
+          className={`p-1.5 rounded-md transition-all ${
+            viewMode === "cards"
+              ? "bg-white shadow-sm text-primary"
+              : "text-text-tertiary hover:text-text-secondary"
+          }`}
+          aria-label="תצוגת כרטיסים"
+        >
+          <LayoutDashboard size={16} />
+        </button>
+      )}
     </div>
   );
 }

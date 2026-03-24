@@ -37,7 +37,7 @@ import MondayPersonCell from "../components/shared/MondayPersonCell";
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
-  const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
+  const [viewMode, setViewMode] = useState<"kanban" | "table" | "cards">("table");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
@@ -66,7 +66,7 @@ export default function ContactsPage() {
         sortDir,
         needsFollowUp: needsFollowUp || undefined,
       }),
-    enabled: viewMode === "table",
+    enabled: viewMode === "table" || viewMode === "cards",
   });
 
   // Board data
@@ -393,7 +393,7 @@ export default function ContactsPage() {
       subtitle={`${data?.pagination.total || 0} אנשי קשר`}
       actions={
         <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
+          <ViewToggle viewMode={viewMode} onChange={setViewMode} showCards />
           <ExportButton
             entity="contacts"
             filters={{ status: statusFilter, search: debouncedSearch }}
@@ -419,6 +419,61 @@ export default function ContactsPage() {
           loading={boardLoading}
           emptyText="אין אנשי קשר"
         />
+      ) : viewMode === "cards" ? (
+        <>
+          {/* Status filter chips */}
+          <div className="flex gap-2 flex-wrap">
+            <FilterChip
+              label="הכל"
+              active={!statusFilter}
+              onClick={() => { setStatusFilter(""); setPage(1); }}
+            />
+            {Object.entries(contactStatuses).map(([key, val]) => (
+              <FilterChip
+                key={key}
+                label={val.label}
+                color={val.color}
+                active={statusFilter === key}
+                onClick={() => { setStatusFilter(key); setPage(1); }}
+              />
+            ))}
+            <span className="text-border text-xs select-none">|</span>
+            <FilterChip
+              label="דורש מעקב"
+              color="#FF4D4F"
+              active={needsFollowUp}
+              onClick={() => { setNeedsFollowUp(!needsFollowUp); setPage(1); }}
+            />
+          </div>
+          {/* Search */}
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="חיפוש לפי שם, אימייל או טלפון..."
+            className="w-full max-w-sm px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+          />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {(data?.data || []).map((contact) => (
+                <ContactCRMCard
+                  key={contact.id}
+                  contact={contact}
+                  onClick={() => setSelectedContactId(contact.id)}
+                />
+              ))}
+              {(data?.data || []).length === 0 && (
+                <div className="col-span-full text-center py-20 text-text-tertiary text-sm">
+                  לא נמצאו אנשי קשר
+                </div>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <>
           {/* Status filter chips */}
@@ -609,6 +664,107 @@ function ContactCard({
         )}
       </div>
     </div>
+  );
+}
+
+function ContactCRMCard({
+  contact,
+  onClick,
+}: {
+  contact: Contact;
+  onClick: () => void;
+}) {
+  const initials = [contact.firstName?.[0], contact.lastName?.[0]]
+    .filter(Boolean)
+    .join("")
+    .toUpperCase() || "?";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="bg-white rounded-2xl shadow-sm border border-border-light hover:shadow-md hover:border-primary/30 transition-all text-right group w-full p-4 flex flex-col gap-3 cursor-pointer"
+    >
+      {/* Header: avatar + name */}
+      <div className="flex items-center gap-3">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold"
+          style={{ backgroundColor: avatarColor(contact.fullName) }}
+          aria-label={contact.fullName}
+        >
+          {initials}
+        </div>
+        <div className="min-w-0 flex-1 text-right">
+          <span className="font-bold text-sm text-text-primary block truncate">
+            {contact.fullName}
+          </span>
+          {contact.position && (
+            <span className="text-[11px] text-text-tertiary block truncate">
+              {contact.position}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Company */}
+      {contact.company && (
+        <div className="flex items-center gap-2">
+          <Building2 size={12} className="text-text-tertiary flex-shrink-0" />
+          <span className="text-xs text-text-secondary truncate">
+            {contact.company.name}
+          </span>
+        </div>
+      )}
+
+      {/* Phone */}
+      {contact.phone && (
+        <div className="flex items-center gap-2">
+          <Phone size={12} className="text-text-tertiary flex-shrink-0" />
+          <span className="text-xs text-text-secondary truncate" dir="ltr">
+            {contact.phone}
+          </span>
+        </div>
+      )}
+
+      {/* Email */}
+      {contact.email && (
+        <div className="flex items-center gap-2">
+          <Mail size={12} className="text-text-tertiary flex-shrink-0" />
+          <span className="text-xs text-text-secondary truncate" dir="ltr">
+            {contact.email}
+          </span>
+        </div>
+      )}
+
+      {/* Footer: last activity + tags */}
+      <div className="flex items-center justify-between pt-2 border-t border-border-light mt-auto">
+        <div className="flex gap-1">
+          {contact.tags.slice(0, 2).map((t) => (
+            <span
+              key={t.id}
+              className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: t.color }}
+            >
+              {t.name}
+            </span>
+          ))}
+          {contact.tags.length > 2 && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+              +{contact.tags.length - 2}
+            </span>
+          )}
+        </div>
+        {contact.lastActivityAt && (
+          <span className="text-[10px] text-text-tertiary flex items-center gap-1">
+            <Calendar size={10} />
+            {new Date(contact.lastActivityAt).toLocaleDateString("he-IL", {
+              day: "numeric",
+              month: "short",
+            })}
+          </span>
+        )}
+      </div>
+    </button>
   );
 }
 

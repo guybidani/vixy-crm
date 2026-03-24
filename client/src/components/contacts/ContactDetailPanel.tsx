@@ -29,7 +29,10 @@ import {
   Clock,
   AlertCircle,
   Plus,
+  Tag,
+  UserCircle2,
 } from "lucide-react";
+import { avatarColor } from "../../lib/utils";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
 import StatusDropdown from "../shared/StatusDropdown";
@@ -42,6 +45,12 @@ import { listCompanies } from "../../api/companies";
 import { createActivity } from "../../api/activities";
 import { createTask, type TaskType } from "../../api/tasks";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
+
+function getWhatsAppUrl(phone: string): string {
+  const cleaned = phone.replace(/\D/g, "");
+  const international = cleaned.startsWith("0") ? "972" + cleaned.slice(1) : cleaned;
+  return `https://wa.me/${international}`;
+}
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -62,16 +71,12 @@ export default function ContactDetailPanel({
   contactId,
   onClose,
 }: ContactDetailPanelProps) {
-  const {
-    contactStatuses,
-  } = useWorkspaceOptions();
+  const { contactStatuses } = useWorkspaceOptions();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"info" | "timeline" | "related">(
-    "info",
-  );
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showRelated, setShowRelated] = useState(false);
 
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", contactId],
@@ -110,6 +115,22 @@ export default function ContactDetailPanel({
     },
   });
 
+  const quickLogMutation = useMutation({
+    mutationFn: (data: { type: string; subject: string; contactId: string }) =>
+      createActivity(data),
+    onSuccess: (_data, variables) => {
+      const labels: Record<string, string> = {
+        CALL: "שיחה נרשמה ✓",
+        EMAIL: "אימייל נרשם ✓",
+        MEETING: "פגישה נרשמה ✓",
+      };
+      toast.success(labels[variables.type] || "פעילות נרשמה ✓");
+      queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onError: () => toast.error("שגיאה ברישום פעילות"),
+  });
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -133,31 +154,37 @@ export default function ContactDetailPanel({
         ? "#FDAB3D"
         : "#C4C4C4";
 
+  const initials = [contact.firstName?.[0], contact.lastName?.[0]]
+    .filter(Boolean)
+    .join("")
+    .toUpperCase() || "?";
+
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-start gap-4 mb-6">
+    <div className="flex flex-col h-full">
+      {/* ── HEADER ───────────────────────────────────────────── */}
+      <div className="flex items-start gap-4 pb-4 border-b border-border-light mb-4">
+        {/* Avatar */}
         <div
-          className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl font-bold"
-          style={{ backgroundColor: "#6161FF" }}
+          className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-white text-xl font-bold shadow-sm"
+          style={{ backgroundColor: avatarColor(contact.fullName) }}
+          aria-label={contact.fullName}
         >
-          {contact.firstName?.[0] || "?"}
+          {initials}
         </div>
+
+        {/* Name + status */}
         <div className="flex-1 min-w-0">
           {editingName ? (
             <input
               autoFocus
-              className="text-xl font-bold text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none w-full"
+              className="text-xl font-bold text-text-primary bg-white border border-primary rounded-lg px-2 py-0.5 outline-none w-full"
               value={nameValue}
               onChange={(e) => setNameValue(e.target.value)}
               onBlur={() => {
                 const parts = nameValue.trim().split(/\s+/);
                 const firstName = parts[0] || contact.firstName;
                 const lastName = parts.slice(1).join(" ") || contact.lastName;
-                if (
-                  firstName !== contact.firstName ||
-                  lastName !== contact.lastName
-                ) {
+                if (firstName !== contact.firstName || lastName !== contact.lastName) {
                   nameMutation.mutate({ firstName, lastName });
                 }
                 setEditingName(false);
@@ -169,23 +196,23 @@ export default function ContactDetailPanel({
             />
           ) : (
             <h2
-              className="text-xl font-bold text-text-primary cursor-text hover:bg-surface-secondary/50 rounded px-1 -mx-1 transition-colors"
+              className="text-xl font-bold text-text-primary cursor-text hover:bg-surface-secondary/50 rounded-lg px-1 -mx-1 transition-colors leading-snug"
               onClick={() => {
                 setNameValue(`${contact.firstName} ${contact.lastName}`);
                 setEditingName(true);
               }}
+              title="לחץ לעריכה"
             >
               {contact.firstName} {contact.lastName}
             </h2>
           )}
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <StatusDropdown
               value={contact.status}
               options={contactStatuses}
               onChange={(s) => statusMutation.mutate(s)}
               size="md"
             />
-            {/* Lead score ring - click to edit */}
             <LeadScoreRing
               score={contact.leadScore}
               scoreColor={scoreColor}
@@ -195,17 +222,19 @@ export default function ContactDetailPanel({
             />
           </div>
         </div>
+
+        {/* Header actions */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => setEditing(true)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary-light transition-colors"
+            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/5 transition-colors"
             title="עריכה"
           >
             <Edit2 size={16} />
           </button>
           <button
             onClick={() => navigate(`/contacts/${contactId}`)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary-light transition-colors"
+            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/5 transition-colors"
             title="פתח בעמוד מלא"
           >
             <ExternalLink size={16} />
@@ -217,47 +246,303 @@ export default function ContactDetailPanel({
           >
             <Trash2 size={16} />
           </button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary transition-colors"
+            title="סגור"
+          >
+            <X size={18} />
+          </button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-border-light mb-5">
-        {(
-          [
-            { key: "info", label: "פרטים" },
-            { key: "timeline", label: "ציר זמן" },
-            { key: "related", label: "קשורים" },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors relative ${
-              activeTab === tab.key
-                ? "text-primary"
-                : "text-text-tertiary hover:text-text-primary"
-            }`}
+      {/* ── ACTION BUTTONS ROW ────────────────────────────────── */}
+      <div className="flex items-center gap-2 mb-5 flex-wrap">
+        <ActionButton
+          icon="📞"
+          label="שיחה"
+          color="#00CA72"
+          onClick={() =>
+            quickLogMutation.mutate({
+              type: "CALL",
+              subject: `שיחה עם ${contact.fullName}`,
+              contactId: contact.id,
+            })
+          }
+        />
+        <ActionButton
+          icon="✉️"
+          label="אימייל"
+          color="#579BFC"
+          onClick={() =>
+            quickLogMutation.mutate({
+              type: "EMAIL",
+              subject: `אימייל ל-${contact.fullName}`,
+              contactId: contact.id,
+            })
+          }
+        />
+        {contact.phone ? (
+          <a
+            href={getWhatsAppUrl(contact.phone)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/5"
           >
-            {tab.label}
-            {activeTab === tab.key && (
-              <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-primary rounded-t-full" />
-            )}
-          </button>
-        ))}
+            <span>💬</span>
+            <span>WhatsApp</span>
+          </a>
+        ) : (
+          <ActionButton
+            icon="💬"
+            label="WhatsApp"
+            color="#25D366"
+            onClick={() => toast.error("יש להוסיף טלפון תחילה")}
+          />
+        )}
+        <ActionButton
+          icon="📅"
+          label="פגישה"
+          color="#A25DDC"
+          onClick={() =>
+            quickLogMutation.mutate({
+              type: "MEETING",
+              subject: `פגישה עם ${contact.fullName}`,
+              contactId: contact.id,
+            })
+          }
+        />
       </div>
 
-      {/* Tab Content */}
-      {activeTab === "info" && (
-        <InfoTab contact={contact} />
-      )}
-      {activeTab === "timeline" && <TimelineTab contact={contact} />}
-      {activeTab === "related" && (
-        <RelatedTab contact={contact} navigate={navigate} />
-      )}
+      {/* ── 2-COLUMN BODY ────────────────────────────────────── */}
+      <div className="flex gap-5 flex-1 min-h-0">
+        {/* LEFT — Activity Feed */}
+        <div className="flex-1 min-w-0 overflow-y-auto">
+          <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wide mb-3">
+            פעילות
+          </h3>
+          <TimelineTab contact={contact} />
+        </div>
+
+        {/* RIGHT — Contact Fields */}
+        <div className="w-64 flex-shrink-0 overflow-y-auto">
+          <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wide mb-3">
+            פרטים
+          </h3>
+          <ContactFieldsPanel contact={contact} />
+        </div>
+      </div>
+
+      {/* ── RELATED SECTION (collapsible) ────────────────────── */}
+      <div className="mt-5 border-t border-border-light pt-4">
+        <button
+          onClick={() => setShowRelated((v) => !v)}
+          className="flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors w-full"
+        >
+          <span>{showRelated ? "▼" : "▶"}</span>
+          קשורים (עסקאות, פניות, משימות)
+        </button>
+        {showRelated && (
+          <div className="mt-3">
+            <RelatedTab contact={contact} navigate={navigate} />
+          </div>
+        )}
+      </div>
 
       {/* Edit Modal */}
       {editing && (
         <EditContactModal contact={contact} onClose={() => setEditing(false)} />
+      )}
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMutation.mutate();
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="מחיקת איש קשר"
+        message="האם אתה בטוח שברצונך למחוק את איש הקשר?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+    </div>
+  );
+}
+
+function ActionButton({
+  icon,
+  label,
+  color,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+      style={{
+        borderColor: `${color}40`,
+        color,
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.backgroundColor = `${color}10`;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+      }}
+    >
+      <span>{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+/** Compact single-column fields panel for the right side of the Monday.com layout */
+function ContactFieldsPanel({ contact }: { contact: any }) {
+  const queryClient = useQueryClient();
+
+  const updateMut = useMutation({
+    mutationFn: (data: Record<string, any>) => updateContact(contact.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+  });
+  const companyOptions: PersonOption[] = (companiesData?.data || []).map(
+    (c) => ({ id: c.id, name: c.name }),
+  );
+
+  const handleSave = (field: string, value: string) => {
+    const payload: Record<string, any> = {};
+    payload[field] = value || (field === "companyId" ? null : undefined);
+    updateMut.mutate(payload);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Contact details card */}
+      <div className="bg-surface-secondary/50 rounded-xl p-3 space-y-2">
+        <EditableInfoRow
+          icon={<Phone size={13} />}
+          label="טלפון"
+          value={contact.phone || ""}
+          placeholder="הוסף טלפון..."
+          dir="ltr"
+          onSave={(v) => handleSave("phone", v)}
+        />
+        <EditableInfoRow
+          icon={<Mail size={13} />}
+          label="אימייל"
+          value={contact.email || ""}
+          placeholder="הוסף אימייל..."
+          dir="ltr"
+          onSave={(v) => handleSave("email", v)}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-text-tertiary flex-shrink-0">
+            <Building2 size={13} />
+          </span>
+          <span className="text-[11px] text-text-tertiary w-12 flex-shrink-0">חברה</span>
+          <div className="flex-1 min-w-0">
+            <MondayPersonCell
+              value={
+                contact.company
+                  ? { id: contact.company.id, name: contact.company.name }
+                  : null
+              }
+              options={companyOptions}
+              onChange={(id) => updateMut.mutate({ companyId: id })}
+              placeholder="בחר חברה"
+            />
+          </div>
+        </div>
+        <EditableInfoRow
+          icon={<Briefcase size={13} />}
+          label="תפקיד"
+          value={contact.position || ""}
+          placeholder="הוסף תפקיד..."
+          onSave={(v) => handleSave("position", v)}
+        />
+        <EditableInfoRow
+          icon={<MessageCircle size={13} />}
+          label="מקור"
+          value={contact.source || ""}
+          placeholder="הוסף מקור..."
+          onSave={(v) => handleSave("source", v)}
+        />
+        <InfoRow
+          icon={<Calendar size={13} />}
+          label="נוצר"
+          value={new Date(contact.createdAt).toLocaleDateString("he-IL")}
+        />
+      </div>
+
+      {/* Follow-up date */}
+      <FollowUpDateField contact={contact} />
+
+      {/* Tags */}
+      <div className="bg-surface-secondary/50 rounded-xl p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <Tag size={12} className="text-text-tertiary" />
+            <span className="text-xs font-semibold text-text-primary">תגיות</span>
+          </div>
+          <TagSelector
+            entityType="contact"
+            entityId={contact.id}
+            currentTags={
+              contact.tags?.map((t: any) => ({
+                id: t.tag?.id || t.id,
+                name: t.tag?.name || t.name,
+                color: t.tag?.color || t.color,
+              })) || []
+            }
+          />
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {contact.tags?.map((t: any) => (
+            <span
+              key={t.tag?.id || t.id}
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+              style={{ backgroundColor: t.tag?.color || t.color }}
+            >
+              {t.tag?.name || t.name}
+            </span>
+          ))}
+          {(!contact.tags || contact.tags.length === 0) && (
+            <span className="text-xs text-text-tertiary">אין תגיות</span>
+          )}
+        </div>
+      </div>
+
+      {/* Assigned to / last activity */}
+      {contact.lastActivityAt && (
+        <div className="bg-surface-secondary/50 rounded-xl p-3">
+          <div className="flex items-center gap-1.5">
+            <UserCircle2 size={13} className="text-text-tertiary" />
+            <span className="text-xs text-text-tertiary">פעילות אחרונה</span>
+          </div>
+          <span className="text-xs font-semibold text-text-primary mt-1 block">
+            {new Date(contact.lastActivityAt).toLocaleDateString("he-IL", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -1128,19 +1413,6 @@ function RelatedTab({
         )}
       </div>
 
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          deleteMutation.mutate();
-        }}
-        onCancel={() => setShowDeleteConfirm(false)}
-        title="מחיקת איש קשר"
-        message="האם אתה בטוח שברצונך למחוק את איש הקשר?"
-        confirmText="מחק"
-        cancelText="ביטול"
-        variant="danger"
-      />
     </div>
   );
 }
