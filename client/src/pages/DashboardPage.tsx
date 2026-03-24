@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Users,
   Handshake,
-  Ticket,
   CheckCircle2,
   Phone,
   Mail,
@@ -13,6 +12,10 @@ import {
   Calendar,
   TrendingUp,
   AlertTriangle,
+  Plus,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { getDashboard } from "../api/dashboard";
@@ -48,6 +51,28 @@ const ACTIVITY_COLORS: Record<string, string> = {
   SYSTEM: "#C4C4C4",
 };
 
+const MOTIVATIONAL = [
+  "בוא נסגור עסקאות היום!",
+  "כל שיחה היא הזדמנות.",
+  "צוות מנצח מתחיל מכאן.",
+  "היום הוא יום מצוין לגדול.",
+  "ממשיכים קדימה, עושים היסטוריה!",
+];
+
+function getTodayMotivational() {
+  const day = new Date().getDay();
+  return MOTIVATIONAL[day % MOTIVATIONAL.length];
+}
+
+function formatTodayDate() {
+  return new Date().toLocaleDateString("he-IL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export default function DashboardPage() {
   const { dealStages, activityTypes } = useWorkspaceOptions();
   const { user } = useAuth();
@@ -63,10 +88,11 @@ export default function DashboardPage() {
   if (isLoading || !data) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-text-primary mb-1">
-          שלום, {user?.name}!
-        </h1>
-        <p className="text-sm text-text-secondary mb-6">טוען נתונים...</p>
+        {/* Loading header */}
+        <div className="mb-6">
+          <div className="h-8 w-56 bg-surface-secondary rounded-xl animate-pulse mb-2" />
+          <div className="h-4 w-40 bg-surface-secondary rounded animate-pulse" />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
@@ -81,189 +107,139 @@ export default function DashboardPage() {
 
   const { kpis, pipeline, recentActivities, rottingDeals } = data;
 
+  // Compute calls this week from recentActivities (CALL type in the feed + kpis data)
+  const callsThisWeek = recentActivities.filter((a) => a.type === "CALL").length;
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary mb-1">
-        שלום, {user?.name}!
-      </h1>
-      <p className="text-sm text-text-secondary mb-6">
-        הנה סיכום יומי של העסק שלך
-      </p>
+      {/* ===== HEADER ===== */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-text-primary mb-0.5">
+            שלום, {user?.name} 👋
+          </h1>
+          <p className="text-sm text-text-secondary">
+            {formatTodayDate()} · {getTodayMotivational()}
+          </p>
+        </div>
 
-      {/* KPI Cards */}
+        {/* Quick actions */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <QuickActionButton
+            label="+ ליד חדש"
+            color="#6161FF"
+            bg="#E8E8FF"
+            onClick={() => navigate("/contacts?new=1")}
+          />
+          <QuickActionButton
+            label="+ עסקה חדשה"
+            color="#00CA72"
+            bg="#D6F5E8"
+            onClick={() => navigate("/deals?new=1")}
+          />
+          <QuickActionButton
+            label="+ משימה"
+            color="#FDAB3D"
+            bg="#FEF0D8"
+            onClick={() => navigate("/tasks?new=1")}
+          />
+        </div>
+      </div>
+
+      {/* ===== STATS ROW (4 KPI cards) ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 [&>*:nth-child(1)]:animate-fade-in-up [&>*:nth-child(2)]:animate-fade-in-up [&>*:nth-child(2)]:[animation-delay:50ms] [&>*:nth-child(3)]:animate-fade-in-up [&>*:nth-child(3)]:[animation-delay:100ms] [&>*:nth-child(4)]:animate-fade-in-up [&>*:nth-child(4)]:[animation-delay:150ms]">
-        <KpiCard
+        {/* לידים חדשים השבוע */}
+        <StatCard
           borderColor="#6161FF"
-          icon={<Users size={24} />}
+          icon={<Users size={22} />}
           iconBg="#E8E8FF"
           iconColor="#6161FF"
-          label="אנשי קשר"
-          value={kpis.contactsTotal}
-          change={`+${kpis.contactsThisWeek} השבוע`}
-          changePositive
+          label="לידים חדשים השבוע"
+          value={kpis.contactsThisWeek}
+          subValue={`סה"כ ${kpis.contactsTotal}`}
+          trend={kpis.contactsThisWeek > 0 ? "up" : "neutral"}
+          trendLabel={kpis.contactsThisWeek > 0 ? `+${kpis.contactsThisWeek} השבוע` : "אין לידים חדשים"}
           onClick={() => navigate("/contacts")}
         />
-        <KpiCard
+
+        {/* עסקאות פתוחות */}
+        <StatCard
           borderColor="#00CA72"
-          icon={<Handshake size={24} />}
+          icon={<Handshake size={22} />}
           iconBg="#D6F5E8"
           iconColor="#00CA72"
           label="עסקאות פתוחות"
           value={kpis.dealsOpenCount}
-          change={`₪${kpis.totalPipelineValue.toLocaleString()}`}
+          subValue={`₪${kpis.totalPipelineValue.toLocaleString()}`}
+          trend="neutral"
+          trendLabel={`שווי צינור`}
           onClick={() => navigate("/deals")}
         />
-        <KpiCard
-          borderColor="#FDAB3D"
-          icon={<Ticket size={24} />}
-          iconBg="#FEF0D8"
-          iconColor="#FDAB3D"
-          label="פניות פתוחות"
-          value={kpis.ticketsOpen}
-          change={
-            kpis.ticketsUrgent > 0 ? `${kpis.ticketsUrgent} דחוף` : "הכל בסדר"
-          }
-          changePositive={kpis.ticketsUrgent === 0}
-          onClick={() => navigate("/tickets")}
-        />
-        <KpiCard
-          borderColor="#A25DDC"
-          icon={<CheckCircle2 size={24} />}
-          iconBg="#EDE1F5"
-          iconColor="#A25DDC"
+
+        {/* משימות להיום */}
+        <StatCard
+          borderColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
+          icon={<CheckCircle2 size={22} />}
+          iconBg={kpis.tasksOverdue > 0 ? "#FFE8E8" : "#EDE1F5"}
+          iconColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
           label="משימות להיום"
           value={kpis.tasksToday}
-          change={
-            kpis.tasksOverdue > 0 ? `${kpis.tasksOverdue} באיחור` : "הכל בזמן"
+          subValue={
+            kpis.tasksOverdue > 0
+              ? `${kpis.tasksOverdue} באיחור`
+              : "הכל בזמן"
           }
-          changePositive={kpis.tasksOverdue === 0}
+          trend={kpis.tasksOverdue > 0 ? "down" : "up"}
+          trendLabel={
+            kpis.tasksOverdue > 0
+              ? `${kpis.tasksOverdue} באיחור!`
+              : `${kpis.tasksCompletedThisWeek} הושלמו השבוע`
+          }
           onClick={() => navigate("/tasks")}
+        />
+
+        {/* שיחות השבוע */}
+        <StatCard
+          borderColor="#579BFC"
+          icon={<Phone size={22} />}
+          iconBg="#E3EFFE"
+          iconColor="#579BFC"
+          label="שיחות השבוע"
+          value={callsThisWeek}
+          subValue={`מתוך ${recentActivities.length} פעילויות`}
+          trend={callsThisWeek > 0 ? "up" : "neutral"}
+          trendLabel={callsThisWeek > 0 ? `${callsThisWeek} שיחות` : "לא נרשמו שיחות"}
+          onClick={() => navigate("/contacts")}
         />
       </div>
 
+      {/* ===== MAIN GRID: Pipeline + Activity Feed ===== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        {/* Pipeline Chart */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-text-primary text-base">
-              צינור מכירות
-            </h2>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
-              ₪{kpis.totalPipelineValue.toLocaleString()}
-            </span>
-          </div>
-          {pipeline.length === 0 ? (
-            <p className="text-sm text-text-tertiary text-center py-4">
-              אין עסקאות פתוחות
-            </p>
-          ) : (
-            <>
-              {/* Horizontal bar */}
-              <div className="flex rounded-full overflow-hidden h-9 mb-4 shadow-inner bg-surface-secondary">
-                {pipeline.map((p) => {
-                  const pct =
-                    kpis.totalPipelineValue > 0
-                      ? (p.value / kpis.totalPipelineValue) * 100
-                      : 0;
-                  if (pct === 0) return null;
-                  return (
-                    <div
-                      key={p.stage}
-                      className="flex items-center justify-center text-white text-[10px] font-bold transition-all duration-500 hover:brightness-110"
-                      style={{
-                        backgroundColor: STAGE_COLORS[p.stage] || "#C4C4C4",
-                        width: `${Math.max(pct, 8)}%`,
-                      }}
-                    >
-                      {pct > 12 && `₪${(p.value / 1000).toFixed(0)}K`}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Legend */}
-              <div className="space-y-2">
-                {pipeline.map((p) => (
-                  <div key={p.stage} className="flex items-center gap-3 py-1.5 px-2 -mx-2 rounded-lg hover:bg-surface-secondary/60 transition-colors">
-                    <div
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{
-                        backgroundColor: STAGE_COLORS[p.stage] || "#C4C4C4",
-                      }}
-                    />
-                    <span className="text-sm text-text-primary flex-1">
-                      {dealStages[p.stage]?.label || p.stage}
-                    </span>
-                    <span className="text-xs text-text-tertiary">
-                      {p.count} עסקאות
-                    </span>
-                    <span className="text-sm font-semibold text-text-primary">
-                      ₪{p.value.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        {/* Pipeline Funnel Widget */}
+        <PipelineFunnelWidget
+          pipeline={pipeline}
+          totalValue={kpis.totalPipelineValue}
+          dealStages={dealStages}
+          onNavigate={() => navigate("/deals")}
+        />
 
-        {/* Recent Activity */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-text-primary text-base">
-              פעילות אחרונה
-            </h2>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
-              {recentActivities.length} פעילויות
-            </span>
-          </div>
-          {recentActivities.length === 0 ? (
-            <p className="text-sm text-text-tertiary text-center py-4">
-              אין פעילות אחרונה
-            </p>
-          ) : (
-            <div className="space-y-1">
-              {recentActivities.slice(0, 6).map((a) => {
-                const color = ACTIVITY_COLORS[a.type] || "#C4C4C4";
-                return (
-                  <div
-                    key={a.id}
-                    className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-lg hover:bg-surface-secondary/50 transition-all duration-150 hover:translate-x-[-2px]"
-                    style={{ borderRightColor: color }}
-                  >
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white shadow-sm"
-                      style={{ backgroundColor: color }}
-                    >
-                      {ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS.SYSTEM}
-                    </div>
-                    <span className="text-sm text-text-primary flex-1 truncate">
-                      {a.subject ||
-                        (a.contact
-                          ? `${activityTypes[a.type]?.label || a.type} - ${a.contact.firstName} ${a.contact.lastName}`
-                          : a.type)}
-                    </span>
-                    <span className="text-xs text-text-tertiary flex-shrink-0">
-                      {formatRelativeTime(a.createdAt)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        {/* Activity Feed Widget */}
+        <ActivityFeedWidget
+          activities={recentActivities}
+          activityTypes={activityTypes}
+        />
       </div>
 
-      {/* Team Leaderboard */}
+      {/* ===== TEAM + CALENDAR ===== */}
       <div className="grid grid-cols-1 gap-4 mb-6">
         <TeamLeaderboard />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-        {/* Calendar Widget */}
         <CalendarWidget />
       </div>
 
-      {/* At Risk Deals + Today's Tasks */}
+      {/* ===== AT RISK DEALS ===== */}
       {rottingDeals && rottingDeals.length > 0 && (
         <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5 mb-6 border-t-4 border-t-warning">
           <div className="flex items-center justify-between mb-4">
@@ -314,22 +290,51 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Today's Tasks Widget */}
+      {/* ===== TODAY'S TASKS ===== */}
       <TodaysTasksWidget />
     </div>
   );
 }
 
+// ──────────────────────────────────────────────────────────────
+// Quick Action Button
+// ──────────────────────────────────────────────────────────────
+function QuickActionButton({
+  label,
+  color,
+  bg,
+  onClick,
+}: {
+  label: string;
+  color: string;
+  bg: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 hover:scale-[1.04] active:scale-[0.97] shadow-sm"
+      style={{ backgroundColor: bg, color }}
+    >
+      <Plus size={13} />
+      {label}
+    </button>
+  );
+}
 
-function KpiCard({
+// ──────────────────────────────────────────────────────────────
+// Stat Card
+// ──────────────────────────────────────────────────────────────
+function StatCard({
   borderColor,
   icon,
   iconBg,
   iconColor,
   label,
   value,
-  change,
-  changePositive,
+  subValue,
+  trend,
+  trendLabel,
   onClick,
 }: {
   borderColor: string;
@@ -338,35 +343,267 @@ function KpiCard({
   iconColor: string;
   label: string;
   value: number;
-  change: string;
-  changePositive?: boolean;
+  subValue: string;
+  trend: "up" | "down" | "neutral";
+  trendLabel: string;
   onClick?: () => void;
 }) {
+  const TrendIcon =
+    trend === "up"
+      ? ArrowUpRight
+      : trend === "down"
+        ? ArrowDownRight
+        : Minus;
+
+  const trendColor =
+    trend === "up"
+      ? "#00CA72"
+      : trend === "down"
+        ? "#FF4D4F"
+        : "#9CA3AF";
+
   return (
     <div
       onClick={onClick}
       className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card p-5 cursor-pointer hover:shadow-card-hover hover:scale-[1.02] hover:bg-white transition-all duration-200 border-t-4 active:scale-[0.97] group"
       style={{ borderTopColor: borderColor }}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-start justify-between mb-3">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200"
+          className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200"
           style={{ backgroundColor: iconBg, color: iconColor }}
         >
           {icon}
         </div>
-        <span
-          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-            changePositive
-              ? "bg-success-light text-success"
-              : "bg-surface-secondary text-text-secondary"
-          }`}
+        <div
+          className="flex items-center gap-0.5 text-[11px] font-bold"
+          style={{ color: trendColor }}
         >
-          {change}
+          <TrendIcon size={13} />
+          <span>{trendLabel}</span>
+        </div>
+      </div>
+      <p className="text-3xl font-bold text-text-primary leading-tight">
+        {value.toLocaleString()}
+      </p>
+      <p className="text-sm text-text-secondary mt-0.5">{label}</p>
+      <p className="text-xs text-text-tertiary mt-1 font-medium">{subValue}</p>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Pipeline Funnel Widget
+// ──────────────────────────────────────────────────────────────
+function PipelineFunnelWidget({
+  pipeline,
+  totalValue,
+  dealStages,
+  onNavigate,
+}: {
+  pipeline: Array<{ stage: string; count: number; value: number }>;
+  totalValue: number;
+  dealStages: Record<string, { label: string }>;
+  onNavigate: () => void;
+}) {
+  const maxCount = pipeline.length > 0 ? Math.max(...pipeline.map((p) => p.count)) : 1;
+
+  return (
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="font-bold text-text-primary text-base">
+            צינור מכירות
+          </h2>
+          <p className="text-xs text-text-secondary mt-0.5">
+            לפי שלב
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
+            ₪{totalValue.toLocaleString()}
+          </span>
+          <button
+            onClick={onNavigate}
+            className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
+          >
+            הצג הכל →
+          </button>
+        </div>
+      </div>
+
+      {pipeline.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <Handshake size={32} className="text-text-tertiary mb-2" />
+          <p className="text-sm text-text-tertiary">אין עסקאות פתוחות</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {/* Stacked horizontal bar */}
+          <div className="flex rounded-xl overflow-hidden h-8 mb-5 shadow-inner bg-surface-secondary gap-0.5">
+            {pipeline.map((p) => {
+              const pct =
+                totalValue > 0 ? (p.value / totalValue) * 100 : 0;
+              if (pct === 0) return null;
+              return (
+                <div
+                  key={p.stage}
+                  className="flex items-center justify-center text-white text-[10px] font-bold transition-all duration-500 hover:brightness-110 first:rounded-r-xl last:rounded-l-xl"
+                  style={{
+                    backgroundColor: STAGE_COLORS[p.stage] || "#C4C4C4",
+                    width: `${Math.max(pct, 6)}%`,
+                  }}
+                  title={`${dealStages[p.stage]?.label || p.stage}: ₪${p.value.toLocaleString()}`}
+                >
+                  {pct > 12 && `₪${(p.value / 1000).toFixed(0)}K`}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Funnel rows */}
+          {pipeline.map((p) => {
+            const barPct =
+              maxCount > 0 ? (p.count / maxCount) * 100 : 0;
+            const color = STAGE_COLORS[p.stage] || "#C4C4C4";
+            return (
+              <div key={p.stage} className="group">
+                <div className="flex items-center gap-3 mb-1">
+                  <div
+                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <span className="text-sm text-text-primary flex-1 font-medium">
+                    {dealStages[p.stage]?.label || p.stage}
+                  </span>
+                  <span className="text-xs text-text-tertiary">
+                    {p.count} עסקאות
+                  </span>
+                  <span className="text-sm font-bold text-text-primary w-24 text-left">
+                    ₪{p.value.toLocaleString()}
+                  </span>
+                </div>
+                {/* Horizontal progress bar */}
+                <div className="h-1.5 bg-surface-secondary rounded-full overflow-hidden mr-5">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${barPct}%`,
+                      backgroundColor: color,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Activity Feed Widget
+// ──────────────────────────────────────────────────────────────
+function ActivityFeedWidget({
+  activities,
+  activityTypes,
+}: {
+  activities: Array<{
+    id: string;
+    type: string;
+    subject: string | null;
+    body: string | null;
+    contact: { id: string; firstName: string; lastName: string } | null;
+    deal: { id: string; title: string } | null;
+    member: { user: { name: string } };
+    createdAt: string;
+  }>;
+  activityTypes: Record<string, { label: string }>;
+}) {
+  return (
+    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="font-bold text-text-primary text-base">
+            פעילות אחרונה
+          </h2>
+          <p className="text-xs text-text-secondary mt-0.5">
+            כל הצוות
+          </p>
+        </div>
+        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
+          {activities.length} פעילויות
         </span>
       </div>
-      <p className="text-3xl font-bold text-text-primary">{value}</p>
-      <p className="text-sm text-text-secondary mt-0.5">{label}</p>
+
+      {activities.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <TrendingUp size={32} className="text-text-tertiary mb-2" />
+          <p className="text-sm text-text-tertiary">אין פעילות אחרונה</p>
+        </div>
+      ) : (
+        <div className="space-y-0.5">
+          {activities.slice(0, 10).map((a) => {
+            const color = ACTIVITY_COLORS[a.type] || "#C4C4C4";
+            const contactName = a.contact
+              ? `${a.contact.firstName} ${a.contact.lastName}`
+              : null;
+
+            return (
+              <div
+                key={a.id}
+                className="flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-lg hover:bg-surface-secondary/50 transition-all duration-150 group"
+              >
+                {/* Icon bubble */}
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white shadow-sm mt-0.5"
+                  style={{ backgroundColor: color }}
+                >
+                  {ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS.SYSTEM}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-text-primary truncate leading-tight">
+                    {a.subject ||
+                      (contactName
+                        ? `${activityTypes[a.type]?.label || a.type} — ${contactName}`
+                        : activityTypes[a.type]?.label || a.type)}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {contactName && (
+                      <span className="text-[11px] text-text-tertiary truncate">
+                        {contactName}
+                      </span>
+                    )}
+                    {a.deal && (
+                      <>
+                        <span className="text-text-tertiary text-[10px]">·</span>
+                        <span className="text-[11px] text-text-tertiary truncate">
+                          {a.deal.title}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Time + member */}
+                <div className="flex-shrink-0 text-left">
+                  <p className="text-xs text-text-tertiary">
+                    {formatRelativeTime(a.createdAt)}
+                  </p>
+                  <p className="text-[11px] text-text-tertiary mt-0.5 truncate max-w-[80px]">
+                    {a.member?.user?.name}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
