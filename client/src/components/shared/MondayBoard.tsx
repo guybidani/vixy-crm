@@ -118,6 +118,8 @@ interface MondayBoardProps<T extends { id: string }> {
   /** Bulk selection */
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
+  /** ID of the most recently added item — triggers slide-in animation */
+  newItemId?: string | null;
 }
 
 /* ── Main Board ─────────────────────────────────────── */
@@ -151,6 +153,7 @@ export default function MondayBoard<T extends { id: string }>({
   onFiltersChange,
   selectedIds,
   onSelectionChange,
+  newItemId,
 }: MondayBoardProps<T>) {
   const [collapsedGroups, setCollapsedGroups] = useState<
     Record<string, boolean>
@@ -535,28 +538,50 @@ export default function MondayBoard<T extends { id: string }>({
           break;
         }
         case "Enter": {
-          // Simulate a click on the focused cell to trigger inline editing
           e.preventDefault();
-          const key = cellKey(groupIdx, rowIdx, colIdx);
-          const cellEl = cellRefs.current.get(key);
-          if (cellEl) {
-            // Find the first clickable/focusable element inside
-            const clickable = cellEl.querySelector<HTMLElement>(
-              "button, input, [tabindex], [role='button']",
-            );
-            if (clickable) {
-              clickable.click();
-              clickable.focus();
-            } else {
-              cellEl.click();
+          // On any focused row: open detail panel via onRowClick
+          const currentRow = expandedMap[currentExpandedIdx]?.group.items[rowIdx];
+          if (currentRow && onRowClick) {
+            onRowClick(currentRow);
+          } else {
+            // Fallback: simulate click on the focused cell
+            const key = cellKey(groupIdx, rowIdx, colIdx);
+            const cellEl = cellRefs.current.get(key);
+            if (cellEl) {
+              const clickable = cellEl.querySelector<HTMLElement>(
+                "button, input, [tabindex], [role='button']",
+              );
+              if (clickable) {
+                clickable.click();
+                clickable.focus();
+              } else {
+                cellEl.click();
+              }
             }
           }
           break;
         }
       }
     },
-    [focusedCell, groupedData, collapsedGroups, visibleColumns.length],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [focusedCell, groupedData, collapsedGroups, visibleColumns.length, onRowClick],
   );
+
+  // Global "N" shortcut: open new item when no input is focused
+  useEffect(() => {
+    function handleGlobalKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "n" || e.key === "N") {
+        if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          onNewItem?.();
+        }
+      }
+    }
+    document.addEventListener("keydown", handleGlobalKey);
+    return () => document.removeEventListener("keydown", handleGlobalKey);
+  }, [onNewItem]);
 
   const hasNewItem = !!(onNewItem || onNewItemInGroup);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -881,6 +906,9 @@ export default function MondayBoard<T extends { id: string }>({
         >
           <MoreHorizontal size={16} />
         </button>
+
+        {/* Keyboard shortcuts tooltip */}
+        <KeyboardShortcutsButton />
       </div>
 
       {/* Active filter chips */}
@@ -1273,7 +1301,10 @@ export default function MondayBoard<T extends { id: string }>({
                       group.items.map((row, rowIdx) => (
                         <tr
                           key={row.id}
-                          className="group/row border-b border-[#E6E9EF] transition-colors hover:bg-[#F5F6F8]"
+                          className={cn(
+                            "group/row border-b border-[#E6E9EF] transition-colors hover:bg-[#F5F6F8]",
+                            newItemId === row.id && "animate-row-slide-in",
+                          )}
                           onContextMenu={(e) => {
                             if (contextMenuItems) {
                               e.preventDefault();
@@ -1687,6 +1718,57 @@ function ColumnMenu({
   );
 }
 
+/* ── Keyboard Shortcuts Tooltip ────────────────────── */
+
+function KeyboardShortcutsButton() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="קיצורי מקלדת"
+        title="קיצורי מקלדת"
+        className="flex items-center gap-1 px-2.5 py-[7px] text-[12px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors select-none"
+      >
+        <span className="font-mono text-[11px] border border-[#D0D4E4] rounded px-1 py-0.5 bg-white leading-none">?</span>
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] p-4 min-w-[240px]" dir="rtl">
+          <p className="text-[12px] font-semibold text-[#323338] mb-3">קיצורי מקלדת</p>
+          <div className="space-y-2">
+            {([
+              ["↑ / ↓", "ניווט בין שורות"],
+              ["Enter", "פתח פרטי פריט"],
+              ["Escape", "סגור פאנל / בטל בחירה"],
+              ["N", "פריט חדש"],
+              ["Tab / Shift+Tab", "תא הבא / הקודם"],
+            ] as const).map(([key, desc]) => (
+              <div key={key} className="flex items-center justify-between gap-4">
+                <span className="text-[12px] text-[#676879]">{desc}</span>
+                <kbd className="font-mono text-[11px] bg-[#F5F6F8] border border-[#D0D4E4] rounded px-1.5 py-0.5 text-[#323338] whitespace-nowrap flex-shrink-0">
+                  {key}
+                </kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Monday-style Status Cell ──────────────────────── */
 
 const LABEL_COLORS = [
@@ -1724,8 +1806,21 @@ export function MondayStatusCell({
     Array<{ key: string; label: string; color: string }>
   >([]);
   const [colorPickerIdx, setColorPickerIdx] = useState<number | null>(null);
+  const [flashing, setFlashing] = useState(false);
+  const prevValueRef = useRef(value);
   const ref = useRef<HTMLDivElement>(null);
   const current = options[value];
+
+  // Trigger flash when value changes
+  useEffect(() => {
+    if (prevValueRef.current !== value && value) {
+      setFlashing(true);
+      const t = setTimeout(() => setFlashing(false), 550);
+      prevValueRef.current = value;
+      return () => clearTimeout(t);
+    }
+    prevValueRef.current = value;
+  }, [value]);
 
   useEffect(() => {
     if (!open) return;
@@ -1779,6 +1874,7 @@ export function MondayStatusCell({
         className={cn(
           "w-full py-[6px] px-2 text-[13px] font-medium text-white text-center rounded-[2px] transition-opacity select-none",
           onChange && "cursor-pointer hover:opacity-85",
+          flashing && "animate-status-flash",
         )}
         style={{ backgroundColor: current.color }}
       >
@@ -1964,45 +2060,54 @@ export function MondayStatusCell({
 
 /* ── Skeleton Loader ────────────────────────────────── */
 
+// Stable widths to avoid hydration mismatch (no Math.random in render)
+const SKELETON_WIDTHS = [72, 55, 88, 63, 79, 50, 95, 68, 83, 57, 75, 91];
+
 function BoardSkeleton<T>({ columns }: { columns: MondayColumn<T>[] }) {
   return (
     <div className="mb-6">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-4 h-4 bg-[#E6E9EF] rounded animate-pulse" />
-        <div className="w-32 h-5 bg-[#E6E9EF] rounded animate-pulse" />
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-4 h-4 rounded animate-shimmer" />
+        <div className="w-32 h-5 rounded animate-shimmer" />
+        <div className="w-16 h-4 rounded animate-shimmer opacity-60" />
       </div>
-      <table className="w-full border-collapse">
-        <thead>
-          <tr>
-            <th className="w-[6px] p-0 bg-[#E6E9EF]" />
-            <th className="w-[36px] px-1 py-2 bg-white border-b border-[#D0D4E4]" />
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className="px-3 py-2 bg-white border-b border-[#D0D4E4]"
-              >
-                <div className="w-16 h-3 bg-[#E6E9EF] rounded animate-pulse" />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <tr key={i} className="border-b border-[#E6E9EF]">
-              <td className="w-[6px] p-0 bg-[#E6E9EF]" />
-              <td className="w-[36px] px-1 py-2.5" />
+      <div className="rounded-t overflow-hidden border border-[#E6E9EF]">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-white">
+              <th className="w-[6px] p-0 bg-[#E6E9EF]" />
+              <th className="w-[36px] px-1 py-2.5 bg-white border-b border-[#D0D4E4]" />
               {columns.map((col) => (
-                <td key={col.key} className="px-3 py-2.5">
-                  <div
-                    className="h-4 bg-[#F5F6F8] rounded animate-pulse"
-                    style={{ width: `${50 + Math.random() * 50}%` }}
-                  />
-                </td>
+                <th
+                  key={col.key}
+                  className="px-3 py-2.5 bg-white border-b border-[#D0D4E4]"
+                  style={col.width ? { width: col.width } : undefined}
+                >
+                  <div className="w-16 h-3 rounded animate-shimmer" />
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i} className="border-b border-[#E6E9EF] bg-white">
+                <td className="w-[6px] p-0 bg-[#E6E9EF] opacity-40" />
+                <td className="w-[36px] px-1 py-2.5">
+                  <div className="w-3.5 h-3.5 rounded animate-shimmer" />
+                </td>
+                {columns.map((col, colIdx) => (
+                  <td key={col.key} className="px-3 py-2.5">
+                    <div
+                      className="h-4 rounded animate-shimmer"
+                      style={{ width: `${SKELETON_WIDTHS[(i * columns.length + colIdx) % SKELETON_WIDTHS.length]}%` }}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

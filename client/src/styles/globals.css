@@ -101,6 +101,45 @@
   }
 }
 
+/* ── Board micro-interaction keyframes ── */
+
+@keyframes status-flash {
+  0%   { filter: brightness(1); }
+  25%  { filter: brightness(1.45); }
+  60%  { filter: brightness(1.2); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes row-slide-in {
+  0%   { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes checkbox-pop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  60%  { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-status-flash {
+  animation: status-flash 0.5s ease-out;
+}
+
+.animate-row-slide-in {
+  animation: row-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #F5F6F8 25%, #EBEDF2 50%, #F5F6F8 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
 /* Accessibility: respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

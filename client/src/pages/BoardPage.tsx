@@ -342,6 +342,7 @@ export default function BoardPage() {
   // Board name inline editing
   const [editingBoardName, setEditingBoardName] = useState(false);
   const [boardNameValue, setBoardNameValue] = useState("");
+  const [newItemId, setNewItemId] = useState<string | null>(null);
 
   const { data: board, isLoading } = useQuery({
     queryKey: ["board", id],
@@ -369,7 +370,14 @@ export default function BoardPage() {
   const addItemMut = useMutation({
     mutationFn: (p: { groupId: string; name: string }) =>
       addBoardItem(id!, p.groupId, { name: p.name }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["board", id] });
+      // Track newly added item for slide-in animation
+      if (data?.id) {
+        setNewItemId(data.id);
+        setTimeout(() => setNewItemId(null), 1000);
+      }
+    },
   });
 
   const updateValuesMut = useMutation({
@@ -1089,6 +1097,7 @@ export default function BoardPage() {
           onDeleteItem={(row: BoardRow) => {
             deleteItemMut.mutate(row.id);
           }}
+          newItemId={newItemId}
           statusKey={statusCol?.key as any}
           statusOptions={statusOpts}
           groupByColumns={

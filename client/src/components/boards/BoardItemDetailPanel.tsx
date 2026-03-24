@@ -193,6 +193,82 @@ function StatusPillField({
   );
 }
 
+// ── Sub-component: CopyableField ─────────────────────────────────────────
+
+function CopyableField({
+  value,
+  type,
+  onSave,
+}: {
+  value: string;
+  type: "email" | "tel";
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      toast.success("הועתק!");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      toast.error("העתקה נכשלה");
+    }
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        type={type}
+        className="w-full text-[13px] text-[#323338] bg-white rounded-[4px] px-1 py-0.5 outline-none border border-[#0073EA] transition-colors"
+        defaultValue={value}
+        onBlur={(e) => {
+          onSave(e.target.value);
+          setEditing(false);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+          if (e.key === "Escape") setEditing(false);
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 group/copy">
+      <span
+        className="flex-1 text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 hover:bg-[#F5F6F8] cursor-text transition-colors truncate"
+        onDoubleClick={() => setEditing(true)}
+        title="לחץ פעמיים לעריכה"
+      >
+        {value || <span className="text-[#C3C6D4]">—</span>}
+      </span>
+      {value && (
+        <button
+          onClick={handleCopy}
+          title={copied ? "הועתק!" : "העתק"}
+          className="flex-shrink-0 p-1 rounded-[4px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#EDF3FB] opacity-0 group-hover/copy:opacity-100 transition-all"
+        >
+          {copied ? (
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2 8 6 12 14 4" />
+            </svg>
+          ) : (
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="5" y="5" width="9" height="9" rx="1.5" />
+              <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────
 
 export default function BoardItemDetailPanel({
@@ -571,20 +647,24 @@ export default function BoardItemDetailPanel({
             </div>
           )}
 
+          {(col.type === "EMAIL" || col.type === "PHONE") && (
+            <CopyableField
+              value={value ?? ""}
+              type={col.type === "EMAIL" ? "email" : "tel"}
+              onSave={(v) => saveValue(col, v)}
+            />
+          )}
+
           {col.type !== "STATUS" &&
             col.type !== "PRIORITY" &&
             col.type !== "CHECKBOX" &&
             col.type !== "DATE" &&
             col.type !== "NUMBER" &&
-            col.type !== "LINK" && (
+            col.type !== "LINK" &&
+            col.type !== "EMAIL" &&
+            col.type !== "PHONE" && (
               <input
-                type={
-                  col.type === "EMAIL"
-                    ? "email"
-                    : col.type === "PHONE"
-                    ? "tel"
-                    : "text"
-                }
+                type="text"
                 className="w-full text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 outline-none border border-transparent hover:bg-[#F5F6F8] focus:bg-white focus:border-[#0073EA] transition-colors cursor-pointer focus:cursor-text"
                 defaultValue={value ?? ""}
                 placeholder="—"
