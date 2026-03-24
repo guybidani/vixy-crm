@@ -16,6 +16,8 @@ import { cn } from "./lib/utils";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
 import QuickAdd from "./components/shared/QuickAdd";
+import QuickAddModal from "./components/shared/QuickAddModal";
+import GlobalSearch from "./components/shared/GlobalSearch";
 import CommandPalette from "./components/shared/CommandPalette";
 import ShortcutsHelp from "./components/shared/ShortcutsHelp";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -168,15 +170,21 @@ function AppLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  // "+" button in header → QuickAddModal (tab-based)
   const openQuickAdd = useCallback(() => {
-    setQuickAddType(null);
-    setQuickAddOpen(true);
+    setQuickAddModalOpen(true);
   }, []);
   const openQuickAddWithType = useCallback((type?: "task" | "contact" | "deal") => {
     setQuickAddType(type ?? null);
     setQuickAddOpen(true);
+  }, []);
+  // Ctrl+K → GlobalSearch
+  const openGlobalSearch = useCallback(() => {
+    setGlobalSearchOpen(true);
   }, []);
   const openCommandPalette = useCallback(() => {
     setCommandPaletteOpen(true);
@@ -217,7 +225,7 @@ function AppLayout() {
       <Header
         sidebarCollapsed={sidebarCollapsed}
         onQuickAdd={openQuickAdd}
-        onCommandPalette={openCommandPalette}
+        onCommandPalette={openGlobalSearch}
         onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
       <main
@@ -235,6 +243,14 @@ function AppLayout() {
         open={quickAddOpen}
         onClose={() => setQuickAddOpen(false)}
         initialType={quickAddType}
+      />
+      <QuickAddModal
+        open={quickAddModalOpen}
+        onClose={() => setQuickAddModalOpen(false)}
+      />
+      <GlobalSearch
+        open={globalSearchOpen}
+        onClose={() => setGlobalSearchOpen(false)}
       />
       <CommandPalette
         open={commandPaletteOpen}

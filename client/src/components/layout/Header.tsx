@@ -31,15 +31,15 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   });
   const badgeCount = (taskStats?.overdueCount ?? 0) + (taskStats?.dueTodayCount ?? 0);
 
-  // Ctrl+K = QuickAdd, Ctrl+Shift+K = CommandPalette
+  // Ctrl+K = GlobalSearch, Ctrl+Shift+K = QuickAdd
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         if (e.shiftKey) {
-          onCommandPalette();
-        } else {
           onQuickAdd();
+        } else {
+          onCommandPalette();
         }
       }
     }
@@ -160,8 +160,8 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       <button
         onClick={onQuickAdd}
         className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
-        title="הוספה מהירה (Ctrl+K)"
-        aria-label="הוספה מהירה (Ctrl+K)"
+        title="הוספה מהירה (Ctrl+Shift+K)"
+        aria-label="הוספה מהירה (Ctrl+Shift+K)"
       >
         <Plus size={16} />
         <span className="hidden sm:inline">חדש</span>
