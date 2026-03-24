@@ -42,6 +42,7 @@ const BoardPage = lazy(() => import("./pages/BoardPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const AutomationsPage = lazy(() => import("./pages/AutomationsPage"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ImportPage = lazy(() => import("./pages/ImportPage"));
 const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -357,6 +358,7 @@ function App() {
             <Route path="tasks" element={withErrorBoundary(<TasksPage />)} />
             <Route path="history" element={withErrorBoundary(<HistoryPage />)} />
             <Route path="analytics" element={withErrorBoundary(<AnalyticsPage />)} />
+            <Route path="reports" element={withErrorBoundary(<ReportsPage />)} />
             <Route path="tickets" element={withErrorBoundary(<TicketsPage />)} />
             <Route path="tickets/:id" element={withErrorBoundary(<TicketDetailPage />)} />
             <Route path="documents" element={withErrorBoundary(<DocumentsPage />)} />

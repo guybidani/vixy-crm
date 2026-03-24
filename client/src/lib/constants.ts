@@ -36,6 +36,13 @@ export const NAV_ITEMS = [
     dot: "#FDAB3D",
   },
   {
+    key: "reports",
+    label: "דוחות",
+    icon: "BarChart2",
+    path: "/reports",
+    dot: "#6161FF",
+  },
+  {
     key: "tasks",
     label: "משימות",
     icon: "CheckSquare",
