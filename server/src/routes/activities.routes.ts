@@ -81,3 +81,52 @@ activitiesRouter.post("/", validate(createSchema), async (req, res, next) => {
     next(err);
   }
 });
+
+const updateSchema = z.object({
+  subject: z.string().optional(),
+  body: z.string().optional(),
+  metadata: z.any().optional(),
+});
+
+activitiesRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
+  try {
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Not a workspace member" },
+      });
+    }
+    const activity = await activitiesService.update(
+      req.workspaceId!,
+      member.id,
+      req.params.id as string,
+      req.body,
+    );
+    res.json(activity);
+  } catch (err) {
+    next(err);
+  }
+});
+
+activitiesRouter.delete("/:id", async (req, res, next) => {
+  try {
+    const member = await prisma.workspaceMember.findFirst({
+      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+    });
+    if (!member) {
+      return res.status(403).json({
+        error: { code: "FORBIDDEN", message: "Not a workspace member" },
+      });
+    }
+    const result = await activitiesService.remove(
+      req.workspaceId!,
+      member.id,
+      req.params.id as string,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});

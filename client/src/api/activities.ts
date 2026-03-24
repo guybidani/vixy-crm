@@ -55,3 +55,19 @@ export function createActivity(data: {
     body: JSON.stringify(data),
   });
 }
+
+export function updateActivity(
+  id: string,
+  data: { subject?: string; body?: string; metadata?: any },
+) {
+  return api<Activity>(`/activities/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteActivity(id: string) {
+  return api<{ deleted: boolean }>(`/activities/${id}`, {
+    method: "DELETE",
+  });
+}

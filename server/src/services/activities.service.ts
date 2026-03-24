@@ -194,3 +194,48 @@ export async function create(
 
   return activity;
 }
+
+export async function update(
+  workspaceId: string,
+  memberId: string,
+  activityId: string,
+  data: { subject?: string; body?: string; metadata?: any },
+) {
+  // Verify ownership — only the author can edit
+  const existing = await prisma.activity.findFirst({
+    where: { id: activityId, workspaceId },
+  });
+  if (!existing) throw new AppError(404, "NOT_FOUND", "Activity not found");
+  if (existing.memberId !== memberId)
+    throw new AppError(403, "FORBIDDEN", "Not the author");
+
+  return prisma.activity.update({
+    where: { id: activityId },
+    data: {
+      subject: data.subject,
+      body: data.body,
+      metadata: data.metadata,
+    },
+    include: {
+      member: { include: { user: { select: { name: true } } } },
+      contact: { select: { id: true, firstName: true, lastName: true } },
+      deal: { select: { id: true, title: true } },
+    },
+  });
+}
+
+export async function remove(
+  workspaceId: string,
+  memberId: string,
+  activityId: string,
+) {
+  const existing = await prisma.activity.findFirst({
+    where: { id: activityId, workspaceId },
+  });
+  if (!existing) throw new AppError(404, "NOT_FOUND", "Activity not found");
+  if (existing.memberId !== memberId)
+    throw new AppError(403, "FORBIDDEN", "Not the author");
+
+  await prisma.activity.delete({ where: { id: activityId } });
+  return { deleted: true };
+}

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +31,7 @@ import {
   Plus,
   Tag,
   UserCircle2,
+  Pencil,
 } from "lucide-react";
 import { avatarColor } from "../../lib/utils";
 import toast from "react-hot-toast";
@@ -42,8 +43,9 @@ import MondayPersonCell, {
 } from "../shared/MondayPersonCell";
 import { getContact, updateContact, deleteContact } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
-import { createActivity } from "../../api/activities";
+import { createActivity, updateActivity, deleteActivity } from "../../api/activities";
 import { createTask, type TaskType } from "../../api/tasks";
+import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 function getWhatsAppUrl(phone: string): string {
@@ -799,29 +801,119 @@ const PRIORITY_DOT_COLORS: Record<string, string> = {
   LOW: "#C4C4C4",
 };
 
+// ── Relative time helper ──────────────────────────────────────────────────────
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "עכשיו";
+  if (mins < 60) return `לפני ${mins} דקות`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `לפני ${hrs} שעות`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `לפני ${days} ימים`;
+  return new Date(dateStr).toLocaleDateString("he-IL");
+}
+
+type ComposeTab = "NOTE" | "CALL" | "EMAIL" | "MEETING";
+type FilterType = "ALL" | "CALL" | "EMAIL" | "NOTE" | "MEETING";
+
+const COMPOSE_TABS: { id: ComposeTab; label: string; emoji: string; color: string }[] = [
+  { id: "NOTE",    label: "הערה",   emoji: "📝", color: "#6161FF" },
+  { id: "CALL",    label: "שיחה",   emoji: "📞", color: "#00CA72" },
+  { id: "EMAIL",   label: "אימייל", emoji: "✉️", color: "#579BFC" },
+  { id: "MEETING", label: "פגישה",  emoji: "📅", color: "#A25DDC" },
+];
+
+const FILTER_CHIPS: { id: FilterType; label: string }[] = [
+  { id: "ALL",     label: "הכל" },
+  { id: "CALL",    label: "שיחות" },
+  { id: "EMAIL",   label: "אימיילים" },
+  { id: "NOTE",    label: "הערות" },
+  { id: "MEETING", label: "פגישות" },
+];
+
+const CALL_OUTCOMES = [
+  { value: "ANSWERED",  label: "ענה" },
+  { value: "NO_ANSWER", label: "לא ענה" },
+  { value: "VOICEMAIL", label: "תא קולי" },
+];
+
 function TimelineTab({ contact }: { contact: any }) {
   const { activityTypes } = useWorkspaceOptions();
+  const { workspaces, currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
-  const [noteText, setNoteText] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [quickMode, setQuickMode] = useState<"note" | "task">("note");
 
-  // Task form state
+  // Current workspace member id for author check
+  const currentMemberId = workspaces.find(
+    (w) => w.id === currentWorkspaceId,
+  )?.memberId;
+
+  // ── Compose state ─────────────────────────────
+  const [activeTab, setActiveTab] = useState<ComposeTab>("NOTE");
+  const [noteBody, setNoteBody] = useState("");
+  const [callOutcome, setCallOutcome] = useState("ANSWERED");
+  const [callDuration, setCallDuration] = useState("");
+  const [callNotes, setCallNotes] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [meetingNotes, setMeetingNotes] = useState("");
+  const [meetingAttendees, setMeetingAttendees] = useState("");
+
+  // ── Task compose ──────────────────────────────
+  const [showTaskCompose, setShowTaskCompose] = useState(false);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
   const [taskDueDate, setTaskDueDate] = useState("");
   const [taskDueTime, setTaskDueTime] = useState("");
   const [taskType, setTaskType] = useState<TaskType>("TASK");
 
-  const addNoteMutation = useMutation({
-    mutationFn: (body: string) =>
-      createActivity({ type: "NOTE", body, contactId: contact.id }),
+  // ── Filter ────────────────────────────────────
+  const [filter, setFilter] = useState<FilterType>("ALL");
+
+  // ── Edit state ────────────────────────────────
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editBody, setEditBody] = useState("");
+  const [editSubject, setEditSubject] = useState("");
+
+  // ── Mutations ─────────────────────────────────
+  const logMutation = useMutation({
+    mutationFn: (data: Parameters<typeof createActivity>[0]) =>
+      createActivity(data),
     onSuccess: () => {
-      setNoteText("");
+      // Reset all compose fields
+      setNoteBody("");
+      setCallNotes("");
+      setCallDuration("");
+      setCallOutcome("ANSWERED");
+      setEmailSubject("");
+      setEmailBody("");
+      setMeetingNotes("");
+      setMeetingAttendees("");
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
-      toast.success("הערה נוספה");
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("נרשם בהצלחה ✓");
     },
-    onError: () => toast.error("שגיאה בהוספת הערה"),
+    onError: () => toast.error("שגיאה ברישום"),
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { subject?: string; body?: string } }) =>
+      updateActivity(id, data),
+    onSuccess: () => {
+      setEditingId(null);
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteActivity(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      toast.success("נמחק");
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
   });
 
   const addTaskMutation = useMutation({
@@ -839,6 +931,7 @@ function TimelineTab({ contact }: { contact: any }) {
       setTaskDueDate("");
       setTaskDueTime("");
       setTaskType("TASK");
+      setShowTaskCompose(false);
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast.success("משימה נוצרה");
@@ -846,42 +939,65 @@ function TimelineTab({ contact }: { contact: any }) {
     onError: () => toast.error("שגיאה ביצירת משימה"),
   });
 
-  const handleAddNote = () => {
-    const trimmed = noteText.trim();
-    if (!trimmed) return;
-    addNoteMutation.mutate(trimmed);
+  const handleLog = () => {
+    switch (activeTab) {
+      case "NOTE":
+        if (!noteBody.trim()) return;
+        logMutation.mutate({ type: "NOTE", body: noteBody.trim(), contactId: contact.id });
+        break;
+      case "CALL":
+        logMutation.mutate({
+          type: "CALL",
+          subject: `שיחה עם ${contact.fullName}`,
+          body: callNotes.trim() || undefined,
+          contactId: contact.id,
+          metadata: {
+            outcome: callOutcome,
+            duration: callDuration || undefined,
+          },
+        });
+        break;
+      case "EMAIL":
+        if (!emailSubject.trim()) return;
+        logMutation.mutate({
+          type: "EMAIL",
+          subject: emailSubject.trim(),
+          body: emailBody.trim() || undefined,
+          contactId: contact.id,
+        });
+        break;
+      case "MEETING":
+        logMutation.mutate({
+          type: "MEETING",
+          subject: `פגישה עם ${contact.fullName}`,
+          body: meetingNotes.trim() || undefined,
+          contactId: contact.id,
+          metadata: {
+            attendees: meetingAttendees.trim() || undefined,
+          },
+        });
+        break;
+    }
   };
 
-  const handleAddTask = () => {
-    const trimmed = taskTitle.trim();
-    if (!trimmed) return;
-    addTaskMutation.mutate({
-      title: trimmed,
-      description: taskDescription.trim() || undefined,
-      dueDate: taskDueDate || undefined,
-      dueTime: taskDueTime || undefined,
-      taskType,
-      contactId: contact.id,
-    });
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleLog();
+    }
   };
 
   const applyDuePreset = (preset: "1h" | "3h" | "tomorrow9" | "1w") => {
     const now = new Date();
-    let target: Date;
+    let target: Date = new Date(now);
     switch (preset) {
-      case "1h":
-        target = new Date(now.getTime() + 60 * 60 * 1000);
-        break;
-      case "3h":
-        target = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-        break;
+      case "1h": target = new Date(now.getTime() + 60 * 60 * 1000); break;
+      case "3h": target = new Date(now.getTime() + 3 * 60 * 60 * 1000); break;
       case "tomorrow9":
-        target = new Date(now);
         target.setDate(target.getDate() + 1);
         target.setHours(9, 0, 0, 0);
         break;
       case "1w":
-        target = new Date(now);
         target.setDate(target.getDate() + 7);
         target.setHours(9, 0, 0, 0);
         break;
@@ -895,33 +1011,22 @@ function TimelineTab({ contact }: { contact: any }) {
     );
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      if (quickMode === "note") handleAddNote();
-      else handleAddTask();
-    }
-  };
-
   const TASK_TYPE_OPTIONS: { value: TaskType; label: string }[] = [
-    { value: "CALL", label: "שיחה" },
-    { value: "MEETING", label: "פגישה" },
-    { value: "FOLLOW_UP", label: "מעקב" },
-    { value: "TASK", label: "כללי" },
+    { value: "CALL",     label: "שיחה" },
+    { value: "MEETING",  label: "פגישה" },
+    { value: "FOLLOW_UP",label: "מעקב" },
+    { value: "TASK",     label: "כללי" },
   ];
 
   // Build unified timeline
   const tasks: any[] = contact.tasks || [];
   const activities: any[] = contact.activities || [];
 
-  const upcomingTasks: TimelineItem[] = tasks
+  // Next action banner — earliest upcoming task
+  const upcomingTasks = tasks
     .filter((t: any) => t.status !== "DONE" && t.status !== "CANCELLED" && t.dueDate)
-    .map((t: any) => ({
-      type: "task_upcoming" as const,
-      date: new Date(t.dueDate),
-      data: t,
-    }))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+    .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const nextTask = upcomingTasks[0] || null;
 
   const historyItems: TimelineItem[] = [
     ...activities.map((a: any) => ({
@@ -938,276 +1043,385 @@ function TimelineTab({ contact }: { contact: any }) {
       })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  const hasUpcoming = upcomingTasks.length > 0;
-  const hasHistory = historyItems.length > 0;
+  // Apply filter
+  const filteredHistory = historyItems.filter((item) => {
+    if (filter === "ALL") return true;
+    if (item.type === "activity") return item.data.type === filter;
+    return false; // completed tasks always hidden when filter is active
+  });
+
+  const hasHistory = filteredHistory.length > 0;
+
+  // Check if log button should be disabled
+  const logDisabled =
+    logMutation.isPending ||
+    (activeTab === "NOTE" && !noteBody.trim()) ||
+    (activeTab === "EMAIL" && !emailSubject.trim());
 
   return (
     <div className="space-y-3">
-      {/* Quick input — Note / Task toggle */}
-      <div className="bg-surface-secondary/50 rounded-xl p-3">
-        {/* Mode toggle */}
-        <div className="flex gap-1 mb-2">
-          <button
-            onClick={() => setQuickMode("note")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              quickMode === "note"
-                ? "bg-primary text-white"
-                : "bg-white text-text-secondary border border-border-light hover:bg-surface-secondary"
+      {/* ── Next action banner ─────────────────────────────────────── */}
+      {nextTask && (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#6161FF]/8 border border-[#6161FF]/20">
+          <Clock size={13} className="text-[#6161FF] flex-shrink-0" />
+          <span className="text-xs font-semibold text-[#6161FF]">משימה הבאה:</span>
+          <span className="text-xs text-text-primary font-medium truncate flex-1">{nextTask.title}</span>
+          <span
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+              isOverdue(new Date(nextTask.dueDate))
+                ? "bg-danger/10 text-danger"
+                : "bg-[#6161FF]/10 text-[#6161FF]"
             }`}
           >
-            <StickyNote size={12} />
-            הערה
-          </button>
+            {formatDueDateLabel(new Date(nextTask.dueDate))}
+          </span>
+        </div>
+      )}
+
+      {/* ── Compose area ───────────────────────────────────────────── */}
+      <div className="bg-white border border-border-light rounded-xl overflow-hidden shadow-sm">
+        {/* Tab bar */}
+        <div className="flex border-b border-border-light">
+          {COMPOSE_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-all ${
+                activeTab === tab.id
+                  ? "border-b-2 text-text-primary"
+                  : "text-text-tertiary hover:text-text-secondary hover:bg-surface-secondary/50"
+              }`}
+              style={activeTab === tab.id ? { borderBottomColor: tab.color } : {}}
+            >
+              <span>{tab.emoji}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
           <button
-            onClick={() => setQuickMode("task")}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-              quickMode === "task"
-                ? "bg-primary text-white"
-                : "bg-white text-text-secondary border border-border-light hover:bg-surface-secondary"
+            onClick={() => setShowTaskCompose((v) => !v)}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all border-r border-border-light ${
+              showTaskCompose
+                ? "bg-primary/5 text-primary border-b-2 border-b-primary"
+                : "text-text-tertiary hover:text-text-secondary hover:bg-surface-secondary/50"
             }`}
           >
             <CheckSquare size={12} />
-            משימה
+            <span>משימה</span>
           </button>
         </div>
 
-        {quickMode === "note" ? (
-          /* ── Note mode ── */
-          <>
-            <textarea
-              ref={textareaRef}
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="הוסף הערה..."
-              rows={2}
-              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-            />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-text-tertiary">
-                Ctrl+Enter לשמירה
-              </span>
-              <button
-                onClick={handleAddNote}
-                disabled={!noteText.trim() || addNoteMutation.isPending}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
-              >
-                <Send size={12} />
-                {addNoteMutation.isPending ? "שומר..." : "הוסף"}
-              </button>
-            </div>
-          </>
-        ) : (
-          /* ── Task mode ── */
-          <div className="space-y-2">
+        {/* Task compose panel */}
+        {showTaskCompose ? (
+          <div className="p-3 space-y-2">
             <input
               type="text"
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
               placeholder="כותרת המשימה *"
-              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
             <textarea
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
-              onKeyDown={handleKeyDown}
               placeholder="פרטים נוספים..."
               rows={2}
-              className="w-full bg-white border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
-
-            {/* Due date presets */}
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap gap-1">
-                {(
-                  [
-                    { key: "1h", label: "עוד שעה" },
-                    { key: "3h", label: "עוד 3 שעות" },
-                    { key: "tomorrow9", label: "מחר 9:00" },
-                    { key: "1w", label: "עוד שבוע" },
-                  ] as const
-                ).map((p) => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => applyDuePreset(p.key)}
-                    className="px-2 py-1 text-[10px] font-semibold rounded-md bg-white border border-border-light text-text-secondary hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={taskDueDate}
-                  onChange={(e) => setTaskDueDate(e.target.value)}
-                  className="flex-1 bg-white border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                />
-                <input
-                  type="time"
-                  value={taskDueTime}
-                  onChange={(e) => setTaskDueTime(e.target.value)}
-                  className="w-24 bg-white border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                />
-              </div>
+            <div className="flex flex-wrap gap-1">
+              {([{ key: "1h", label: "עוד שעה" }, { key: "3h", label: "עוד 3 שעות" }, { key: "tomorrow9", label: "מחר 9:00" }, { key: "1w", label: "עוד שבוע" }] as const).map((p) => (
+                <button key={p.key} type="button" onClick={() => applyDuePreset(p.key)}
+                  className="px-2 py-1 text-[10px] font-semibold rounded-md bg-surface-secondary border border-border-light text-text-secondary hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
+                  {p.label}
+                </button>
+              ))}
             </div>
-
-            {/* Task type */}
+            <div className="flex gap-2">
+              <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)}
+                className="flex-1 bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
+              <input type="time" value={taskDueTime} onChange={(e) => setTaskDueTime(e.target.value)}
+                className="w-24 bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
+            </div>
             <div className="flex flex-wrap gap-1">
               {TASK_TYPE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setTaskType(opt.value)}
-                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-                    taskType === opt.value
-                      ? "bg-primary text-white"
-                      : "bg-white border border-border-light text-text-secondary hover:bg-surface-secondary"
-                  }`}
-                >
+                <button key={opt.value} type="button" onClick={() => setTaskType(opt.value)}
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${taskType === opt.value ? "bg-primary text-white" : "bg-surface-secondary border border-border-light text-text-secondary hover:bg-primary/10"}`}>
                   {opt.label}
                 </button>
               ))}
             </div>
-
-            {/* Submit */}
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-text-tertiary">
-                Ctrl+Enter לשמירה
-              </span>
+            <div className="flex justify-end">
               <button
-                onClick={handleAddTask}
+                onClick={() => addTaskMutation.mutate({ title: taskTitle.trim(), description: taskDescription.trim() || undefined, dueDate: taskDueDate || undefined, dueTime: taskDueTime || undefined, taskType, contactId: contact.id })}
                 disabled={!taskTitle.trim() || addTaskMutation.isPending}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
-              >
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none">
                 <Plus size={12} />
                 {addTaskMutation.isPending ? "יוצר..." : "צור משימה"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Activity compose body */
+          <div className="p-3 space-y-2">
+            {activeTab === "NOTE" && (
+              <textarea
+                value={noteBody}
+                onChange={(e) => setNoteBody(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="כתוב הערה..."
+                rows={3}
+                className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              />
+            )}
+            {activeTab === "CALL" && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-[10px] font-semibold text-text-tertiary mb-1 block">תוצאה</label>
+                    <select
+                      value={callOutcome}
+                      onChange={(e) => setCallOutcome(e.target.value)}
+                      className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      {CALL_OUTCOMES.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="w-28">
+                    <label className="text-[10px] font-semibold text-text-tertiary mb-1 block">משך (דקות)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={callDuration}
+                      onChange={(e) => setCallDuration(e.target.value)}
+                      placeholder="0"
+                      className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                </div>
+                <textarea
+                  value={callNotes}
+                  onChange={(e) => setCallNotes(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="הערות שיחה..."
+                  rows={2}
+                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            )}
+            {activeTab === "EMAIL" && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="נושא *"
+                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <textarea
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="תוכן האימייל (אופציונלי)..."
+                  rows={2}
+                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            )}
+            {activeTab === "MEETING" && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={meetingAttendees}
+                  onChange={(e) => setMeetingAttendees(e.target.value)}
+                  placeholder="משתתפים (אופציונלי)..."
+                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <textarea
+                  value={meetingNotes}
+                  onChange={(e) => setMeetingNotes(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="סיכום פגישה..."
+                  rows={2}
+                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[10px] text-text-tertiary">Ctrl+Enter לשמירה</span>
+              <button
+                onClick={handleLog}
+                disabled={logDisabled}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Send size={12} />
+                {logMutation.isPending ? "שומר..." : "רשום"}
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Upcoming tasks section */}
-      {hasUpcoming && (
-        <div>
-          <h4 className="text-xs font-bold text-text-secondary mb-2 flex items-center gap-1.5">
-            <Clock size={12} className="text-[#6161FF]" />
-            משימות קרובות
-          </h4>
-          <div className="space-y-1">
-            {upcomingTasks.map((item) => {
-              const task = item.data;
-              const overdue = isOverdue(item.date);
-              const iconColor = overdue ? "#FF4D4F" : "#6161FF";
-              const priorityDot = PRIORITY_DOT_COLORS[task.priority] || "#C4C4C4";
-
-              return (
-                <div
-                  key={`upcoming-${task.id as string}`}
-                  className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
-                  style={{ borderRightColor: iconColor }}
-                >
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5"
-                    style={{ backgroundColor: iconColor }}
-                  >
-                    <Circle size={12} className="text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-text-primary">
-                        {task.title}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                          overdue
-                            ? "bg-danger/10 text-danger"
-                            : "bg-[#6161FF]/10 text-[#6161FF]"
-                        }`}
-                      >
-                        {formatDueDateLabel(item.date)}
-                      </span>
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: priorityDot }}
-                        title={task.priority}
-                      />
-                    </div>
-                    {task.assignee?.user?.name && (
-                      <span className="text-xs text-text-tertiary">
-                        {task.assignee.user.name}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* ── Filter chips ───────────────────────────────────────────── */}
+      {historyItems.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap">
+          {FILTER_CHIPS.map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => setFilter(chip.id)}
+              className={`px-2.5 py-1 text-[11px] font-semibold rounded-full transition-all ${
+                filter === chip.id
+                  ? "bg-primary text-white"
+                  : "bg-surface-secondary text-text-secondary hover:bg-primary/10 hover:text-primary border border-border-light"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* History section */}
+      {/* ── Timeline history ───────────────────────────────────────── */}
       <div>
-        {hasUpcoming && (
-          <h4 className="text-xs font-bold text-text-secondary mb-2 flex items-center gap-1.5">
-            <AlertCircle size={12} className="text-text-tertiary" />
-            היסטוריה
-          </h4>
-        )}
-
-        {!hasHistory && !hasUpcoming ? (
+        {!hasHistory ? (
           <p className="text-sm text-text-tertiary text-center py-6">אין פעילות עדיין</p>
-        ) : !hasHistory ? null : (
-          <div className="space-y-1">
-            {historyItems.map((item) => {
+        ) : (
+          <div className="space-y-0.5">
+            {filteredHistory.map((item) => {
               if (item.type === "activity") {
                 const activity = item.data;
                 const typeInfo = activityTypes[activity.type as string];
                 const color = ACTIVITY_COLORS[activity.type as string] || "#C4C4C4";
+                const isAuthor = currentMemberId && activity.member?.id === currentMemberId;
+                const isEditing = editingId === activity.id;
+
+                // Render metadata badge for CALL
+                const outcome = activity.metadata?.outcome;
+                const duration = activity.metadata?.duration;
+                const attendees = activity.metadata?.attendees;
+
                 return (
                   <div
                     key={`activity-${activity.id as string}`}
-                    className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
-                    style={{ borderRightColor: color }}
+                    className="group/item flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-surface-secondary/40 transition-colors"
                   >
+                    {/* Type icon circle */}
                     <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5"
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white mt-0.5 shadow-sm"
                       style={{ backgroundColor: color }}
                     >
                       <ActivityIcon type={activity.type} />
                     </div>
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-semibold text-text-primary">
                           {typeInfo?.label || activity.type}
                         </span>
-                        <span className="text-xs text-text-tertiary">
-                          {new Date(activity.createdAt).toLocaleDateString("he-IL")}{" "}
-                          {new Date(activity.createdAt).toLocaleTimeString("he-IL", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                        {activity.member?.user?.name && (
+                          <span className="text-xs text-text-tertiary">
+                            {activity.member.user.name}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-text-tertiary/70">
+                          {timeAgo(activity.createdAt)}
                         </span>
+                        {/* Call outcome badge */}
+                        {outcome && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/10 text-[#00CA72]">
+                            {CALL_OUTCOMES.find((o) => o.value === outcome)?.label || outcome}
+                          </span>
+                        )}
+                        {duration && (
+                          <span className="text-[10px] text-text-tertiary">{duration} דק׳</span>
+                        )}
                       </div>
-                      {activity.subject && (
-                        <p className="text-sm text-text-secondary mt-0.5">
-                          {activity.subject}
-                        </p>
-                      )}
-                      {activity.body && (
-                        <p className="text-xs text-text-tertiary mt-0.5 line-clamp-2">
-                          {activity.body}
-                        </p>
-                      )}
-                      {activity.member?.user?.name && (
-                        <span className="text-xs text-text-tertiary">
-                          — {activity.member.user.name}
-                        </span>
+
+                      {isEditing ? (
+                        <div className="mt-2 space-y-1.5">
+                          {activity.type === "EMAIL" && (
+                            <input
+                              type="text"
+                              value={editSubject}
+                              onChange={(e) => setEditSubject(e.target.value)}
+                              className="w-full bg-white border border-primary rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              placeholder="נושא"
+                            />
+                          )}
+                          <textarea
+                            value={editBody}
+                            onChange={(e) => setEditBody(e.target.value)}
+                            rows={3}
+                            className="w-full bg-white border border-primary rounded-lg px-2 py-1.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => editMutation.mutate({
+                                id: activity.id,
+                                data: {
+                                  subject: activity.type === "EMAIL" ? editSubject : undefined,
+                                  body: editBody,
+                                },
+                              })}
+                              disabled={editMutation.isPending}
+                              className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+                            >
+                              {editMutation.isPending ? "שומר..." : "שמור"}
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="px-3 py-1 bg-surface-secondary text-text-secondary text-xs font-semibold rounded-lg hover:bg-border-light transition-colors"
+                            >
+                              ביטול
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {activity.subject && activity.type !== "CALL" && activity.type !== "MEETING" && (
+                            <p className="text-sm text-text-secondary mt-0.5 font-medium">
+                              {activity.subject}
+                            </p>
+                          )}
+                          {activity.body && (
+                            <p className="text-sm text-text-secondary mt-0.5 line-clamp-3 whitespace-pre-wrap">
+                              {activity.body}
+                            </p>
+                          )}
+                          {attendees && (
+                            <p className="text-xs text-text-tertiary mt-0.5">משתתפים: {attendees}</p>
+                          )}
+                        </>
                       )}
                     </div>
+
+                    {/* Edit / Delete — shown on hover, author only */}
+                    {isAuthor && !isEditing && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity flex-shrink-0 mt-0.5">
+                        <button
+                          onClick={() => {
+                            setEditingId(activity.id);
+                            setEditBody(activity.body || "");
+                            setEditSubject(activity.subject || "");
+                          }}
+                          className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/10 transition-colors"
+                          title="ערוך"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm("למחוק את הפעילות?")) {
+                              deleteMutation.mutate(activity.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-text-tertiary hover:text-danger hover:bg-red-50 transition-colors"
+                          title="מחק"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               }
@@ -1217,11 +1431,10 @@ function TimelineTab({ contact }: { contact: any }) {
               return (
                 <div
                   key={`task-done-${task.id as string}`}
-                  className="flex items-start gap-3 py-3 border-r-[3px] pr-3 rounded-sm"
-                  style={{ borderRightColor: "#00CA72" }}
+                  className="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-surface-secondary/40 transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00CA72]">
-                    <CheckCircle2 size={12} className="text-white" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00CA72] shadow-sm">
+                    <CheckCircle2 size={13} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -1231,19 +1444,13 @@ function TimelineTab({ contact }: { contact: any }) {
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/15 text-[#00CA72]">
                         הושלמה
                       </span>
-                      <span className="text-xs text-text-tertiary">
-                        {item.date.toLocaleDateString("he-IL")}{" "}
-                        {item.date.toLocaleTimeString("he-IL", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                      {task.assignee?.user?.name && (
+                        <span className="text-xs text-text-tertiary">{task.assignee.user.name}</span>
+                      )}
+                      <span className="text-[11px] text-text-tertiary/70">
+                        {timeAgo(task.completedAt || task.updatedAt || task.createdAt)}
                       </span>
                     </div>
-                    {task.assignee?.user?.name && (
-                      <span className="text-xs text-text-tertiary">
-                        {task.assignee.user.name}
-                      </span>
-                    )}
                   </div>
                 </div>
               );
