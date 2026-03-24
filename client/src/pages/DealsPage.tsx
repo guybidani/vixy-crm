@@ -433,7 +433,14 @@ export default function DealsPage() {
         </div>
       )}
 
-      {viewMode === "kanban" ? (
+      {/* Empty state — no deals, no active search/filter */}
+      {!debouncedSearch &&
+        !viewFilters.stage &&
+        totalDeals === 0 &&
+        !pipelineLoading &&
+        !tableLoading ? (
+        <DealsEmptyState onAdd={() => setShowCreate(true)} />
+      ) : viewMode === "kanban" ? (
         <KanbanBoard<Deal>
           columns={kanbanColumns}
           renderCard={(deal, isDragging) => (
@@ -702,6 +709,46 @@ function CheckSquareIcon() {
       <polyline points="9 11 12 14 22 4" />
       <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
+  );
+}
+
+/* ── Deals Empty State ─────────────────────────────── */
+
+function DealsEmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+      {/* Pipeline illustration */}
+      <div className="mb-6">
+        <div className="w-24 h-24 rounded-full bg-[#D6F5E8] flex items-center justify-center shadow-sm">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Pipeline funnel */}
+            <rect x="8" y="10" width="36" height="6" rx="3" fill="#00CA72" opacity="0.3"/>
+            <rect x="12" y="20" width="28" height="5" rx="2.5" fill="#00CA72" opacity="0.5"/>
+            <rect x="16" y="29" width="20" height="5" rx="2.5" fill="#00CA72" opacity="0.7"/>
+            <rect x="20" y="38" width="12" height="5" rx="2.5" fill="#00CA72"/>
+            {/* Plus badge */}
+            <circle cx="41" cy="11" r="7" fill="#6161FF"/>
+            <line x1="41" y1="8" x2="41" y2="14" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="38" y1="11" x2="44" y2="11" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <h3 className="text-xl font-bold text-text-primary mb-2">
+        עדיין אין עסקאות
+      </h3>
+      <p className="text-sm text-text-secondary max-w-xs mb-6 leading-relaxed">
+        צור עסקה ראשונה, קשר אותה לאיש קשר ועקוב אחרי ההתקדמות בצינור המכירות.
+      </p>
+
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
+      >
+        <Plus size={16} />
+        צור עסקה ראשונה
+      </button>
+    </div>
   );
 }
 

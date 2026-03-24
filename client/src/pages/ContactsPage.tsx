@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -510,23 +510,32 @@ export default function ContactsPage() {
             />
           </div>
 
-          <DataTable
-            columns={columns}
-            data={data?.data || []}
-            loading={isLoading}
-            search={search}
-            onSearchChange={(s) => {
-              setSearch(s);
-              setPage(1);
-            }}
-            searchPlaceholder="חיפוש לפי שם, אימייל או טלפון..."
-            pagination={data?.pagination}
-            onPageChange={setPage}
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSortChange={handleSort}
-            onRowClick={(row) => setSelectedContactId(row.id)}
-          />
+          {/* Empty state — no contacts at all, no active filter/search */}
+          {!isLoading &&
+            !debouncedSearch &&
+            !statusFilter &&
+            !needsFollowUp &&
+            (data?.data || []).length === 0 ? (
+            <ContactsEmptyState onAdd={() => setShowCreate(true)} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={data?.data || []}
+              loading={isLoading}
+              search={search}
+              onSearchChange={(s) => {
+                setSearch(s);
+                setPage(1);
+              }}
+              searchPlaceholder="חיפוש לפי שם, אימייל או טלפון..."
+              pagination={data?.pagination}
+              onPageChange={setPage}
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSortChange={handleSort}
+              onRowClick={(row) => setSelectedContactId(row.id)}
+            />
+          )}
         </>
       )}
 
@@ -765,6 +774,51 @@ function ContactCRMCard({
         )}
       </div>
     </button>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Contacts Empty State
+// ──────────────────────────────────────────────────────────────
+function ContactsEmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+      {/* Illustration */}
+      <div className="mb-6 relative">
+        <div className="w-24 h-24 rounded-full bg-[#E8E8FF] flex items-center justify-center shadow-sm">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Face circle */}
+            <circle cx="26" cy="20" r="12" fill="#6161FF" opacity="0.15" stroke="#6161FF" strokeWidth="2"/>
+            {/* Eyes */}
+            <circle cx="22" cy="18" r="1.5" fill="#6161FF"/>
+            <circle cx="30" cy="18" r="1.5" fill="#6161FF"/>
+            {/* Smile */}
+            <path d="M22 23 Q26 27 30 23" stroke="#6161FF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+            {/* Body */}
+            <path d="M10 44 C10 35 16 32 26 32 C36 32 42 35 42 44" stroke="#6161FF" strokeWidth="2" strokeLinecap="round" fill="none"/>
+            {/* Plus badge */}
+            <circle cx="40" cy="10" r="7" fill="#00CA72"/>
+            <line x1="40" y1="7" x2="40" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="37" y1="10" x2="43" y2="10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <h3 className="text-xl font-bold text-text-primary mb-2">
+        עדיין אין אנשי קשר
+      </h3>
+      <p className="text-sm text-text-secondary max-w-xs mb-6 leading-relaxed">
+        הוסף לידים ואנשי קשר כדי לעקוב אחרי שיחות, עסקאות ומשימות — הכל במקום אחד.
+      </p>
+
+      <button
+        onClick={onAdd}
+        className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
+      >
+        <UserPlus size={16} />
+        הוסף איש קשר ראשון
+      </button>
+    </div>
   );
 }
 
