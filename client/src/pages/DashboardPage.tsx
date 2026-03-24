@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatRelativeTime } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -406,113 +406,6 @@ export default function DashboardPage() {
 
       {/* ===== TODAY'S TASKS ===== */}
       <TodaysTasksWidget />
-    </div>
-  );
-}
-
-// ──────────────────────────────────────────────────────────────
-// Welcome Banner (first-time user)
-// ──────────────────────────────────────────────────────────────
-const WELCOME_DISMISSED_KEY = "vixy_crm_welcome_dismissed";
-
-function WelcomeBanner() {
-  const navigate = useNavigate();
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(WELCOME_DISMISSED_KEY) === "1",
-  );
-
-  useEffect(() => {
-    if (dismissed) localStorage.setItem(WELCOME_DISMISSED_KEY, "1");
-  }, [dismissed]);
-
-  if (dismissed) return null;
-
-  const steps = [
-    {
-      num: 1,
-      icon: <Users size={22} className="text-[#6161FF]" />,
-      iconBg: "#E8E8FF",
-      title: "הוסף אנשי קשר",
-      desc: "ייבא לידים או הוסף ידנית — כל לקוח פוטנציאלי מתחיל כאן.",
-      cta: "הוסף איש קשר",
-      onClick: () => navigate("/contacts?new=1"),
-    },
-    {
-      num: 2,
-      icon: <LayoutGrid size={22} className="text-[#579BFC]" />,
-      iconBg: "#E3EFFE",
-      title: "צור בורד",
-      desc: "נהל פרויקטים, משימות ותהליכים בעזרת לוחות גמישים.",
-      cta: "לבורדים",
-      onClick: () => navigate("/boards"),
-    },
-    {
-      num: 3,
-      icon: <Handshake size={22} className="text-[#00CA72]" />,
-      iconBg: "#D6F5E8",
-      title: "עקוב אחרי עסקאות",
-      desc: "הגדר עסקאות וצא מסלול לאורך צינור המכירות שלך.",
-      cta: "צור עסקה",
-      onClick: () => navigate("/deals?new=1"),
-    },
-  ];
-
-  return (
-    <div className="relative bg-gradient-to-l from-[#6161FF]/10 via-white to-[#00CA72]/10 rounded-2xl border border-[#6161FF]/20 shadow-card p-6 mb-6 overflow-hidden">
-      {/* dismiss */}
-      <button
-        onClick={() => setDismissed(true)}
-        className="absolute top-3 left-3 p-1.5 rounded-lg hover:bg-black/5 transition-colors text-text-tertiary hover:text-text-primary"
-        aria-label="סגור"
-      >
-        <X size={16} />
-      </button>
-
-      {/* header */}
-      <div className="mb-5">
-        <h2 className="text-lg font-bold text-text-primary mb-1">
-          ברוך הבא ל‑Vixy CRM! 🎉 בוא נתחיל
-        </h2>
-        <p className="text-sm text-text-secondary">
-          שלושה צעדים פשוטים להתחלה — בצע אותם לפי הסדר לתוצאה הטובה ביותר.
-        </p>
-      </div>
-
-      {/* step cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {steps.map((s) => (
-          <div
-            key={s.num}
-            className="bg-white rounded-xl border border-border-light p-4 flex flex-col gap-3 hover:shadow-md hover:border-primary/30 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: s.iconBg }}
-              >
-                {s.icon}
-              </div>
-              <div>
-                <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">
-                  שלב {s.num}
-                </span>
-                <p className="text-sm font-bold text-text-primary leading-tight">
-                  {s.title}
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-text-secondary leading-relaxed flex-1">
-              {s.desc}
-            </p>
-            <button
-              onClick={s.onClick}
-              className="w-full py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold transition-all hover:shadow-sm active:scale-[0.97]"
-            >
-              {s.cta}
-            </button>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
