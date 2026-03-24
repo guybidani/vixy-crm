@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback } from "react";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  "595077912228-qbl9ulrqtalslk58pii8ttpo772m0dk6.apps.googleusercontent.com";
 
 interface GoogleLoginButtonProps {
   onSuccess: (idToken: string) => void;
