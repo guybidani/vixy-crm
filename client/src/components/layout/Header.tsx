@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Plus, LogOut, Menu, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
 import NotificationCenter from "./NotificationCenter";
 import SearchDropdown from "./SearchDropdown";
 import TodayTasksPanel from "./TodayTasksPanel";
+import { getTaskStats } from "../../api/tasks";
 
 interface HeaderProps {
   sidebarCollapsed: boolean;
@@ -20,6 +22,14 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [todayTasksOpen, setTodayTasksOpen] = useState(false);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+
+  // Badge: overdue + due today count
+  const { data: taskStats } = useQuery({
+    queryKey: ["task-stats-header"],
+    queryFn: () => getTaskStats(true),
+    refetchInterval: 60_000,
+  });
+  const badgeCount = (taskStats?.overdueCount ?? 0) + (taskStats?.dueTodayCount ?? 0);
 
   // Ctrl+K = QuickAdd, Ctrl+Shift+K = CommandPalette
   useEffect(() => {
@@ -160,11 +170,16 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       {/* Today's Tasks Clock */}
       <button
         onClick={() => setTodayTasksOpen(true)}
-        className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA]"
+        className="relative p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA]"
         title="משימות להיום"
         aria-label="משימות להיום"
       >
         <Clock size={18} />
+        {badgeCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#D83A52] text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+            {badgeCount > 99 ? "99+" : badgeCount}
+          </span>
+        )}
       </button>
 
       {/* Notifications */}
