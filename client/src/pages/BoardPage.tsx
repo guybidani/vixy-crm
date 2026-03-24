@@ -923,6 +923,21 @@ export default function BoardPage() {
         </div>
       }
     >
+      {/* Board empty state */}
+      {!isLoading &&
+        board &&
+        !search &&
+        mondayGroups.every((g) => g.items.length === 0) && (
+          <BoardEmptyState
+            onAddItem={() => {
+              if (board.groups.length > 0) {
+                setAddingItemGroup(board.groups[0].id);
+                setNewItemName("");
+              }
+            }}
+          />
+        )}
+
       {viewMode === "table" ? (
         <MondayBoard
           groups={filtered}
@@ -1116,5 +1131,52 @@ export default function BoardPage() {
         />
       )}
     </PageShell>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Board Empty State
+// ──────────────────────────────────────────────────────────────
+function BoardEmptyState({ onAddItem }: { onAddItem: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-6 text-center pointer-events-none">
+      {/* Table illustration */}
+      <div className="mb-5">
+        <div className="w-24 h-24 rounded-full bg-[#E3EFFE] flex items-center justify-center shadow-sm pointer-events-auto">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Table grid */}
+            <rect x="6" y="10" width="40" height="6" rx="2" fill="#0073EA" opacity="0.3"/>
+            <rect x="6" y="19" width="40" height="5" rx="2" fill="#0073EA" opacity="0.15"/>
+            <rect x="6" y="27" width="40" height="5" rx="2" fill="#0073EA" opacity="0.15"/>
+            <rect x="6" y="35" width="40" height="5" rx="2" fill="#0073EA" opacity="0.15"/>
+            {/* Column separators */}
+            <line x1="20" y1="10" x2="20" y2="40" stroke="#0073EA" strokeWidth="1" opacity="0.3"/>
+            <line x1="34" y1="10" x2="34" y2="40" stroke="#0073EA" strokeWidth="1" opacity="0.3"/>
+            {/* Plus badge */}
+            <circle cx="42" cy="12" r="7" fill="#00CA72"/>
+            <line x1="42" y1="9" x2="42" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="39" y1="12" x2="45" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <h3 className="text-lg font-bold text-[#323338] mb-2 pointer-events-auto">
+        הבורד ריק
+      </h3>
+      <p className="text-sm text-[#676879] max-w-xs mb-5 leading-relaxed pointer-events-auto">
+        הוסף פריט ראשון לבורד — עקוב אחרי משימות, פרויקטים או כל מידע שחשוב לך.
+      </p>
+
+      <button
+        onClick={onAddItem}
+        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97] pointer-events-auto"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <line x1="7" y1="1" x2="7" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="1" y1="7" x2="13" y2="7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+        הוסף פריט ראשון
+      </button>
+    </div>
   );
 }

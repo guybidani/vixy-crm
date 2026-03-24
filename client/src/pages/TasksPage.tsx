@@ -18,10 +18,19 @@ import {
   TrendingUp,
   Headphones,
   Layers,
+  Phone,
+  Mail,
+  MessageCircle,
+  Users,
+  RefreshCw,
+  ClipboardList,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  AlarmClock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
-import StatusDropdown from "../components/shared/StatusDropdown";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import KanbanBoard, {
@@ -48,11 +57,36 @@ import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useAuth } from "../hooks/useAuth";
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
 const STATUS_ICONS: Record<string, typeof Circle> = {
   TODO: Circle,
   IN_PROGRESS: Clock,
   DONE: CheckCircle2,
   CANCELLED: Ban,
+};
+
+const TASK_TYPE_CONFIG: Record<string, { label: string; icon: typeof Circle; color: string; bg: string }> = {
+  CALL: { label: "שיחה", icon: Phone, color: "#579BFC", bg: "#EBF4FF" },
+  EMAIL: { label: "מייל", icon: Mail, color: "#FDAB3D", bg: "#FFF5E0" },
+  MEETING: { label: "פגישה", icon: Users, color: "#9B59B6", bg: "#F5EEFF" },
+  WHATSAPP: { label: "וואטסאפ", icon: MessageCircle, color: "#00CA72", bg: "#E0FAF0" },
+  FOLLOW_UP: { label: "מעקב", icon: RefreshCw, color: "#FF7575", bg: "#FFF0F0" },
+  TASK: { label: "משימה", icon: ClipboardList, color: "#C3C6D4", bg: "#F4F5F8" },
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  URGENT: "#FB275D",
+  HIGH: "#FDAB3D",
+  MEDIUM: "#579BFC",
+  LOW: "#C3C6D4",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  URGENT: "דחוף",
+  HIGH: "גבוה",
+  MEDIUM: "בינוני",
+  LOW: "נמוך",
 };
 
 const TASK_CONTEXT_OPTIONS = [
@@ -68,85 +102,670 @@ const TASK_CONTEXT_BADGE: Record<string, { label: string; color: string }> = {
   GENERAL: { label: "כללי", color: "#C3C6D4" },
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "#FB275D",
-  HIGH: "#FDAB3D",
-  MEDIUM: "#579BFC",
-  LOW: "#C3C6D4",
-};
+// ─── Date grouping logic ──────────────────────────────────────────────────────
 
-// --- Due date helpers ---
+type DateGroup = "overdue" | "today" | "tomorrow" | "this_week" | "next_week" | "later" | "no_date";
 
-interface DueDateInfo {
+interface DateGroupConfig {
+  key: DateGroup;
   label: string;
-  colorClass: string;
-  icon: "calendar" | "clock" | "warning";
-  bgClass: string;
+  headerColor: string;
+  headerTextColor: string;
+  emptyLabel: string;
 }
 
-function getDueDateInfo(dueDate: string | null, status: string): DueDateInfo {
-  if (!dueDate) {
-    return { label: "אין תאריך יעד", colorClass: "text-text-tertiary", icon: "calendar", bgClass: "" };
+const DATE_GROUP_CONFIG: DateGroupConfig[] = [
+  { key: "overdue", label: "באיחור", headerColor: "#FFF0F0", headerTextColor: "#D63031", emptyLabel: "אין משימות באיחור", },
+  { key: "today", label: "היום", headerColor: "#FFF8E6", headerTextColor: "#E17055", emptyLabel: "אין משימות להיום", },
+  { key: "tomorrow", label: "מחר", headerColor: "#EBF4FF", headerTextColor: "#0984E3", emptyLabel: "אין משימות למחר", },
+  { key: "this_week", label: "השבוע", headerColor: "#F0FFF8", headerTextColor: "#00B894", emptyLabel: "אין משימות לשבוע זה", },
+  { key: "next_week", label: "שבוע הבא", headerColor: "#F5EEFF", headerTextColor: "#6C5CE7", emptyLabel: "אין משימות לשבוע הבא", },
+  { key: "later", label: "מאוחר יותר", headerColor: "#F4F5F8", headerTextColor: "#636E72", emptyLabel: "אין משימות", },
+  { key: "no_date", label: "ללא תאריך", headerColor: "#F4F5F8", headerTextColor: "#B2BEC3", emptyLabel: "אין משימות ללא תאריך", },
+];
+
+function getDateGroup(task: Task): DateGroup {
+  if (!task.dueDate) return "no_date";
+  const due = new Date(task.dueDate);
+  due.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diff < 0 && task.status !== "DONE" && task.status !== "CANCELLED") return "overdue";
+  if (diff === 0) return "today";
+  if (diff === 1) return "tomorrow";
+
+  // end of this week (Sunday-Saturday)
+  const dayOfWeek = today.getDay(); // 0=Sunday
+  const daysUntilSaturday = 6 - dayOfWeek;
+  if (diff <= daysUntilSaturday) return "this_week";
+
+  const daysUntilNextSaturday = daysUntilSaturday + 7;
+  if (diff <= daysUntilNextSaturday) return "next_week";
+
+  return "later";
+}
+
+function groupTasksByDate(tasks: Task[]): Record<DateGroup, Task[]> {
+  const groups: Record<DateGroup, Task[]> = {
+    overdue: [], today: [], tomorrow: [], this_week: [], next_week: [], later: [], no_date: [],
+  };
+  for (const task of tasks) {
+    groups[getDateGroup(task)].push(task);
   }
+  return groups;
+}
+
+// ─── Date filter ─────────────────────────────────────────────────────────────
+
+type DateFilter = "all" | "today" | "week" | "overdue";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState<T>(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+// ─── TypeChip ────────────────────────────────────────────────────────────────
+
+function TypeChip({ taskType }: { taskType: string }) {
+  const cfg = TASK_TYPE_CONFIG[taskType] ?? TASK_TYPE_CONFIG.TASK;
+  const Icon = cfg.icon;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold flex-shrink-0"
+      style={{ backgroundColor: cfg.bg, color: cfg.color }}
+    >
+      <Icon size={10} />
+      <span>{cfg.label}</span>
+    </span>
+  );
+}
+
+// ─── ContactAvatar ────────────────────────────────────────────────────────────
+
+function ContactAvatar({ name, onClick }: { name: string; onClick?: () => void }) {
+  const initials = name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      className="flex items-center gap-1.5 group/contact"
+      title={name}
+    >
+      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-[9px] font-bold text-primary">{initials}</span>
+      </div>
+      <span className="text-xs text-text-secondary group-hover/contact:text-primary transition-colors hidden sm:inline truncate max-w-[90px]">
+        {name}
+      </span>
+    </button>
+  );
+}
+
+// ─── PriorityBadge ────────────────────────────────────────────────────────────
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const color = PRIORITY_COLORS[priority] ?? "#C3C6D4";
+  const label = PRIORITY_LABELS[priority] ?? priority;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 text-white"
+      style={{ backgroundColor: color }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-white/50 inline-block" />
+      {label}
+    </span>
+  );
+}
+
+// ─── DueDateCell ─────────────────────────────────────────────────────────────
+
+function DueDateCell({ dueDate, dueTime, status }: { dueDate: string | null; dueTime: string | null; status: string }) {
+  if (!dueDate) return <span className="text-[11px] text-text-tertiary">—</span>;
+
   const due = new Date(dueDate);
   due.setHours(0, 0, 0, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const diff = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff < 0 && status !== "DONE" && status !== "CANCELLED") {
-    return { label: "באיחור", colorClass: "text-danger font-bold", icon: "warning", bgClass: "bg-danger/5" };
-  }
-  if (diff === 0) {
-    return { label: "היום", colorClass: "text-warning font-bold", icon: "clock", bgClass: "bg-warning/5" };
-  }
-  if (diff === 1) {
-    return { label: "מחר", colorClass: "text-blue-500 font-bold", icon: "calendar", bgClass: "bg-blue-50" };
-  }
-  if (diff <= 3) {
-    return { label: due.toLocaleDateString("he-IL", { day: "numeric", month: "short" }), colorClass: "text-orange-500", icon: "calendar", bgClass: "" };
-  }
-  return { label: due.toLocaleDateString("he-IL", { day: "numeric", month: "short" }), colorClass: "text-text-tertiary", icon: "calendar", bgClass: "" };
-}
+  const isOverdue = diff < 0 && status !== "DONE" && status !== "CANCELLED";
+  const isToday = diff === 0;
 
-function DueDateBadge({
-  dueDate,
-  status,
-  compact = false,
-}: {
-  dueDate: string | null;
-  status: string;
-  compact?: boolean;
-}) {
-  const info = getDueDateInfo(dueDate, status);
-  const iconSize = compact ? 10 : 12;
-  const IconEl =
-    info.icon === "warning" ? (
-      <AlertTriangle size={iconSize} />
-    ) : info.icon === "clock" ? (
-      <Clock size={iconSize} />
-    ) : (
-      <Calendar size={iconSize} />
-    );
-  if (!dueDate) {
-    if (compact) return null;
-    return (
-      <span className={`flex items-center gap-1 text-[11px] ${info.colorClass}`}>
-        <Calendar size={iconSize} />
-        <span>{info.label}</span>
-      </span>
-    );
-  }
+  let label: string;
+  if (diff === 0) label = "היום";
+  else if (diff === 1) label = "מחר";
+  else if (diff === -1) label = "אתמול";
+  else label = due.toLocaleDateString("he-IL", { day: "numeric", month: "short" });
+
   return (
     <span
-      className={`flex items-center gap-1 text-[11px] rounded px-1 py-0.5 ${info.colorClass} ${info.bgClass}`}
+      className={`flex items-center gap-1 text-[11px] rounded px-1.5 py-0.5 flex-shrink-0 ${
+        isOverdue
+          ? "bg-danger/10 text-danger font-bold"
+          : isToday
+          ? "bg-warning/10 text-warning font-bold"
+          : "text-text-secondary"
+      }`}
     >
-      {IconEl}
-      <span>{info.label}</span>
+      {isOverdue ? <AlertTriangle size={10} /> : isToday ? <Clock size={10} /> : <Calendar size={10} />}
+      <span>{label}</span>
+      {dueTime && <span className="opacity-70">{dueTime.slice(0, 5)}</span>}
     </span>
   );
 }
 
-// --- Stats bar ---
+// ─── TaskDotMenu ─────────────────────────────────────────────────────────────
+
+function TaskDotMenu({
+  task,
+  onEdit,
+  onDelete,
+}: {
+  task: Task;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative flex-shrink-0">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        className="p-1 rounded hover:bg-surface-secondary opacity-0 group-hover/row:opacity-100 transition-opacity text-text-tertiary hover:text-text-primary"
+        title="פעולות"
+      >
+        <MoreHorizontal size={14} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-border-light z-30 py-1 min-w-[140px]">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
+            className="w-full text-right px-3 py-2 text-sm hover:bg-surface-secondary flex items-center gap-2 transition-colors text-text-primary"
+          >
+            <Pencil size={13} className="text-text-tertiary" />
+            עריכה
+          </button>
+          <SnoozeDropdown taskId={task.id} onSnoozed={() => setOpen(false)} />
+          <div className="border-t border-border-light my-1" />
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
+            className="w-full text-right px-3 py-2 text-sm hover:bg-danger/5 flex items-center gap-2 transition-colors text-danger"
+          >
+            <Trash2 size={13} />
+            מחיקה
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── InlineTaskCreate ─────────────────────────────────────────────────────────
+
+function InlineTaskCreate({ dueDate }: { dueDate?: string }) {
+  const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
+  const [title, setTitle] = useState("");
+  const mutation = useMutation({
+    mutationFn: () => createTask({ title, dueDate }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      setTitle("");
+      setIsAdding(false);
+      toast.success("משימה נוצרה");
+    },
+    onError: () => toast.error("שגיאה ביצירת משימה"),
+  });
+
+  if (!isAdding) {
+    return (
+      <button
+        onClick={() => setIsAdding(true)}
+        className="w-full px-4 py-2 text-sm text-text-tertiary hover:text-primary hover:bg-[#F5F6FF] transition-colors flex items-center gap-2 border-t border-border-light"
+      >
+        <Plus size={14} />
+        <span>+ משימה חדשה</span>
+      </button>
+    );
+  }
+  return (
+    <div className="px-4 py-2.5 flex items-center gap-2 border-t border-border-light bg-[#F5F6FF]">
+      <input
+        autoFocus
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && title.trim()) mutation.mutate();
+          if (e.key === "Escape") { setIsAdding(false); setTitle(""); }
+        }}
+        placeholder="כותרת משימה חדשה..."
+        dir="rtl"
+        className="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+      />
+      <button
+        onClick={() => { if (title.trim()) mutation.mutate(); }}
+        disabled={!title.trim() || mutation.isPending}
+        className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+      >
+        {mutation.isPending ? "..." : "הוסף"}
+      </button>
+      <button onClick={() => { setIsAdding(false); setTitle(""); }} className="p-1 rounded text-text-tertiary hover:text-text-primary">
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+
+// ─── TaskRow (Monday.com style) ───────────────────────────────────────────────
+
+function TaskRow({
+  task,
+  onComplete,
+  onDelete,
+  onEdit,
+  inlineUpdate,
+  memberOptions,
+  onClick,
+  selected,
+  onToggleSelect,
+  showCheckbox,
+}: {
+  task: Task;
+  onComplete: () => void;
+  onDelete: () => void;
+  onEdit: () => void;
+  inlineUpdate: (id: string, data: Record<string, unknown>) => void;
+  memberOptions: { id: string; name: string }[];
+  onClick?: () => void;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  showCheckbox?: boolean;
+}) {
+  const isDone = task.status === "DONE";
+  const StatusIcon = STATUS_ICONS[task.status] || Circle;
+
+  return (
+    <div
+      className={`group/row flex items-center gap-3 px-3 py-2.5 border-b border-border-light last:border-0 transition-colors cursor-pointer
+        ${isDone ? "opacity-60" : ""}
+        ${selected ? "bg-primary/5" : "hover:bg-[#F5F6FF]"}
+      `}
+      onClick={onClick}
+    >
+      {/* Checkbox */}
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          checked={selected ?? false}
+          onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
+          className={`w-4 h-4 rounded border-border text-primary focus:ring-primary/30 flex-shrink-0 cursor-pointer transition-opacity ${
+            showCheckbox || selected ? "opacity-100" : "opacity-0 group-hover/row:opacity-100"
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
+
+      {/* Complete toggle */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onComplete(); }}
+        className="flex-shrink-0 transition-colors"
+        title={isDone ? "סמן כלא הושלם" : "סמן כהושלם"}
+      >
+        <StatusIcon
+          size={18}
+          className={
+            isDone
+              ? "text-success"
+              : task.status === "IN_PROGRESS"
+              ? "text-warning"
+              : "text-text-tertiary hover:text-success"
+          }
+        />
+      </button>
+
+      {/* Type chip */}
+      <TypeChip taskType={task.taskType} />
+
+      {/* Title */}
+      <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+        <MondayTextCell
+          value={task.title}
+          onChange={(val) => inlineUpdate(task.id, { title: val })}
+          placeholder="כותרת משימה"
+          className={isDone ? "line-through text-text-tertiary" : "font-semibold text-text-primary"}
+        />
+        {task.description && (
+          <p className="text-xs text-text-tertiary mt-0.5 truncate">{task.description}</p>
+        )}
+      </div>
+
+      {/* Right side metadata */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Contact */}
+        {task.contact && (
+          <ContactAvatar name={task.contact.name} />
+        )}
+
+        {/* Due date */}
+        <DueDateCell dueDate={task.dueDate} dueTime={task.dueTime} status={task.status} />
+
+        {/* Priority badge */}
+        <PriorityBadge priority={task.priority} />
+
+        {/* Context badge */}
+        {task.taskContext && task.taskContext !== "GENERAL" && (() => {
+          const ctx = TASK_CONTEXT_BADGE[task.taskContext];
+          return ctx ? (
+            <span
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white flex-shrink-0 hidden lg:inline"
+              style={{ backgroundColor: ctx.color }}
+            >
+              {ctx.label}
+            </span>
+          ) : null;
+        })()}
+
+        {/* Recurring icon */}
+        {task.isRecurring && (
+          <span className="text-primary/70 flex-shrink-0" title="משימה חוזרת">
+            <Repeat size={11} />
+          </span>
+        )}
+
+        {/* Assignee */}
+        <MondayPersonCell
+          value={task.assignee ? { id: task.assignee.id, name: task.assignee.name } : null}
+          onChange={(id) => inlineUpdate(task.id, { assigneeId: id! })}
+          options={memberOptions}
+          placeholder="נציג"
+        />
+
+        {/* Dot menu */}
+        <TaskDotMenu task={task} onEdit={onEdit} onDelete={onDelete} />
+      </div>
+    </div>
+  );
+}
+
+// ─── DateGroup section ────────────────────────────────────────────────────────
+
+function DateGroupSection({
+  config,
+  tasks,
+  onComplete,
+  onDelete,
+  onEdit,
+  inlineUpdate,
+  memberOptions,
+  onTaskClick,
+  selectedIds,
+  onToggleSelect,
+  showCheckboxes,
+  defaultOpen,
+}: {
+  config: DateGroupConfig;
+  tasks: Task[];
+  onComplete: (task: Task) => void;
+  onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
+  inlineUpdate: (id: string, data: Record<string, unknown>) => void;
+  memberOptions: { id: string; name: string }[];
+  onTaskClick: (task: Task) => void;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  showCheckboxes: boolean;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? true);
+
+  // Due date for inline create
+  const inlineCreateDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (config.key === "today") return today.toISOString().split("T")[0];
+    if (config.key === "tomorrow") {
+      const t = new Date(today);
+      t.setDate(t.getDate() + 1);
+      return t.toISOString().split("T")[0];
+    }
+    return undefined;
+  }, [config.key]);
+
+  return (
+    <div className="bg-white rounded-xl shadow-card overflow-hidden border border-border-light">
+      {/* Group header */}
+      <button
+        className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:opacity-90"
+        style={{ backgroundColor: config.headerColor }}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <ChevronDown
+          size={14}
+          className="transition-transform flex-shrink-0"
+          style={{
+            color: config.headerTextColor,
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+          }}
+        />
+        <span className="font-bold text-sm" style={{ color: config.headerTextColor }}>
+          {config.label}
+        </span>
+        <span
+          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+          style={{ backgroundColor: config.headerTextColor + "20", color: config.headerTextColor }}
+        >
+          {tasks.length}
+        </span>
+        {config.key === "overdue" && tasks.length > 0 && (
+          <AlertTriangle size={12} style={{ color: config.headerTextColor }} />
+        )}
+      </button>
+
+      {/* Tasks */}
+      {open && (
+        <div>
+          {/* Column headers */}
+          <div className="flex items-center gap-3 px-3 py-1.5 bg-surface-secondary/40 border-b border-border-light text-[11px] font-semibold text-text-tertiary">
+            <div className="w-4 h-4 flex-shrink-0" />
+            <div className="w-5 h-5 flex-shrink-0" />
+            <div className="w-20 flex-shrink-0" />
+            <div className="flex-1">כותרת</div>
+            <div className="w-28 text-right">איש קשר</div>
+            <div className="w-20 text-right">תאריך</div>
+            <div className="w-16 text-right">עדיפות</div>
+            <div className="w-20 text-right">נציג</div>
+            <div className="w-6 flex-shrink-0" />
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="px-4 py-6 text-center text-sm text-text-tertiary">{config.emptyLabel}</div>
+          ) : (
+            tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                onComplete={() => onComplete(task)}
+                onDelete={() => onDelete(task.id)}
+                onEdit={() => onEdit(task)}
+                inlineUpdate={inlineUpdate}
+                memberOptions={memberOptions}
+                onClick={() => onTaskClick(task)}
+                selected={selectedIds.has(task.id)}
+                onToggleSelect={() => onToggleSelect(task.id)}
+                showCheckbox={showCheckboxes}
+              />
+            ))
+          )}
+
+          <InlineTaskCreate dueDate={inlineCreateDate} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Filter chip ─────────────────────────────────────────────────────────────
+
+function FilterChip({ label, color, active, onClick }: { label: string; color?: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+        active
+          ? "text-white shadow-sm"
+          : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
+      }`}
+      style={active ? { backgroundColor: color || "#6161FF" } : undefined}
+    >
+      {label}
+    </button>
+  );
+}
+
+// ─── Priority filter dropdown ─────────────────────────────────────────────────
+
+const PRIORITY_OPTIONS = [
+  { key: "", label: "כל העדיפויות" },
+  { key: "URGENT", label: "דחוף" },
+  { key: "HIGH", label: "גבוה" },
+  { key: "MEDIUM", label: "בינוני" },
+  { key: "LOW", label: "נמוך" },
+];
+
+function PriorityFilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const active = PRIORITY_OPTIONS.find((o) => o.key === value);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+          value
+            ? "bg-primary text-white border-primary shadow-sm"
+            : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+        }`}
+      >
+        {value && <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: PRIORITY_COLORS[value] || "#C3C6D4" }} />}
+        {active?.label ?? "כל העדיפויות"}
+        <ChevronDown size={11} />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 right-0 bg-white border border-border rounded-lg shadow-modal z-20 py-1 min-w-[130px]">
+          {PRIORITY_OPTIONS.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => { onChange(opt.key); setOpen(false); }}
+              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-primary/5 flex items-center gap-2 transition-colors ${
+                value === opt.key ? "text-primary font-semibold" : "text-text-primary"
+              }`}
+            >
+              {opt.key && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLORS[opt.key] || "#C3C6D4" }} />}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Kanban card ──────────────────────────────────────────────────────────────
+
+function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean }) {
+  const { priorities } = useWorkspaceOptions();
+  const isDone = task.status === "DONE";
+  const priorityInfo = priorities[task.priority];
+  const borderColor = PRIORITY_COLORS[task.priority] || "#C3C6D4";
+  const isTaskOverdue =
+    task.dueDate &&
+    !isDone &&
+    task.status !== "CANCELLED" &&
+    (() => {
+      const due = new Date(task.dueDate!);
+      due.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return due < today;
+    })();
+  return (
+    <div
+      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-danger" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-card-hover hover:-translate-y-0.5"}`}
+      style={{ borderLeftColor: isDragging ? "#6161FF" : isTaskOverdue ? "#FF4D4F" : borderColor }}
+    >
+      <span className={`font-semibold text-sm block mb-1.5 ${isDone ? "line-through text-text-tertiary" : "text-text-primary"}`}>{task.title}</span>
+      {task.description && <p className="text-xs text-text-tertiary truncate mb-2">{task.description}</p>}
+      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}>
+          {priorityInfo?.label || task.priority}
+        </span>
+        <TypeChip taskType={task.taskType} />
+        {task.taskContext && task.taskContext !== "GENERAL" && (() => {
+          const ctx = TASK_CONTEXT_BADGE[task.taskContext];
+          return ctx ? (
+            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: ctx.color }}>
+              {ctx.label}
+            </span>
+          ) : null;
+        })()}
+      </div>
+      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
+        <div className="flex items-center gap-1">
+          {task.contact && <span className="text-[11px] text-text-secondary truncate max-w-[80px]">{task.contact.name}</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          {task.isRecurring && (
+            <span className="text-primary/70" title="משימה חוזרת">
+              <Repeat size={11} />
+            </span>
+          )}
+          <DueDateCell dueDate={task.dueDate} dueTime={task.dueTime} status={task.status} />
+          {task.assignee ? (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-primary" title={task.assignee.name}>
+              <span className="text-white text-[9px] font-bold">{task.assignee.name[0]}</span>
+            </div>
+          ) : (
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-border" title="לא הוקצה">
+              <User size={10} className="text-text-tertiary" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Stats bar ────────────────────────────────────────────────────────────────
 
 function StatsBar({ tasks }: { tasks: Task[] }) {
   const today = new Date();
@@ -167,119 +786,35 @@ function StatsBar({ tasks }: { tasks: Task[] }) {
   return (
     <div className="flex items-center gap-4 px-4 py-2.5 bg-white rounded-xl border border-border shadow-card text-sm flex-wrap">
       <span className="text-text-secondary">
-        <span className="font-semibold text-text-primary">{tasks.length}</span>{" "}משימות
+        <span className="font-semibold text-text-primary">{tasks.length}</span> משימות
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
       <span className="text-text-secondary">
-        באיחור:{" "}
-        <span className={`font-semibold ${overdue > 0 ? "text-danger" : "text-text-tertiary"}`}>{overdue}</span>
+        באיחור: <span className={`font-semibold ${overdue > 0 ? "text-danger" : "text-text-tertiary"}`}>{overdue}</span>
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
       <span className="text-text-secondary">
-        היום:{" "}
-        <span className={`font-semibold ${dueToday > 0 ? "text-warning" : "text-text-tertiary"}`}>{dueToday}</span>
+        היום: <span className={`font-semibold ${dueToday > 0 ? "text-warning" : "text-text-tertiary"}`}>{dueToday}</span>
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
       <span className="text-text-secondary">
-        הושלמו:{" "}
-        <span className={`font-semibold ${completed > 0 ? "text-success" : "text-text-tertiary"}`}>{completed}</span>
+        הושלמו: <span className={`font-semibold ${completed > 0 ? "text-success" : "text-text-tertiary"}`}>{completed}</span>
       </span>
     </div>
   );
 }
 
-// --- Debounce hook ---
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState<T>(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
-// --- Priority filter dropdown ---
-
-const PRIORITY_OPTIONS = [
-  { key: "", label: "כל העדיפויות" },
-  { key: "URGENT", label: "דחוף" },
-  { key: "HIGH", label: "גבוה" },
-  { key: "MEDIUM", label: "בינוני" },
-  { key: "LOW", label: "נמוך" },
-];
-
-function PriorityFilterDropdown({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-  const active = PRIORITY_OPTIONS.find((o) => o.key === value);
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-          value ? "bg-primary text-white border-primary shadow-sm" : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
-        }`}
-      >
-        {value && (
-          <span
-            className="w-2 h-2 rounded-full inline-block"
-            style={{ backgroundColor: PRIORITY_COLORS[value] || "#C3C6D4" }}
-          />
-        )}
-        {active?.label ?? "כל העדיפויות"}
-        <ChevronDown size={11} />
-      </button>
-      {open && (
-        <div className="absolute top-full mt-1 right-0 bg-white border border-border rounded-lg shadow-modal z-20 py-1 min-w-[130px]">
-          {PRIORITY_OPTIONS.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => { onChange(opt.key); setOpen(false); }}
-              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-primary/5 flex items-center gap-2 transition-colors ${
-                value === opt.key ? "text-primary font-semibold" : "text-text-primary"
-              }`}
-            >
-              {opt.key && (
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: PRIORITY_COLORS[opt.key] || "#C3C6D4" }}
-                />
-              )}
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- Main page ---
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function TasksPage() {
   const { taskStatuses, priorities } = useWorkspaceOptions();
   const { currentWorkspaceId, workspaces } = useAuth();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [taskTypeFilter, setTaskTypeFilter] = useState("");
   const [contextFilter, setContextFilter] = useState("");
-  const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("dueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [showCreate, setShowCreate] = useState(false);
@@ -292,6 +827,8 @@ export default function TasksPage() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
   const bulkPriorityRef = useRef<HTMLDivElement>(null);
+
+  void priorities;
 
   const toggleTaskSelection = (id: string) => {
     setSelectedTaskIds((prev) => {
@@ -318,13 +855,12 @@ export default function TasksPage() {
   const memberOptions = (members || []).map((m) => ({ id: m.memberId, name: m.name }));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks", { statusFilter, taskTypeFilter, contextFilter, page, sortBy, sortDir, myTasksOnly }],
+    queryKey: ["tasks", { taskTypeFilter, contextFilter, sortBy, sortDir, myTasksOnly }],
     queryFn: () =>
       listTasks({
-        status: statusFilter || undefined,
         taskType: taskTypeFilter || undefined,
         taskContext: contextFilter || undefined,
-        page,
+        limit: 500,
         sortBy,
         sortDir,
         myOnly: myTasksOnly,
@@ -350,18 +886,50 @@ export default function TasksPage() {
     let list = data?.data || [];
     if (priorityFilter) list = list.filter((t) => t.priority === priorityFilter);
     if (searchQuery.trim()) list = list.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Date filter
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dateFilter === "today") {
+      list = list.filter((t) => {
+        if (!t.dueDate) return false;
+        const due = new Date(t.dueDate);
+        due.setHours(0, 0, 0, 0);
+        return due.getTime() === today.getTime();
+      });
+    } else if (dateFilter === "week") {
+      const weekEnd = new Date(today);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      list = list.filter((t) => {
+        if (!t.dueDate) return false;
+        const due = new Date(t.dueDate);
+        due.setHours(0, 0, 0, 0);
+        return due >= today && due <= weekEnd;
+      });
+    } else if (dateFilter === "overdue") {
+      list = list.filter((t) => {
+        if (!t.dueDate || t.status === "DONE" || t.status === "CANCELLED") return false;
+        const due = new Date(t.dueDate);
+        due.setHours(0, 0, 0, 0);
+        return due < today;
+      });
+    }
+
     return list;
-  }, [data, priorityFilter, searchQuery]);
+  }, [data, priorityFilter, searchQuery, dateFilter]);
+
+  const groupedTasks = useMemo(() => groupTasksByDate(tasks), [tasks]);
 
   const kanbanColumns: KanbanCol<Task>[] = useMemo(
-    () => Object.entries(taskStatuses).map(([key, info]) => {
-      let items = boardData?.statuses[key] || [];
-      if (priorityFilter) items = items.filter((t) => t.priority === priorityFilter);
-      if (contextFilter) items = items.filter((t) => t.taskContext === contextFilter);
-      if (myTasksOnly && currentMemberId) items = items.filter((t) => t.assignee?.id === currentMemberId);
-      if (searchQuery.trim()) items = items.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
-      return { key, label: info.label, color: info.color, items };
-    }),
+    () =>
+      Object.entries(taskStatuses).map(([key, info]) => {
+        let items = boardData?.statuses[key] || [];
+        if (priorityFilter) items = items.filter((t) => t.priority === priorityFilter);
+        if (contextFilter) items = items.filter((t) => t.taskContext === contextFilter);
+        if (myTasksOnly && currentMemberId) items = items.filter((t) => t.assignee?.id === currentMemberId);
+        if (searchQuery.trim()) items = items.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
+        return { key, label: info.label, color: info.color, items };
+      }),
     [taskStatuses, boardData, priorityFilter, contextFilter, myTasksOnly, currentMemberId, searchQuery],
   );
 
@@ -402,20 +970,13 @@ export default function TasksPage() {
     onError: () => toast.error("שגיאה בעדכון משימות"),
   });
 
-  const handleBulkDelete = () => {
-    setShowBulkDeleteConfirm(true);
-  };
-
-  const handleBulkMarkDone = () => {
-    bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { status: "DONE" } });
-  };
-
+  const handleBulkDelete = () => setShowBulkDeleteConfirm(true);
+  const handleBulkMarkDone = () => bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { status: "DONE" } });
   const handleBulkPriority = (priority: string) => {
     bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { priority } });
     setShowBulkPriorityMenu(false);
   };
 
-  // Close bulk priority menu on outside click
   useEffect(() => {
     if (!showBulkPriorityMenu) return;
     function handler(e: MouseEvent) {
@@ -425,11 +986,6 @@ export default function TasksPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showBulkPriorityMenu]);
 
-  const todoTasks = tasks.filter((t) => t.status === "TODO");
-  const inProgressTasks = tasks.filter((t) => t.status === "IN_PROGRESS");
-  const doneTasks = tasks.filter((t) => t.status === "DONE");
-  const allTasks = data?.data || [];
-
   const sortOptions = [
     { key: "createdAt", label: "תאריך יצירה" },
     { key: "dueDate", label: "תאריך יעד" },
@@ -437,24 +993,33 @@ export default function TasksPage() {
     { key: "title", label: "כותרת" },
   ];
 
-  void priorities;
+  const DATE_FILTER_OPTIONS: { key: DateFilter; label: string }[] = [
+    { key: "all", label: "הכל" },
+    { key: "today", label: "היום" },
+    { key: "week", label: "השבוע" },
+    { key: "overdue", label: "באיחור" },
+  ];
+
+  const allTasks = data?.data || [];
 
   return (
     <div className="flex h-full">
       <div className={`flex-1 min-w-0 ${selectedTaskId ? "ml-[400px]" : ""}`}>
         <PageShell
-          title="משימות"
-          subtitle={`${data?.pagination.total || 0} משימות`}
+          title="המשימות שלי"
+          subtitle={`${allTasks.length} משימות`}
           actions={
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { setMyTasksOnly(!myTasksOnly); setPage(1); }}
+                onClick={() => { setMyTasksOnly(!myTasksOnly); }}
                 className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${
-                  myTasksOnly ? "bg-primary text-white shadow-sm" : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
+                  myTasksOnly
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
                 }`}
               >
                 <User size={14} />
-                המשימות שלי
+                שלי בלבד
               </button>
               <div className="relative">
                 <button
@@ -469,9 +1034,10 @@ export default function TasksPage() {
                     <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)} />
                     <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-border-light z-20 py-1 min-w-[160px]">
                       {sortOptions.map((opt) => (
-                        <button key={opt.key}
+                        <button
+                          key={opt.key}
                           onClick={() => {
-                            if (sortBy === opt.key) { setSortDir(sortDir === "asc" ? "desc" : "asc"); }
+                            if (sortBy === opt.key) setSortDir(sortDir === "asc" ? "desc" : "asc");
                             else { setSortBy(opt.key); setSortDir(opt.key === "dueDate" ? "asc" : "desc"); }
                             setShowSortMenu(false);
                           }}
@@ -486,7 +1052,7 @@ export default function TasksPage() {
                 )}
               </div>
               <ViewToggle viewMode={viewMode} onChange={setViewMode} />
-              <ExportButton entity="tasks" filters={{ status: statusFilter }} />
+              <ExportButton entity="tasks" filters={{}} />
               <button
                 onClick={() => setShowCreate(true)}
                 className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
@@ -497,8 +1063,53 @@ export default function TasksPage() {
             </div>
           }
         >
+          {/* Stats */}
           <StatsBar tasks={allTasks} />
-          {/* Context filter tabs */}
+
+          {/* Date filter tabs + search row */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Date filter tabs */}
+            <div className="flex items-center gap-1 bg-white border border-border rounded-lg p-1">
+              {DATE_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => setDateFilter(opt.key)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                    dateFilter === opt.key
+                      ? opt.key === "overdue"
+                        ? "bg-danger text-white shadow-sm"
+                        : "bg-primary text-white shadow-sm"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search */}
+            <div className="relative flex-1 max-w-xs">
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+              <input
+                type="text"
+                value={searchRaw}
+                onChange={(e) => setSearchRaw(e.target.value)}
+                placeholder="חפש משימה..."
+                dir="rtl"
+                className="w-full pr-9 pl-8 py-1.5 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
+              />
+              {searchRaw && (
+                <button onClick={() => setSearchRaw("")} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-danger transition-colors">
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            <span className="text-border text-xs select-none hidden sm:inline">|</span>
+            <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
+          </div>
+
+          {/* Context + type filters */}
           <div className="flex flex-wrap items-center gap-2">
             {TASK_CONTEXT_OPTIONS.map((opt) => {
               const Icon = opt.icon;
@@ -506,7 +1117,7 @@ export default function TasksPage() {
               return (
                 <button
                   key={opt.key}
-                  onClick={() => { setContextFilter(opt.key); setPage(1); }}
+                  onClick={() => setContextFilter(opt.key)}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                     isActive
                       ? "text-white shadow-sm"
@@ -520,54 +1131,28 @@ export default function TasksPage() {
                 </button>
               );
             })}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <FilterChip label="הכל" active={!statusFilter} onClick={() => { setStatusFilter(""); setPage(1); }} />
-            {Object.entries(taskStatuses).map(([key, val]) => (
-              <FilterChip key={key} label={val.label} color={val.color} active={statusFilter === key} onClick={() => { setStatusFilter(key); setPage(1); }} />
-            ))}
             <span className="text-border text-xs select-none">|</span>
-            <PriorityFilterDropdown value={priorityFilter} onChange={setPriorityFilter} />
-            <span className="text-border text-xs select-none">|</span>
-            {[
-              { value: "", label: "כל הסוגים", icon: "" },
-              { value: "CALL", label: "שיחה", icon: "📞" },
-              { value: "EMAIL", label: "אימייל", icon: "📧" },
-              { value: "MEETING", label: "פגישה", icon: "🤝" },
-              { value: "WHATSAPP", label: "וואטסאפ", icon: "💬" },
-              { value: "FOLLOW_UP", label: "מעקב", icon: "🔄" },
-              { value: "TASK", label: "משימה", icon: "📋" },
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => { setTaskTypeFilter(opt.value); setPage(1); }}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
-                  taskTypeFilter === opt.value
-                    ? "bg-primary text-white border-primary shadow-sm"
-                    : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
-                }`}
-              >
-                {opt.icon && <span>{opt.icon}</span>}
-                <span>{opt.label}</span>
-              </button>
-            ))}
+            {Object.entries(TASK_TYPE_CONFIG).map(([value, cfg]) => {
+              const Icon = cfg.icon;
+              return (
+                <button
+                  key={value}
+                  onClick={() => setTaskTypeFilter(taskTypeFilter === value ? "" : value)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    taskTypeFilter === value
+                      ? "text-white shadow-sm"
+                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                  }`}
+                  style={taskTypeFilter === value ? { backgroundColor: cfg.color, borderColor: cfg.color } : undefined}
+                >
+                  <Icon size={11} />
+                  <span>{cfg.label}</span>
+                </button>
+              );
+            })}
           </div>
-          <div className="relative">
-            <Search size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
-            <input
-              type="text"
-              value={searchRaw}
-              onChange={(e) => setSearchRaw(e.target.value)}
-              placeholder="חפש משימה..."
-              dir="rtl"
-              className="w-full sm:w-72 pr-9 pl-9 py-2 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
-            />
-            {searchRaw && (
-              <button onClick={() => setSearchRaw("")} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-danger transition-colors">
-                <X size={13} />
-              </button>
-            )}
-          </div>
+
+          {/* Content */}
           {viewMode === "kanban" ? (
             <KanbanBoard<Task>
               columns={kanbanColumns}
@@ -577,89 +1162,54 @@ export default function TasksPage() {
               loading={boardLoading}
               emptyText="אין משימות"
             />
+          ) : isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : tasks.length === 0 ? (
+            <EmptyState
+              icon={<CheckCircle2 size={28} className="text-text-tertiary" />}
+              title="אין משימות"
+              description="צרו משימה חדשה כדי להתחיל לעקוב אחרי המשימות שלכם."
+              action={
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors"
+                >
+                  צור משימה ראשונה
+                </button>
+              }
+            />
           ) : (
-            <>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : tasks.length === 0 ? (
-                <EmptyState
-                  icon={<CheckCircle2 size={28} className="text-text-tertiary" />}
-                  title="אין משימות"
-                  description="צרו משימה חדשה כדי להתחיל לעקוב אחרי המשימות שלכם."
-                  action={
-                    <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors">
-                      צור משימה ראשונה
-                    </button>
-                  }
-                />
-              ) : (
-                <div className="space-y-4">
-                  {!statusFilter ? (
-                    <>
-                      {todoTasks.length > 0 && (
-                        <TaskGroup title="לביצוע" color={taskStatuses.TODO?.color || "#579BFC"} tasks={todoTasks}
-                          onToggle={(task) => toggleMutation.mutate({ id: task.id, status: "IN_PROGRESS" })}
-                          onComplete={(task) => toggleMutation.mutate({ id: task.id, status: "DONE" })}
-                          onDelete={(id) => deleteMutation.mutate(id)}
-                          onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
-                          onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
-                          inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)}
-                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
-                      )}
-                      {inProgressTasks.length > 0 && (
-                        <TaskGroup title="בתהליך" color={taskStatuses.IN_PROGRESS?.color || "#579BFC"} tasks={inProgressTasks}
-                          onToggle={(task) => toggleMutation.mutate({ id: task.id, status: "TODO" })}
-                          onComplete={(task) => toggleMutation.mutate({ id: task.id, status: "DONE" })}
-                          onDelete={(id) => deleteMutation.mutate(id)}
-                          onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
-                          onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
-                          inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)}
-                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
-                      )}
-                      {doneTasks.length > 0 && (
-                        <TaskGroup title="הושלם" color={taskStatuses.DONE?.color || "#00CA72"} tasks={doneTasks}
-                          onToggle={(task) => toggleMutation.mutate({ id: task.id, status: "TODO" })}
-                          onDelete={(id) => deleteMutation.mutate(id)}
-                          onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
-                          onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
-                          inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                          onTaskClick={(task) => setSelectedTaskId(task.id)}
-                          selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
-                      )}
-                    </>
-                  ) : (
-                    <TaskGroup
-                      title={taskStatuses[statusFilter]?.label || "משימות"}
-                      color={taskStatuses[statusFilter]?.color || "#579BFC"}
-                      tasks={tasks}
-                      onToggle={(task) => { const ns = task.status === "DONE" ? "TODO" : "IN_PROGRESS"; toggleMutation.mutate({ id: task.id, status: ns }); }}
-                      onComplete={(task) => toggleMutation.mutate({ id: task.id, status: "DONE" })}
-                      onDelete={(id) => deleteMutation.mutate(id)}
-                      onStatusChange={(id, status) => toggleMutation.mutate({ id, status })}
-                      onPriorityChange={(id, priority) => updateTask(id, { priority }).then(() => queryClient.invalidateQueries({ queryKey: ["tasks"] }))}
-                      inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-                      onTaskClick={(task) => setSelectedTaskId(task.id)}
-                      selectedIds={selectedTaskIds} onToggleSelect={toggleTaskSelection} />
-                  )}
-                </div>
-              )}
-              {data?.pagination && data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4">
-                  <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="px-3 py-1.5 text-sm bg-white border border-border rounded-lg hover:bg-surface-secondary disabled:opacity-30 disabled:cursor-not-allowed">
-                    הקודם
-                  </button>
-                  <span className="text-sm text-text-secondary">עמוד {page} מתוך {data.pagination.totalPages}</span>
-                  <button onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))} disabled={page >= data.pagination.totalPages} className="px-3 py-1.5 text-sm bg-white border border-border rounded-lg hover:bg-surface-secondary disabled:opacity-30 disabled:cursor-not-allowed">
-                    הבא
-                  </button>
-                </div>
-              )}
-            </>
+            <div className="space-y-3">
+              {DATE_GROUP_CONFIG.map((cfg) => {
+                const groupTasks = groupedTasks[cfg.key];
+                // Always show overdue/today, hide empty others unless they have tasks
+                if (groupTasks.length === 0 && cfg.key !== "overdue" && cfg.key !== "today") return null;
+                return (
+                  <DateGroupSection
+                    key={cfg.key}
+                    config={cfg}
+                    tasks={groupTasks}
+                    onComplete={(task) => {
+                      const newStatus = task.status === "DONE" ? "TODO" : "DONE";
+                      toggleMutation.mutate({ id: task.id, status: newStatus });
+                    }}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onEdit={(task) => setSelectedTaskId(task.id)}
+                    inlineUpdate={inlineUpdate}
+                    memberOptions={memberOptions}
+                    onTaskClick={(task) => setSelectedTaskId(task.id)}
+                    selectedIds={selectedTaskIds}
+                    onToggleSelect={toggleTaskSelection}
+                    showCheckboxes={selectedTaskIds.size > 0}
+                    defaultOpen={cfg.key === "overdue" || cfg.key === "today" || cfg.key === "tomorrow"}
+                  />
+                );
+              })}
+            </div>
           )}
+
           <TaskCreateModal
             open={showCreate}
             onClose={() => setShowCreate(false)}
@@ -670,9 +1220,9 @@ export default function TasksPage() {
           />
         </PageShell>
       </div>
+
       {selectedTaskId && (
         <>
-          {/* Mobile backdrop */}
           <div
             className="fixed inset-0 bg-black/20 z-30 md:hidden"
             onClick={() => setSelectedTaskId(null)}
@@ -685,6 +1235,7 @@ export default function TasksPage() {
           </div>
         </>
       )}
+
       <BulkActionBar
         selectedCount={selectedTaskIds.size}
         onClear={clearSelection}
@@ -720,10 +1271,7 @@ export default function TasksPage() {
                   onClick={() => handleBulkPriority(opt.key)}
                   className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
                 >
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: opt.color }}
-                  />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
                   {opt.label}
                 </button>
               ))}
@@ -748,245 +1296,3 @@ export default function TasksPage() {
     </div>
   );
 }
-
-// --- Kanban card ---
-
-function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean; }) {
-  const { priorities } = useWorkspaceOptions();
-  const isDone = task.status === "DONE";
-  const priorityInfo = priorities[task.priority];
-  const borderColor = PRIORITY_COLORS[task.priority] || "#C3C6D4";
-  const isTaskOverdue = task.dueDate && !isDone && task.status !== "CANCELLED" && (() => {
-    const due = new Date(task.dueDate!); due.setHours(0, 0, 0, 0);
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    return due < today;
-  })();
-  return (
-    <div
-      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-danger" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-card-hover hover:-translate-y-0.5"}`}
-      style={{ borderLeftColor: isDragging ? "#6161FF" : isTaskOverdue ? "#FF4D4F" : borderColor }}
-    >
-      <span className={`font-semibold text-sm block mb-1.5 ${isDone ? "line-through text-text-tertiary" : "text-text-primary"}`}>{task.title}</span>
-      {task.description && <p className="text-xs text-text-tertiary truncate mb-2">{task.description}</p>}
-      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}>
-          {priorityInfo?.label || task.priority}
-        </span>
-        {task.taskType && task.taskType !== "TASK" && (() => {
-          const TASK_ICONS: Record<string, string> = { CALL: "📞", EMAIL: "📧", MEETING: "🤝", WHATSAPP: "💬", FOLLOW_UP: "🔄" };
-          const TASK_LABELS: Record<string, string> = { CALL: "שיחה", EMAIL: "אימייל", MEETING: "פגישה", WHATSAPP: "וואטסאפ", FOLLOW_UP: "מעקב" };
-          return (
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-surface-secondary text-text-secondary">
-              {TASK_ICONS[task.taskType]} {TASK_LABELS[task.taskType]}
-            </span>
-          );
-        })()}
-        {task.taskContext && task.taskContext !== "GENERAL" && (() => {
-          const ctx = TASK_CONTEXT_BADGE[task.taskContext];
-          return ctx ? (
-            <span
-              className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: ctx.color }}
-            >
-              {ctx.label}
-            </span>
-          ) : null;
-        })()}
-      </div>
-      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
-        <div className="flex items-center gap-1">
-          {task.contact && <span className="text-[11px] text-text-secondary truncate max-w-[80px]">{task.contact.name}</span>}
-        </div>
-        <div className="flex items-center gap-2">
-          {task.isRecurring && (
-            <span
-              className="text-primary/70"
-              title={`משימה חוזרת - ${
-                task.recurrenceType === "DAILY" ? "יומי" :
-                task.recurrenceType === "WEEKLY" ? "שבועי" :
-                task.recurrenceType === "BIWEEKLY" ? "דו-שבועי" :
-                task.recurrenceType === "MONTHLY" ? "חודשי" : ""
-              }`}
-            >
-              <Repeat size={11} />
-            </span>
-          )}
-          <DueDateBadge dueDate={task.dueDate} status={task.status} compact />
-          {task.dueDate && <span title="מסונכרן עם Google Calendar" className="cursor-default text-[11px] leading-none">📅</span>}
-          {task.assignee ? (
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-primary" title={task.assignee.name}>
-              <span className="text-white text-[9px] font-bold">{task.assignee.name[0]}</span>
-            </div>
-          ) : (
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-border" title="לא הוקצה">
-              <User size={10} className="text-text-tertiary" />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Task group ---
-
-function TaskGroup({ title, color, tasks, onToggle, onComplete, onDelete, onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onTaskClick, selectedIds, onToggleSelect }: {
-  title: string; color: string; tasks: Task[]; onToggle: (task: Task) => void; onComplete?: (task: Task) => void;
-  onDelete: (id: string) => void; onStatusChange: (id: string, status: string) => void; onPriorityChange: (id: string, priority: string) => void;
-  inlineUpdate: (id: string, data: any) => void; memberOptions: { id: string; name: string }[]; onTaskClick?: (task: Task) => void;
-  selectedIds?: Set<string>; onToggleSelect?: (id: string) => void;
-}) {
-  const hasAnySelected = selectedIds && selectedIds.size > 0;
-  return (
-    <div className="bg-white rounded-xl shadow-card overflow-hidden">
-      <div className="px-4 py-2.5 flex items-center gap-2" style={{ backgroundColor: color }}>
-        <span className="font-bold text-sm text-white">{title}</span>
-        <span className="text-[11px] font-semibold text-white/80 bg-white/20 px-2 py-0.5 rounded-full">{tasks.length}</span>
-      </div>
-      <div>
-        {tasks.map((task) => (
-          <TaskRow key={task.id} task={task}
-            onToggle={() => onToggle(task)}
-            onComplete={onComplete ? () => onComplete(task) : undefined}
-            onDelete={() => onDelete(task.id)}
-            onStatusChange={(status) => onStatusChange(task.id, status)}
-            onPriorityChange={(priority) => onPriorityChange(task.id, priority)}
-            inlineUpdate={inlineUpdate} memberOptions={memberOptions}
-            onClick={onTaskClick ? () => onTaskClick(task) : undefined}
-            selected={selectedIds?.has(task.id) ?? false}
-            onToggleSelect={onToggleSelect ? () => onToggleSelect(task.id) : undefined}
-            showCheckbox={!!hasAnySelected}
-          />
-        ))}
-      </div>
-      <InlineTaskCreate />
-    </div>
-  );
-}
-
-function InlineTaskCreate() {
-  const queryClient = useQueryClient();
-  const [isAdding, setIsAdding] = useState(false);
-  const [title, setTitle] = useState("");
-  const mutation = useMutation({
-    mutationFn: () => createTask({ title }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
-      setTitle(""); setIsAdding(false);
-      toast.success("משימה נוצרה");
-    },
-    onError: () => { toast.error("שגיאה ביצירת משימה"); },
-  });
-  if (!isAdding) {
-    return (
-      <button onClick={() => setIsAdding(true)} className="w-full px-4 py-2.5 text-sm text-text-tertiary hover:text-primary hover:bg-[#F5F6FF] transition-colors flex items-center gap-2 border-t border-border-light">
-        <Plus size={14} />
-        הוסף משימה
-      </button>
-    );
-  }
-  return (
-    <div className="px-4 py-2.5 flex items-center gap-2 border-t border-border-light bg-[#F5F6FF]">
-      <input autoFocus type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => { if (e.key === "Enter" && title.trim()) mutation.mutate(); if (e.key === "Escape") { setIsAdding(false); setTitle(""); } }}
-        placeholder="כותרת משימה חדשה..."
-        className="flex-1 px-2 py-1 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-      />
-      <button onClick={() => { if (title.trim()) mutation.mutate(); }} disabled={!title.trim() || mutation.isPending}
-        className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors">
-        {mutation.isPending ? "..." : "הוסף"}
-      </button>
-      <button onClick={() => { setIsAdding(false); setTitle(""); }} className="p-1 rounded text-text-tertiary hover:text-text-primary">
-        <X size={14} />
-      </button>
-    </div>
-  );
-}
-
-// --- Task row ---
-
-function TaskRow({ task, onToggle, onComplete, onDelete, onStatusChange: _onStatusChange, onPriorityChange, inlineUpdate, memberOptions, onClick, selected, onToggleSelect, showCheckbox }: {
-  task: Task; onToggle: () => void; onComplete?: () => void; onDelete: () => void;
-  onStatusChange: (status: string) => void; onPriorityChange: (priority: string) => void;
-  inlineUpdate: (id: string, data: any) => void; memberOptions: { id: string; name: string }[]; onClick?: () => void;
-  selected?: boolean; onToggleSelect?: () => void; showCheckbox?: boolean;
-}) {
-  const { priorities } = useWorkspaceOptions();
-  const isDone = task.status === "DONE";
-  const isOverdue = task.dueDate && !isDone && task.status !== "CANCELLED" && new Date(task.dueDate) < new Date();
-  const StatusIcon = STATUS_ICONS[task.status] || Circle;
-  return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-border-light last:border-0 hover:bg-[#F5F6FF] transition-colors group ${isOverdue ? "bg-danger/5" : ""} ${selected ? "bg-primary/5" : ""}`}>
-      {onToggleSelect && (
-        <input
-          type="checkbox"
-          checked={selected ?? false}
-          onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
-          className={`w-4 h-4 rounded border-border text-primary focus:ring-primary/30 flex-shrink-0 cursor-pointer ${showCheckbox || selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
-        />
-      )}
-      <button onClick={(e) => { e.stopPropagation(); (onComplete || onToggle)(); }} className="flex-shrink-0 transition-colors" title={isDone ? "סמן כלא הושלם" : "סמן כהושלם"}>
-        <StatusIcon size={20} className={isDone ? "text-success" : task.status === "IN_PROGRESS" ? "text-warning" : "text-text-tertiary hover:text-success"} />
-      </button>
-      <div className="flex-1 min-w-0 cursor-pointer" onClick={onClick}>
-        <MondayTextCell value={task.title} onChange={(val) => inlineUpdate(task.id, { title: val })} placeholder="כותרת משימה" />
-        {task.description && <p className="text-xs text-text-tertiary mt-0.5 truncate">{task.description}</p>}
-      </div>
-      <StatusDropdown value={task.priority} options={priorities} onChange={onPriorityChange} />
-      {task.taskContext && task.taskContext !== "GENERAL" && (() => {
-        const ctx = TASK_CONTEXT_BADGE[task.taskContext];
-        return ctx ? (
-          <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white flex-shrink-0"
-            style={{ backgroundColor: ctx.color }}
-          >
-            {ctx.label}
-          </span>
-        ) : null;
-      })()}
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {task.contact && <span className="text-xs text-text-secondary hidden sm:inline">{task.contact.name}</span>}
-        {task.isRecurring && (
-          <span
-            className="flex items-center gap-0.5 text-[11px] text-primary/70 bg-primary/5 px-1.5 py-0.5 rounded"
-            title={`משימה חוזרת - ${
-              task.recurrenceType === "DAILY" ? "יומי" :
-              task.recurrenceType === "WEEKLY" ? "שבועי" :
-              task.recurrenceType === "BIWEEKLY" ? "דו-שבועי" :
-              task.recurrenceType === "MONTHLY" ? "חודשי" : ""
-            }`}
-          >
-            <Repeat size={11} />
-          </span>
-        )}
-        <DueDateBadge dueDate={task.dueDate} status={task.status} />
-        <MondayPersonCell
-          value={task.assignee ? { id: task.assignee.id, name: task.assignee.name } : null}
-          onChange={(id) => inlineUpdate(task.id, { assigneeId: id! })}
-          options={memberOptions}
-          placeholder="נציג"
-        />
-        {!isDone && <SnoozeDropdown taskId={task.id} />}
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="p-1 rounded hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" title="מחק משימה">
-          <X size={14} className="text-danger" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// --- Filter chip ---
-
-function FilterChip({ label, color, active, onClick }: { label: string; color?: string; active: boolean; onClick: () => void; }) {
-  return (
-    <button onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${active ? "text-white shadow-sm" : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"}`}
-      style={active ? { backgroundColor: color || "#6161FF" } : undefined}
-    >
-      {label}
-    </button>
-  );
-}
-
-// Old CreateTaskModal removed — now using TaskCreateModal component
