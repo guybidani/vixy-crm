@@ -26,13 +26,17 @@ import {
 /* ------------------------------------------------------------------ */
 /*  useInView – scroll-triggered animation hook                        */
 /* ------------------------------------------------------------------ */
-function useInView(threshold = 0.15) {
+function useInView(threshold = 0.05) {
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (!("IntersectionObserver" in window)) {
+      setInView(true);
+      return;
+    }
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -40,7 +44,7 @@ function useInView(threshold = 0.15) {
           obs.unobserve(el);
         }
       },
-      { threshold },
+      { threshold, rootMargin: "0px 0px 100px 0px" },
     );
     obs.observe(el);
     return () => obs.disconnect();

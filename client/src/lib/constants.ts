@@ -58,7 +58,7 @@ export const NAV_ITEMS = [
   },
   {
     key: "analytics",
-    label: "דוחות",
+    label: "ניתוחים",
     icon: "BarChart3",
     path: "/analytics",
     dot: "#6161FF",
