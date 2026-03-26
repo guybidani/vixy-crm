@@ -63,6 +63,12 @@ export default function ColumnEditorModal({
     setType(newType);
     if (newType === "STATUS") setOptions(STATUS_DEFAULTS);
     if (newType === "PRIORITY") setOptions(PRIORITY_DEFAULTS);
+    // Auto-fill label with the type's Hebrew name if label is empty or matches another type label
+    const currentTypeLabels = COLUMN_TYPES.map((ct) => ct.label);
+    if (!label.trim() || currentTypeLabels.includes(label.trim())) {
+      const found = COLUMN_TYPES.find((ct) => ct.value === newType);
+      if (found) setLabel(found.label);
+    }
   }
   const [options, setOptions] = useState<
     Array<{ key: string; label: string; color: string }>
