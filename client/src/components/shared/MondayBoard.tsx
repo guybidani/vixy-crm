@@ -1956,7 +1956,29 @@ export function MondayStatusCell({
     setColorPickerIdx(null);
   }
 
-  if (!current) return <span className="text-[#C3C6D4]">—</span>;
+  if (!current) return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        className="w-full h-full min-h-[32px] flex items-center justify-center text-[#C3C6D4] hover:bg-[#F5F6F8] transition-colors"
+      >
+        —
+      </button>
+      {open && !editing && (
+        <div className="absolute top-full left-0 z-50 bg-white rounded-[8px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1.5 min-w-[160px]">
+          {Object.entries(options).map(([key, opt]) => (
+            <button
+              key={key}
+              onClick={(e) => { e.stopPropagation(); onChange?.(key); setOpen(false); }}
+              className="w-full px-2 py-1 hover:bg-[#F5F6F8] flex items-center gap-2 text-[13px] text-[#323338]"
+            >
+              <span className="inline-block w-full py-0.5 rounded-[4px] text-white text-[12px] font-semibold text-center" style={{ backgroundColor: opt.color }}>{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div className="relative" ref={ref}>
