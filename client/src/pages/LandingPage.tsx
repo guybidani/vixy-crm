@@ -315,14 +315,14 @@ export default function LandingPage() {
   ];
 
   return (
-    <div dir="rtl" className="min-h-screen bg-white font-sans text-text-primary overflow-x-hidden">
+    <div dir="rtl" className="min-h-screen bg-white font-sans text-[#323338] overflow-x-hidden">
       {/* ============================================================ */}
       {/*  NAVBAR                                                       */}
       {/* ============================================================ */}
       <nav
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-glass border-b border-border-light"
+            ? "bg-white/80 backdrop-blur-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border-b border-[#E6E9EF]"
             : "bg-transparent"
         }`}
       >
@@ -336,21 +336,21 @@ export default function LandingPage() {
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
             >
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-purple flex items-center justify-center shadow-card-glow">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#6161FF] flex items-center justify-center shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
                 <span className="text-white font-bold text-lg">V</span>
               </div>
-              <span className="text-xl font-bold text-text-primary">Vixy CRM</span>
+              <span className="text-xl font-bold text-[#323338]">Vixy CRM</span>
             </div>
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-8">
-              <button onClick={() => scrollTo("features")} className="text-sm text-text-secondary hover:text-primary transition-colors">
+              <button onClick={() => scrollTo("features")} className="text-[13px] text-[#676879] hover:text-[#0073EA] transition-colors">
                 תכונות
               </button>
-              <button onClick={() => scrollTo("pricing")} className="text-sm text-text-secondary hover:text-primary transition-colors">
+              <button onClick={() => scrollTo("pricing")} className="text-[13px] text-[#676879] hover:text-[#0073EA] transition-colors">
                 תמחור
               </button>
-              <button onClick={() => scrollTo("faq")} className="text-sm text-text-secondary hover:text-primary transition-colors">
+              <button onClick={() => scrollTo("faq")} className="text-[13px] text-[#676879] hover:text-[#0073EA] transition-colors">
                 שאלות נפוצות
               </button>
             </div>
@@ -359,13 +359,13 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-3">
               <button
                 onClick={() => navigate("/login")}
-                className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors"
+                className="px-4 py-2 text-[13px] font-medium text-[#676879] hover:text-[#0073EA] transition-colors"
               >
                 התחברות
               </button>
               <button
                 onClick={() => navigate("/register")}
-                className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-l from-primary to-purple rounded-lg hover:shadow-card-glow transition-all duration-300"
+                className="px-5 py-2 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-lg hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300"
               >
                 הרשמה חינם
               </button>
@@ -380,23 +380,23 @@ export default function LandingPage() {
 
         {/* Mobile menu */}
         {mobileMenu && (
-          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-border-light px-4 pb-4 pt-2 space-y-2">
-            <button onClick={() => scrollTo("features")} className="block w-full text-right py-2 text-sm text-text-secondary hover:text-primary">
+          <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-[#E6E9EF] px-4 pb-4 pt-2 space-y-2">
+            <button onClick={() => scrollTo("features")} className="block w-full text-right py-2 text-[13px] text-[#676879] hover:text-[#0073EA]">
               תכונות
             </button>
-            <button onClick={() => scrollTo("pricing")} className="block w-full text-right py-2 text-sm text-text-secondary hover:text-primary">
+            <button onClick={() => scrollTo("pricing")} className="block w-full text-right py-2 text-[13px] text-[#676879] hover:text-[#0073EA]">
               תמחור
             </button>
-            <button onClick={() => scrollTo("faq")} className="block w-full text-right py-2 text-sm text-text-secondary hover:text-primary">
+            <button onClick={() => scrollTo("faq")} className="block w-full text-right py-2 text-[13px] text-[#676879] hover:text-[#0073EA]">
               שאלות נפוצות
             </button>
-            <hr className="border-border-light" />
-            <button onClick={() => navigate("/login")} className="block w-full text-right py-2 text-sm font-medium text-text-secondary">
+            <hr className="border-[#E6E9EF]" />
+            <button onClick={() => navigate("/login")} className="block w-full text-right py-2 text-[13px] font-medium text-[#676879]">
               התחברות
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="block w-full py-2.5 text-sm font-semibold text-white bg-gradient-to-l from-primary to-purple rounded-lg text-center"
+              className="block w-full py-2.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-lg text-center"
             >
               הרשמה חינם
             </button>
@@ -410,7 +410,7 @@ export default function LandingPage() {
       <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 overflow-hidden">
         {/* Background gradient mesh */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/10 blur-[120px]" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-[#0073EA]/10 blur-[120px]" />
           <div className="absolute top-40 left-0 w-[500px] h-[500px] rounded-full bg-purple/10 blur-[120px]" />
           <div className="absolute bottom-0 right-1/3 w-[400px] h-[400px] rounded-full bg-sky/8 blur-[100px]" />
           <div
@@ -427,20 +427,20 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Text */}
             <div className="text-center lg:text-right">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-light/60 text-primary text-xs font-semibold mb-6 backdrop-blur-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#E8F3FF]/60 text-[#0073EA] text-xs font-semibold mb-6 backdrop-blur-sm">
                 <Zap size={14} />
                 <span>חדש! אוטומציות AI מתקדמות</span>
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
                 ה-
-                <span className="bg-gradient-to-l from-primary to-purple bg-clip-text text-transparent">
+                <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
                   CRM
                 </span>
                 {" "}שעובד
                 <br />
                 בשבילך
               </h1>
-              <p className="text-lg sm:text-xl text-text-secondary leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0 lg:max-w-none">
+              <p className="text-lg sm:text-xl text-[#676879] leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0 lg:max-w-none">
                 נהלו לקוחות, עסקאות ומשימות במקום אחד.
                 <br className="hidden sm:block" />
                 פשוט, חכם ויפה.
@@ -448,14 +448,14 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <button
                   onClick={() => navigate("/register")}
-                  className="group px-8 py-3.5 text-base font-bold text-white bg-gradient-to-l from-primary to-purple rounded-xl hover:shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="group px-8 py-3.5 text-base font-bold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-xl hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   התחלה חינם
                   <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
                 </button>
                 <button
                   onClick={() => scrollTo("features")}
-                  className="px-8 py-3.5 text-base font-semibold text-primary border-2 border-primary/20 rounded-xl hover:bg-primary-light/40 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="px-8 py-3.5 text-base font-semibold text-[#0073EA] border-2 border-[#0073EA]/20 rounded-xl hover:bg-[#E8F3FF]/40 transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   <Play size={16} />
                   גלו את התכונות
@@ -465,37 +465,37 @@ export default function LandingPage() {
 
             {/* Dashboard mockup */}
             <div className="relative">
-              <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-card-hover border border-border-light p-5 transform lg:rotate-[-1deg] hover:rotate-0 transition-transform duration-500">
+              <div className="relative bg-white/70 backdrop-blur-xl rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#E6E9EF] p-5 transform lg:rotate-[-1deg] hover:rotate-0 transition-transform duration-500">
                 {/* Window chrome */}
                 <div className="flex items-center gap-1.5 mb-4">
                   <div className="w-3 h-3 rounded-full bg-danger/60" />
                   <div className="w-3 h-3 rounded-full bg-warning/60" />
                   <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <div className="flex-1 mx-3 h-6 rounded-md bg-surface-secondary" />
+                  <div className="flex-1 mx-3 h-6 rounded-md bg-[#F5F6F8]" />
                 </div>
 
                 {/* KPI cards row */}
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   {[
-                    { label: "עסקאות פתוחות", value: "47", color: "text-primary", bg: "bg-primary-light" },
+                    { label: "עסקאות פתוחות", value: "47", color: "text-[#0073EA]", bg: "bg-[#E8F3FF]" },
                     { label: "הכנסה חודשית", value: "₪284K", color: "text-success", bg: "bg-success-light" },
                     { label: "לקוחות חדשים", value: "+23", color: "text-purple", bg: "bg-purple-light" },
                   ].map((kpi) => (
                     <div key={kpi.label} className={`${kpi.bg} rounded-lg p-3`}>
-                      <p className="text-[10px] text-text-secondary mb-1">{kpi.label}</p>
+                      <p className="text-[10px] text-[#676879] mb-1">{kpi.label}</p>
                       <p className={`text-lg font-bold ${kpi.color}`}>{kpi.value}</p>
                     </div>
                   ))}
                 </div>
 
                 {/* Mini bar chart */}
-                <div className="bg-surface-secondary rounded-lg p-3 mb-4">
-                  <p className="text-[10px] text-text-secondary mb-2">מכירות שבועיות</p>
+                <div className="bg-[#F5F6F8] rounded-lg p-3 mb-4">
+                  <p className="text-[10px] text-[#676879] mb-2">מכירות שבועיות</p>
                   <div className="flex items-end gap-1.5 h-16">
                     {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-t-sm bg-gradient-to-t from-primary to-purple/60 transition-all duration-500"
+                        className="flex-1 rounded-t-sm bg-gradient-to-t from-[#0073EA] to-[#6161FF]/60 transition-all duration-500"
                         style={{ height: `${h}%` }}
                       />
                     ))}
@@ -507,21 +507,21 @@ export default function LandingPage() {
                   {[
                     { name: "ישראל טכנולוגיות", status: "bg-success", amount: "₪45,000" },
                     { name: "מדיה פלוס בע\"מ", status: "bg-warning", amount: "₪32,000" },
-                    { name: "דיגיטל סולושנס", status: "bg-primary", amount: "₪28,500" },
+                    { name: "דיגיטל סולושנס", status: "bg-[#0073EA]", amount: "₪28,500" },
                   ].map((row) => (
                     <div key={row.name} className="flex items-center justify-between py-1.5 px-2 rounded-md bg-white/60">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${row.status}`} />
-                        <span className="text-xs text-text-primary font-medium">{row.name}</span>
+                        <span className="text-xs text-[#323338] font-medium">{row.name}</span>
                       </div>
-                      <span className="text-xs text-text-secondary font-medium">{row.amount}</span>
+                      <span className="text-xs text-[#676879] font-medium">{row.amount}</span>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Floating accent */}
               <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-2xl bg-gradient-to-br from-success to-success/50 blur-2xl opacity-40" />
-              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-purple blur-2xl opacity-30" />
+              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0073EA] to-[#6161FF] blur-2xl opacity-30" />
             </div>
           </div>
         </div>
@@ -530,7 +530,7 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  STATS BAR                                                    */}
       {/* ============================================================ */}
-      <div ref={statsSection.ref} className="relative py-12 bg-gradient-to-l from-primary to-purple">
+      <div ref={statsSection.ref} className="relative py-12 bg-gradient-to-l from-[#0073EA] to-[#6161FF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
             {[
@@ -555,7 +555,7 @@ export default function LandingPage() {
                     />
                   )}
                 </p>
-                <p className="text-sm text-white/80">{stat.label}</p>
+                <p className="text-[13px] text-white/80">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -568,14 +568,14 @@ export default function LandingPage() {
       <Section id="features" className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-primary mb-2">תכונות</p>
+            <p className="text-[13px] font-semibold text-[#0073EA] mb-2">תכונות</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               כל מה שאתם צריכים,{" "}
-              <span className="bg-gradient-to-l from-primary to-purple bg-clip-text text-transparent">
+              <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
                 במקום אחד
               </span>
             </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto">
+            <p className="text-[#676879] max-w-2xl mx-auto">
               Vixy CRM נותנת לכם את כל הכלים לניהול לקוחות, מכירות ותפעול &#8211; בממשק יפה ופשוט.
             </p>
           </div>
@@ -586,7 +586,7 @@ export default function LandingPage() {
               return (
                 <div
                   key={i}
-                  className="group relative bg-white/80 backdrop-blur-sm rounded-xl border border-border-light p-6 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300"
+                  className="group relative bg-white/80 backdrop-blur-sm rounded-xl border border-[#E6E9EF] p-6 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300"
                 >
                   <div
                     className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
@@ -595,7 +595,7 @@ export default function LandingPage() {
                     <Icon size={22} style={{ color: f.color }} />
                   </div>
                   <h3 className="text-lg font-bold mb-2">{f.title}</h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
+                  <p className="text-[13px] text-[#676879] leading-relaxed">
                     {f.desc}
                   </p>
                 </div>
@@ -608,14 +608,14 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  WHY VIXY                                                     */}
       {/* ============================================================ */}
-      <Section className="py-20 sm:py-28 bg-surface-secondary">
+      <Section className="py-20 sm:py-28 bg-[#F5F6F8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-primary mb-2">למה Vixy?</p>
+            <p className="text-[13px] font-semibold text-[#0073EA] mb-2">למה Vixy?</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               בנינו את ה-CRM שרצינו לעצמנו
             </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto">
+            <p className="text-[#676879] max-w-2xl mx-auto">
               אחרי שניסינו עשרות מערכות, הבנו שחסר CRM שמדבר עברית, פשוט לשימוש, ומותאם לצוותים ישראליים.
             </p>
           </div>
@@ -626,13 +626,13 @@ export default function LandingPage() {
               return (
                 <div
                   key={i}
-                  className="relative bg-white/80 backdrop-blur-sm rounded-xl border border-border-light p-8 text-center shadow-card hover:shadow-card-glow transition-all duration-300"
+                  className="relative bg-white/80 backdrop-blur-sm rounded-xl border border-[#E6E9EF] p-8 text-center shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-primary-light flex items-center justify-center mx-auto mb-5">
-                    <Icon size={26} className="text-primary" />
+                  <div className="w-14 h-14 rounded-2xl bg-[#E8F3FF] flex items-center justify-center mx-auto mb-5">
+                    <Icon size={26} className="text-[#0073EA]" />
                   </div>
                   <h3 className="text-lg font-bold mb-3">{item.title}</h3>
-                  <p className="text-sm text-text-secondary leading-relaxed">
+                  <p className="text-[13px] text-[#676879] leading-relaxed">
                     {item.desc}
                   </p>
                 </div>
@@ -648,14 +648,14 @@ export default function LandingPage() {
       <Section id="pricing" className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-primary mb-2">תמחור</p>
+            <p className="text-[13px] font-semibold text-[#0073EA] mb-2">תמחור</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               תוכנית לכל{" "}
-              <span className="bg-gradient-to-l from-primary to-purple bg-clip-text text-transparent">
+              <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
                 גודל עסק
               </span>
             </h2>
-            <p className="text-text-secondary max-w-2xl mx-auto">
+            <p className="text-[#676879] max-w-2xl mx-auto">
               התחילו בחינם, שדרגו כשתגדלו. ללא התחייבות, ללא הפתעות.
             </p>
           </div>
@@ -666,27 +666,27 @@ export default function LandingPage() {
                 key={i}
                 className={`relative rounded-2xl border p-7 transition-all duration-300 hover:scale-[1.03] ${
                   plan.highlighted
-                    ? "bg-gradient-to-b from-primary/[0.03] to-purple/[0.03] border-primary/30 shadow-card-glow"
-                    : "bg-white border-border-light shadow-card hover:shadow-card-hover"
+                    ? "bg-gradient-to-b from-[#0073EA]/[0.03] to-[#6161FF]/[0.03] border-[#0073EA]/30 shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
+                    : "bg-white border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-l from-primary to-purple text-white text-xs font-bold shadow-card-glow">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-l from-[#0073EA] to-[#6161FF] text-white text-xs font-bold shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
                     {plan.badge}
                   </div>
                 )}
                 <h3 className="text-lg font-bold mb-1">{plan.name}</h3>
-                <p className="text-xs text-text-secondary mb-4">{plan.desc}</p>
+                <p className="text-xs text-[#676879] mb-4">{plan.desc}</p>
                 <div className="mb-6">
                   <span className="text-3xl font-extrabold">{plan.price}</span>
-                  <span className="text-sm text-text-secondary">{plan.period}</span>
+                  <span className="text-[13px] text-[#676879]">{plan.period}</span>
                 </div>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feat, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm text-text-secondary">
+                    <li key={j} className="flex items-center gap-2 text-[13px] text-[#676879]">
                       <Check
                         size={16}
-                        className={plan.highlighted ? "text-primary" : "text-success"}
+                        className={plan.highlighted ? "text-[#0073EA]" : "text-success"}
                       />
                       <span>{feat}</span>
                     </li>
@@ -694,10 +694,10 @@ export default function LandingPage() {
                 </ul>
                 <button
                   onClick={() => plan.price === "צרו קשר" ? window.location.href = "mailto:sales@vixy.co.il" : navigate("/register")}
-                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-300 ${
+                  className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all duration-300 ${
                     plan.highlighted
-                      ? "bg-gradient-to-l from-primary to-purple text-white hover:shadow-card-glow"
-                      : "bg-surface-secondary text-text-primary hover:bg-primary-light hover:text-primary"
+                      ? "bg-gradient-to-l from-[#0073EA] to-[#6161FF] text-white hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
+                      : "bg-[#F5F6F8] text-[#323338] hover:bg-[#E8F3FF] hover:text-[#0073EA]"
                   }`}
                 >
                   {plan.price === "צרו קשר" ? "צרו קשר" : "התחלה חינם"}
@@ -711,10 +711,10 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  TESTIMONIALS                                                 */}
       {/* ============================================================ */}
-      <Section className="py-20 sm:py-28 bg-surface-secondary">
+      <Section className="py-20 sm:py-28 bg-[#F5F6F8]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-primary mb-2">המלצות</p>
+            <p className="text-[13px] font-semibold text-[#0073EA] mb-2">המלצות</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               מה הלקוחות שלנו אומרים
             </h2>
@@ -724,7 +724,7 @@ export default function LandingPage() {
             {testimonials.map((t, i) => (
               <div
                 key={i}
-                className="bg-white/80 backdrop-blur-sm rounded-xl border border-border-light p-6 shadow-card hover:shadow-card-hover transition-all duration-300"
+                className="bg-white/80 backdrop-blur-sm rounded-xl border border-[#E6E9EF] p-6 shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all duration-300"
               >
                 {/* Stars */}
                 <div className="flex gap-1 mb-4">
@@ -732,19 +732,19 @@ export default function LandingPage() {
                     <Star key={s} size={16} className="fill-warning text-warning" />
                   ))}
                 </div>
-                <p className="text-sm text-text-secondary leading-relaxed mb-6">
+                <p className="text-[13px] text-[#676879] leading-relaxed mb-6">
                   &ldquo;{t.text}&rdquo;
                 </p>
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-[13px]"
                     style={{ backgroundColor: t.color }}
                   >
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="text-sm font-bold">{t.name}</p>
-                    <p className="text-xs text-text-secondary">{t.role}</p>
+                    <p className="text-[13px] font-bold">{t.name}</p>
+                    <p className="text-xs text-[#676879]">{t.role}</p>
                   </div>
                 </div>
               </div>
@@ -759,7 +759,7 @@ export default function LandingPage() {
       <Section id="faq" className="py-20 sm:py-28">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-sm font-semibold text-primary mb-2">שאלות נפוצות</p>
+            <p className="text-[13px] font-semibold text-[#0073EA] mb-2">שאלות נפוצות</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               יש שאלות? יש לנו תשובות
             </h2>
@@ -769,17 +769,17 @@ export default function LandingPage() {
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-white/80 backdrop-blur-sm rounded-xl border border-border-light shadow-card overflow-hidden"
+                className="bg-white/80 backdrop-blur-sm rounded-xl border border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   aria-expanded={openFaq === i}
                   className="w-full flex items-center justify-between p-5 text-right"
                 >
-                  <span className="text-sm font-bold">{faq.q}</span>
+                  <span className="text-[13px] font-bold">{faq.q}</span>
                   <ChevronDown
                     size={18}
-                    className={`text-text-secondary transition-transform duration-300 flex-shrink-0 mr-3 ${
+                    className={`text-[#676879] transition-transform duration-300 flex-shrink-0 mr-3 ${
                       openFaq === i ? "rotate-180" : ""
                     }`}
                   />
@@ -789,7 +789,7 @@ export default function LandingPage() {
                     openFaq === i ? "max-h-60 pb-5" : "max-h-0"
                   }`}
                 >
-                  <p className="px-5 text-sm text-text-secondary leading-relaxed">
+                  <p className="px-5 text-[13px] text-[#676879] leading-relaxed">
                     {faq.a}
                   </p>
                 </div>
@@ -803,7 +803,7 @@ export default function LandingPage() {
       {/*  FINAL CTA                                                    */}
       {/* ============================================================ */}
       <section className="relative py-20 sm:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-bl from-primary via-purple to-primary" />
+        <div className="absolute inset-0 bg-gradient-to-bl from-[#0073EA] via-[#6161FF] to-[#0073EA]" />
         <div className="absolute inset-0 opacity-10">
           <div
             className="w-full h-full"
@@ -828,11 +828,11 @@ export default function LandingPage() {
               placeholder="הזינו את המייל שלכם"
               value={ctaEmail}
               onChange={(e) => setCtaEmail(e.target.value)}
-              className="flex-1 px-5 py-3.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="flex-1 px-5 py-3.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/50 text-[13px] focus:outline-none focus:ring-2 focus:ring-white/30"
             />
             <button
               onClick={() => navigate(ctaEmail ? `/register?email=${encodeURIComponent(ctaEmail)}` : "/register")}
-              className="px-7 py-3.5 bg-white text-primary font-bold text-sm rounded-xl hover:bg-white/90 transition-all duration-300 hover:shadow-lg whitespace-nowrap"
+              className="px-7 py-3.5 bg-white text-[#0073EA] font-bold text-[13px] rounded-[4px] hover:bg-white/90 transition-all duration-300 hover:shadow-lg whitespace-nowrap"
             >
               התחלה חינם
             </button>
@@ -853,12 +853,12 @@ export default function LandingPage() {
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-purple flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#6161FF] flex items-center justify-center">
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
                 <span className="text-xl font-bold text-white">Vixy CRM</span>
               </div>
-              <p className="text-sm leading-relaxed mb-4 max-w-xs">
+              <p className="text-[13px] leading-relaxed mb-4 max-w-xs">
                 הCRM הישראלי החכם לניהול לקוחות, מכירות ותפעול. פשוט, יפה ויעיל.
               </p>
               <div className="flex gap-3">
@@ -895,13 +895,13 @@ export default function LandingPage() {
               },
             ].map((col, i) => (
               <div key={i}>
-                <h4 className="text-sm font-bold text-white mb-4">{col.title}</h4>
+                <h4 className="text-[13px] font-bold text-white mb-4">{col.title}</h4>
                 <ul className="space-y-2.5">
                   {col.links.map((link, j) => (
                     <li key={j}>
                       <a
                         href="#"
-                        className="text-sm hover:text-white transition-colors"
+                        className="text-[13px] hover:text-white transition-colors"
                       >
                         {link}
                       </a>

@@ -112,19 +112,16 @@ export default function TemplatesPage() {
 
   return (
     <PageShell
-      title={
-        <span className="flex items-center gap-2">
-          <FileText size={22} className="text-primary" />
-          תבניות הודעות
-        </span>
-      }
+      boardStyle
+      emoji="📋"
+      title="תבניות הודעות"
       subtitle={`${filteredTemplates.length} תבניות`}
       actions={
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
         >
-          <Plus size={16} />
+          <Plus size={15} strokeWidth={2.5} />
           צור תבנית
         </button>
       }
@@ -134,21 +131,21 @@ export default function TemplatesPage() {
         <div className="relative max-w-xs flex-1">
           <Search
             size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="חיפוש תבניות..."
-            className="w-full pr-9 pl-4 py-2 bg-white border border-border rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+            className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
           />
         </div>
 
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
-          className="px-3 py-2 bg-white border border-border rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="px-3 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
         >
           <option value="">כל הקטגוריות</option>
           {Object.entries(CATEGORIES).map(([key, val]) => (
@@ -161,7 +158,7 @@ export default function TemplatesPage() {
         <select
           value={filterChannel}
           onChange={(e) => setFilterChannel(e.target.value)}
-          className="px-3 py-2 bg-white border border-border rounded-lg text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="px-3 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
         >
           <option value="">כל הערוצים</option>
           {Object.entries(CHANNELS).map(([key, val]) => (
@@ -178,19 +175,19 @@ export default function TemplatesPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-card p-5 h-44 animate-pulse"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 h-44 animate-pulse"
             />
           ))}
         </div>
       ) : filteredTemplates.length === 0 ? (
         <EmptyState
-          icon={<FileText size={28} className="text-text-tertiary" />}
+          icon={<FileText size={28} className="text-[#9699A6]" />}
           title="אין תבניות"
           description="צרו תבנית ראשונה כדי לחסוך זמן במשלוח הודעות."
           action={
             <button
               onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md"
+              className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md"
             >
               צור תבנית ראשונה
             </button>
@@ -274,7 +271,7 @@ function TemplateCard({
   const ChannelIcon = ch.icon;
 
   return (
-    <div className="bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all p-5 border-r-4 group flex flex-col" style={{ borderRightColor: cat.color }}>
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all p-5 border-r-4 group flex flex-col" style={{ borderRightColor: cat.color }}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -285,12 +282,12 @@ function TemplateCard({
             <FileText size={16} />
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-text-primary truncate">
+            <h3 className="font-semibold text-[#323338] truncate">
               {template.name}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
               <StatusBadge label={cat.label} color={cat.color} />
-              <span className="flex items-center gap-1 text-xs text-text-tertiary">
+              <span className="flex items-center gap-1 text-[12px] text-[#9699A6]">
                 <ChannelIcon size={11} />
                 {ch.label}
               </span>
@@ -298,7 +295,7 @@ function TemplateCard({
           </div>
         </div>
         {!template.isActive && (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-tertiary text-text-tertiary">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-tertiary text-[#9699A6]">
             לא פעיל
           </span>
         )}
@@ -306,40 +303,40 @@ function TemplateCard({
 
       {/* Subject */}
       {template.subject && (
-        <p className="text-xs text-text-secondary mb-1 truncate">
+        <p className="text-[12px] text-[#676879] mb-1 truncate">
           <span className="font-medium">נושא:</span> {template.subject}
         </p>
       )}
 
       {/* Body preview */}
-      <p className="text-sm text-text-secondary leading-relaxed line-clamp-3 flex-1">
+      <p className="text-[13px] text-[#676879] leading-relaxed line-clamp-3 flex-1">
         {template.body.slice(0, 100)}
         {template.body.length > 100 ? "..." : ""}
       </p>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-        <span className="text-[11px] text-text-tertiary">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#E6E9EF]/50">
+        <span className="text-[11px] text-[#9699A6]">
           {template.usageCount} שימושים
         </span>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(); }}
-            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors text-text-tertiary hover:text-primary"
+            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA]"
             title="תצוגה מקדימה"
           >
             <Eye size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1.5 hover:bg-surface-secondary rounded-lg transition-colors text-text-tertiary hover:text-primary"
+            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA]"
             title="עריכה"
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors text-text-tertiary hover:text-danger"
+            className="p-1.5 hover:bg-red-50 rounded-[4px] transition-colors text-[#9699A6] hover:text-[#E44258]"
             title="מחיקה"
           >
             <Trash2 size={14} />
@@ -428,14 +425,14 @@ function TemplateFormModal({
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             שם התבנית *
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             required
             autoFocus
             placeholder="לדוגמה: מעקב אחרי שיחה"
@@ -445,13 +442,13 @@ function TemplateFormModal({
         {/* Category + Channel */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               קטגוריה
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             >
               {Object.entries(CATEGORIES).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -461,13 +458,13 @@ function TemplateFormModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               ערוץ
             </label>
             <select
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             >
               {Object.entries(CHANNELS).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -481,14 +478,14 @@ function TemplateFormModal({
         {/* Subject (email only) */}
         {channel === "EMAIL" && (
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               נושא (אימייל)
             </label>
             <input
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               placeholder="נושא ההודעה..."
             />
           </div>
@@ -496,7 +493,7 @@ function TemplateFormModal({
 
         {/* Variable helpers */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1.5">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1.5">
             משתנים זמינים
           </label>
           <div className="flex flex-wrap gap-1.5">
@@ -505,11 +502,11 @@ function TemplateFormModal({
                 key={v.name}
                 type="button"
                 onClick={() => insertVariable(v.name)}
-                className="flex items-center gap-1 px-2.5 py-1 bg-[#F5F6FF] border border-primary/20 text-primary text-xs font-medium rounded-full hover:bg-primary hover:text-white transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 bg-[#F5F6FF] border border-[#0073EA]/20 text-[#0073EA] text-[12px] font-medium rounded-full hover:bg-[#0073EA] hover:text-white transition-colors"
               >
                 <Copy size={10} />
                 {`{{${v.name}}}`}
-                <span className="text-text-tertiary group-hover:text-white/70">
+                <span className="text-[#9699A6] group-hover:text-white/70">
                   ({v.label})
                 </span>
               </button>
@@ -520,13 +517,13 @@ function TemplateFormModal({
         {/* Body */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-text-primary">
+            <label className="block text-[13px] font-medium text-[#323338]">
               תוכן ההודעה *
             </label>
             <button
               type="button"
               onClick={() => setShowPreview(!showPreview)}
-              className="flex items-center gap-1 text-xs text-primary hover:text-primary-hover transition-colors"
+              className="flex items-center gap-1 text-[12px] text-[#0073EA] hover:text-[#0060C2] transition-colors"
             >
               <Eye size={12} />
               {showPreview ? "הסתר תצוגה מקדימה" : "תצוגה מקדימה"}
@@ -535,7 +532,7 @@ function TemplateFormModal({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] resize-none"
             rows={6}
             required
             placeholder="תוכן ההודעה... השתמשו ב-{{firstName}} להוספת משתנים"
@@ -545,16 +542,16 @@ function TemplateFormModal({
         {/* Preview panel */}
         {showPreview && (
           <div className="bg-[#F5F6FF] border border-primary/10 rounded-lg p-4">
-            <p className="text-xs font-semibold text-primary mb-2">
+            <p className="text-[12px] font-semibold text-[#0073EA] mb-2">
               תצוגה מקדימה:
             </p>
             {channel === "EMAIL" && subject && (
-              <p className="text-sm font-medium text-text-primary mb-1">
-                <span className="text-text-tertiary">נושא: </span>
+              <p className="text-[13px] font-medium text-[#323338] mb-1">
+                <span className="text-[#9699A6]">נושא: </span>
                 {renderPreview(subject, EXAMPLE_VALUES)}
               </p>
             )}
-            <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">
+            <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
               {renderPreview(body, EXAMPLE_VALUES)}
             </p>
           </div>
@@ -565,14 +562,14 @@ function TemplateFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {isPending
               ? "שומר..."
@@ -622,24 +619,24 @@ function PreviewModal({
         {/* Meta */}
         <div className="flex items-center gap-2">
           <StatusBadge label={cat.label} color={cat.color} />
-          <span className="flex items-center gap-1 text-xs text-text-tertiary">
+          <span className="flex items-center gap-1 text-[12px] text-[#9699A6]">
             <ChannelIcon size={11} />
             {ch.label}
           </span>
         </div>
 
         {/* Template name */}
-        <h3 className="text-lg font-bold text-text-primary">{template.name}</h3>
+        <h3 className="text-lg font-bold text-[#323338]">{template.name}</h3>
 
         {/* Rendered content */}
-        <div className="bg-surface-secondary rounded-lg p-4 space-y-2">
+        <div className="bg-[#F5F6F8] rounded-[4px] p-4 space-y-2">
           {renderedSubject && (
-            <p className="text-sm font-medium text-text-primary">
-              <span className="text-text-tertiary">נושא: </span>
+            <p className="text-[13px] font-medium text-[#323338]">
+              <span className="text-[#9699A6]">נושא: </span>
               {renderedSubject}
             </p>
           )}
-          <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">
+          <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
             {renderedBody}
           </p>
         </div>
@@ -647,14 +644,14 @@ function PreviewModal({
         {/* Variables used */}
         {template.variables && template.variables.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-text-tertiary mb-1.5">
+            <p className="text-[12px] font-semibold text-[#9699A6] mb-1.5">
               משתנים בתבנית:
             </p>
             <div className="flex flex-wrap gap-1.5">
               {template.variables.map((v) => (
                 <span
                   key={v.name}
-                  className="px-2 py-0.5 bg-[#F5F6FF] border border-primary/20 text-primary text-xs rounded-full"
+                  className="px-2 py-0.5 bg-[#F5F6FF] border border-[#0073EA]/20 text-[#0073EA] text-[12px] rounded-full"
                 >
                   {`{{${v.name}}}`} = {v.label}
                 </span>
@@ -668,14 +665,14 @@ function PreviewModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             סגור
           </button>
           <button
             type="button"
             onClick={copyToClipboard}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm flex items-center justify-center gap-1.5"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] flex items-center justify-center gap-1.5"
           >
             <Copy size={14} />
             העתק

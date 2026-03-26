@@ -27,7 +27,7 @@ export default function SaveViewDialog({
     <Modal open={open} onClose={onClose} title="שמור תצוגה">
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             שם התצוגה
           </label>
           <input
@@ -35,7 +35,7 @@ export default function SaveViewDialog({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="שם התצוגה"
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             autoFocus
             required
           />
@@ -46,23 +46,23 @@ export default function SaveViewDialog({
             type="checkbox"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
-            className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30"
+            className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]/20"
           />
-          <span className="text-sm text-text-secondary">הגדר כברירת מחדל</span>
+          <span className="text-sm text-[#676879]">הגדר כברירת מחדל</span>
         </label>
 
         <div className="flex gap-3 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={saving || !name.trim()}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-sm disabled:opacity-50"
           >
             {saving ? "שומר..." : "שמור"}
           </button>

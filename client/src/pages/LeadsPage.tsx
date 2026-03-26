@@ -8,8 +8,6 @@ import {
   Mail,
   Building2,
   Search,
-  LayoutGrid,
-  Columns3,
   TrendingUp,
   Sparkles,
   Clock,
@@ -114,40 +112,23 @@ export default function LeadsPage() {
 
   return (
     <PageShell
+      boardStyle
+      emoji="🎯"
       title="לידים"
       subtitle={`${data?.pagination.total || 0} לידים ממתינים`}
+      views={[
+        { key: "cards", label: "כרטיסים" },
+        { key: "pipeline", label: "משפך" },
+      ]}
+      activeView={viewMode}
+      onViewChange={(key) => setViewMode(key as "cards" | "pipeline")}
       actions={
         <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="flex items-center bg-surface-secondary rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode("cards")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === "cards"
-                  ? "bg-white text-text-primary shadow-sm"
-                  : "text-text-tertiary hover:text-text-secondary"
-              }`}
-            >
-              <LayoutGrid size={14} />
-              כרטיסים
-            </button>
-            <button
-              onClick={() => setViewMode("pipeline")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === "pipeline"
-                  ? "bg-white text-text-primary shadow-sm"
-                  : "text-text-tertiary hover:text-text-secondary"
-              }`}
-            >
-              <Columns3 size={14} />
-              משפך
-            </button>
-          </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2.5} />
             ליד חדש
           </button>
         </div>
@@ -157,26 +138,26 @@ export default function LeadsPage() {
       <div className="relative max-w-sm">
         <Search
           size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
         />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="חיפוש לידים..."
-          className="w-full pr-9 pl-4 py-2 bg-white border border-border rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
         />
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : leads.length === 0 ? (
         <EmptyState
           icon={
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-2">
-              <Inbox size={28} className="text-primary" />
+            <div className="w-16 h-16 rounded-2xl bg-[#0073EA]/10 flex items-center justify-center mb-2">
+              <Inbox size={28} className="text-[#0073EA]" />
             </div>
           }
           title="אין לידים חדשים"
@@ -184,7 +165,7 @@ export default function LeadsPage() {
           action={
             <button
               onClick={() => setShowCreate(true)}
-              className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] flex items-center gap-2"
             >
               <Plus size={16} />
               הוסף ליד ראשון
@@ -202,17 +183,17 @@ export default function LeadsPage() {
                   className="w-2.5 h-2.5 rounded-full"
                   style={{ backgroundColor: stage.color }}
                 />
-                <span className="text-sm font-bold text-text-primary">
+                <span className="text-[13px] font-bold text-[#323338]">
                   {stage.label}
                 </span>
-                <span className="text-xs text-text-tertiary bg-surface-secondary rounded-full px-2 py-0.5">
+                <span className="text-[12px] text-[#9699A6] bg-[#F5F6F8] rounded-full px-2 py-0.5">
                   {stage.leads.length}
                 </span>
               </div>
               {/* Column body */}
-              <div className="space-y-2.5 min-h-[200px] bg-surface-secondary/40 rounded-xl p-2.5">
+              <div className="space-y-2.5 min-h-[200px] bg-[#F5F6F8]/40 rounded-xl p-2.5">
                 {stage.leads.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-text-tertiary">
+                  <div className="flex flex-col items-center justify-center py-8 text-[#9699A6]">
                     <Inbox size={20} className="mb-1.5 opacity-40" />
                     <span className="text-xs">אין לידים</span>
                   </div>
@@ -288,7 +269,7 @@ function LeadCard({
 
   return (
     <div
-      className="group bg-white rounded-xl shadow-card border border-transparent hover:shadow-card-hover hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden"
+      className="group bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border border-transparent hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[#0073EA]/20 hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden"
     >
       {/* Score accent bar at top */}
       <div
@@ -299,11 +280,11 @@ function LeadCard({
       {/* Header: Name + Score ring */}
       <div className="flex items-start justify-between mb-4 mt-1">
         <div className="cursor-pointer flex-1 min-w-0" onClick={onClick}>
-          <h3 className="font-bold text-text-primary text-[15px] truncate group-hover:text-primary transition-colors">
+          <h3 className="font-bold text-[#323338] text-[15px] truncate group-hover:text-[#0073EA] transition-colors">
             {lead.fullName}
           </h3>
           {lead.position && (
-            <p className="text-xs text-text-tertiary mt-0.5 truncate">{lead.position}</p>
+            <p className="text-[12px] text-[#9699A6] mt-0.5 truncate">{lead.position}</p>
           )}
         </div>
         {/* Circular score with label */}
@@ -326,7 +307,7 @@ function LeadCard({
                 className="transition-all duration-500"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text-primary">
+            <span className="absolute inset-0 flex items-center justify-center text-[12px] font-bold text-[#323338]">
               {lead.leadScore}
             </span>
           </div>
@@ -339,7 +320,7 @@ function LeadCard({
       {/* Contact info */}
       <div className="space-y-2 mb-4">
         {lead.email && (
-          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+          <div className="flex items-center gap-2.5 text-[12px] text-[#676879]">
             <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center flex-shrink-0">
               <Mail size={12} className="text-blue-500" />
             </div>
@@ -349,7 +330,7 @@ function LeadCard({
           </div>
         )}
         {lead.phone && (
-          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+          <div className="flex items-center gap-2.5 text-[12px] text-[#676879]">
             <div className="w-6 h-6 rounded-md bg-green-50 flex items-center justify-center flex-shrink-0">
               <Phone size={12} className="text-green-500" />
             </div>
@@ -357,7 +338,7 @@ function LeadCard({
           </div>
         )}
         {lead.company && (
-          <div className="flex items-center gap-2.5 text-xs text-text-secondary">
+          <div className="flex items-center gap-2.5 text-[12px] text-[#676879]">
             <div className="w-6 h-6 rounded-md bg-purple-50 flex items-center justify-center flex-shrink-0">
               <Building2 size={12} className="text-purple-500" />
             </div>
@@ -382,7 +363,7 @@ function LeadCard({
       )}
 
       {/* Source + Date */}
-      <div className="flex items-center justify-between text-[10px] text-text-tertiary mb-4 pb-3 border-b border-border-light">
+      <div className="flex items-center justify-between text-[10px] text-[#9699A6] mb-4 pb-3 border-b border-[#E6E9EF]">
         {lead.source ? (
           <span className="flex items-center gap-1">
             <TrendingUp size={10} />
@@ -399,7 +380,7 @@ function LeadCard({
       <div className="flex gap-2.5">
         <button
           onClick={onClick}
-          className="flex-1 py-2.5 text-xs font-semibold text-text-secondary bg-surface-secondary hover:bg-surface-tertiary hover:text-text-primary rounded-lg transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-border"
+          className="flex-1 py-2.5 text-[12px] font-semibold text-[#676879] bg-[#F5F6F8] hover:bg-surface-tertiary hover:text-[#323338] rounded-[4px] transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-[#E6E9EF]"
         >
           פרטים
         </button>
@@ -409,7 +390,7 @@ function LeadCard({
             onQualify();
           }}
           disabled={isQualifying}
-          className="flex-1 py-2.5 text-xs font-bold text-white bg-[#00CA72] hover:bg-[#00B865] rounded-lg transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-md active:scale-[0.97]"
+          className="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#00CA72] hover:bg-[#00B865] rounded-[4px] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-md active:scale-[0.97]"
         >
           {isQualifying ? (
             <>
@@ -445,10 +426,10 @@ function PipelineCard({
   return (
     <div
       onClick={onClick}
-      className="group bg-white rounded-lg p-3 shadow-sm border border-transparent hover:shadow-md hover:border-primary/20 cursor-pointer transition-all duration-150"
+      className="group bg-white rounded-[4px] p-3 shadow-sm border border-transparent hover:shadow-md hover:border-[#0073EA]/20 cursor-pointer transition-all duration-150"
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-sm text-text-primary truncate group-hover:text-primary transition-colors">
+        <span className="font-semibold text-[13px] text-[#323338] truncate group-hover:text-[#0073EA] transition-colors">
           {lead.fullName}
         </span>
         <span
@@ -460,14 +441,14 @@ function PipelineCard({
       </div>
       {lead.company && (
         <div className="flex items-center gap-1.5 mb-1.5">
-          <Building2 size={10} className="text-text-tertiary" />
-          <span className="text-[11px] text-text-tertiary truncate">
+          <Building2 size={10} className="text-[#9699A6]" />
+          <span className="text-[11px] text-[#9699A6] truncate">
             {lead.company.name}
           </span>
         </div>
       )}
       {(lead.email || lead.phone) && (
-        <p dir="ltr" className="text-[11px] text-text-tertiary truncate text-right mb-2">
+        <p dir="ltr" className="text-[11px] text-[#9699A6] truncate text-right mb-2">
           {lead.email || lead.phone}
         </p>
       )}
@@ -539,26 +520,26 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               שם פרטי *
             </label>
             <input
               type="text"
               value={form.firstName}
               onChange={(e) => setField("firstName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               שם משפחה *
             </label>
             <input
               type="text"
               value={form.lastName}
               onChange={(e) => setField("lastName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               required
             />
           </div>
@@ -566,26 +547,26 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               אימייל
             </label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               טלפון
             </label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
@@ -593,13 +574,13 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               חברה
             </label>
             <select
               value={form.companyId}
               onChange={(e) => setField("companyId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] bg-white"
             >
               <option value="">ללא חברה</option>
               {companies?.data.map((c) => (
@@ -610,26 +591,26 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               תפקיד
             </label>
             <input
               type="text"
               value={form.position}
               onChange={(e) => setField("position", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             מקור
           </label>
           <select
             value={form.source}
             onChange={(e) => setField("source", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] bg-white"
           >
             <option value="">בחרו מקור</option>
             {leadSources.map((s) => (
@@ -644,14 +625,14 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור ליד"}
           </button>

@@ -114,20 +114,20 @@ export default function Modal({
         ref={dialogRef}
         tabIndex={-1}
         className={cn(
-          "relative bg-white rounded-xl shadow-modal w-full outline-none animate-in fade-in zoom-in-95 duration-200",
+          "relative bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full outline-none animate-in fade-in zoom-in-95 duration-150",
           maxWidth,
           className,
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-            <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E6E9EF]">
+            <h2 className="text-[15px] font-semibold text-[#323338]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-text-primary"
+              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
               aria-label="סגור"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         )}

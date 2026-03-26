@@ -136,7 +136,7 @@ export default function ContactDetailPanel({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function ContactDetailPanel({
   if (!contact) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">איש קשר לא נמצא</p>
+        <p className="text-[#676879]">איש קשר לא נמצא</p>
       </div>
     );
   }
@@ -164,10 +164,10 @@ export default function ContactDetailPanel({
   return (
     <div className="flex flex-col h-full">
       {/* ── HEADER ───────────────────────────────────────────── */}
-      <div className="flex items-start gap-4 pb-4 border-b border-border-light mb-4">
+      <div className="flex items-start gap-4 pb-4 border-b border-[#E6E9EF] mb-4">
         {/* Avatar */}
         <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 text-white text-xl font-bold shadow-sm"
+          className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xl font-bold shadow-sm"
           style={{ backgroundColor: avatarColor(contact.fullName) }}
           aria-label={contact.fullName}
         >
@@ -179,7 +179,7 @@ export default function ContactDetailPanel({
           {editingName ? (
             <input
               autoFocus
-              className="text-xl font-bold text-text-primary bg-white border border-primary rounded-lg px-2 py-0.5 outline-none w-full"
+              className="text-xl font-bold text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-2 py-0.5 outline-none w-full"
               value={nameValue}
               onChange={(e) => setNameValue(e.target.value)}
               onBlur={() => {
@@ -198,7 +198,7 @@ export default function ContactDetailPanel({
             />
           ) : (
             <h2
-              className="text-xl font-bold text-text-primary cursor-text hover:bg-surface-secondary/50 rounded-lg px-1 -mx-1 transition-colors leading-snug"
+              className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8] rounded-[4px] px-1 -mx-1 transition-colors leading-snug"
               onClick={() => {
                 setNameValue(`${contact.firstName} ${contact.lastName}`);
                 setEditingName(true);
@@ -229,28 +229,28 @@ export default function ContactDetailPanel({
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
             onClick={() => setEditing(true)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/5 transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#E8F3FF] transition-colors"
             title="עריכה"
           >
             <Edit2 size={16} />
           </button>
           <button
             onClick={() => navigate(`/contacts/${contactId}`)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/5 transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#E8F3FF] transition-colors"
             title="פתח בעמוד מלא"
           >
             <ExternalLink size={16} />
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-danger hover:bg-red-50 transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#E44258] hover:bg-[#FFEEF0] transition-colors"
             title="מחיקה"
           >
             <Trash2 size={16} />
           </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
             title="סגור"
           >
             <X size={18} />
@@ -289,7 +289,7 @@ export default function ContactDetailPanel({
             href={getWhatsAppUrl(contact.phone)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/5"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/5"
           >
             <span>💬</span>
             <span>WhatsApp</span>
@@ -320,7 +320,7 @@ export default function ContactDetailPanel({
       <div className="flex gap-5 flex-1 min-h-0">
         {/* LEFT — Activity Feed */}
         <div className="flex-1 min-w-0 overflow-y-auto">
-          <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wide mb-3">
+          <h3 className="text-xs font-bold text-[#676879] uppercase tracking-wide mb-3">
             פעילות
           </h3>
           <TimelineTab contact={contact} />
@@ -328,7 +328,7 @@ export default function ContactDetailPanel({
 
         {/* RIGHT — Contact Fields */}
         <div className="w-64 flex-shrink-0 overflow-y-auto">
-          <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wide mb-3">
+          <h3 className="text-xs font-bold text-[#676879] uppercase tracking-wide mb-3">
             פרטים
           </h3>
           <ContactFieldsPanel contact={contact} />
@@ -336,10 +336,10 @@ export default function ContactDetailPanel({
       </div>
 
       {/* ── RELATED SECTION (collapsible) ────────────────────── */}
-      <div className="mt-5 border-t border-border-light pt-4">
+      <div className="mt-5 border-t border-[#E6E9EF] pt-4">
         <button
           onClick={() => setShowRelated((v) => !v)}
-          className="flex items-center gap-2 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors w-full"
+          className="flex items-center gap-2 text-sm font-semibold text-[#676879] hover:text-[#323338] transition-colors w-full"
         >
           <span>{showRelated ? "▼" : "▶"}</span>
           קשורים (עסקאות, פניות, משימות)
@@ -387,7 +387,7 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]"
       style={{
         borderColor: `${color}40`,
         color,
@@ -436,7 +436,7 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
   return (
     <div className="space-y-3">
       {/* Contact details card */}
-      <div className="bg-surface-secondary/50 rounded-xl p-3 space-y-2">
+      <div className="bg-[#F5F6F8] rounded-xl p-3 space-y-2">
         <EditableInfoRow
           icon={<Phone size={13} />}
           label="טלפון"
@@ -454,10 +454,10 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
           onSave={(v) => handleSave("email", v)}
         />
         <div className="flex items-center gap-2">
-          <span className="text-text-tertiary flex-shrink-0">
+          <span className="text-[#9699A6] flex-shrink-0">
             <Building2 size={13} />
           </span>
-          <span className="text-[11px] text-text-tertiary w-12 flex-shrink-0">חברה</span>
+          <span className="text-[11px] text-[#9699A6] w-12 flex-shrink-0">חברה</span>
           <div className="flex-1 min-w-0">
             <MondayPersonCell
               value={
@@ -496,11 +496,11 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
       <FollowUpDateField contact={contact} />
 
       {/* Tags */}
-      <div className="bg-surface-secondary/50 rounded-xl p-3">
+      <div className="bg-[#F5F6F8] rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <Tag size={12} className="text-text-tertiary" />
-            <span className="text-xs font-semibold text-text-primary">תגיות</span>
+            <Tag size={12} className="text-[#9699A6]" />
+            <span className="text-xs font-semibold text-[#323338]">תגיות</span>
           </div>
           <TagSelector
             entityType="contact"
@@ -525,19 +525,19 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
             </span>
           ))}
           {(!contact.tags || contact.tags.length === 0) && (
-            <span className="text-xs text-text-tertiary">אין תגיות</span>
+            <span className="text-xs text-[#9699A6]">אין תגיות</span>
           )}
         </div>
       </div>
 
       {/* Assigned to / last activity */}
       {contact.lastActivityAt && (
-        <div className="bg-surface-secondary/50 rounded-xl p-3">
+        <div className="bg-[#F5F6F8] rounded-xl p-3">
           <div className="flex items-center gap-1.5">
-            <UserCircle2 size={13} className="text-text-tertiary" />
-            <span className="text-xs text-text-tertiary">פעילות אחרונה</span>
+            <UserCircle2 size={13} className="text-[#9699A6]" />
+            <span className="text-xs text-[#9699A6]">פעילות אחרונה</span>
           </div>
-          <span className="text-xs font-semibold text-text-primary mt-1 block">
+          <span className="text-xs font-semibold text-[#323338] mt-1 block">
             {new Date(contact.lastActivityAt).toLocaleDateString("he-IL", {
               day: "numeric",
               month: "long",
@@ -585,8 +585,8 @@ function InfoTab({
     <div className="grid grid-cols-2 gap-5">
       {/* Contact Details */}
       <div className="space-y-4">
-        <div className="bg-surface-secondary/50 rounded-xl p-4">
-          <h3 className="font-bold text-text-primary text-sm mb-3">פרטי קשר</h3>
+        <div className="bg-[#F5F6F8] rounded-xl p-4">
+          <h3 className="font-bold text-[#323338] text-sm mb-3">פרטי קשר</h3>
           <div className="space-y-2.5">
             <EditableInfoRow
               icon={<Mail size={14} />}
@@ -605,10 +605,10 @@ function InfoTab({
               onSave={(v) => handleSave("phone", v)}
             />
             <div className="flex items-center gap-2">
-              <span className="text-text-tertiary">
+              <span className="text-[#9699A6]">
                 <Building2 size={14} />
               </span>
-              <span className="text-xs text-text-tertiary w-14">חברה</span>
+              <span className="text-xs text-[#9699A6] w-14">חברה</span>
               <div className="flex-1">
                 <MondayPersonCell
                   value={
@@ -648,9 +648,9 @@ function InfoTab({
         <FollowUpDateField contact={contact} />
 
         {/* Tags */}
-        <div className="bg-surface-secondary/50 rounded-xl p-4">
+        <div className="bg-[#F5F6F8] rounded-xl p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-text-primary text-sm">תגיות</h3>
+            <h3 className="font-bold text-[#323338] text-sm">תגיות</h3>
             <TagSelector
               entityType="contact"
               entityId={contact.id}
@@ -674,7 +674,7 @@ function InfoTab({
               </span>
             ))}
             {(!contact.tags || contact.tags.length === 0) && (
-              <span className="text-xs text-text-tertiary">אין תגיות</span>
+              <span className="text-xs text-[#9699A6]">אין תגיות</span>
             )}
           </div>
         </div>
@@ -683,58 +683,58 @@ function InfoTab({
       {/* WhatsApp + AI */}
       <div className="space-y-4">
         {/* WhatsApp (Jony) */}
-        <div className="bg-surface-secondary/50 rounded-xl p-4">
+        <div className="bg-[#F5F6F8] rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 bg-[#25D366] rounded-lg flex items-center justify-center">
               <MessageSquare size={14} className="text-white" />
             </div>
-            <h3 className="font-bold text-text-primary text-sm">WhatsApp</h3>
+            <h3 className="font-bold text-[#323338] text-sm">WhatsApp</h3>
             <span className="text-[10px] bg-[#25D366] text-white px-1.5 py-0.5 rounded-full font-semibold">
               Jony
             </span>
           </div>
           {contact.phone ? (
             <div className="space-y-2">
-              <div className="bg-white rounded-lg p-3 border border-border-light">
-                <p className="text-xs text-text-secondary mb-2">
+              <div className="bg-white rounded-lg p-3 border border-[#E6E9EF]">
+                <p className="text-xs text-[#676879] mb-2">
                   שלח הודעת WhatsApp ל-{contact.firstName}
                 </p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="כתוב הודעה..."
-                    className="flex-1 px-2.5 py-1.5 border border-border-light rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#25D366]/30 bg-white"
+                    className="flex-1 px-2.5 py-1.5 border border-[#E6E9EF] rounded-[4px] text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]/30 bg-white"
                   />
-                  <button className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20BD5C] text-white rounded-lg transition-colors">
+                  <button className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20BD5C] text-white rounded-[4px] transition-colors">
                     <Send size={12} />
                   </button>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-text-tertiary text-center py-2">
+            <p className="text-xs text-[#9699A6] text-center py-2">
               יש להוסיף טלפון לשליחת הודעות
             </p>
           )}
         </div>
 
         {/* AI Call Analysis */}
-        <div className="bg-surface-secondary/50 rounded-xl p-4">
+        <div className="bg-[#F5F6F8] rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 bg-[#A25DDC] rounded-lg flex items-center justify-center">
               <Brain size={14} className="text-white" />
             </div>
-            <h3 className="font-bold text-text-primary text-sm">
+            <h3 className="font-bold text-[#323338] text-sm">
               ניתוח שיחות AI
             </h3>
           </div>
-          <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-white hover:bg-[#EDE1F5] rounded-lg transition-colors text-right border border-border-light">
+          <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-white hover:bg-[#EDE1F5] rounded-[4px] transition-colors text-right border border-[#E6E9EF]">
             <Mic size={14} className="text-[#A25DDC]" />
             <div className="flex-1">
               <span className="text-xs font-medium text-[#A25DDC] block">
                 העלה הקלטת שיחה
               </span>
-              <span className="text-[10px] text-text-tertiary">
+              <span className="text-[10px] text-[#9699A6]">
                 AI ינתח את השיחה ויציע פעולות המשך
               </span>
             </div>
@@ -742,21 +742,21 @@ function InfoTab({
         </div>
 
         {/* Vixy Campaigns */}
-        <div className="bg-surface-secondary/50 rounded-xl p-4">
+        <div className="bg-[#F5F6F8] rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-7 h-7 bg-[#0073EA] rounded-lg flex items-center justify-center">
               <Megaphone size={14} className="text-white" />
             </div>
-            <h3 className="font-bold text-text-primary text-sm">
+            <h3 className="font-bold text-[#323338] text-sm">
               Vixy קמפיינים
             </h3>
           </div>
-          <div className="bg-white rounded-lg p-3 text-center border border-border-light">
-            <Megaphone size={20} className="text-primary mx-auto mb-1" />
-            <p className="text-xs font-medium text-primary">
+          <div className="bg-white rounded-lg p-3 text-center border border-[#E6E9EF]">
+            <Megaphone size={20} className="text-[#0073EA] mx-auto mb-1" />
+            <p className="text-xs font-medium text-[#0073EA]">
               בקרוב - חיבור ל-Vixy
             </p>
-            <p className="text-[10px] text-text-tertiary mt-0.5">
+            <p className="text-[10px] text-[#9699A6] mt-0.5">
               צפו בקמפיינים, הוצאות, ולידים מ-Vixy
             </p>
           </div>
@@ -1065,11 +1065,11 @@ function TimelineTab({ contact }: { contact: any }) {
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#6161FF]/8 border border-[#6161FF]/20">
           <Clock size={13} className="text-[#6161FF] flex-shrink-0" />
           <span className="text-xs font-semibold text-[#6161FF]">משימה הבאה:</span>
-          <span className="text-xs text-text-primary font-medium truncate flex-1">{nextTask.title}</span>
+          <span className="text-xs text-[#323338] font-medium truncate flex-1">{nextTask.title}</span>
           <span
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
               isOverdue(new Date(nextTask.dueDate))
-                ? "bg-danger/10 text-danger"
+                ? "bg-[#E44258]/10 text-[#E44258]"
                 : "bg-[#6161FF]/10 text-[#6161FF]"
             }`}
           >
@@ -1079,17 +1079,17 @@ function TimelineTab({ contact }: { contact: any }) {
       )}
 
       {/* ── Compose area ───────────────────────────────────────────── */}
-      <div className="bg-white border border-border-light rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#E6E9EF] rounded-xl overflow-hidden shadow-sm">
         {/* Tab bar */}
-        <div className="flex border-b border-border-light">
+        <div className="flex border-b border-[#E6E9EF]">
           {COMPOSE_TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-all ${
                 activeTab === tab.id
-                  ? "border-b-2 text-text-primary"
-                  : "text-text-tertiary hover:text-text-secondary hover:bg-surface-secondary/50"
+                  ? "border-b-2 text-[#323338]"
+                  : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F5F6F8]"
               }`}
               style={activeTab === tab.id ? { borderBottomColor: tab.color } : {}}
             >
@@ -1099,10 +1099,10 @@ function TimelineTab({ contact }: { contact: any }) {
           ))}
           <button
             onClick={() => setShowTaskCompose((v) => !v)}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all border-r border-border-light ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all border-r border-[#E6E9EF] ${
               showTaskCompose
-                ? "bg-primary/5 text-primary border-b-2 border-b-primary"
-                : "text-text-tertiary hover:text-text-secondary hover:bg-surface-secondary/50"
+                ? "bg-[#E8F3FF] text-[#0073EA] border-b-2 border-b-[#0073EA]"
+                : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F5F6F8]"
             }`}
           >
             <CheckSquare size={12} />
@@ -1118,33 +1118,33 @@ function TimelineTab({ contact }: { contact: any }) {
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
               placeholder="כותרת המשימה *"
-              className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
             />
             <textarea
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
               placeholder="פרטים נוספים..."
               rows={2}
-              className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
             />
             <div className="flex flex-wrap gap-1">
               {([{ key: "1h", label: "עוד שעה" }, { key: "3h", label: "עוד 3 שעות" }, { key: "tomorrow9", label: "מחר 9:00" }, { key: "1w", label: "עוד שבוע" }] as const).map((p) => (
                 <button key={p.key} type="button" onClick={() => applyDuePreset(p.key)}
-                  className="px-2 py-1 text-[10px] font-semibold rounded-md bg-surface-secondary border border-border-light text-text-secondary hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors">
+                  className="px-2 py-1 text-[10px] font-semibold rounded-md bg-[#F5F6F8] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] hover:border-[#0073EA]/30 transition-colors">
                   {p.label}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
               <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)}
-                className="flex-1 bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                className="flex-1 bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
               <input type="time" value={taskDueTime} onChange={(e) => setTaskDueTime(e.target.value)}
-                className="w-24 bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                className="w-24 bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
             </div>
             <div className="flex flex-wrap gap-1">
               {TASK_TYPE_OPTIONS.map((opt) => (
                 <button key={opt.value} type="button" onClick={() => setTaskType(opt.value)}
-                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${taskType === opt.value ? "bg-primary text-white" : "bg-surface-secondary border border-border-light text-text-secondary hover:bg-primary/10"}`}>
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${taskType === opt.value ? "bg-[#0073EA] text-white" : "bg-[#F5F6F8] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10"}`}>
                   {opt.label}
                 </button>
               ))}
@@ -1153,7 +1153,7 @@ function TimelineTab({ contact }: { contact: any }) {
               <button
                 onClick={() => addTaskMutation.mutate({ title: taskTitle.trim(), description: taskDescription.trim() || undefined, dueDate: taskDueDate || undefined, dueTime: taskDueTime || undefined, taskType, contactId: contact.id })}
                 disabled={!taskTitle.trim() || addTaskMutation.isPending}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none">
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold rounded-[4px] transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none">
                 <Plus size={12} />
                 {addTaskMutation.isPending ? "יוצר..." : "צור משימה"}
               </button>
@@ -1169,18 +1169,18 @@ function TimelineTab({ contact }: { contact: any }) {
                 onKeyDown={handleKeyDown}
                 placeholder="כתוב הערה..."
                 rows={3}
-                className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
               />
             )}
             {activeTab === "CALL" && (
               <div className="space-y-2">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="text-[10px] font-semibold text-text-tertiary mb-1 block">תוצאה</label>
+                    <label className="text-[10px] font-semibold text-[#9699A6] mb-1 block">תוצאה</label>
                     <select
                       value={callOutcome}
                       onChange={(e) => setCallOutcome(e.target.value)}
-                      className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                     >
                       {CALL_OUTCOMES.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
@@ -1188,14 +1188,14 @@ function TimelineTab({ contact }: { contact: any }) {
                     </select>
                   </div>
                   <div className="w-28">
-                    <label className="text-[10px] font-semibold text-text-tertiary mb-1 block">משך (דקות)</label>
+                    <label className="text-[10px] font-semibold text-[#9699A6] mb-1 block">משך (דקות)</label>
                     <input
                       type="number"
                       min={0}
                       value={callDuration}
                       onChange={(e) => setCallDuration(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-2 py-1.5 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                     />
                   </div>
                 </div>
@@ -1205,7 +1205,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="הערות שיחה..."
                   rows={2}
-                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
@@ -1216,7 +1216,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
                   placeholder="נושא *"
-                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
                 <textarea
                   value={emailBody}
@@ -1224,7 +1224,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="תוכן האימייל (אופציונלי)..."
                   rows={2}
-                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
@@ -1235,7 +1235,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   value={meetingAttendees}
                   onChange={(e) => setMeetingAttendees(e.target.value)}
                   placeholder="משתתפים (אופציונלי)..."
-                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
                 <textarea
                   value={meetingNotes}
@@ -1243,16 +1243,16 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="סיכום פגישה..."
                   rows={2}
-                  className="w-full bg-surface-secondary/40 border border-border-light rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[10px] text-text-tertiary">Ctrl+Enter לשמירה</span>
+              <span className="text-[10px] text-[#9699A6]">Ctrl+Enter לשמירה</span>
               <button
                 onClick={handleLog}
                 disabled={logDisabled}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold rounded-[4px] transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none"
               >
                 <Send size={12} />
                 {logMutation.isPending ? "שומר..." : "רשום"}
@@ -1271,8 +1271,8 @@ function TimelineTab({ contact }: { contact: any }) {
               onClick={() => setFilter(chip.id)}
               className={`px-2.5 py-1 text-[11px] font-semibold rounded-full transition-all ${
                 filter === chip.id
-                  ? "bg-primary text-white"
-                  : "bg-surface-secondary text-text-secondary hover:bg-primary/10 hover:text-primary border border-border-light"
+                  ? "bg-[#0073EA] text-white"
+                  : "bg-[#F5F6F8] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] border border-[#E6E9EF]"
               }`}
             >
               {chip.label}
@@ -1284,7 +1284,7 @@ function TimelineTab({ contact }: { contact: any }) {
       {/* ── Timeline history ───────────────────────────────────────── */}
       <div>
         {!hasHistory ? (
-          <p className="text-sm text-text-tertiary text-center py-6">אין פעילות עדיין</p>
+          <p className="text-sm text-[#9699A6] text-center py-6">אין פעילות עדיין</p>
         ) : (
           <div className="space-y-0.5">
             {filteredHistory.map((item) => {
@@ -1303,7 +1303,7 @@ function TimelineTab({ contact }: { contact: any }) {
                 return (
                   <div
                     key={`activity-${activity.id as string}`}
-                    className="group/item flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-surface-secondary/40 transition-colors"
+                    className="group/item flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F5F6F8]/40 transition-colors"
                   >
                     {/* Type icon circle */}
                     <div
@@ -1315,15 +1315,15 @@ function TimelineTab({ contact }: { contact: any }) {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-text-primary">
+                        <span className="text-sm font-semibold text-[#323338]">
                           {typeInfo?.label || activity.type}
                         </span>
                         {activity.member?.user?.name && (
-                          <span className="text-xs text-text-tertiary">
+                          <span className="text-xs text-[#9699A6]">
                             {activity.member.user.name}
                           </span>
                         )}
-                        <span className="text-[11px] text-text-tertiary/70">
+                        <span className="text-[11px] text-[#9699A6]/70">
                           {timeAgo(activity.createdAt)}
                         </span>
                         {/* Call outcome badge */}
@@ -1333,7 +1333,7 @@ function TimelineTab({ contact }: { contact: any }) {
                           </span>
                         )}
                         {duration && (
-                          <span className="text-[10px] text-text-tertiary">{duration} דק׳</span>
+                          <span className="text-[10px] text-[#9699A6]">{duration} דק׳</span>
                         )}
                       </div>
 
@@ -1344,7 +1344,7 @@ function TimelineTab({ contact }: { contact: any }) {
                               type="text"
                               value={editSubject}
                               onChange={(e) => setEditSubject(e.target.value)}
-                              className="w-full bg-white border border-primary rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              className="w-full bg-white border border-[#0073EA] rounded-[4px] px-2 py-1.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                               placeholder="נושא"
                             />
                           )}
@@ -1352,7 +1352,7 @@ function TimelineTab({ contact }: { contact: any }) {
                             value={editBody}
                             onChange={(e) => setEditBody(e.target.value)}
                             rows={3}
-                            className="w-full bg-white border border-primary rounded-lg px-2 py-1.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full bg-white border border-[#0073EA] rounded-[4px] px-2 py-1.5 text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                           />
                           <div className="flex gap-2">
                             <button
@@ -1364,13 +1364,13 @@ function TimelineTab({ contact }: { contact: any }) {
                                 },
                               })}
                               disabled={editMutation.isPending}
-                              className="px-3 py-1 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+                              className="px-3 py-1 bg-[#0073EA] text-white text-[12px] font-semibold rounded-[4px] hover:bg-[#0060C2] transition-colors disabled:opacity-50"
                             >
                               {editMutation.isPending ? "שומר..." : "שמור"}
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="px-3 py-1 bg-surface-secondary text-text-secondary text-xs font-semibold rounded-lg hover:bg-border-light transition-colors"
+                              className="px-3 py-1 bg-[#F5F6F8] text-[#676879] text-xs font-semibold rounded-[4px] hover:bg-[#E6E9EF] transition-colors"
                             >
                               ביטול
                             </button>
@@ -1379,17 +1379,17 @@ function TimelineTab({ contact }: { contact: any }) {
                       ) : (
                         <>
                           {activity.subject && activity.type !== "CALL" && activity.type !== "MEETING" && (
-                            <p className="text-sm text-text-secondary mt-0.5 font-medium">
+                            <p className="text-sm text-[#676879] mt-0.5 font-medium">
                               {activity.subject}
                             </p>
                           )}
                           {activity.body && (
-                            <p className="text-sm text-text-secondary mt-0.5 line-clamp-3 whitespace-pre-wrap">
+                            <p className="text-sm text-[#676879] mt-0.5 line-clamp-3 whitespace-pre-wrap">
                               {activity.body}
                             </p>
                           )}
                           {attendees && (
-                            <p className="text-xs text-text-tertiary mt-0.5">משתתפים: {attendees}</p>
+                            <p className="text-xs text-[#9699A6] mt-0.5">משתתפים: {attendees}</p>
                           )}
                         </>
                       )}
@@ -1404,7 +1404,7 @@ function TimelineTab({ contact }: { contact: any }) {
                             setEditBody(activity.body || "");
                             setEditSubject(activity.subject || "");
                           }}
-                          className="p-1.5 rounded-lg text-text-tertiary hover:text-primary hover:bg-primary/10 transition-colors"
+                          className="p-1.5 rounded-[4px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#0060C2]/10 transition-colors"
                           title="ערוך"
                         >
                           <Pencil size={12} />
@@ -1415,7 +1415,7 @@ function TimelineTab({ contact }: { contact: any }) {
                               deleteMutation.mutate(activity.id);
                             }
                           }}
-                          className="p-1.5 rounded-lg text-text-tertiary hover:text-danger hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-[4px] text-[#9699A6] hover:text-[#E44258] hover:bg-[#FFEEF0] transition-colors"
                           title="מחק"
                         >
                           <Trash2 size={12} />
@@ -1431,23 +1431,23 @@ function TimelineTab({ contact }: { contact: any }) {
               return (
                 <div
                   key={`task-done-${task.id as string}`}
-                  className="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-surface-secondary/40 transition-colors"
+                  className="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F5F6F8]/40 transition-colors"
                 >
                   <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00CA72] shadow-sm">
                     <CheckCircle2 size={13} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-text-tertiary line-through">
+                      <span className="text-sm font-semibold text-[#9699A6] line-through">
                         {task.title}
                       </span>
                       <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/15 text-[#00CA72]">
                         הושלמה
                       </span>
                       {task.assignee?.user?.name && (
-                        <span className="text-xs text-text-tertiary">{task.assignee.user.name}</span>
+                        <span className="text-xs text-[#9699A6]">{task.assignee.user.name}</span>
                       )}
-                      <span className="text-[11px] text-text-tertiary/70">
+                      <span className="text-[11px] text-[#9699A6]/70">
                         {timeAgo(task.completedAt || task.updatedAt || task.createdAt)}
                       </span>
                     </div>
@@ -1474,7 +1474,7 @@ function RelatedTab({
     <div className="space-y-5">
       {/* Deals */}
       <div>
-        <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
           <Handshake size={16} className="text-[#00CA72]" />
           עסקאות ({contact.deals?.length || 0})
         </h3>
@@ -1485,21 +1485,21 @@ function RelatedTab({
               return (
                 <div
                   key={deal.id}
-                  className="flex items-center justify-between p-3 bg-surface-secondary/50 rounded-xl hover:bg-surface-secondary transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                   onClick={() => navigate(`/deals`)}
                 >
                   <div>
-                    <span className="font-medium text-sm text-text-primary">
+                    <span className="font-medium text-sm text-[#323338]">
                       {deal.title}
                     </span>
                     {deal.assignee && (
-                      <span className="text-xs text-text-tertiary block">
+                      <span className="text-xs text-[#9699A6] block">
                         {deal.assignee.user.name}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-text-primary">
+                    <span className="text-sm font-semibold text-[#323338]">
                       ₪{deal.value?.toLocaleString() || 0}
                     </span>
                     {stage && (
@@ -1511,7 +1511,7 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-tertiary text-center py-3 bg-surface-secondary/30 rounded-xl">
+          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
             אין עסקאות
           </p>
         )}
@@ -1519,7 +1519,7 @@ function RelatedTab({
 
       {/* Tickets */}
       <div>
-        <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
           <Ticket size={16} className="text-[#FB275D]" />
           פניות ({contact.tickets?.length || 0})
         </h3>
@@ -1531,10 +1531,10 @@ function RelatedTab({
               return (
                 <div
                   key={ticket.id}
-                  className="flex items-center justify-between p-3 bg-surface-secondary/50 rounded-xl hover:bg-surface-secondary transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                   onClick={() => navigate(`/tickets/${ticket.id}`)}
                 >
-                  <span className="font-medium text-sm text-text-primary">
+                  <span className="font-medium text-sm text-[#323338]">
                     {ticket.subject}
                   </span>
                   <div className="flex items-center gap-2">
@@ -1553,7 +1553,7 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-tertiary text-center py-3 bg-surface-secondary/30 rounded-xl">
+          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
             אין פניות
           </p>
         )}
@@ -1561,7 +1561,7 @@ function RelatedTab({
 
       {/* Tasks */}
       <div>
-        <h3 className="font-bold text-text-primary text-sm mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
           <CheckSquare size={16} className="text-[#00CA72]" />
           משימות ({contact.tasks?.length || 0})
         </h3>
@@ -1572,14 +1572,14 @@ function RelatedTab({
               return (
                 <div
                   key={task.id}
-                  className="flex items-center justify-between p-3 bg-surface-secondary/50 rounded-xl"
+                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl"
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                         task.status === "DONE"
                           ? "bg-success border-success"
-                          : "border-border"
+                          : "border-[#E6E9EF]"
                       }`}
                     >
                       {task.status === "DONE" && (
@@ -1589,8 +1589,8 @@ function RelatedTab({
                     <span
                       className={`font-medium text-sm ${
                         task.status === "DONE"
-                          ? "line-through text-text-tertiary"
-                          : "text-text-primary"
+                          ? "line-through text-[#9699A6]"
+                          : "text-[#323338]"
                       }`}
                     >
                       {task.title}
@@ -1598,7 +1598,7 @@ function RelatedTab({
                   </div>
                   <div className="flex items-center gap-2">
                     {task.dueDate && (
-                      <span className="text-xs text-text-tertiary">
+                      <span className="text-xs text-[#9699A6]">
                         {new Date(task.dueDate).toLocaleDateString("he-IL")}
                       </span>
                     )}
@@ -1614,7 +1614,7 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-text-tertiary text-center py-3 bg-surface-secondary/30 rounded-xl">
+          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
             אין משימות
           </p>
         )}
@@ -1663,7 +1663,7 @@ function FollowUpDateField({ contact }: { contact: any }) {
     : null;
 
   let statusBadge: React.ReactNode = null;
-  let dateColorClass = "text-text-secondary";
+  let dateColorClass = "text-[#676879]";
 
   if (followUpDate) {
     const today = new Date();
@@ -1673,9 +1673,9 @@ function FollowUpDateField({ contact }: { contact: any }) {
     const diff = Math.round((fuDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diff < 0) {
-      dateColorClass = "text-danger font-bold";
+      dateColorClass = "text-[#E44258] font-bold";
       statusBadge = (
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-danger/10 text-danger">
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#E44258]/10 text-[#E44258]">
           באיחור!
         </span>
       );
@@ -1704,16 +1704,16 @@ function FollowUpDateField({ contact }: { contact: any }) {
   };
 
   return (
-    <div className="bg-surface-secondary/50 rounded-xl p-4">
+    <div className="bg-[#F5F6F8] rounded-xl p-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-bold text-text-primary text-sm flex items-center gap-1.5">
-          <Calendar size={14} className="text-primary" />
+        <h3 className="font-bold text-[#323338] text-sm flex items-center gap-1.5">
+          <Calendar size={14} className="text-[#0073EA]" />
           תאריך מעקב
         </h3>
         {followUpDate && (
           <button
             onClick={handleClear}
-            className="text-[10px] text-text-tertiary hover:text-danger transition-colors"
+            className="text-[10px] text-[#9699A6] hover:text-[#E44258] transition-colors"
           >
             הסר
           </button>
@@ -1739,7 +1739,7 @@ function FollowUpDateField({ contact }: { contact: any }) {
               defaultValue={followUpDate.toISOString().split("T")[0]}
               onChange={handleDateChange}
               onBlur={() => setEditing(false)}
-              className="text-xs border border-primary rounded px-2 py-1 focus:outline-none bg-white"
+              className="text-xs border border-[#0073EA] rounded px-2 py-1 focus:outline-none bg-white"
             />
           )}
         </div>
@@ -1751,12 +1751,12 @@ function FollowUpDateField({ contact }: { contact: any }) {
               autoFocus
               onChange={handleDateChange}
               onBlur={() => setEditing(false)}
-              className="text-xs border border-primary rounded px-2 py-1 focus:outline-none bg-white"
+              className="text-xs border border-[#0073EA] rounded px-2 py-1 focus:outline-none bg-white"
             />
           ) : (
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary-hover font-semibold transition-colors px-2 py-1.5 rounded-lg hover:bg-primary/5"
+              className="flex items-center gap-1.5 text-[12px] text-[#0073EA] hover:text-[#0060C2] font-semibold transition-colors px-2 py-1.5 rounded-[4px] hover:bg-[#E8F3FF]"
             >
               <Calendar size={12} />
               הגדר מעקב
@@ -1783,10 +1783,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-text-tertiary">{icon}</span>
-      <span className="text-xs text-text-tertiary w-14">{label}</span>
+      <span className="text-[#9699A6]">{icon}</span>
+      <span className="text-xs text-[#9699A6] w-14">{label}</span>
       <span
-        className={`text-sm text-text-primary ${onClick ? "cursor-pointer hover:text-primary underline-offset-2 hover:underline" : ""}`}
+        className={`text-sm text-[#323338] ${onClick ? "cursor-pointer hover:text-[#0073EA] underline-offset-2 hover:underline" : ""}`}
         dir={dir}
         onClick={onClick}
       >
@@ -1821,11 +1821,11 @@ function EditableInfoRow({
   if (editing && !readOnly) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-text-tertiary">{icon}</span>
-        <span className="text-xs text-text-tertiary w-14">{label}</span>
+        <span className="text-[#9699A6]">{icon}</span>
+        <span className="text-xs text-[#9699A6] w-14">{label}</span>
         <input
           autoFocus
-          className="flex-1 text-sm text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+          className="flex-1 text-sm text-[#323338] bg-white border border-[#0073EA] rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
           value={editVal}
           dir={dir}
           onChange={(e) => setEditVal(e.target.value)}
@@ -1847,16 +1847,16 @@ function EditableInfoRow({
 
   return (
     <div className="flex items-center gap-2 group/row">
-      <span className="text-text-tertiary">{icon}</span>
-      <span className="text-xs text-text-tertiary w-14">{label}</span>
+      <span className="text-[#9699A6]">{icon}</span>
+      <span className="text-xs text-[#9699A6] w-14">{label}</span>
       <span
         className={`text-sm flex-1 min-w-0 ${
           value
             ? onClick
-              ? "text-primary cursor-pointer hover:underline"
-              : "text-text-primary"
-            : "text-text-tertiary"
-        } ${!readOnly ? "cursor-text hover:bg-surface-secondary/80 rounded px-1 -mx-1 transition-colors" : ""}`}
+              ? "text-[#0073EA] cursor-pointer hover:underline"
+              : "text-[#323338]"
+            : "text-[#9699A6]"
+        } ${!readOnly ? "cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors" : ""}`}
         dir={dir}
         onClick={() => {
           if (onClick) {
@@ -1875,7 +1875,7 @@ function EditableInfoRow({
             setEditVal("");
             setEditing(true);
           }}
-          className="opacity-0 group-hover/row:opacity-100 text-primary text-[10px] transition-opacity"
+          className="opacity-0 group-hover/row:opacity-100 text-[#0073EA] text-[10px] transition-opacity"
         >
           +
         </button>
@@ -1904,7 +1904,7 @@ function LeadScoreRing({
           type="number"
           min={0}
           max={100}
-          className="w-14 text-sm text-center border border-primary rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+          className="w-14 text-sm text-center border border-[#0073EA] rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
           value={val}
           onChange={(e) => setVal(e.target.value)}
           onBlur={() => {
@@ -1917,7 +1917,7 @@ function LeadScoreRing({
             if (e.key === "Escape") setEditing(false);
           }}
         />
-        <span className="text-xs text-text-tertiary">ציון</span>
+        <span className="text-xs text-[#9699A6]">ציון</span>
       </div>
     );
   }
@@ -1948,11 +1948,11 @@ function LeadScoreRing({
             strokeLinecap="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-text-primary">
+        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[#323338]">
           {score}
         </span>
       </div>
-      <span className="text-xs text-text-tertiary">ציון</span>
+      <span className="text-xs text-[#9699A6]">ציון</span>
     </div>
   );
 }
@@ -2036,40 +2036,40 @@ function EditContactModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-modal w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-text-primary">עריכת איש קשר</h2>
+          <h2 className="text-lg font-bold text-[#323338]">עריכת איש קשר</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
           >
-            <X size={18} className="text-text-tertiary" />
+            <X size={18} className="text-[#9699A6]" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 שם פרטי *
               </label>
               <input
                 type="text"
                 value={form.firstName}
                 onChange={(e) => setField("firstName", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 שם משפחה *
               </label>
               <input
                 type="text"
                 value={form.lastName}
                 onChange={(e) => setField("lastName", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 required
               />
             </div>
@@ -2077,26 +2077,26 @@ function EditContactModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 אימייל
               </label>
               <input
                 type="email"
                 value={form.email}
                 onChange={(e) => setField("email", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 dir="ltr"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 טלפון
               </label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setField("phone", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 dir="ltr"
               />
             </div>
@@ -2104,13 +2104,13 @@ function EditContactModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 חברה
               </label>
               <select
                 value={form.companyId}
                 onChange={(e) => setField("companyId", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 <option value="">ללא חברה</option>
                 {companies?.data.map((c) => (
@@ -2121,27 +2121,27 @@ function EditContactModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 תפקיד
               </label>
               <input
                 type="text"
                 value={form.position}
                 onChange={(e) => setField("position", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 סטטוס
               </label>
               <select
                 value={form.status}
                 onChange={(e) => setField("status", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 {Object.entries(contactStatuses).map(([key, val]) => (
                   <option key={key} value={key}>
@@ -2151,7 +2151,7 @@ function EditContactModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-sm font-medium text-[#323338] mb-1">
                 ציון ליד (0-100)
               </label>
               <input
@@ -2160,7 +2160,7 @@ function EditContactModal({
                 max={100}
                 value={form.leadScore}
                 onChange={(e) => setField("leadScore", e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               />
             </div>
           </div>
@@ -2169,14 +2169,14 @@ function EditContactModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+              className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
             >
               ביטול
             </button>
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+              className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
             >
               {mutation.isPending ? "שומר..." : "שמור שינויים"}
             </button>

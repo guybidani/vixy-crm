@@ -201,7 +201,7 @@ function WorkflowDialog({
         {/* Name & Description */}
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-text-primary block mb-1">
+            <label className="text-[13px] font-medium text-[#323338] block mb-1">
               שם
             </label>
             <input
@@ -209,11 +209,11 @@ function WorkflowDialog({
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="לדוגמה: שלח התראה כשעסקה נסגרת"
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] outline-none"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-text-primary block mb-1">
+            <label className="text-[13px] font-medium text-[#323338] block mb-1">
               תיאור (אופציונלי)
             </label>
             <input
@@ -222,14 +222,14 @@ function WorkflowDialog({
               onChange={(e) =>
                 setForm((f) => ({ ...f, description: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] outline-none"
             />
           </div>
         </div>
 
         {/* Trigger */}
         <div>
-          <label className="text-sm font-bold text-text-primary block mb-2">
+          <label className="text-[13px] font-bold text-[#323338] block mb-2">
             <Zap size={14} className="inline ml-1 text-purple-500" />
             טריגר - מתי להפעיל?
           </label>
@@ -239,14 +239,14 @@ function WorkflowDialog({
                 key={key}
                 onClick={() => setForm((f) => ({ ...f, trigger: key }))}
                 className={cn(
-                  "text-right p-3 rounded-lg border transition-all text-sm",
+                  "text-right p-3 rounded-[4px] border transition-all text-[13px]",
                   form.trigger === key
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                    : "border-border-light hover:border-primary/30 hover:bg-surface-secondary",
+                    ? "border-[#0073EA] bg-[#0073EA]/5 ring-1 ring-[#0073EA]/20"
+                    : "border-[#E6E9EF] hover:border-[#0073EA]/30 hover:bg-[#F5F6F8]",
                 )}
               >
-                <div className="font-medium text-text-primary">{label}</div>
-                <div className="text-xs text-text-tertiary mt-0.5">
+                <div className="font-medium text-[#323338]">{label}</div>
+                <div className="text-[12px] text-[#9699A6] mt-0.5">
                   {description}
                 </div>
               </button>
@@ -257,19 +257,19 @@ function WorkflowDialog({
         {/* Conditions */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-bold text-text-primary">
+            <label className="text-[13px] font-bold text-[#323338]">
               תנאים (אופציונלי)
             </label>
             <button
               onClick={addCondition}
-              className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
+              className="text-xs text-[#0073EA] hover:text-[#0060C2] flex items-center gap-1"
             >
               <Plus size={12} />
               הוסף תנאי
             </button>
           </div>
           {form.conditions.length === 0 ? (
-            <p className="text-xs text-text-tertiary">
+            <p className="text-[12px] text-[#9699A6]">
               ללא תנאים — הטריגר יפעל תמיד
             </p>
           ) : (
@@ -277,7 +277,7 @@ function WorkflowDialog({
               {form.conditions.map((cond, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 p-2 bg-surface-secondary rounded-lg"
+                  className="flex items-center gap-2 p-2 bg-[#F5F6F8] rounded-[4px]"
                 >
                   <input
                     type="text"
@@ -286,14 +286,14 @@ function WorkflowDialog({
                       updateCondition(i, "field", e.target.value)
                     }
                     placeholder="שדה (stage, status...)"
-                    className="flex-1 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                    className="flex-1 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                   />
                   <select
                     value={cond.operator}
                     onChange={(e) =>
                       updateCondition(i, "operator", e.target.value)
                     }
-                    className="px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                    className="px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                   >
                     {Object.entries(CONDITION_OPERATORS).map(([k, v]) => (
                       <option key={k} value={k}>
@@ -308,11 +308,11 @@ function WorkflowDialog({
                       updateCondition(i, "value", e.target.value)
                     }
                     placeholder="ערך"
-                    className="flex-1 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                    className="flex-1 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                   />
                   <button
                     onClick={() => removeCondition(i)}
-                    className="p-1 text-text-tertiary hover:text-danger"
+                    className="p-1 text-[#9699A6] hover:text-[#E44258]"
                   >
                     <X size={14} />
                   </button>
@@ -325,13 +325,13 @@ function WorkflowDialog({
         {/* Actions */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-bold text-text-primary">
+            <label className="text-[13px] font-bold text-[#323338]">
               <Play size={14} className="inline ml-1 text-green-500" />
               פעולות - מה לעשות?
             </label>
             <button
               onClick={addAction}
-              className="text-xs text-primary hover:text-primary-hover flex items-center gap-1"
+              className="text-xs text-[#0073EA] hover:text-[#0060C2] flex items-center gap-1"
             >
               <Plus size={12} />
               הוסף פעולה
@@ -341,13 +341,13 @@ function WorkflowDialog({
             {form.actions.map((action, i) => (
               <div
                 key={i}
-                className="p-3 border border-border-light rounded-lg space-y-2"
+                className="p-3 border border-[#E6E9EF] rounded-[4px] space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <select
                     value={action.type}
                     onChange={(e) => updateAction(i, "type", e.target.value)}
-                    className="px-2 py-1.5 border border-border-light rounded text-sm bg-white font-medium"
+                    className="px-2 py-1.5 border border-[#E6E9EF] rounded text-[13px] bg-white font-medium"
                   >
                     {Object.entries(ACTION_TYPES).map(([k, v]) => (
                       <option key={k} value={k}>
@@ -358,7 +358,7 @@ function WorkflowDialog({
                   {form.actions.length > 1 && (
                     <button
                       onClick={() => removeAction(i)}
-                      className="p-1 text-text-tertiary hover:text-danger"
+                      className="p-1 text-[#9699A6] hover:text-[#E44258]"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -375,7 +375,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "title", e.target.value)
                       }
                       placeholder="כותרת ההתראה (תמיכה ב-{{field}})"
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <input
                       type="text"
@@ -384,7 +384,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "body", e.target.value)
                       }
                       placeholder="תוכן ההתראה"
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                   </div>
                 )}
@@ -398,7 +398,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "title", e.target.value)
                       }
                       placeholder="כותרת המשימה"
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <input
                       type="text"
@@ -407,7 +407,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "description", e.target.value)
                       }
                       placeholder="תיאור (אופציונלי)"
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <div className="flex gap-2">
                       <select
@@ -415,7 +415,7 @@ function WorkflowDialog({
                         onChange={(e) =>
                           updateActionConfig(i, "priority", e.target.value)
                         }
-                        className="px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                        className="px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                       >
                         <option value="LOW">נמוכה</option>
                         <option value="MEDIUM">בינונית</option>
@@ -429,7 +429,7 @@ function WorkflowDialog({
                           updateActionConfig(i, "dueDays", e.target.value)
                         }
                         placeholder="ימים לביצוע"
-                        className="w-32 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                        className="w-32 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                       />
                     </div>
                   </div>
@@ -444,7 +444,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "field", e.target.value)
                       }
                       placeholder="שם השדה (status, priority...)"
-                      className="flex-1 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="flex-1 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <input
                       type="text"
@@ -453,7 +453,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "value", e.target.value)
                       }
                       placeholder="ערך חדש"
-                      className="flex-1 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="flex-1 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                   </div>
                 )}
@@ -464,7 +464,7 @@ function WorkflowDialog({
                     onChange={(e) =>
                       updateActionConfig(i, "stage", e.target.value)
                     }
-                    className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                    className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                   >
                     <option value="">בחר שלב</option>
                     <option value="LEAD">ליד</option>
@@ -485,7 +485,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "subject", e.target.value)
                       }
                       placeholder="נושא האימייל"
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <textarea
                       value={action.config.body || ""}
@@ -494,7 +494,7 @@ function WorkflowDialog({
                       }
                       placeholder="תוכן האימייל"
                       rows={3}
-                      className="w-full px-2 py-1.5 border border-border-light rounded text-xs bg-white resize-none"
+                      className="w-full px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white resize-none"
                     />
                   </div>
                 )}
@@ -508,7 +508,7 @@ function WorkflowDialog({
                         updateActionConfig(i, "tagName", e.target.value)
                       }
                       placeholder="שם התגית"
-                      className="flex-1 px-2 py-1.5 border border-border-light rounded text-xs bg-white"
+                      className="flex-1 px-2 py-1.5 border border-[#E6E9EF] rounded text-[12px] bg-white"
                     />
                     <input
                       type="color"
@@ -516,7 +516,7 @@ function WorkflowDialog({
                       onChange={(e) =>
                         updateActionConfig(i, "tagColor", e.target.value)
                       }
-                      className="w-10 h-8 p-0.5 border border-border-light rounded cursor-pointer"
+                      className="w-10 h-8 p-0.5 border border-[#E6E9EF] rounded cursor-pointer"
                     />
                   </div>
                 )}
@@ -527,17 +527,17 @@ function WorkflowDialog({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-light">
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#E6E9EF]">
         <button
           onClick={onClose}
-          className="px-4 py-2 text-sm text-text-secondary hover:text-text-primary"
+          className="px-4 py-2 text-[13px] text-[#676879] hover:text-[#323338]"
         >
           ביטול
         </button>
         <button
           onClick={() => canSave && onSave(form)}
           disabled={!canSave}
-          className="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {initial ? "שמור שינויים" : "צור אוטומציה"}
         </button>
@@ -613,6 +613,8 @@ export default function AutomationsPage() {
 
   return (
     <PageShell
+      boardStyle
+      emoji="⚡"
       title="אוטומציות"
       subtitle="הגדר טריגרים ופעולות אוטומטיות לתהליכי העבודה שלך"
       actions={
@@ -621,16 +623,16 @@ export default function AutomationsPage() {
             setEditing(null);
             setDialogOpen(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all"
+          className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
         >
-          <Plus size={16} />
+          <Plus size={15} strokeWidth={2.5} />
           אוטומציה חדשה
         </button>
       }
     >
       {isLoading ? (
         <PageCard>
-          <div className="text-center py-12 text-text-tertiary text-sm">
+          <div className="text-center py-12 text-[#9699A6] text-[13px]">
             טוען...
           </div>
         </PageCard>
@@ -643,7 +645,7 @@ export default function AutomationsPage() {
             action={
               <button
                 onClick={() => setDialogOpen(true)}
-                className="px-6 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all"
+                className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all"
               >
                 צור אוטומציה
               </button>
@@ -687,7 +689,7 @@ export default function AutomationsPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-text-primary text-sm truncate">
+                      <h3 className="font-bold text-[#323338] text-[13px] truncate">
                         {w.name}
                       </h3>
                       {!w.isActive && (
@@ -696,7 +698,7 @@ export default function AutomationsPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5 text-xs text-text-tertiary">
+                    <div className="flex items-center gap-3 mt-0.5 text-[12px] text-[#9699A6]">
                       <span className="text-purple-600 font-medium">
                         {triggerInfo?.label || w.trigger}
                       </span>
@@ -717,21 +719,21 @@ export default function AutomationsPage() {
                         setEditing(w);
                         setDialogOpen(true);
                       }}
-                      className="p-2 rounded-lg hover:bg-surface-secondary text-text-tertiary transition-colors"
+                      className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
                       title="ערוך"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => setAutomationToDelete(w.id)}
-                      className="p-2 rounded-lg hover:bg-red-50 text-text-tertiary hover:text-danger transition-colors"
+                      className="p-2 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-[#E44258] transition-colors"
                       title="מחק"
                     >
                       <Trash2 size={14} />
                     </button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : w.id)}
-                      className="p-2 rounded-lg hover:bg-surface-secondary text-text-tertiary transition-colors"
+                      className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
                     >
                       {isExpanded ? (
                         <ChevronUp size={14} />
@@ -744,10 +746,10 @@ export default function AutomationsPage() {
 
                 {/* Expanded details */}
                 {isExpanded && (
-                  <div className="px-5 pb-4 pt-0 border-t border-border-light">
+                  <div className="px-5 pb-4 pt-0 border-t border-[#E6E9EF]">
                     <div className="pt-3 space-y-3">
                       {w.description && (
-                        <p className="text-sm text-text-secondary">
+                        <p className="text-[13px] text-[#676879]">
                           {w.description}
                         </p>
                       )}
@@ -756,7 +758,7 @@ export default function AutomationsPage() {
                       {Array.isArray(w.conditions) &&
                         w.conditions.length > 0 && (
                           <div>
-                            <h4 className="text-xs font-bold text-text-primary mb-1">
+                            <h4 className="text-[12px] font-bold text-[#323338] mb-1">
                               תנאים:
                             </h4>
                             <div className="flex flex-wrap gap-1">
@@ -779,16 +781,16 @@ export default function AutomationsPage() {
 
                       {/* Actions list */}
                       <div>
-                        <h4 className="text-xs font-bold text-text-primary mb-1">
+                        <h4 className="text-[12px] font-bold text-[#323338] mb-1">
                           פעולות:
                         </h4>
                         <div className="space-y-1">
                           {w.actions.map((a, i) => (
                             <div
                               key={a.id || i}
-                              className="flex items-center gap-2 text-xs text-text-secondary bg-surface-secondary px-3 py-1.5 rounded-lg"
+                              className="flex items-center gap-2 text-[12px] text-[#676879] bg-[#F5F6F8] px-3 py-1.5 rounded-[4px]"
                             >
-                              <span className="font-medium text-text-primary">
+                              <span className="font-medium text-[#323338]">
                                 {i + 1}.
                               </span>
                               <span>
@@ -797,7 +799,7 @@ export default function AutomationsPage() {
                               {a.config &&
                                 typeof a.config === "object" &&
                                 (a.config as Record<string, any>).title && (
-                                  <span className="text-text-tertiary">
+                                  <span className="text-[#9699A6]">
                                     — {(a.config as Record<string, any>).title}
                                   </span>
                                 )}

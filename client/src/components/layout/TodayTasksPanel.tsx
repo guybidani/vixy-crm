@@ -417,7 +417,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <div className="w-7 h-7 rounded-lg bg-[#0073EA]/10 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-[4px] bg-[#0073EA]/10 flex items-center justify-center">
                   <Clock size={15} className="text-[#0073EA]" />
                 </div>
                 <h2 className="text-[15px] font-bold text-[#323338]">
@@ -428,7 +428,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors mt-0.5"
+              className="p-1.5 text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors mt-0.5"
               aria-label="סגור"
             >
               <X size={17} />

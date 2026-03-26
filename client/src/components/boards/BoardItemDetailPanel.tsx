@@ -149,7 +149,7 @@ function StatusPillField({
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1 right-0 bg-white border border-[#E6E9EF] rounded-lg shadow-xl z-30 py-1 min-w-[140px]">
+        <div className="absolute top-full mt-1 right-0 bg-white border border-[#E6E9EF] rounded-[4px] shadow-xl z-30 py-1 min-w-[140px]">
           {options.map((opt) => (
             <button
               key={opt.key}
@@ -694,7 +694,7 @@ export default function BoardItemDetailPanel({
             </div>
             <button
               onClick={handleClose}
-              className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+              className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
               aria-label="סגור"
             >
               <X size={18} />
@@ -952,7 +952,7 @@ export default function BoardItemDetailPanel({
                               download={f.fileName}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 text-[#676879] hover:text-[#0073EA] hover:bg-[#EDF3FB] rounded-lg transition-colors"
+                              className="p-1.5 text-[#676879] hover:text-[#0073EA] hover:bg-[#EDF3FB] rounded-[4px] transition-colors"
                               title="הורד"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -960,7 +960,7 @@ export default function BoardItemDetailPanel({
                             </a>
                             <button
                               onClick={() => deleteFileMut.mutate(f.id)}
-                              className="p-1.5 text-[#676879] hover:text-[#D83A52] hover:bg-[#FFEEF0] rounded-lg transition-colors"
+                              className="p-1.5 text-[#676879] hover:text-[#D83A52] hover:bg-[#FFEEF0] rounded-[4px] transition-colors"
                               title="מחק"
                             >
                               <Trash2 size={14} />
@@ -1208,7 +1208,7 @@ export default function BoardItemDetailPanel({
                     setAddingSubItem(true);
                     setTimeout(() => subItemInputRef.current?.focus(), 50);
                   }}
-                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] text-[#0073EA] font-medium hover:bg-[#EDF3FB] rounded-lg transition-colors border border-dashed border-[#C3D8F8] hover:border-[#0073EA]"
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] text-[#0073EA] font-medium hover:bg-[#EDF3FB] rounded-[4px] transition-colors border border-dashed border-[#C3D8F8] hover:border-[#0073EA]"
                 >
                   <Plus size={13} />
                   הוסף תת-פריט

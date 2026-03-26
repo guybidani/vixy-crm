@@ -74,13 +74,13 @@ function DealsTimeline() {
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
         <TrendingUp size={18} className="text-[#6161FF]" />
-        <h3 className="font-semibold text-text-primary">עסקאות לאורך זמן</h3>
-        <span className="text-xs text-text-tertiary mr-auto">8 שבועות אחרונים</span>
+        <h3 className="font-semibold text-[#323338]">עסקאות לאורך זמן</h3>
+        <span className="text-[12px] text-[#9699A6] mr-auto">8 שבועות אחרונים</span>
       </div>
       {q.isLoading ? (
-        <div className="animate-pulse h-48 bg-surface-secondary rounded-lg" />
+        <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
       ) : data.length === 0 ? (
-        <p className="text-sm text-text-tertiary text-center py-12">אין נתונים לתקופה זו</p>
+        <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -158,11 +158,11 @@ function PipelineByStage() {
     if (!active || !payload || payload.length === 0) return null;
     const entry = data.find((d) => d.name === label);
     return (
-      <div className="bg-white border border-[#EEEFF3] rounded-lg p-3 shadow-sm text-sm">
-        <p className="font-semibold text-text-primary mb-1">{label}</p>
-        <p className="text-text-secondary">{payload[0].value} עסקאות</p>
+      <div className="bg-white border border-[#EEEFF3] rounded-lg p-3 shadow-sm text-[13px]">
+        <p className="font-semibold text-[#323338] mb-1">{label}</p>
+        <p className="text-[#676879]">{payload[0].value} עסקאות</p>
         {entry && entry.ערך > 0 && (
-          <p className="text-text-tertiary">₪{entry.ערך.toLocaleString()}</p>
+          <p className="text-[#9699A6]">₪{entry.ערך.toLocaleString()}</p>
         )}
       </div>
     );
@@ -172,13 +172,13 @@ function PipelineByStage() {
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
         <BarChart2 size={18} className="text-[#00CA72]" />
-        <h3 className="font-semibold text-text-primary">פייפליין לפי שלב</h3>
-        <span className="text-xs text-text-tertiary mr-auto">החודש</span>
+        <h3 className="font-semibold text-[#323338]">פייפליין לפי שלב</h3>
+        <span className="text-[12px] text-[#9699A6] mr-auto">החודש</span>
       </div>
       {q.isLoading ? (
-        <div className="animate-pulse h-48 bg-surface-secondary rounded-lg" />
+        <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
       ) : data.length === 0 ? (
-        <p className="text-sm text-text-tertiary text-center py-12">אין עסקאות לתקופה זו</p>
+        <p className="text-[13px] text-[#9699A6] text-center py-12">אין עסקאות לתקופה זו</p>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart
@@ -232,35 +232,35 @@ function TeamPerformance() {
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
         <Users size={18} className="text-[#A25DDC]" />
-        <h3 className="font-semibold text-text-primary">ביצועי צוות</h3>
-        <span className="text-xs text-text-tertiary mr-auto">החודש</span>
+        <h3 className="font-semibold text-[#323338]">ביצועי צוות</h3>
+        <span className="text-[12px] text-[#9699A6] mr-auto">החודש</span>
       </div>
       {q.isLoading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-surface-secondary rounded" />
+            <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
           ))}
         </div>
       ) : sorted.length === 0 ? (
-        <p className="text-sm text-text-tertiary text-center py-12">אין נתונים לתקופה זו</p>
+        <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#EEEFF3]">
-                <th className="text-right py-2 pr-1 font-semibold text-text-secondary text-xs">
+                <th className="text-right py-2 pr-1 font-semibold text-[#676879] text-[12px]">
                   נציג
                 </th>
-                <th className="text-center py-2 font-semibold text-text-secondary text-xs">
+                <th className="text-center py-2 font-semibold text-[#676879] text-[12px]">
                   עסקאות שנסגרו
                 </th>
-                <th className="text-center py-2 font-semibold text-text-secondary text-xs">
+                <th className="text-center py-2 font-semibold text-[#676879] text-[12px]">
                   שיחות
                 </th>
-                <th className="text-center py-2 font-semibold text-text-secondary text-xs">
+                <th className="text-center py-2 font-semibold text-[#676879] text-[12px]">
                   משימות הושלמו
                 </th>
-                <th className="text-left py-2 pl-1 font-semibold text-text-secondary text-xs">
+                <th className="text-left py-2 pl-1 font-semibold text-[#676879] text-[12px]">
                   ערך שנסגר
                 </th>
               </tr>
@@ -273,32 +273,32 @@ function TeamPerformance() {
                 >
                   <td className="py-2.5 pr-1">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+                      <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0073EA] to-[#0060C2] flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
                         {member.name.charAt(0)}
                       </span>
-                      <span className="font-medium text-text-primary truncate max-w-[120px]">
+                      <span className="font-medium text-[#323338] truncate max-w-[120px]">
                         {member.name}
                       </span>
                     </div>
                   </td>
                   <td className="text-center py-2.5">
                     <span
-                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold ${
                         member.dealsWon > 0
                           ? "bg-[#E6FBF1] text-[#00CA72]"
-                          : "text-text-tertiary"
+                          : "text-[#9699A6]"
                       }`}
                     >
                       {member.dealsWon}
                     </span>
                   </td>
-                  <td className="text-center py-2.5 text-text-secondary">
+                  <td className="text-center py-2.5 text-[#676879]">
                     {member.callsCount}
                   </td>
-                  <td className="text-center py-2.5 text-text-secondary">
+                  <td className="text-center py-2.5 text-[#676879]">
                     {member.tasksCompleted}
                   </td>
-                  <td className="text-left py-2.5 pl-1 text-text-secondary">
+                  <td className="text-left py-2.5 pl-1 text-[#676879]">
                     {member.dealsWonValue > 0
                       ? `₪${member.dealsWonValue.toLocaleString()}`
                       : "—"}
@@ -402,15 +402,15 @@ function LeadSources() {
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
         <PieChart size={18} className="text-[#FDAB3D]" />
-        <h3 className="font-semibold text-text-primary">מקורות לידים</h3>
-        <span className="text-xs text-text-tertiary mr-auto">סה״כ: {total}</span>
+        <h3 className="font-semibold text-[#323338]">מקורות לידים</h3>
+        <span className="text-[12px] text-[#9699A6] mr-auto">סה״כ: {total}</span>
       </div>
       {q.isLoading ? (
         <div className="flex justify-center py-8">
-          <div className="w-40 h-40 rounded-full bg-surface-secondary animate-pulse" />
+          <div className="w-40 h-40 rounded-full bg-[#F5F6F8] animate-pulse" />
         </div>
       ) : data.length === 0 ? (
-        <p className="text-sm text-text-tertiary text-center py-12">אין נתונים</p>
+        <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים</p>
       ) : (
         <div className="flex flex-col items-center gap-4">
           <ResponsiveContainer width="100%" height={200}>
@@ -458,12 +458,9 @@ function LeadSources() {
 export default function ReportsPage() {
   return (
     <PageShell
-      title={
-        <span className="flex items-center gap-2">
-          <BarChart2 size={22} className="text-primary" />
-          דוחות
-        </span>
-      }
+      boardStyle
+      emoji="📈"
+      title="דוחות"
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DealsTimeline />

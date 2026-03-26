@@ -58,7 +58,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
     <>
     <header
       className={cn(
-        "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-4 px-3 sm:px-4 transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.06)]",
+        "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 transition-all duration-200 border-b border-[#E6E9EF]",
         // Mobile: full width. Desktop: offset by sidebar
         "right-0 md:right-[220px]",
         sidebarCollapsed && "md:right-14",
@@ -68,7 +68,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       {onMobileMenuToggle && (
         <button
           onClick={onMobileMenuToggle}
-          className="p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary md:hidden flex-shrink-0"
+          className="p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] md:hidden flex-shrink-0"
           aria-label="תפריט"
         >
           <Menu size={20} />
@@ -77,7 +77,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
 
       {/* Logo / brand — visible on mobile only (desktop sidebar has it) */}
       <div className="flex items-center gap-1.5 md:hidden flex-shrink-0">
-        <div className="w-7 h-7 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center shadow-sm">
+        <div className="w-7 h-7 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-[4px] flex items-center justify-center shadow-sm">
           <span className="text-white font-bold text-sm">V</span>
         </div>
       </div>
@@ -86,11 +86,11 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       <div className="flex-1 md:hidden" />
 
       {/* Search — desktop: always visible, mobile: hidden */}
-      <div className="hidden sm:flex flex-1 max-w-lg">
+      <div className="hidden sm:flex flex-1 max-w-[400px]">
         <div className="relative w-full">
           <Search
-            size={16}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+            size={15}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#676879]"
           />
           <input
             type="text"
@@ -108,9 +108,9 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                 setShowSearch(false);
               }
             }}
-            placeholder="חיפוש אנשי קשר, עסקאות, פניות..."
+            placeholder="חיפוש..."
             aria-label="חיפוש גלובלי"
-            className="w-full pr-9 pl-4 py-2 bg-surface-secondary rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white focus-visible:ring-2 focus-visible:ring-primary transition-colors"
+            className="w-full pr-8 pl-3 py-[6px] text-[13px] bg-[#F5F6F8] border border-[#E6E9EF] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 focus:bg-white transition-all"
           />
           {showSearch && searchQuery.length >= 2 && (
             <SearchDropdown
@@ -127,18 +127,18 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       {/* Quick Add — hidden on mobile */}
       <button
         onClick={onQuickAdd}
-        className="hidden sm:flex items-center gap-1.5 px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+        className="hidden sm:flex items-center gap-1 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
         title="הוספה מהירה (Ctrl+Shift+K)"
         aria-label="הוספה מהירה (Ctrl+Shift+K)"
       >
-        <Plus size={16} />
+        <Plus size={15} strokeWidth={2.5} />
         <span>חדש</span>
       </button>
 
       {/* Today's Tasks Clock — always visible */}
       <button
         onClick={() => setTodayTasksOpen(true)}
-        className="relative p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-[#0073EA] flex-shrink-0"
+        className="relative p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#0073EA] flex-shrink-0"
         title="משימות להיום"
         aria-label="משימות להיום"
       >
@@ -154,27 +154,24 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       <NotificationCenter />
 
       {/* User — hidden on mobile */}
-      <div className="hidden sm:flex items-center gap-2 border-r border-border-light pr-2 sm:pr-3">
-        <div
-          className="w-8 h-8 bg-primary rounded-full flex items-center justify-center"
-          role="img"
-          aria-label={user?.name || "משתמש"}
-        >
-          <span className="text-white text-xs font-bold">
-            {user?.name?.charAt(0) || "?"}
-          </span>
-        </div>
-        <span className="text-sm text-text-primary font-medium hidden md:block">
-          {user?.name}
-        </span>
+      <div className="hidden sm:flex items-center gap-2">
         <button
           onClick={logout}
-          className="p-1.5 rounded hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-danger"
+          className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#D83A52]"
           title="יציאה"
           aria-label="יציאה מהמערכת"
         >
-          <LogOut size={16} />
+          <LogOut size={15} />
         </button>
+        <div
+          className="w-7 h-7 bg-[#0073EA] rounded-full flex items-center justify-center cursor-pointer"
+          role="img"
+          aria-label={user?.name || "משתמש"}
+        >
+          <span className="text-white text-[11px] font-bold">
+            {user?.name?.charAt(0) || "?"}
+          </span>
+        </div>
       </div>
     </header>
 

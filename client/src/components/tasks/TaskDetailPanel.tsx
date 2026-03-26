@@ -201,7 +201,7 @@ export default function TaskDetailPanel({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -209,7 +209,7 @@ export default function TaskDetailPanel({
   if (!task) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">משימה לא נמצאה</p>
+        <p className="text-[#676879]">משימה לא נמצאה</p>
       </div>
     );
   }
@@ -250,8 +250,8 @@ export default function TaskDetailPanel({
               isDone
                 ? "text-success"
                 : isOverdue
-                  ? "text-danger"
-                  : "text-primary"
+                  ? "text-[#E44258]"
+                  : "text-[#0073EA]"
             }
           />
         </div>
@@ -259,7 +259,7 @@ export default function TaskDetailPanel({
           {editingTitle ? (
             <input
               autoFocus
-              className="text-lg font-bold text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none w-full"
+              className="text-lg font-bold text-[#323338] bg-white border border-[#0073EA] rounded px-2 py-0.5 outline-none w-full"
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={() => {
@@ -275,10 +275,10 @@ export default function TaskDetailPanel({
             />
           ) : (
             <h2
-              className={`text-lg font-bold cursor-text hover:bg-surface-secondary/50 rounded px-1 -mx-1 transition-colors ${
+              className={`text-lg font-bold cursor-text hover:bg-[#F5F6F8] rounded px-1 -mx-1 transition-colors ${
                 isDone
-                  ? "line-through text-text-tertiary"
-                  : "text-text-primary"
+                  ? "line-through text-[#9699A6]"
+                  : "text-[#323338]"
               }`}
               onClick={() => {
                 setTitleValue(task.title);
@@ -318,12 +318,12 @@ export default function TaskDetailPanel({
               ) : null;
             })()}
             {task.dueTime && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-secondary flex items-center gap-0.5">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879] flex items-center gap-0.5">
                 <Clock size={9} /> {task.dueTime}
               </span>
             )}
             {isOverdue && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-danger/10 text-danger flex items-center gap-0.5">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#E44258]/10 text-[#E44258] flex items-center gap-0.5">
                 <AlertTriangle size={9} />
                 באיחור!
               </span>
@@ -336,14 +336,14 @@ export default function TaskDetailPanel({
           )}
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="p-2 rounded-lg text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#E44258] hover:bg-[#E44258]/10 transition-colors"
             title="מחיקה"
           >
             <Trash2 size={16} />
           </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-secondary transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
           >
             <X size={16} />
           </button>
@@ -351,7 +351,7 @@ export default function TaskDetailPanel({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 border-b border-border-light">
+      <div className="flex gap-1 mb-5 border-b border-[#E6E9EF]">
         {(
           [
             { key: "info", label: "פרטים" },
@@ -362,10 +362,10 @@ export default function TaskDetailPanel({
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-primary text-primary"
-                : "border-transparent text-text-tertiary hover:text-text-secondary"
+                ? "border-[#0073EA] text-[#0073EA]"
+                : "border-transparent text-[#9699A6] hover:text-[#676879]"
             }`}
           >
             {tab.label}
@@ -377,13 +377,13 @@ export default function TaskDetailPanel({
         <div className="space-y-4">
           {/* Description */}
           <div>
-            <label className="text-xs font-semibold text-text-tertiary uppercase mb-1.5 block">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase mb-1.5 block">
               תיאור
             </label>
             {editingDescription ? (
               <textarea
                 autoFocus
-                className="w-full px-3 py-2 border border-primary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none min-h-[80px]"
+                className="w-full px-3 py-2 border border-[#0073EA] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 resize-none min-h-[80px]"
                 value={descriptionValue}
                 onChange={(e) => setDescriptionValue(e.target.value)}
                 onBlur={() => {
@@ -398,14 +398,14 @@ export default function TaskDetailPanel({
               />
             ) : (
               <div
-                className="text-sm text-text-secondary cursor-text rounded-lg px-3 py-2 hover:bg-surface-secondary/50 transition-colors min-h-[40px] whitespace-pre-wrap"
+                className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-[#F5F6F8] transition-colors min-h-[40px] whitespace-pre-wrap"
                 onClick={() => {
                   setDescriptionValue(task.description || "");
                   setEditingDescription(true);
                 }}
               >
                 {task.description || (
-                  <span className="text-text-tertiary">
+                  <span className="text-[#9699A6]">
                     לחץ להוספת תיאור...
                   </span>
                 )}
@@ -415,7 +415,7 @@ export default function TaskDetailPanel({
 
           {/* Priority */}
           <div className="flex items-center justify-between py-2">
-            <label className="text-xs font-semibold text-text-tertiary uppercase">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase">
               עדיפות
             </label>
             <StatusDropdown
@@ -427,7 +427,7 @@ export default function TaskDetailPanel({
 
           {/* Task Type */}
           <div className="flex items-center justify-between py-2">
-            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase flex items-center gap-1.5">
               <Tag size={13} />
               סוג משימה
             </label>
@@ -452,7 +452,7 @@ export default function TaskDetailPanel({
 
           {/* Task Context */}
           <div className="flex items-center justify-between py-2">
-            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase flex items-center gap-1.5">
               <Layers size={13} />
               הקשר
             </label>
@@ -481,7 +481,7 @@ export default function TaskDetailPanel({
 
           {/* Due Date + Time */}
           <div className="flex items-center justify-between py-2">
-            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase flex items-center gap-1.5">
               <Calendar size={13} />
               תאריך ושעה
             </label>
@@ -494,11 +494,11 @@ export default function TaskDetailPanel({
                 type="time"
                 value={task.dueTime || ""}
                 onChange={(e) => updateMutation.mutate({ dueTime: e.target.value || null })}
-                className="text-xs border border-border-light rounded px-2 py-1 focus:outline-none focus:border-primary bg-white"
+                className="text-xs border border-[#E6E9EF] rounded px-2 py-1 focus:outline-none focus:border-[#0073EA] bg-white"
                 title="שעת יעד"
               />
               {isOverdue && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-danger/10 text-danger flex items-center gap-1">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E44258]/10 text-[#E44258] flex items-center gap-1">
                   <AlertTriangle size={10} />
                   {overdueDays} ימים באיחור
                 </span>
@@ -508,7 +508,7 @@ export default function TaskDetailPanel({
 
           {/* Assignee */}
           <div className="flex items-center justify-between py-2">
-            <label className="text-xs font-semibold text-text-tertiary uppercase flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase flex items-center gap-1.5">
               <User size={13} />
               נציג אחראי
             </label>
@@ -529,14 +529,14 @@ export default function TaskDetailPanel({
           {/* Outcome Note (shown when completed) */}
           {isDone && (
             <div>
-              <label className="text-xs font-semibold text-text-tertiary uppercase mb-1.5 block flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-[#9699A6] uppercase mb-1.5 block flex items-center gap-1.5">
                 <CheckCircle2 size={13} className="text-success" />
                 תוצאה / סיכום
               </label>
               {editingOutcome ? (
                 <textarea
                   autoFocus
-                  className="w-full px-3 py-2 border border-success rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-success/30 resize-none min-h-[70px] bg-success/5"
+                  className="w-full px-3 py-2 border border-success rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-success/30 resize-none min-h-[70px] bg-success/5"
                   value={outcomeValue}
                   onChange={(e) => setOutcomeValue(e.target.value)}
                   onBlur={() => {
@@ -551,14 +551,14 @@ export default function TaskDetailPanel({
                 />
               ) : (
                 <div
-                  className="text-sm text-text-secondary cursor-text rounded-lg px-3 py-2 hover:bg-success/5 transition-colors min-h-[36px] border border-dashed border-success/30"
+                  className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-success/5 transition-colors min-h-[36px] border border-dashed border-success/30"
                   onClick={() => {
                     setOutcomeValue(task.outcomeNote || "");
                     setEditingOutcome(true);
                   }}
                 >
                   {task.outcomeNote || (
-                    <span className="text-text-tertiary">הוסף סיכום מה התרחש...</span>
+                    <span className="text-[#9699A6]">הוסף סיכום מה התרחש...</span>
                   )}
                 </div>
               )}
@@ -566,44 +566,44 @@ export default function TaskDetailPanel({
           )}
 
           {/* Divider */}
-          <div className="border-t border-border-light my-3" />
+          <div className="border-t border-[#E6E9EF] my-3" />
 
           {/* Related entities */}
           <div>
-            <label className="text-xs font-semibold text-text-tertiary uppercase mb-2 block">
+            <label className="text-xs font-semibold text-[#9699A6] uppercase mb-2 block">
               קישורים
             </label>
             <div className="space-y-1.5">
               {task.contact && (
                 <button
                   onClick={() => navigate(`/contacts?detail=${task.contact!.id}`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-surface-secondary/50 transition-colors text-sm text-text-primary group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
-                  <User size={14} className="text-primary" />
+                  <User size={14} className="text-[#0073EA]" />
                   <span className="flex-1 text-right">{task.contact.name}</span>
                   <ExternalLink
                     size={12}
-                    className="text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-[#9699A6] opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                 </button>
               )}
               {task.deal && (
                 <button
                   onClick={() => navigate(`/deals`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-surface-secondary/50 transition-colors text-sm text-text-primary group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Handshake size={14} className="text-success" />
                   <span className="flex-1 text-right">{task.deal.title}</span>
                   <ExternalLink
                     size={12}
-                    className="text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-[#9699A6] opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                 </button>
               )}
               {task.ticket && (
                 <button
                   onClick={() => navigate(`/tickets`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-lg hover:bg-surface-secondary/50 transition-colors text-sm text-text-primary group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Ticket size={14} className="text-warning" />
                   <span className="flex-1 text-right">
@@ -611,12 +611,12 @@ export default function TaskDetailPanel({
                   </span>
                   <ExternalLink
                     size={12}
-                    className="text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="text-[#9699A6] opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                 </button>
               )}
               {!task.contact && !task.deal && !task.ticket && (
-                <p className="text-xs text-text-tertiary px-3 py-2">
+                <p className="text-xs text-[#9699A6] px-3 py-2">
                   אין קישורים
                 </p>
               )}
@@ -624,19 +624,19 @@ export default function TaskDetailPanel({
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border-light my-3" />
+          <div className="border-t border-[#E6E9EF] my-3" />
 
           {/* Metadata */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-text-tertiary">נוצר על ידי</span>
-              <span className="text-text-secondary font-medium">
+              <span className="text-[#9699A6]">נוצר על ידי</span>
+              <span className="text-[#676879] font-medium">
                 {task.createdBy}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-text-tertiary">תאריך יצירה</span>
-              <span className="text-text-secondary font-medium">
+              <span className="text-[#9699A6]">תאריך יצירה</span>
+              <span className="text-[#676879] font-medium">
                 {new Date(task.createdAt).toLocaleDateString("he-IL", {
                   day: "numeric",
                   month: "long",
@@ -646,7 +646,7 @@ export default function TaskDetailPanel({
             </div>
             {task.completedAt && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-text-tertiary">הושלם ב</span>
+                <span className="text-[#9699A6]">הושלם ב</span>
                 <span className="text-success font-medium">
                   {new Date(task.completedAt).toLocaleDateString("he-IL", {
                     day: "numeric",
@@ -664,7 +664,7 @@ export default function TaskDetailPanel({
           {/* Comment list */}
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
             {!comments || comments.length === 0 ? (
-              <p className="text-sm text-text-tertiary text-center py-8">
+              <p className="text-sm text-[#9699A6] text-center py-8">
                 אין תגובות עדיין
               </p>
             ) : (
@@ -673,29 +673,29 @@ export default function TaskDetailPanel({
                   key={comment.id}
                   className="flex gap-3 group"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-primary">
+                  <div className="w-8 h-8 rounded-full bg-[#0073EA]/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-[#0073EA]">
                     {comment.authorName.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-text-primary">
+                      <span className="text-sm font-semibold text-[#323338]">
                         {comment.authorName}
                       </span>
-                      <span className="text-[10px] text-text-tertiary">
+                      <span className="text-[10px] text-[#9699A6]">
                         {formatRelativeTime(comment.createdAt)}
                       </span>
                       {comment.authorId === currentMemberId && (
                         <button
                           onClick={() => deleteCommentMutation.mutate(comment.id)}
                           disabled={deleteCommentMutation.isPending}
-                          className="p-1 rounded text-text-tertiary hover:text-danger hover:bg-danger/10 transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1 rounded text-[#9699A6] hover:text-[#E44258] hover:bg-[#E44258]/10 transition-colors opacity-0 group-hover:opacity-100"
                           title="מחק תגובה"
                         >
                           <Trash2 size={12} />
                         </button>
                       )}
                     </div>
-                    <p className="text-sm text-text-secondary whitespace-pre-wrap mt-0.5">
+                    <p className="text-sm text-[#676879] whitespace-pre-wrap mt-0.5">
                       {comment.body}
                     </p>
                   </div>
@@ -705,10 +705,10 @@ export default function TaskDetailPanel({
           </div>
 
           {/* Comment input */}
-          <div className="border-t border-border-light pt-3">
+          <div className="border-t border-[#E6E9EF] pt-3">
             <div className="flex gap-2">
               <textarea
-                className="flex-1 px-3 py-2 border border-border-light rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none min-h-[60px] placeholder:text-text-tertiary"
+                className="flex-1 px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none min-h-[60px] placeholder:text-[#9699A6]"
                 placeholder="כתוב תגובה..."
                 value={commentBody}
                 onChange={(e) => setCommentBody(e.target.value)}
@@ -721,13 +721,13 @@ export default function TaskDetailPanel({
               />
             </div>
             <div className="flex items-center justify-between mt-2">
-              <span className="text-[10px] text-text-tertiary">
+              <span className="text-[10px] text-[#9699A6]">
                 Ctrl+Enter לשליחה
               </span>
               <button
                 onClick={handleSubmitComment}
                 disabled={!commentBody.trim() || createCommentMutation.isPending}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary hover:bg-primary/90 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0073EA] hover:bg-[#0060C2]/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send size={12} />
                 הוסף תגובה
@@ -739,7 +739,7 @@ export default function TaskDetailPanel({
         /* Activity Tab */
         <div className="space-y-1">
           {!activities || activities.length === 0 ? (
-            <p className="text-sm text-text-tertiary text-center py-8">
+            <p className="text-sm text-[#9699A6] text-center py-8">
               אין פעילות רשומה
             </p>
           ) : (
@@ -748,7 +748,7 @@ export default function TaskDetailPanel({
               return (
                 <div
                   key={a.id}
-                  className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-lg hover:bg-surface-secondary/50 transition-all"
+                  className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-[4px] hover:bg-[#F5F6F8] transition-all"
                   style={{ borderRightColor: color }}
                 >
                   <div
@@ -758,18 +758,18 @@ export default function TaskDetailPanel({
                     {ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS.SYSTEM}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm text-text-primary block truncate">
+                    <span className="text-sm text-[#323338] block truncate">
                       {a.subject ||
                         activityTypes[a.type]?.label ||
                         a.type}
                     </span>
                     {a.body && (
-                      <p className="text-xs text-text-tertiary truncate">
+                      <p className="text-xs text-[#9699A6] truncate">
                         {a.body}
                       </p>
                     )}
                   </div>
-                  <span className="text-[10px] text-text-tertiary flex-shrink-0">
+                  <span className="text-[10px] text-[#9699A6] flex-shrink-0">
                     {formatRelativeTime(a.createdAt)}
                   </span>
                 </div>
@@ -781,24 +781,24 @@ export default function TaskDetailPanel({
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="font-bold text-text-primary mb-2">מחיקת משימה</h3>
-            <p className="text-sm text-text-secondary mb-4">
+        <div className="fixed inset-0 bg-black/20  z-50 flex items-center justify-center">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="font-bold text-[#323338] mb-2">מחיקת משימה</h3>
+            <p className="text-sm text-[#676879] mb-4">
               האם אתה בטוח שברצונך למחוק את המשימה &quot;{task.title}&quot;?
               פעולה זו לא ניתנת לביטול.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>
               <button
                 onClick={() => deleteMutation.mutate()}
                 disabled={deleteMutation.isPending}
-                className="flex-1 py-2 bg-danger hover:bg-danger/90 text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+                className="flex-1 py-2 bg-[#E44258] hover:bg-[#E44258]/90 text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
               >
                 {deleteMutation.isPending ? "מוחק..." : "מחק"}
               </button>

@@ -117,22 +117,24 @@ export default function KnowledgeBasePage() {
 
   return (
     <PageShell
+      boardStyle
+      emoji="📚"
       title="מאגר ידע"
       subtitle={`${articles?.length || 0} מאמרים`}
       actions={
         <div className="flex gap-2">
           <button
             onClick={() => setShowCreateCategory(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-border hover:border-primary text-text-secondary hover:text-primary text-sm font-semibold rounded-lg transition-all hover:shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-[#E6E9EF] hover:border-[#0073EA] text-[#676879] hover:text-[#0073EA] text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-sm"
           >
             <FolderOpen size={14} />
             קטגוריה חדשה
           </button>
           <button
             onClick={() => setShowCreateArticle(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2.5} />
             מאמר חדש
           </button>
         </div>
@@ -142,26 +144,26 @@ export default function KnowledgeBasePage() {
       <div className="relative max-w-sm">
         <Search
           size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
         />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="חיפוש מאמרים..."
-          className="w-full pr-9 pl-4 py-2 bg-white border border-border rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
         />
       </div>
 
       <div className="grid grid-cols-4 gap-4">
         {/* Categories sidebar */}
-        <div className="col-span-1 bg-white rounded-xl shadow-card p-3 space-y-1 self-start">
+        <div className="col-span-1 bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-3 space-y-1 self-start">
           <button
             onClick={() => setSelectedCategory("")}
-            className={`w-full text-right px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+            className={`w-full text-right px-3 py-2.5 rounded-[4px] text-[13px] font-medium transition-all flex items-center gap-2 ${
               !selectedCategory
-                ? "bg-[#F5F6FF] text-primary font-semibold border-r-[3px] border-primary"
-                : "text-text-secondary hover:bg-surface-secondary"
+                ? "bg-[#F5F6FF] text-[#0073EA] font-semibold border-r-[3px] border-[#0073EA]"
+                : "text-[#676879] hover:bg-[#F5F6F8]"
             }`}
           >
             <BookOpen size={14} />
@@ -169,8 +171,8 @@ export default function KnowledgeBasePage() {
             <span
               className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                 !selectedCategory
-                  ? "bg-primary text-white"
-                  : "bg-surface-tertiary text-text-tertiary"
+                  ? "bg-[#0073EA] text-white"
+                  : "bg-surface-tertiary text-[#9699A6]"
               }`}
             >
               {articles?.length || 0}
@@ -182,10 +184,10 @@ export default function KnowledgeBasePage() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`w-full text-right px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`w-full text-right px-3 py-2.5 rounded-[4px] text-[13px] font-medium transition-all flex items-center gap-2 ${
                   selectedCategory === cat.id
                     ? "bg-[#F5F6FF] font-semibold border-r-[3px]"
-                    : "text-text-secondary hover:bg-surface-secondary"
+                    : "text-[#676879] hover:bg-[#F5F6F8]"
                 }`}
                 style={
                   selectedCategory === cat.id
@@ -202,7 +204,7 @@ export default function KnowledgeBasePage() {
                   className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                     selectedCategory === cat.id
                       ? "text-white"
-                      : "bg-surface-tertiary text-text-tertiary"
+                      : "bg-surface-tertiary text-[#9699A6]"
                   }`}
                   style={
                     selectedCategory === cat.id
@@ -224,19 +226,19 @@ export default function KnowledgeBasePage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl shadow-card p-5 h-28 animate-pulse"
+                  className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 h-28 animate-pulse"
                 />
               ))}
             </div>
           ) : !articles || articles.length === 0 ? (
             <EmptyState
-              icon={<BookOpen size={28} className="text-text-tertiary" />}
+              icon={<BookOpen size={28} className="text-[#9699A6]" />}
               title="אין מאמרים"
               description="צרו מאמר ראשון במאגר הידע."
               action={
                 <button
                   onClick={() => setShowCreateArticle(true)}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md"
+                  className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md"
                 >
                   צור מאמר ראשון
                 </button>
@@ -291,23 +293,23 @@ function ArticleCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl shadow-card border-r-4 hover:shadow-card-hover transition-all p-5 cursor-pointer group"
+      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border-r-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all p-5 cursor-pointer group"
       style={{ borderRightColor: categoryColor }}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2.5">
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+            className="w-8 h-8 rounded-[4px] flex items-center justify-center text-white flex-shrink-0"
             style={{ backgroundColor: categoryColor }}
           >
             <FileText size={14} />
           </div>
           <div>
-            <h3 className="font-semibold text-text-primary group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-[#323338] group-hover:text-[#0073EA] transition-colors">
               {article.title}
             </h3>
             {article.category && (
-              <span className="text-xs text-text-tertiary">
+              <span className="text-[12px] text-[#9699A6]">
                 {article.category.name}
               </span>
             )}
@@ -318,9 +320,9 @@ function ArticleCard({
           color={article.status === "published" ? "#00CA72" : "#C4C4C4"}
         />
       </div>
-      <div className="flex items-center gap-4 mt-3 text-xs text-text-tertiary">
+      <div className="flex items-center gap-4 mt-3 text-[12px] text-[#9699A6]">
         <div className="flex items-center gap-1.5">
-          <Eye size={12} className="text-primary" />
+          <Eye size={12} className="text-[#0073EA]" />
           <span>{article.viewCount} צפיות</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -328,7 +330,7 @@ function ArticleCard({
           <span>{article.helpfulCount}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <ThumbsDown size={12} className="text-danger" />
+          <ThumbsDown size={12} className="text-[#E44258]" />
           <span>{article.notHelpfulCount}</span>
         </div>
         <span className="mr-auto">
@@ -370,28 +372,28 @@ function ArticleView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+          className="p-2 hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
         >
-          <ArrowRight size={18} className="text-text-secondary" />
+          <ArrowRight size={18} className="text-[#676879]" />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
             {article.category && (
               <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                className="text-[12px] font-semibold px-2 py-0.5 rounded-full text-white"
                 style={{ backgroundColor: catColor }}
               >
                 {article.category.name}
               </span>
             )}
           </div>
-          <h1 className="text-xl font-bold text-text-primary">
+          <h1 className="text-xl font-bold text-[#323338]">
             {article.title}
           </h1>
         </div>
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-border hover:border-primary text-text-secondary hover:text-primary text-sm font-semibold rounded-lg transition-all hover:shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E6E9EF] hover:border-[#0073EA] text-[#676879] hover:text-[#0073EA] text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-sm"
         >
           <PenLine size={14} />
           ערוך
@@ -400,20 +402,20 @@ function ArticleView({
 
       {/* Article body */}
       <div
-        className="bg-white rounded-xl shadow-card p-6 border-r-4"
+        className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 border-r-4"
         style={{ borderRightColor: catColor }}
       >
         <div
-          className="prose prose-sm max-w-none text-text-primary"
+          className="prose prose-sm max-w-none text-[#323338]"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.body) }}
         />
       </div>
 
       {/* Stats + Vote */}
-      <div className="bg-white rounded-xl shadow-card p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs text-text-tertiary">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-[12px] text-[#9699A6]">
           <div className="flex items-center gap-1.5">
-            <Eye size={12} className="text-primary" />
+            <Eye size={12} className="text-[#0073EA]" />
             <span>{article.viewCount} צפיות</span>
           </div>
           <StatusBadge
@@ -423,19 +425,19 @@ function ArticleView({
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-sm text-text-secondary">
+          <span className="text-[13px] text-[#676879]">
             האם מאמר זה עזר לך?
           </span>
           <button
             onClick={() => voteMutation.mutate(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:border-success hover:bg-success-light hover:text-success transition-all text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-success hover:bg-success-light hover:text-success transition-all text-[13px]"
           >
             <ThumbsUp size={14} />
             <span>כן ({article.helpfulCount})</span>
           </button>
           <button
             onClick={() => voteMutation.mutate(false)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border hover:border-danger hover:bg-red-50 hover:text-danger transition-all text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-[#E44258] hover:bg-red-50 hover:text-[#E44258] transition-all text-[13px]"
           >
             <ThumbsDown size={14} />
             <span>לא ({article.notHelpfulCount})</span>
@@ -486,17 +488,17 @@ function ArticleEditor({
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-surface-secondary rounded-lg transition-colors"
+            className="p-2 hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
           >
-            <ArrowRight size={18} className="text-text-secondary" />
+            <ArrowRight size={18} className="text-[#676879]" />
           </button>
-          <h1 className="text-xl font-bold text-text-primary">עריכת מאמר</h1>
+          <h1 className="text-xl font-bold text-[#323338]">עריכת מאמר</h1>
         </div>
         <div className="flex gap-2">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as any)}
-            className="px-3 py-1.5 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="px-3 py-1.5 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
           >
             <option value="draft">טיוטה</option>
             <option value="published">מפורסם</option>
@@ -504,7 +506,7 @@ function ArticleEditor({
           <button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
-            className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md disabled:opacity-50"
+            className="px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md disabled:opacity-50"
           >
             {mutation.isPending ? "שומר..." : "שמור"}
           </button>
@@ -512,27 +514,27 @@ function ArticleEditor({
       </div>
 
       {/* Editor */}
-      <div className="bg-white rounded-xl shadow-card p-6 space-y-4">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             כותרת
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             קטגוריה
           </label>
           <select
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
           >
             <option value="">ללא קטגוריה</option>
             {categories.map((c) => (
@@ -544,13 +546,13 @@ function ArticleEditor({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             תוכן (HTML)
           </label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary font-mono"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] font-mono"
             rows={15}
             dir="ltr"
           />
@@ -595,14 +597,14 @@ function CreateCategoryModal({ onClose }: { onClose: () => void }) {
         className="space-y-4 p-6"
       >
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             שם קטגוריה *
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             required
             autoFocus
           />
@@ -611,14 +613,14 @@ function CreateCategoryModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור"}
           </button>
@@ -675,14 +677,14 @@ function CreateArticleModal({
         className="space-y-4 p-6"
       >
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             כותרת *
           </label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             required
             autoFocus
           />
@@ -690,13 +692,13 @@ function CreateArticleModal({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               קטגוריה
             </label>
             <select
               value={form.categoryId}
               onChange={(e) => setField("categoryId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             >
               <option value="">ללא</option>
               {categories.map((c) => (
@@ -707,13 +709,13 @@ function CreateArticleModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               סטטוס
             </label>
             <select
               value={form.status}
               onChange={(e) => setField("status", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             >
               <option value="draft">טיוטה</option>
               <option value="published">מפורסם</option>
@@ -722,13 +724,13 @@ function CreateArticleModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             תוכן *
           </label>
           <textarea
             value={form.body}
             onChange={(e) => setField("body", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] resize-none"
             rows={8}
             required
             placeholder="תוכן המאמר (תומך HTML)"
@@ -739,14 +741,14 @@ function CreateArticleModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור מאמר"}
           </button>

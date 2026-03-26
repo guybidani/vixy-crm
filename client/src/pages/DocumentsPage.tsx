@@ -42,7 +42,7 @@ function getFileIcon(mimeType: string | null) {
     return <Presentation size={20} className="text-[#FDAB3D]" />;
   if (mimeType.includes("word") || mimeType.includes("document"))
     return <FileText size={20} className="text-[#579BFC]" />;
-  return <File size={20} className="text-text-tertiary" />;
+  return <File size={20} className="text-[#9699A6]" />;
 }
 
 function formatFileSize(bytes: number | null) {
@@ -115,15 +115,17 @@ export default function DocumentsPage() {
 
   return (
     <PageShell
+      boardStyle
+      emoji="📄"
       title="מסמכים"
       subtitle={`${data?.total || 0} מסמכים`}
       actions={
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2.5} />
             מסמך חדש
           </button>
           {showMenu && (
@@ -132,15 +134,15 @@ export default function DocumentsPage() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-border-light py-1 w-48 z-50">
+              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] py-1 w-48 z-50">
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     fileInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-secondary transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <Upload size={15} className="text-text-tertiary" />
+                  <Upload size={15} className="text-[#9699A6]" />
                   העלה קובץ
                 </button>
                 <button
@@ -148,9 +150,9 @@ export default function DocumentsPage() {
                     setShowMenu(false);
                     setShowCreate("rich-text");
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-secondary transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <FileText size={15} className="text-text-tertiary" />
+                  <FileText size={15} className="text-[#9699A6]" />
                   מסמך טקסט חדש
                 </button>
               </div>
@@ -167,12 +169,12 @@ export default function DocumentsPage() {
       }
     >
       {/* Search & Filters */}
-      <div className="bg-white rounded-xl shadow-card p-4">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 relative">
             <Search
               size={16}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
             />
             <input
               type="text"
@@ -182,10 +184,10 @@ export default function DocumentsPage() {
                 setPage(1);
               }}
               placeholder="חיפוש מסמכים..."
-              className="w-full pr-9 pl-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full pr-9 pl-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             />
           </div>
-          <div className="flex items-center gap-1 bg-surface-secondary rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] p-0.5">
             {TYPE_FILTERS.map((f) => (
               <button
                 key={f.value}
@@ -193,10 +195,10 @@ export default function DocumentsPage() {
                   setTypeFilter(f.value);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors ${
                   typeFilter === f.value
-                    ? "bg-white shadow-sm text-text-primary"
-                    : "text-text-secondary hover:text-text-primary"
+                    ? "bg-white shadow-sm text-[#323338]"
+                    : "text-[#676879] hover:text-[#323338]"
                 }`}
               >
                 {f.label}
@@ -211,13 +213,13 @@ export default function DocumentsPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="bg-surface-secondary rounded-xl p-4 animate-pulse h-32"
+                className="bg-[#F5F6F8] rounded-xl p-4 animate-pulse h-32"
               />
             ))}
           </div>
         ) : !data?.data.length ? (
           <EmptyState
-            icon={<FileText size={28} className="text-text-tertiary" />}
+            icon={<FileText size={28} className="text-[#9699A6]" />}
             title="אין מסמכים"
             description="העלה קובץ או צור מסמך טקסט חדש כדי להתחיל"
           />
@@ -236,21 +238,21 @@ export default function DocumentsPage() {
 
             {/* Pagination */}
             {data.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-border-light">
+              <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-[#E6E9EF]">
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-secondary rounded-lg disabled:opacity-30"
+                  className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
                 >
                   הקודם
                 </button>
-                <span className="text-sm text-text-secondary">
+                <span className="text-[13px] text-[#676879]">
                   עמוד {page} מתוך {data.totalPages}
                 </span>
                 <button
                   disabled={page >= data.totalPages}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-secondary rounded-lg disabled:opacity-30"
+                  className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
                 >
                   הבא
                 </button>
@@ -314,10 +316,10 @@ function DocumentCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-border-light rounded-xl p-4 hover:border-primary/30 hover:shadow-sm transition-all cursor-pointer group relative"
+      className="bg-white border border-[#E6E9EF] rounded-xl p-4 hover:border-[#0073EA]/30 hover:shadow-sm transition-all cursor-pointer group relative"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-surface-secondary flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
           {doc.type === "RICH_TEXT" ? (
             <FileText size={20} className="text-[#6161FF]" />
           ) : (
@@ -325,10 +327,10 @@ function DocumentCard({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm text-text-primary truncate">
+          <h3 className="font-semibold text-[13px] text-[#323338] truncate">
             {doc.title}
           </h3>
-          <p className="text-xs text-text-tertiary mt-0.5">
+          <p className="text-[12px] text-[#9699A6] mt-0.5">
             {doc.type === "FILE" ? formatFileSize(doc.fileSize) : "מסמך טקסט"}
             {" · "}
             {new Date(doc.createdAt).toLocaleDateString("he-IL")}
@@ -338,13 +340,13 @@ function DocumentCard({
               {linkedEntities.slice(0, 2).map((name, i) => (
                 <span
                   key={i}
-                  className="text-[10px] px-1.5 py-0.5 bg-primary/8 text-primary rounded-full"
+                  className="text-[10px] px-1.5 py-0.5 bg-[#0073EA]/8 text-[#0073EA] rounded-full"
                 >
                   {name}
                 </span>
               ))}
               {linkedEntities.length > 2 && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-surface-secondary text-text-tertiary rounded-full">
+                <span className="text-[10px] px-1.5 py-0.5 bg-[#F5F6F8] text-[#9699A6] rounded-full">
                   +{linkedEntities.length - 2}
                 </span>
               )}
@@ -360,7 +362,7 @@ function DocumentCard({
             e.stopPropagation();
             onDelete();
           }}
-          className="p-1.5 rounded-lg hover:bg-red-50 text-text-tertiary hover:text-red-500 transition-colors"
+          className="p-1.5 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-red-500 transition-colors"
           title="מחק"
         >
           <Trash2 size={14} />
@@ -399,7 +401,7 @@ function DocumentDetailPanel({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-surface-secondary flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#F5F6F8] flex items-center justify-center">
             {doc.type === "RICH_TEXT" ? (
               <FileText size={24} className="text-[#6161FF]" />
             ) : (
@@ -412,12 +414,12 @@ function DocumentDetailPanel({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-2 py-1 border border-border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full px-2 py-1 border border-[#E6E9EF] rounded-[4px] text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30"
               />
             ) : (
-              <h2 className="font-bold text-text-primary">{doc.title}</h2>
+              <h2 className="font-bold text-[#323338]">{doc.title}</h2>
             )}
-            <p className="text-xs text-text-tertiary mt-0.5">
+            <p className="text-[12px] text-[#9699A6] mt-0.5">
               נוצר ב-{new Date(doc.createdAt).toLocaleDateString("he-IL")} ·{" "}
               {doc.createdBy?.user?.name || ""}
             </p>
@@ -426,15 +428,15 @@ function DocumentDetailPanel({
 
         {/* File info or Rich text content */}
         {doc.type === "FILE" ? (
-          <div className="bg-surface-secondary rounded-xl p-4 space-y-2">
-            <p className="text-sm text-text-secondary">
+          <div className="bg-[#F5F6F8] rounded-xl p-4 space-y-2">
+            <p className="text-[13px] text-[#676879]">
               <span className="font-medium">שם קובץ:</span> {doc.fileName}
             </p>
-            <p className="text-sm text-text-secondary">
+            <p className="text-[13px] text-[#676879]">
               <span className="font-medium">גודל:</span>{" "}
               {formatFileSize(doc.fileSize)}
             </p>
-            <p className="text-sm text-text-secondary">
+            <p className="text-[13px] text-[#676879]">
               <span className="font-medium">סוג:</span> {doc.mimeType}
             </p>
             {doc.fileUrl && (
@@ -442,7 +444,7 @@ function DocumentDetailPanel({
                 href={`/uploads/${doc.fileUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 mt-2 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
               >
                 <Download size={15} />
                 הורדה
@@ -455,7 +457,7 @@ function DocumentDetailPanel({
               <RichTextEditor value={content} onChange={setContent} />
             ) : (
               <div
-                className="prose prose-sm max-w-none text-text-primary [direction:rtl] border border-border-light rounded-xl p-4"
+                className="prose prose-sm max-w-none text-[#323338] [direction:rtl] border border-[#E6E9EF] rounded-xl p-4"
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHtml(doc.content || ""),
                 }}
@@ -467,7 +469,7 @@ function DocumentDetailPanel({
         {/* Linked entities */}
         {doc.links.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-text-primary mb-2">
+            <h3 className="text-[13px] font-semibold text-[#323338] mb-2">
               מקושר אל
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -491,7 +493,7 @@ function DocumentDetailPanel({
                 return (
                   <span
                     key={link.id}
-                    className="text-xs px-2 py-1 bg-surface-secondary rounded-full text-text-secondary"
+                    className="text-[12px] px-2 py-1 bg-[#F5F6F8] rounded-full text-[#676879]"
                   >
                     {type}: {name}
                   </span>
@@ -502,7 +504,7 @@ function DocumentDetailPanel({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-2 border-t border-border-light">
+        <div className="flex items-center gap-2 pt-2 border-t border-[#E6E9EF]">
           {doc.type === "RICH_TEXT" && (
             <>
               {editing ? (
@@ -510,7 +512,7 @@ function DocumentDetailPanel({
                   <button
                     onClick={() => updateMut.mutate()}
                     disabled={updateMut.isPending}
-                    className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors disabled:opacity-50"
                   >
                     {updateMut.isPending ? "שומר..." : "שמור"}
                   </button>
@@ -520,7 +522,7 @@ function DocumentDetailPanel({
                       setContent(doc.content || "");
                       setTitle(doc.title);
                     }}
-                    className="px-4 py-2 bg-surface-tertiary hover:bg-border text-text-secondary text-sm font-semibold rounded-lg transition-colors"
+                    className="px-4 py-2 bg-surface-tertiary hover:bg-border text-[#676879] text-[13px] font-semibold rounded-[4px] transition-colors"
                   >
                     ביטול
                   </button>
@@ -528,7 +530,7 @@ function DocumentDetailPanel({
               ) : (
                 <button
                   onClick={() => setEditing(true)}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors"
+                  className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
                 >
                   עריכה
                 </button>
@@ -537,7 +539,7 @@ function DocumentDetailPanel({
           )}
           <button
             onClick={onDelete}
-            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-lg transition-colors mr-auto"
+            className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-[13px] font-semibold rounded-[4px] transition-colors mr-auto"
           >
             <Trash2 size={15} className="inline ml-1" />
             מחק
@@ -573,21 +575,21 @@ function CreateRichTextModal({ onClose }: { onClose: () => void }) {
     >
       <div className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             כותרת *
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             placeholder="הכנס כותרת למסמך"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             תוכן
           </label>
           <RichTextEditor
@@ -601,14 +603,14 @@ function CreateRichTextModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending || !title.trim()}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור מסמך"}
           </button>

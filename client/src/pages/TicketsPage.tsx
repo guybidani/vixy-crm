@@ -95,7 +95,7 @@ function SlaCountdown({ ticket }: { ticket: Ticket }) {
     const h = Math.floor(over / 60);
     const m = over % 60;
     return (
-      <span className="flex items-center gap-1 text-[10px] font-bold text-danger">
+      <span className="flex items-center gap-1 text-[10px] font-bold text-[#E44258]">
         <AlertCircle size={10} />
         {h > 0 ? `+${h}:${String(m).padStart(2, "0")}` : `+${m} דק'`}
       </span>
@@ -105,7 +105,7 @@ function SlaCountdown({ ticket }: { ticket: Ticket }) {
   const h = Math.floor(remMin / 60);
   const m = remMin % 60;
   return (
-    <span className="flex items-center gap-1 text-[10px] font-semibold text-danger">
+    <span className="flex items-center gap-1 text-[10px] font-semibold text-[#E44258]">
       <Clock size={10} />
       {h > 0 ? `${h}:${String(m).padStart(2, "0")}` : `${m} דק'`}
     </span>
@@ -173,18 +173,18 @@ export default function TicketsPage() {
   });
 
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-surface-secondary -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
       {/* ── Left: Ticket List ── */}
-      <div className="w-[340px] flex-shrink-0 flex flex-col border-l border-border bg-white">
+      <div className="w-[340px] flex-shrink-0 flex flex-col border-l border-[#E6E9EF] bg-white">
         {/* Header */}
-        <div className="px-4 pt-4 pb-2 border-b border-border-light">
+        <div className="px-4 pt-4 pb-2 border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[15px] font-bold text-text-primary">קריאות</h2>
+            <h2 className="text-[15px] font-semibold text-[#323338]">קריאות</h2>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold rounded-lg transition-all"
+              className="flex items-center gap-1 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
             >
-              <Plus size={13} />
+              <Plus size={15} strokeWidth={2.5} />
               חדשה
             </button>
           </div>
@@ -192,14 +192,14 @@ export default function TicketsPage() {
           <div className="relative mb-3">
             <Search
               size={14}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none"
             />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="חיפוש קריאות..."
-              className="w-full pr-8 pl-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-surface-secondary"
+              className="w-full pr-8 pl-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-[#F5F6F8]"
             />
           </div>
           {/* Status Tabs */}
@@ -208,10 +208,10 @@ export default function TicketsPage() {
               <button
                 key={tab.key}
                 onClick={() => { setStatusFilter(tab.key); setPage(1); }}
-                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all ${
+                className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium transition-all ${
                   statusFilter === tab.key
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-surface-secondary text-text-secondary hover:bg-border"
+                    ? "bg-[#0073EA] text-white"
+                    : "bg-[#F5F6F8] text-[#676879] hover:bg-[#E6E9EF]"
                 }`}
               >
                 {tab.label}
@@ -223,11 +223,11 @@ export default function TicketsPage() {
         {/* Ticket List */}
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center h-32 text-text-tertiary text-sm">
+            <div className="flex items-center justify-center h-32 text-[#9699A6] text-sm">
               טוען...
             </div>
           ) : sortedRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-text-tertiary text-sm gap-2">
+            <div className="flex flex-col items-center justify-center h-32 text-[#9699A6] text-sm gap-2">
               <MessageSquare size={24} className="opacity-30" />
               אין קריאות
             </div>
@@ -248,7 +248,7 @@ export default function TicketsPage() {
           {data?.pagination && data.pagination.page < data.pagination.pages && (
             <button
               onClick={() => setPage((p) => p + 1)}
-              className="w-full py-2 text-xs text-primary hover:bg-primary/5 transition-colors"
+              className="w-full py-2 text-[12px] text-[#0073EA] hover:bg-[#0073EA]/5 transition-colors"
             >
               טען עוד...
             </button>
@@ -265,7 +265,7 @@ export default function TicketsPage() {
             onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-text-tertiary gap-3">
+          <div className="flex flex-col items-center justify-center h-full text-[#9699A6] gap-3">
             <MessageSquare size={48} className="opacity-20" />
             <p className="text-sm">בחר קריאה מהרשימה</p>
           </div>
@@ -305,10 +305,10 @@ function TicketListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-right px-3 py-3 border-b border-border-light transition-colors relative flex gap-0 ${
+      className={`w-full text-right px-3 py-3 border-b border-[#E6E9EF] transition-colors relative flex gap-0 ${
         isSelected
-          ? "bg-primary/5 border-r-[3px] border-r-primary"
-          : "hover:bg-surface-secondary border-r-[3px]"
+          ? "bg-[#0073EA]/5 border-r-[3px] border-r-[#0073EA]"
+          : "hover:bg-[#F5F6F8] border-r-[3px]"
       }`}
       style={{
         borderRightColor: isSelected ? "#6161FF" : priorityColor,
@@ -317,10 +317,10 @@ function TicketListItem({
       <div className="flex-1 min-w-0">
         {/* Subject + time */}
         <div className="flex items-start justify-between gap-2 mb-1">
-          <span className="text-[13px] font-semibold text-text-primary truncate leading-tight">
+          <span className="text-[13px] font-semibold text-[#323338] truncate leading-tight">
             {ticket.subject}
           </span>
-          <span className="text-[10px] text-text-tertiary whitespace-nowrap flex-shrink-0">
+          <span className="text-[10px] text-[#9699A6] whitespace-nowrap flex-shrink-0">
             {timeAgo(ticket.createdAt)}
           </span>
         </div>
@@ -334,7 +334,7 @@ function TicketListItem({
                 {ticket.contact.name[0]}
               </span>
             </div>
-            <span className="text-[11px] text-text-secondary truncate">
+            <span className="text-[11px] text-[#676879] truncate">
               {ticket.contact.name}
             </span>
           </div>
@@ -356,7 +356,7 @@ function TicketListItem({
             {priorities[ticket.priority]?.label || ticket.priority}
           </span>
           {ticket.messageCount > 0 && (
-            <span className="flex items-center gap-0.5 text-[10px] text-text-tertiary">
+            <span className="flex items-center gap-0.5 text-[10px] text-[#9699A6]">
               <MessageSquare size={10} />
               {ticket.messageCount}
             </span>
@@ -423,7 +423,7 @@ function TicketDetailPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+      <div className="flex items-center justify-center h-full text-[#9699A6] text-sm">
         טוען...
       </div>
     );
@@ -431,7 +431,7 @@ function TicketDetailPanel({
 
   if (!ticket) {
     return (
-      <div className="flex items-center justify-center h-full text-text-tertiary text-sm">
+      <div className="flex items-center justify-center h-full text-[#9699A6] text-sm">
         קריאה לא נמצאה
       </div>
     );
@@ -452,9 +452,9 @@ function TicketDetailPanel({
       {/* ── Main: thread + reply ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top: ticket header */}
-        <div className="px-5 py-3 border-b border-border bg-white flex items-start gap-3 flex-shrink-0">
+        <div className="px-5 py-3 border-b border-[#E6E9EF] bg-white flex items-start gap-3 flex-shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-bold text-text-primary truncate">
+            <h2 className="text-[15px] font-bold text-[#323338] truncate">
               {ticket.subject}
             </h2>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -472,7 +472,7 @@ function TicketDetailPanel({
               />
               {/* Contact link */}
               {ticket.contact && (
-                <span className="flex items-center gap-1 text-xs text-primary cursor-pointer hover:underline"
+                <span className="flex items-center gap-1 text-xs text-[#0073EA] cursor-pointer hover:underline"
                   onClick={onNavigateFull}
                 >
                   <User size={12} />
@@ -480,7 +480,7 @@ function TicketDetailPanel({
                 </span>
               )}
               {showSlaAlert && (
-                <span className="flex items-center gap-1 text-xs font-bold text-danger bg-danger/10 px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-xs font-bold text-[#E44258] bg-[#E44258]/10 px-2 py-0.5 rounded-full">
                   <AlertCircle size={12} />
                   SLA הופר
                 </span>
@@ -492,7 +492,7 @@ function TicketDetailPanel({
             {ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
               <button
                 onClick={() => onStatusChange(ticketId, "RESOLVED")}
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-success hover:bg-success/90 text-white text-xs font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-success hover:bg-success/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
               >
                 <CheckCircle2 size={13} />
                 נפתר
@@ -501,7 +501,7 @@ function TicketDetailPanel({
             {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
               <button
                 onClick={() => onStatusChange(ticketId, "OPEN")}
-                className="flex items-center gap-1 px-2.5 py-1.5 bg-warning hover:bg-warning/90 text-white text-xs font-semibold rounded-lg transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-warning hover:bg-warning/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
               >
                 פתח מחדש
               </button>
@@ -511,9 +511,9 @@ function TicketDetailPanel({
 
         {/* Description */}
         {ticket.description && (
-          <div className="mx-4 mt-3 mb-0 bg-white rounded-xl shadow-card p-3 flex-shrink-0">
-            <p className="text-xs text-text-tertiary font-medium mb-1">תיאור</p>
-            <p className="text-sm text-text-secondary whitespace-pre-wrap">
+          <div className="mx-4 mt-3 mb-0 bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-3 flex-shrink-0">
+            <p className="text-[12px] text-[#9699A6] font-medium mb-1">תיאור</p>
+            <p className="text-sm text-[#676879] whitespace-pre-wrap">
               {ticket.description}
             </p>
           </div>
@@ -522,7 +522,7 @@ function TicketDetailPanel({
         {/* Message thread */}
         <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {ticket.messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-text-tertiary gap-2">
+            <div className="flex flex-col items-center justify-center py-16 text-[#9699A6] gap-2">
               <MessageSquare size={32} className="opacity-20" />
               <p className="text-sm">אין הודעות עדיין</p>
             </div>
@@ -535,22 +535,22 @@ function TicketDetailPanel({
         </div>
 
         {/* Reply composer */}
-        <div className="flex-shrink-0 border-t border-border bg-white">
+        <div className="flex-shrink-0 border-t border-[#E6E9EF] bg-white">
           <ReplyComposer ticketId={ticketId} ticket={ticket} />
         </div>
       </div>
 
       {/* ── Right sidebar: metadata ── */}
-      <div className="w-[220px] flex-shrink-0 border-r border-border bg-white overflow-y-auto">
+      <div className="w-[220px] flex-shrink-0 border-r border-[#E6E9EF] bg-white overflow-y-auto">
         <div className="p-3 space-y-4">
           {/* SLA alert */}
           {showSlaAlert && (
-            <div className="bg-danger/10 border border-danger/30 rounded-xl p-3">
-              <p className="text-[11px] font-bold text-danger flex items-center gap-1 mb-1">
+            <div className="bg-[#E44258]/10 border border-[#E44258]/30 rounded-xl p-3">
+              <p className="text-[11px] font-bold text-[#E44258] flex items-center gap-1 mb-1">
                 <AlertCircle size={12} />
                 SLA הופר
               </p>
-              <p className="text-[10px] text-danger/80">
+              <p className="text-[10px] text-[#E44258]/80">
                 קריאה דחופה פתוחה מעל 4 שעות
               </p>
               <SlaCountdown ticket={{
@@ -579,29 +579,29 @@ function TicketDetailPanel({
           {/* Contact */}
           {ticket.contact && (
             <div>
-              <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+              <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-wide mb-2">
                 איש קשר
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-[#0073EA] flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-[9px] font-bold">
                       {ticket.contact.firstName[0]}
                     </span>
                   </div>
-                  <span className="text-xs font-medium text-text-primary">
+                  <span className="text-[12px] font-medium text-[#323338]">
                     {ticket.contact.firstName} {ticket.contact.lastName}
                   </span>
                 </div>
                 {ticket.contact.email && (
-                  <div className="flex items-center gap-1 text-[11px] text-text-secondary">
-                    <Mail size={11} className="text-text-tertiary flex-shrink-0" />
+                  <div className="flex items-center gap-1 text-[11px] text-[#676879]">
+                    <Mail size={11} className="text-[#9699A6] flex-shrink-0" />
                     <span dir="ltr" className="truncate">{ticket.contact.email}</span>
                   </div>
                 )}
                 {ticket.contact.phone && (
-                  <div className="flex items-center gap-1 text-[11px] text-text-secondary">
-                    <Phone size={11} className="text-text-tertiary flex-shrink-0" />
+                  <div className="flex items-center gap-1 text-[11px] text-[#676879]">
+                    <Phone size={11} className="text-[#9699A6] flex-shrink-0" />
                     <span dir="ltr">{ticket.contact.phone}</span>
                   </div>
                 )}
@@ -611,22 +611,22 @@ function TicketDetailPanel({
 
           {/* Ticket details */}
           <div>
-            <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+            <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-wide mb-2">
               פרטי קריאה
             </p>
             <div className="space-y-2">
               <MetaRow label="נוצר">
-                <span className="text-[11px] text-text-secondary">
+                <span className="text-[11px] text-[#676879]">
                   {new Date(ticket.createdAt).toLocaleDateString("he-IL")}
                 </span>
               </MetaRow>
               <MetaRow label="עודכן">
-                <span className="text-[11px] text-text-secondary">
+                <span className="text-[11px] text-[#676879]">
                   {timeAgo(ticket.updatedAt)}
                 </span>
               </MetaRow>
               <MetaRow label="ערוץ">
-                <span className="text-[11px] text-text-secondary capitalize">
+                <span className="text-[11px] text-[#676879] capitalize">
                   {ticket.channel}
                 </span>
               </MetaRow>
@@ -635,7 +635,7 @@ function TicketDetailPanel({
                 <select
                   value={ticket.assignee?.id || ""}
                   onChange={(e) => assignMutation.mutate(e.target.value)}
-                  className="text-[11px] text-text-primary bg-surface-secondary border border-border rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/30 max-w-[100px]"
+                  className="text-[11px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[100px]"
                 >
                   <option value="">לא שויך</option>
                   {(members || []).map((m) => (
@@ -647,7 +647,7 @@ function TicketDetailPanel({
               </MetaRow>
               {ticket.firstResponseAt && (
                 <MetaRow label="תגובה ראשונה">
-                  <span className="text-[11px] text-text-secondary">
+                  <span className="text-[11px] text-[#676879]">
                     {timeAgo(ticket.firstResponseAt)}
                   </span>
                 </MetaRow>
@@ -665,7 +665,7 @@ function TicketDetailPanel({
                     {[1, 2, 3, 4, 5].map((i) => (
                       <span
                         key={i}
-                        className={`text-xs ${i <= ticket.csatScore! ? "text-warning" : "text-text-tertiary"}`}
+                        className={`text-[12px] ${i <= ticket.csatScore! ? "text-warning" : "text-[#9699A6]"}`}
                       >
                         ★
                       </span>
@@ -679,14 +679,14 @@ function TicketDetailPanel({
           {/* SLA policy */}
           {slaInfo && (
             <div>
-              <p className="text-[10px] font-semibold text-text-tertiary uppercase tracking-wide mb-2">
+              <p className="text-[10px] font-semibold text-[#9699A6] uppercase tracking-wide mb-2">
                 SLA
               </p>
               <div className="space-y-2">
                 <div>
-                  <p className="text-[10px] text-text-tertiary mb-0.5">תגובה ראשונה</p>
+                  <p className="text-[10px] text-[#9699A6] mb-0.5">תגובה ראשונה</p>
                   <p className={`text-[11px] font-semibold flex items-center gap-1 ${
-                    slaInfo.responseBreached ? "text-danger" : "text-success"
+                    slaInfo.responseBreached ? "text-[#E44258]" : "text-success"
                   }`}>
                     <Clock size={10} />
                     {slaInfo.responseBreached
@@ -697,9 +697,9 @@ function TicketDetailPanel({
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-text-tertiary mb-0.5">פתרון</p>
+                  <p className="text-[10px] text-[#9699A6] mb-0.5">פתרון</p>
                   <p className={`text-[11px] font-semibold flex items-center gap-1 ${
-                    slaInfo.resolutionBreached ? "text-danger" : "text-success"
+                    slaInfo.resolutionBreached ? "text-[#E44258]" : "text-success"
                   }`}>
                     <Clock size={10} />
                     {slaInfo.resolutionBreached
@@ -730,8 +730,8 @@ function MessageBubble({ message }: { message: TicketMessage }) {
           isInternal
             ? "bg-yellow-50 border border-yellow-200"
             : isAgent
-              ? "bg-white border border-border-light"
-              : "bg-primary text-white"
+              ? "bg-white border border-[#E6E9EF]"
+              : "bg-[#0073EA] text-white"
         }`}
       >
         <div className="flex items-center gap-1.5 mb-1">
@@ -741,14 +741,14 @@ function MessageBubble({ message }: { message: TicketMessage }) {
               isInternal
                 ? "text-warning"
                 : isAgent
-                  ? "text-text-tertiary"
+                  ? "text-[#9699A6]"
                   : "text-white/70"
             }`}
           >
             {isInternal ? "הערה פנימית" : isAgent ? "נציג" : "לקוח"}
           </span>
           <span className={`text-[9px] mr-auto ${
-            isAgent && !isInternal ? "text-text-tertiary" : isInternal ? "text-text-tertiary" : "text-white/50"
+            isAgent && !isInternal ? "text-[#9699A6]" : isInternal ? "text-[#9699A6]" : "text-white/50"
           }`}>
             {new Date(message.createdAt).toLocaleTimeString("he-IL", {
               hour: "2-digit",
@@ -759,9 +759,9 @@ function MessageBubble({ message }: { message: TicketMessage }) {
         <p
           className={`text-sm whitespace-pre-wrap ${
             isInternal
-              ? "text-text-primary"
+              ? "text-[#323338]"
               : isAgent
-                ? "text-text-primary"
+                ? "text-[#323338]"
                 : "text-white"
           }`}
         >
@@ -828,8 +828,8 @@ function ReplyComposer({
         <button
           type="button"
           onClick={() => setIsInternal(false)}
-          className={`text-xs px-2 py-1 rounded-md transition-colors ${
-            !isInternal ? "bg-primary text-white" : "text-text-secondary hover:bg-surface-secondary"
+          className={`text-[12px] px-2 py-1 rounded-md transition-colors ${
+            !isInternal ? "bg-[#0073EA] text-white" : "text-[#676879] hover:bg-[#F5F6F8]"
           }`}
         >
           תגובה ללקוח
@@ -837,8 +837,8 @@ function ReplyComposer({
         <button
           type="button"
           onClick={() => setIsInternal(true)}
-          className={`text-xs px-2 py-1 rounded-md transition-colors flex items-center gap-1 ${
-            isInternal ? "bg-warning text-white" : "text-text-secondary hover:bg-surface-secondary"
+          className={`text-[12px] px-2 py-1 rounded-md transition-colors flex items-center gap-1 ${
+            isInternal ? "bg-warning text-white" : "text-[#676879] hover:bg-[#F5F6F8]"
           }`}
         >
           <Eye size={11} />
@@ -855,11 +855,11 @@ function ReplyComposer({
             מוכן
           </button>
           {showCanned && (
-            <div className="absolute left-0 bottom-full mb-1 bg-white rounded-xl shadow-modal border border-border z-20 w-72 max-h-60 overflow-y-auto">
-              <div className="p-2 border-b border-border-light flex items-center justify-between">
-                <span className="text-xs font-semibold text-text-primary">תגובות מוכנות</span>
-                <button type="button" onClick={() => setShowCanned(false)} className="p-0.5 rounded hover:bg-surface-secondary">
-                  <X size={12} className="text-text-tertiary" />
+            <div className="absolute left-0 bottom-full mb-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] z-20 w-72 max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-[#E6E9EF] flex items-center justify-between">
+                <span className="text-[12px] font-semibold text-[#323338]">תגובות מוכנות</span>
+                <button type="button" onClick={() => setShowCanned(false)} className="p-0.5 rounded hover:bg-[#F5F6F8]">
+                  <X size={12} className="text-[#9699A6]" />
                 </button>
               </div>
               {cannedResponses && cannedResponses.length > 0 ? (
@@ -868,14 +868,14 @@ function ReplyComposer({
                     key={cr.id}
                     type="button"
                     onClick={() => insertCannedResponse(cr)}
-                    className="w-full text-right px-3 py-2 hover:bg-surface-secondary transition-colors border-b border-border-light last:border-0"
+                    className="w-full text-right px-3 py-2 hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF] last:border-0"
                   >
-                    <div className="text-xs font-medium text-text-primary">{cr.title}</div>
-                    <p className="text-[10px] text-text-tertiary truncate mt-0.5">{cr.body.slice(0, 60)}...</p>
+                    <div className="text-[12px] font-medium text-[#323338]">{cr.title}</div>
+                    <p className="text-[10px] text-[#9699A6] truncate mt-0.5">{cr.body.slice(0, 60)}...</p>
                   </button>
                 ))
               ) : (
-                <p className="text-xs text-text-tertiary text-center py-4">אין תגובות מוכנות</p>
+                <p className="text-[12px] text-[#9699A6] text-center py-4">אין תגובות מוכנות</p>
               )}
             </div>
           )}
@@ -892,18 +892,18 @@ function ReplyComposer({
             }
           }}
           placeholder={isInternal ? "הערה פנימית (לא נראית ללקוח)..." : "כתוב תגובה... (Ctrl+Enter לשליחה)"}
-          className={`flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 resize-none ${
+          className={`flex-1 px-3 py-2 border rounded-[4px] text-[13px] focus:outline-none focus:ring-2 resize-none ${
             isInternal
               ? "border-yellow-200 bg-yellow-50/50 focus:ring-warning/30 focus:border-warning"
-              : "border-border focus:ring-primary/30 focus:border-primary"
+              : "border-[#E6E9EF] focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
           }`}
           rows={2}
         />
         <button
           type="submit"
           disabled={!body.trim() || mutation.isPending}
-          className={`px-3 self-end rounded-lg text-white font-semibold text-sm transition-colors disabled:opacity-50 flex items-center gap-1 py-2 ${
-            isInternal ? "bg-warning hover:bg-warning/90" : "bg-primary hover:bg-primary-hover"
+          className={`px-3 self-end rounded-[4px] text-white font-semibold text-[13px] transition-colors disabled:opacity-50 flex items-center gap-1 py-2 ${
+            isInternal ? "bg-warning hover:bg-warning/90" : "bg-[#0073EA] hover:bg-[#0060C2]"
           }`}
         >
           <Send size={14} />
@@ -918,7 +918,7 @@ function ReplyComposer({
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-1">
-      <span className="text-[10px] text-text-tertiary flex-shrink-0">{label}</span>
+      <span className="text-[10px] text-[#9699A6] flex-shrink-0">{label}</span>
       {children}
     </div>
   );
@@ -972,31 +972,31 @@ function CreateTicketModal({
     <Modal open={true} onClose={onClose} title="קריאה חדשה">
       <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">נושא *</label>
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">נושא *</label>
           <input
             type="text"
             value={form.subject}
             onChange={(e) => setField("subject", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">תיאור</label>
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">תיאור</label>
           <textarea
             value={form.description}
             onChange={(e) => setField("description", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
             rows={3}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">עדיפות</label>
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">עדיפות</label>
             <select
               value={form.priority}
               onChange={(e) => setField("priority", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>{val.label}</option>
@@ -1004,11 +1004,11 @@ function CreateTicketModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">ערוץ</label>
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">ערוץ</label>
             <select
               value={form.channel}
               onChange={(e) => setField("channel", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(ticketChannels).map(([key, val]) => (
                 <option key={key} value={key}>{val.label}</option>
@@ -1017,11 +1017,11 @@ function CreateTicketModal({
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">איש קשר</label>
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">איש קשר</label>
           <select
             value={form.contactId}
             onChange={(e) => setField("contactId", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
           >
             <option value="">ללא</option>
             {contacts?.data.map((c) => (
@@ -1033,14 +1033,14 @@ function CreateTicketModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור קריאה"}
           </button>

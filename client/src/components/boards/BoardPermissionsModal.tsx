@@ -132,20 +132,20 @@ export default function BoardPermissionsModal({
       maxWidth="max-w-md"
     >
       {/* Custom header with lock icon */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E9EF]">
         <div className="flex items-center gap-2.5">
           {isPrivate ? (
             <Lock size={18} className="text-[#6161FF]" />
           ) : (
-            <Unlock size={18} className="text-text-tertiary" />
+            <Unlock size={18} className="text-[#9699A6]" />
           )}
-          <h2 className="text-lg font-bold text-text-primary">
+          <h2 className="text-lg font-bold text-[#323338]">
             הרשאות — {boardName}
           </h2>
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-text-primary"
+          className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#323338]"
           aria-label="סגור"
         >
           <X size={18} />
@@ -156,8 +156,8 @@ export default function BoardPermissionsModal({
         {/* Privacy toggle */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield size={16} className="text-text-tertiary" />
-            <span className="text-sm font-medium text-text-primary">
+            <Shield size={16} className="text-[#9699A6]" />
+            <span className="text-sm font-medium text-[#323338]">
               בורד פרטי
             </span>
           </div>
@@ -182,18 +182,18 @@ export default function BoardPermissionsModal({
           </button>
         </div>
 
-        <p className="text-xs text-text-tertiary -mt-2">
+        <p className="text-xs text-[#9699A6] -mt-2">
           {isPrivate
             ? "רק משתמשים עם הרשאה יכולים לראות את הבורד"
             : "כל חברי סביבת העבודה יכולים לראות את הבורד"}
         </p>
 
         {/* Divider */}
-        <div className="border-t border-border-light" />
+        <div className="border-t border-[#E6E9EF]" />
 
         {/* Current members with access */}
         <div>
-          <h3 className="text-sm font-semibold text-text-primary mb-3">
+          <h3 className="text-sm font-semibold text-[#323338] mb-3">
             חברים עם גישה
           </h3>
 
@@ -202,7 +202,7 @@ export default function BoardPermissionsModal({
               <div className="w-5 h-5 border-2 border-[#6161FF] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : accessList.length === 0 ? (
-            <p className="text-sm text-text-tertiary py-3 text-center">
+            <p className="text-sm text-[#9699A6] py-3 text-center">
               {isPrivate ? "אין חברים עם גישה" : "הבורד פתוח לכולם"}
             </p>
           ) : (
@@ -232,16 +232,16 @@ export default function BoardPermissionsModal({
         {/* Add permissions section */}
         {membersWithoutAccess.length > 0 && isPrivate && (
           <>
-            <div className="border-t border-border-light" />
+            <div className="border-t border-[#E6E9EF]" />
             <div>
-              <h3 className="text-sm font-semibold text-text-primary mb-3">
+              <h3 className="text-sm font-semibold text-[#323338] mb-3">
                 הוסף הרשאה
               </h3>
               <div className="space-y-1 max-h-[160px] overflow-y-auto">
                 {membersWithoutAccess.map((member) => (
                   <div
                     key={member.memberId}
-                    className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-[#F5F6F8] transition-colors"
+                    className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6161FF]/20 to-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
@@ -250,10 +250,10 @@ export default function BoardPermissionsModal({
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">
+                        <p className="text-sm font-medium text-[#323338] truncate">
                           {member.name}
                         </p>
-                        <p className="text-xs text-text-tertiary truncate">
+                        <p className="text-xs text-[#9699A6] truncate">
                           {member.email}
                         </p>
                       </div>
@@ -301,7 +301,7 @@ function MemberRow({
   disabled: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-[#F5F6F8] transition-colors">
+    <div className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6161FF]/20 to-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
           <span className="text-xs font-semibold text-[#6161FF]">
@@ -309,10 +309,10 @@ function MemberRow({
           </span>
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-text-primary truncate">
+          <p className="text-sm font-medium text-[#323338] truncate">
             {name}
           </p>
-          <p className="text-xs text-text-tertiary truncate">{email}</p>
+          <p className="text-xs text-[#9699A6] truncate">{email}</p>
         </div>
       </div>
 
@@ -321,7 +321,7 @@ function MemberRow({
         <button
           onClick={onToggleDropdown}
           disabled={disabled}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-text-secondary bg-white border border-[#D0D4E4] rounded-md hover:border-[#6161FF] hover:text-[#6161FF] transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#676879] bg-white border border-[#D0D4E4] rounded-md hover:border-[#6161FF] hover:text-[#6161FF] transition-colors disabled:opacity-50"
         >
           {PERMISSION_LABELS[permission] || permission}
           <svg
@@ -342,7 +342,7 @@ function MemberRow({
         </button>
 
         {isOpen && (
-          <div className="absolute left-0 top-full mt-1 w-36 bg-white rounded-lg shadow-lg border border-[#E6E9EF] z-50 py-1 animate-in fade-in zoom-in-95 duration-150">
+          <div className="absolute left-0 top-full mt-1 w-36 bg-white rounded-[4px] shadow-lg border border-[#E6E9EF] z-50 py-1 animate-in fade-in zoom-in-95 duration-150">
             {PERMISSION_OPTIONS.map((opt) => {
               const Icon = opt.icon;
               const isActive = opt.value === permission;
@@ -354,7 +354,7 @@ function MemberRow({
                   className={`
                     w-full flex items-center gap-2 px-3 py-2 text-xs text-right transition-colors
                     ${isActive ? "bg-[#6161FF]/10 text-[#6161FF] font-medium" : ""}
-                    ${isRemove ? "text-red-500 hover:bg-red-50" : "hover:bg-[#F5F6F8] text-text-secondary"}
+                    ${isRemove ? "text-red-500 hover:bg-[#FFEEF0]" : "hover:bg-[#F5F6F8] text-[#676879]"}
                   `}
                 >
                   <Icon size={14} />

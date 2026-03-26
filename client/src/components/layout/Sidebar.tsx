@@ -92,7 +92,7 @@ function EditableLabel({
     return (
       <input
         ref={inputRef}
-        className="bg-white border border-[#0073EA] rounded px-1.5 py-0.5 text-sm text-[#323338] outline-none focus-visible:ring-2 focus-visible:ring-primary w-full min-w-0"
+        className="bg-white border border-[#0073EA] rounded px-1.5 py-0.5 text-[13px] text-[#323338] outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] w-full min-w-0"
         aria-label="שנה שם"
         value={editVal}
         onChange={(e) => setEditVal(e.target.value)}
@@ -247,7 +247,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         >
           <div
             className={cn(
-              "flex-shrink-0 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-sm",
+              "flex-shrink-0 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center shadow-sm",
               collapsed ? "w-8 h-8" : "w-9 h-9",
             )}
           >
@@ -261,7 +261,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 <select
                   value={currentWorkspaceId || ""}
                   onChange={(e) => selectWorkspace(e.target.value)}
-                  className="w-full text-[13px] font-bold text-text-primary bg-transparent border-none focus:outline-none cursor-pointer truncate leading-tight"
+                  className="w-full text-[13px] font-bold text-[#323338] bg-transparent border-none focus:outline-none cursor-pointer truncate leading-tight"
                 >
                   {workspaces.map((ws) => (
                     <option key={ws.id} value={ws.id}>
@@ -270,11 +270,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   ))}
                 </select>
               ) : (
-                <span className="text-[13px] font-bold text-text-primary truncate block leading-tight">
+                <span className="text-[13px] font-bold text-[#323338] truncate block leading-tight">
                   {currentWs?.name || "Vixy CRM"}
                 </span>
               )}
-              <span className="text-[11px] text-text-tertiary leading-tight block mt-0.5">
+              <span className="text-[11px] text-[#9699A6] leading-tight block mt-0.5">
                 CRM
               </span>
             </div>
@@ -294,11 +294,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 onClick={onMobileClose}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2.5 rounded-lg text-sm transition-colors duration-150 group relative mb-0.5",
+                    "flex items-center gap-2.5 rounded-[4px] text-[13px] transition-colors duration-150 group relative mb-0.5",
                     collapsed ? "justify-center w-10 h-10 mx-auto" : "px-2.5 py-2",
                     isActive
-                      ? "bg-primary/10 text-primary font-semibold border-r-[3px] border-primary"
-                      : "text-text-secondary hover:bg-[#EAEAEF] hover:text-text-primary",
+                      ? "bg-[#0073EA]/10 text-[#0073EA] font-semibold border-r-[3px] border-[#0073EA]"
+                      : "text-[#676879] hover:bg-[#EAEAEF] hover:text-[#323338]",
                   )
                 }
               >
@@ -308,7 +308,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                       size={18}
                       className={cn(
                         "flex-shrink-0 transition-colors duration-150",
-                        isActive ? "text-primary" : "text-[#676879] group-hover:text-text-primary",
+                        isActive ? "text-[#0073EA]" : "text-[#676879] group-hover:text-[#323338]",
                       )}
                     />
                     {!collapsed && (
@@ -331,12 +331,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 {/* Section header with toggle */}
                 <button
                   onClick={toggleBoards}
-                  className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-text-secondary hover:bg-[#EAEAEF] hover:text-text-primary transition-colors duration-150 group"
+                  className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-[4px] text-[#676879] hover:bg-[#EAEAEF] hover:text-[#323338] transition-colors duration-150 group"
                   aria-expanded={boardsExpanded}
                 >
                   <div className="flex items-center gap-2">
-                    <LayoutGrid size={16} className="text-[#676879] group-hover:text-text-primary" />
-                    <span className="text-[12px] font-semibold text-text-secondary uppercase tracking-wide">
+                    <LayoutGrid size={16} className="text-[#676879] group-hover:text-[#323338]" />
+                    <span className="text-[12px] font-semibold text-[#676879] uppercase tracking-wide">
                       בורדים
                     </span>
                   </div>
@@ -346,7 +346,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                         e.stopPropagation();
                         setCreateBoardOpen(true);
                       }}
-                      className="p-0.5 rounded hover:bg-white/80 hover:text-primary transition-colors text-text-tertiary"
+                      className="p-0.5 rounded hover:bg-white/80 hover:text-[#0073EA] transition-colors text-[#9699A6]"
                       role="button"
                       aria-label="צור בורד חדש"
                     >
@@ -355,7 +355,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     <ChevronDown
                       size={14}
                       className={cn(
-                        "text-text-tertiary transition-transform duration-200",
+                        "text-[#9699A6] transition-transform duration-200",
                         boardsExpanded ? "" : "-rotate-90",
                       )}
                     />
@@ -372,10 +372,10 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                         onClick={onMobileClose}
                         className={({ isActive }) =>
                           cn(
-                            "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-colors duration-150 group relative mb-0.5",
+                            "flex items-center gap-2.5 px-2.5 py-2 rounded-[4px] text-[13px] transition-colors duration-150 group relative mb-0.5",
                             isActive
-                              ? "bg-primary/10 text-primary font-semibold border-r-[3px] border-primary"
-                              : "text-text-secondary hover:bg-[#EAEAEF] hover:text-text-primary",
+                              ? "bg-[#0073EA]/10 text-[#0073EA] font-semibold border-r-[3px] border-[#0073EA]"
+                              : "text-[#676879] hover:bg-[#EAEAEF] hover:text-[#323338]",
                           )
                         }
                       >
@@ -398,7 +398,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     {/* Add new board */}
                     <button
                       onClick={() => setCreateBoardOpen(true)}
-                      className="flex items-center gap-2 px-2.5 py-1.5 w-full text-[12px] text-text-tertiary hover:text-primary hover:bg-[#EAEAEF] rounded-lg transition-colors duration-150 mt-0.5"
+                      className="flex items-center gap-2 px-2.5 py-1.5 w-full text-[12px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#EAEAEF] rounded-[4px] transition-colors duration-150 mt-0.5"
                     >
                       <Plus size={13} />
                       <span>+ בורד חדש</span>
@@ -411,14 +411,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               <div className="flex flex-col items-center gap-1">
                 <NavLink
                   to="/boards/1"
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-text-secondary hover:bg-[#EAEAEF] hover:text-text-primary transition-colors duration-150 group relative"
+                  className="w-10 h-10 flex items-center justify-center rounded-[4px] text-[#676879] hover:bg-[#EAEAEF] hover:text-[#323338] transition-colors duration-150 group relative"
                 >
-                  <LayoutGrid size={18} className="text-[#676879] group-hover:text-text-primary" />
+                  <LayoutGrid size={18} className="text-[#676879] group-hover:text-[#323338]" />
                   <Tooltip label="בורדים" />
                 </NavLink>
                 <button
                   onClick={() => setCreateBoardOpen(true)}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg text-text-tertiary hover:bg-[#EAEAEF] hover:text-primary transition-colors duration-150 group relative"
+                  className="w-10 h-10 flex items-center justify-center rounded-[4px] text-[#9699A6] hover:bg-[#EAEAEF] hover:text-[#0073EA] transition-colors duration-150 group relative"
                   aria-label="בורד חדש"
                 >
                   <Plus size={18} />
@@ -437,11 +437,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             onClick={onMobileClose}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2.5 rounded-lg text-sm transition-colors duration-150 group relative",
+                "flex items-center gap-2.5 rounded-[4px] text-[13px] transition-colors duration-150 group relative",
                 collapsed ? "justify-center w-10 h-10 mx-auto" : "px-2.5 py-2",
                 isActive
-                  ? "bg-primary/10 text-primary font-semibold border-r-[3px] border-primary"
-                  : "text-text-secondary hover:bg-[#EAEAEF] hover:text-text-primary",
+                  ? "bg-[#0073EA]/10 text-[#0073EA] font-semibold border-r-[3px] border-[#0073EA]"
+                  : "text-[#676879] hover:bg-[#EAEAEF] hover:text-[#323338]",
               )
             }
           >
@@ -451,7 +451,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   size={18}
                   className={cn(
                     "flex-shrink-0",
-                    isActive ? "text-primary" : "text-[#676879] group-hover:text-text-primary",
+                    isActive ? "text-[#0073EA]" : "text-[#676879] group-hover:text-[#323338]",
                   )}
                 />
                 {!collapsed && <span className="truncate">הגדרות</span>}
@@ -463,16 +463,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           {/* User row */}
           <div
             className={cn(
-              "flex items-center gap-2 rounded-lg px-2.5 py-2 hover:bg-[#EAEAEF] transition-colors duration-150 cursor-default group relative",
+              "flex items-center gap-2 rounded-[4px] px-2.5 py-2 hover:bg-[#EAEAEF] transition-colors duration-150 cursor-default group relative",
               collapsed && "justify-center px-0 w-10 h-10 mx-auto",
             )}
             title={user?.name}
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#0073EA] to-[#0060C2] flex items-center justify-center flex-shrink-0">
               <span className="text-white text-[11px] font-bold leading-none">{userInitials}</span>
             </div>
             {!collapsed && (
-              <span className="text-[13px] text-text-primary font-medium truncate flex-1 min-w-0">
+              <span className="text-[13px] text-[#323338] font-medium truncate flex-1 min-w-0">
                 {user?.name || "משתמש"}
               </span>
             )}
@@ -483,7 +483,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           <button
             onClick={onToggle}
             className={cn(
-              "w-full flex items-center gap-2 rounded-lg px-2.5 py-2 text-text-tertiary hover:bg-[#EAEAEF] hover:text-text-secondary transition-colors duration-150",
+              "w-full flex items-center gap-2 rounded-[4px] px-2.5 py-2 text-[#9699A6] hover:bg-[#EAEAEF] hover:text-[#676879] transition-colors duration-150",
               collapsed && "justify-center px-0",
             )}
             aria-label={collapsed ? "פתח תפריט" : "כווץ תפריט"}
@@ -492,7 +492,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               size={16}
               className={cn("transition-transform duration-300", collapsed ? "rotate-180" : "")}
             />
-            {!collapsed && <span className="text-xs">כיווץ</span>}
+            {!collapsed && <span className="text-[12px]">כיווץ</span>}
           </button>
         </div>
       </aside>

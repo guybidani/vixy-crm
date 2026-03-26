@@ -112,33 +112,24 @@ export default function SettingsPage() {
   );
 
   return (
-    <PageShell title="הגדרות" subtitle="ניהול מערכת">
+    <PageShell title="הגדרות" subtitle="ניהול מערכת" emoji="⚙️" boardStyle>
       {/* Monday-style underlined tab bar */}
-      <div className="bg-white rounded-xl shadow-card px-2">
-        <div className="flex gap-1">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] px-2 mb-4">
+        <div className="flex gap-0 overflow-x-auto border-b border-[#E6E9EF]">
           {TABS.map((t) => {
             const isActive = tab === t.key;
             return (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`relative flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap ${
                   isActive
-                    ? "text-text-primary"
-                    : "text-text-tertiary hover:text-text-secondary"
+                    ? "text-[#0073EA] border-[#0073EA]"
+                    : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
                 }`}
               >
-                <t.icon
-                  size={16}
-                  style={isActive ? { color: t.color } : undefined}
-                />
+                <t.icon size={14} />
                 {t.label}
-                {isActive && (
-                  <span
-                    className="absolute bottom-0 left-2 right-2 h-[3px] rounded-t-full"
-                    style={{ backgroundColor: t.color }}
-                  />
-                )}
               </button>
             );
           })}
@@ -196,9 +187,9 @@ function GeneralTab() {
   return (
     <div className="space-y-4 max-w-2xl">
       {/* Workspace name */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-5 flex items-center gap-2">
-          <Building2 size={16} className="text-primary" />
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+        <h2 className="text-base font-bold text-[#323338] mb-5 flex items-center gap-2">
+          <Building2 size={16} className="text-[#0073EA]" />
           פרטי סביבת עבודה
         </h2>
 
@@ -211,15 +202,15 @@ function GeneralTab() {
             {(name || currentWs?.name || "W").charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-semibold text-text-primary">{currentWs?.name}</p>
-            <p className="text-xs text-text-tertiary font-mono">{currentWs?.slug}</p>
+            <p className="text-sm font-semibold text-[#323338]">{currentWs?.name}</p>
+            <p className="text-xs text-[#9699A6] font-mono">{currentWs?.slug}</p>
           </div>
         </div>
 
         <div className="space-y-4">
           {/* Workspace name */}
           <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+            <label className="block text-xs font-semibold text-[#676879] mb-1.5">
               שם סביבת עבודה
             </label>
             {editingName ? (
@@ -228,29 +219,29 @@ function GeneralTab() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-primary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className="flex-1 px-3 py-2 border border-[#0073EA] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                   autoFocus
                 />
                 <button
                   onClick={() => updateMut.mutate({ name })}
                   disabled={updateMut.isPending || !name.trim()}
-                  className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
                 >
                   שמור
                 </button>
                 <button
                   onClick={() => { setName(currentWs?.name || ""); setEditingName(false); }}
-                  className="px-3 py-2 bg-surface-tertiary text-text-secondary text-sm font-semibold rounded-lg hover:bg-border transition-colors"
+                  className="px-3 py-2 bg-[#F5F6F8] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
                 >
                   ביטול
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <p className="text-sm font-semibold text-text-primary flex-1">{currentWs?.name}</p>
+                <p className="text-sm font-semibold text-[#323338] flex-1">{currentWs?.name}</p>
                 <button
                   onClick={() => setEditingName(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text-secondary border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#676879] border border-[#D0D4E4] rounded-[4px] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors"
                 >
                   <Pencil size={12} /> ערוך
                 </button>
@@ -260,7 +251,7 @@ function GeneralTab() {
 
           {/* Timezone */}
           <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+            <label className="block text-xs font-semibold text-[#676879] mb-1.5">
               <Globe size={12} className="inline mr-1" />
               אזור זמן
             </label>
@@ -268,7 +259,7 @@ function GeneralTab() {
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="flex-1 px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 {TIMEZONES.map((tz) => (
                   <option key={tz.value} value={tz.value}>{tz.label}</option>
@@ -277,7 +268,7 @@ function GeneralTab() {
               <button
                 onClick={() => updateMut.mutate({ timezone })}
                 disabled={updateMut.isPending}
-                className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
               >
                 שמור
               </button>
@@ -313,8 +304,8 @@ function ProfileTab() {
   return (
     <div className="space-y-4 max-w-2xl">
       {/* Personal info */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-5">פרטים אישיים</h2>
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+        <h2 className="text-base font-bold text-[#323338] mb-5">פרטים אישיים</h2>
         <div className="flex items-start gap-5">
           {/* Avatar */}
           <div
@@ -330,36 +321,36 @@ function ProfileTab() {
           <div className="flex-1 space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">שם מלא</label>
+              <label className="block text-xs font-semibold text-[#676879] mb-1.5">שם מלא</label>
               {editingName ? (
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-primary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="flex-1 px-3 py-2 border border-[#0073EA] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                     autoFocus
                   />
                   <button
                     onClick={() => updateMut.mutate({ name })}
                     disabled={updateMut.isPending || !name.trim()}
-                    className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
                   >
                     שמור
                   </button>
                   <button
                     onClick={() => { setName(user?.name || ""); setEditingName(false); }}
-                    className="px-3 py-2 bg-surface-tertiary text-text-secondary text-sm font-semibold rounded-lg hover:bg-border transition-colors"
+                    className="px-3 py-2 bg-[#F5F6F8] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
                   >
                     ביטול
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <p className="text-sm font-semibold text-text-primary flex-1">{user?.name}</p>
+                  <p className="text-sm font-semibold text-[#323338] flex-1">{user?.name}</p>
                   <button
                     onClick={() => setEditingName(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-text-secondary border border-border rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#676879] border border-[#D0D4E4] rounded-[4px] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors"
                   >
                     <Pencil size={12} /> ערוך
                   </button>
@@ -368,30 +359,30 @@ function ProfileTab() {
             </div>
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1.5">
+              <label className="block text-xs font-semibold text-[#676879] mb-1.5">
                 <Mail size={12} className="inline mr-1" />
                 אימייל
               </label>
-              <p className="text-sm text-text-primary">{user?.email}</p>
+              <p className="text-sm text-[#323338]">{user?.email}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Workspace membership */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-4">סביבת עבודה נוכחית</h2>
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+        <h2 className="text-base font-bold text-[#323338] mb-4">סביבת עבודה נוכחית</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">שם הסביבה</label>
-            <p className="text-sm font-semibold text-text-primary">{currentWs?.name || "—"}</p>
+            <label className="block text-xs text-[#9699A6] mb-1">שם הסביבה</label>
+            <p className="text-sm font-semibold text-[#323338]">{currentWs?.name || "—"}</p>
           </div>
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">סלאג</label>
-            <p className="text-sm text-text-primary font-mono">{currentWs?.slug || "—"}</p>
+            <label className="block text-xs text-[#9699A6] mb-1">סלאג</label>
+            <p className="text-sm text-[#323338] font-mono">{currentWs?.slug || "—"}</p>
           </div>
           <div>
-            <label className="block text-xs text-text-tertiary mb-1">תפקיד</label>
+            <label className="block text-xs text-[#9699A6] mb-1">תפקיד</label>
             <RoleBadge role={currentWs?.role || ""} />
           </div>
         </div>
@@ -399,31 +390,31 @@ function ProfileTab() {
 
       {/* All Workspaces */}
       {workspaces.length > 1 && (
-        <div className="bg-white rounded-xl shadow-card p-6">
-          <h2 className="text-base font-bold text-text-primary mb-4">
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+          <h2 className="text-base font-bold text-[#323338] mb-4">
             סביבות עבודה ({workspaces.length})
           </h2>
           <div className="space-y-2">
             {workspaces.map((ws) => (
               <div
                 key={ws.id}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                className={`flex items-center gap-3 p-3 rounded-[4px] border transition-all ${
                   ws.id === currentWorkspaceId
-                    ? "border-primary bg-[#F5F6FF] shadow-sm"
-                    : "border-border-light hover:border-border"
+                    ? "border-[#0073EA] bg-[#F5F6FF] shadow-sm"
+                    : "border-[#E6E9EF] hover:border-[#E6E9EF]"
                 }`}
               >
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm">
+                <div className="w-10 h-10 bg-[#0073EA] rounded-xl flex items-center justify-center shadow-sm">
                   <span className="text-white text-sm font-bold">{ws.name.charAt(0)}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-text-primary">{ws.name}</p>
-                  <p className="text-xs text-text-tertiary">
+                  <p className="text-sm font-semibold text-[#323338]">{ws.name}</p>
+                  <p className="text-xs text-[#9699A6]">
                     {ROLES[ws.role as keyof typeof ROLES] || ws.role}
                   </p>
                 </div>
                 {ws.id === currentWorkspaceId && (
-                  <span className="text-[10px] bg-primary text-white px-2.5 py-0.5 rounded-full font-semibold">
+                  <span className="text-[10px] bg-[#0073EA] text-white px-2.5 py-0.5 rounded-full font-semibold">
                     פעיל
                   </span>
                 )}
@@ -524,15 +515,15 @@ function MembersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-primary">חברי צוות</h2>
-          <p className="text-xs text-text-tertiary">
+          <h2 className="text-base font-bold text-[#323338]">חברי צוות</h2>
+          <p className="text-xs text-[#9699A6]">
             {members?.length || 0} חברים בסביבת העבודה
           </p>
         </div>
         {isOwnerOrAdmin && (
           <button
             onClick={() => { setShowInvite(true); setInviteSent(false); }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-all hover:shadow-md active:scale-[0.97]"
           >
             <UserPlus size={16} />
             + הזמן חבר
@@ -544,24 +535,24 @@ function MembersTab() {
       {isLoading ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-card p-4 h-16 animate-pulse" />
+            <div key={i} className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4 h-16 animate-pulse" />
           ))}
         </div>
       ) : !members || members.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-card text-center py-12">
-          <Users size={32} className="text-text-tertiary mx-auto mb-2" />
-          <p className="text-sm text-text-tertiary">אין חברי צוות</p>
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-center py-12">
+          <Users size={32} className="text-[#9699A6] mx-auto mb-2" />
+          <p className="text-sm text-[#9699A6]">אין חברי צוות</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-card overflow-hidden">
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-5 py-2.5 bg-surface-secondary border-b border-border-light text-[11px] font-semibold text-text-tertiary uppercase tracking-wide">
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-5 py-2.5 bg-[#F5F6F8] border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide">
             <span>חבר</span>
             <span>פעיל לאחרונה</span>
             <span>תפקיד</span>
             {isOwnerOrAdmin && <span>פעולות</span>}
           </div>
-          <div className="divide-y divide-border-light">
+          <div className="divide-y divide-[#E6E9EF]">
             {members.map((m) => {
               const memberAvatarColor = avatarColor(m.name || "");
               const isCurrentUser = m.userId === user?.id;
@@ -584,10 +575,10 @@ function MembersTab() {
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-text-primary truncate">
-                        {m.name} {isCurrentUser && <span className="text-[10px] text-text-tertiary font-normal">(אתה)</span>}
+                      <p className="text-sm font-semibold text-[#323338] truncate">
+                        {m.name} {isCurrentUser && <span className="text-[10px] text-[#9699A6] font-normal">(אתה)</span>}
                       </p>
-                      <p className="text-xs text-text-tertiary flex items-center gap-1 truncate">
+                      <p className="text-xs text-[#9699A6] flex items-center gap-1 truncate">
                         <Mail size={10} className="flex-shrink-0" />
                         {m.email}
                       </p>
@@ -595,7 +586,7 @@ function MembersTab() {
                   </div>
 
                   {/* Last active */}
-                  <p className="text-xs text-text-tertiary">
+                  <p className="text-xs text-[#9699A6]">
                     {formatLastActive((m as { lastActive?: string }).lastActive)}
                   </p>
 
@@ -607,21 +598,21 @@ function MembersTab() {
                         className="flex items-center gap-1 group"
                       >
                         <RoleBadge role={m.role} />
-                        <ChevronDown size={12} className="text-text-tertiary group-hover:text-primary transition-colors" />
+                        <ChevronDown size={12} className="text-[#9699A6] group-hover:text-[#0073EA] transition-colors" />
                       </button>
                     ) : (
                       <RoleBadge role={m.role} />
                     )}
                     {roleDropdown === m.memberId && (
-                      <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-border-light z-50 py-1.5 min-w-[140px]">
+                      <div className="absolute top-full right-0 mt-1 bg-white rounded-xl shadow-lg border border-[#E6E9EF] z-50 py-1.5 min-w-[140px]">
                         {(["ADMIN", "AGENT"] as const).map((r) => (
                           <button
                             key={r}
                             onClick={() => changeRoleMut.mutate({ memberId: m.memberId, role: r })}
                             disabled={changeRoleMut.isPending}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#F5F6FF] transition-colors ${m.role === r ? "font-semibold text-primary" : "text-text-primary"}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#F5F6FF] transition-colors ${m.role === r ? "font-semibold text-[#0073EA]" : "text-[#323338]"}`}
                           >
-                            {m.role === r && <Check size={12} className="text-primary" />}
+                            {m.role === r && <Check size={12} className="text-[#0073EA]" />}
                             {m.role !== r && <span className="w-3" />}
                             {r === "ADMIN" ? "מנהל" : "נציג"}
                           </button>
@@ -641,10 +632,10 @@ function MembersTab() {
                             }
                           }}
                           disabled={removeMut.isPending}
-                          className="p-1.5 rounded-md hover:bg-red-50 transition-colors group"
+                          className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors group"
                           title="הסר מחבר"
                         >
-                          <X size={15} className="text-text-tertiary group-hover:text-danger transition-colors" />
+                          <X size={15} className="text-[#9699A6] group-hover:text-[#E44258] transition-colors" />
                         </button>
                       ) : (
                         <span className="w-8 block" />
@@ -671,12 +662,12 @@ function MembersTab() {
               <CheckCircle2 size={32} className="text-success" />
             </div>
             <div>
-              <p className="text-base font-bold text-text-primary">ההזמנה נשלחה!</p>
-              <p className="text-sm text-text-tertiary mt-1">החבר החדש נוסף לסביבת העבודה</p>
+              <p className="text-base font-bold text-[#323338]">ההזמנה נשלחה!</p>
+              <p className="text-sm text-[#9699A6] mt-1">החבר החדש נוסף לסביבת העבודה</p>
             </div>
             <button
               onClick={() => { setInviteSent(false); }}
-              className="px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary-hover transition-colors"
+              className="px-5 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] transition-colors"
             >
               הזמן עוד
             </button>
@@ -687,23 +678,23 @@ function MembersTab() {
             className="space-y-4 p-6"
           >
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">אימייל *</label>
+              <label className="block text-sm font-medium text-[#323338] mb-1">אימייל *</label>
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="example@company.com"
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 required
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">תפקיד</label>
+              <label className="block text-sm font-medium text-[#323338] mb-1">תפקיד</label>
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "ADMIN" | "AGENT")}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               >
                 <option value="AGENT">נציג — גישה לנתונים בלבד</option>
                 <option value="ADMIN">מנהל — גישה מלאה + הגדרות</option>
@@ -713,14 +704,14 @@ function MembersTab() {
               <button
                 type="button"
                 onClick={() => setShowInvite(false)}
-                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>
               <button
                 type="submit"
                 disabled={inviteMut.isPending}
-                className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+                className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
               >
                 {inviteMut.isPending ? "שולח..." : "שלח הזמנה"}
               </button>
@@ -778,26 +769,26 @@ function WorkspacePermissionsTab() {
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-1">הרשאות סביבת עבודה</h2>
-        <p className="text-xs text-text-tertiary mb-6">קבע מי יכול לבצע כל פעולה לפי תפקיד</p>
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+        <h2 className="text-base font-bold text-[#323338] mb-1">הרשאות סביבת עבודה</h2>
+        <p className="text-xs text-[#9699A6] mb-6">קבע מי יכול לבצע כל פעולה לפי תפקיד</p>
 
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-right text-xs font-semibold text-text-tertiary pb-3 pr-0">פעולה</th>
+                <th className="text-right text-xs font-semibold text-[#9699A6] pb-3 pr-0">פעולה</th>
                 {ALL_ROLES.map((r) => (
-                  <th key={r} className="text-center text-xs font-semibold text-text-tertiary pb-3 px-4">
+                  <th key={r} className="text-center text-xs font-semibold text-[#9699A6] pb-3 px-4">
                     <RoleBadge role={r} />
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-light">
+            <tbody className="divide-y divide-[#E6E9EF]">
               {(Object.keys(perms) as (keyof typeof perms)[]).map((perm) => (
                 <tr key={perm} className="hover:bg-[#F5F6FF] transition-colors">
-                  <td className="py-3 text-sm text-text-primary font-medium">{PERM_LABELS[perm]}</td>
+                  <td className="py-3 text-sm text-[#323338] font-medium">{PERM_LABELS[perm]}</td>
                   {ALL_ROLES.map((role) => {
                     const isChecked = perms[perm].includes(role);
                     const isLocked = role === "OWNER"; // OWNER always has permission
@@ -808,8 +799,8 @@ function WorkspacePermissionsTab() {
                           disabled={isLocked || !isOwnerOrAdmin}
                           className={`w-5 h-5 rounded flex items-center justify-center mx-auto transition-colors ${
                             isChecked
-                              ? "bg-primary text-white"
-                              : "border-2 border-border hover:border-primary"
+                              ? "bg-[#0073EA] text-white"
+                              : "border-2 border-[#E6E9EF] hover:border-[#0073EA]"
                           } ${isLocked ? "opacity-60 cursor-not-allowed" : isOwnerOrAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
                         >
                           {isChecked && <Check size={12} />}
@@ -824,7 +815,7 @@ function WorkspacePermissionsTab() {
         </div>
 
         {!isOwnerOrAdmin && (
-          <p className="mt-4 text-xs text-text-tertiary bg-surface-secondary rounded-lg p-3 flex items-center gap-2">
+          <p className="mt-4 text-xs text-[#9699A6] bg-[#F5F6F8] rounded-lg p-3 flex items-center gap-2">
             <Lock size={12} />
             רק בעלים ומנהלים יכולים לשנות הרשאות
           </p>
@@ -868,10 +859,10 @@ function CannedResponsesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-primary">
+          <h2 className="text-base font-bold text-[#323338]">
             תגובות מוכנות
           </h2>
-          <p className="text-xs text-text-tertiary">
+          <p className="text-xs text-[#9699A6]">
             תבניות תגובה מוכנות לשימוש מהיר בפניות. תומך במשתנים:{" "}
             {"{{contact.firstName}}"}, {"{{agent.name}}"}
           </p>
@@ -881,7 +872,7 @@ function CannedResponsesTab() {
             setEditing(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-all hover:shadow-md active:scale-[0.97]"
         >
           <Plus size={16} />
           תגובה חדשה
@@ -893,14 +884,14 @@ function CannedResponsesTab() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-card h-32 animate-pulse"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] h-32 animate-pulse"
             />
           ))}
         </div>
       ) : Object.keys(grouped).length === 0 ? (
-        <div className="bg-white rounded-xl shadow-card text-center py-12">
-          <Zap size={32} className="text-text-tertiary mx-auto mb-2" />
-          <p className="text-sm text-text-tertiary">אין תגובות מוכנות</p>
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-center py-12">
+          <Zap size={32} className="text-[#9699A6] mx-auto mb-2" />
+          <p className="text-sm text-[#9699A6]">אין תגובות מוכנות</p>
         </div>
       ) : (
         Object.entries(grouped).map(([category, items], gIdx) => {
@@ -908,7 +899,7 @@ function CannedResponsesTab() {
           return (
             <div
               key={category}
-              className="bg-white rounded-xl shadow-card overflow-hidden"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden"
             >
               <div
                 className="px-4 py-2.5 flex items-center gap-2"
@@ -920,17 +911,17 @@ function CannedResponsesTab() {
                   {items.length}
                 </span>
               </div>
-              <div className="divide-y divide-border-light">
+              <div className="divide-y divide-[#E6E9EF]">
                 {items.map((r) => (
                   <div
                     key={r.id}
                     className="px-4 py-3 flex items-start gap-3 hover:bg-[#F5F6FF] transition-colors"
                   >
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-semibold text-text-primary">
+                      <h4 className="text-sm font-semibold text-[#323338]">
                         {r.title}
                       </h4>
-                      <p className="text-xs text-text-tertiary mt-1 whitespace-pre-wrap line-clamp-2">
+                      <p className="text-xs text-[#9699A6] mt-1 whitespace-pre-wrap line-clamp-2">
                         {r.body}
                       </p>
                     </div>
@@ -940,15 +931,15 @@ function CannedResponsesTab() {
                           setEditing(r);
                           setShowForm(true);
                         }}
-                        className="p-1.5 rounded-md hover:bg-surface-secondary transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
                       >
-                        <Pencil size={14} className="text-text-tertiary" />
+                        <Pencil size={14} className="text-[#9699A6]" />
                       </button>
                       <button
                         onClick={() => deleteMut.mutate(r.id)}
-                        className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors"
                       >
-                        <Trash2 size={14} className="text-danger" />
+                        <Trash2 size={14} className="text-[#E44258]" />
                       </button>
                     </div>
                   </div>
@@ -1030,20 +1021,20 @@ function CannedResponseForm({
     >
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             כותרת *
           </label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             required
             autoFocus
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             קטגוריה
           </label>
           <input
@@ -1052,23 +1043,23 @@ function CannedResponseForm({
             onChange={(e) =>
               setForm((f) => ({ ...f, category: e.target.value }))
             }
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             placeholder="כללי, סגירה, מעקב..."
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             תוכן *
           </label>
           <textarea
             value={form.body}
             onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
             rows={5}
             required
             placeholder={`שלום {{contact.firstName}},\n\nתוכן ההודעה...\n\nבברכה,\n{{agent.name}}`}
           />
-          <p className="text-[10px] text-text-tertiary mt-1">
+          <p className="text-[10px] text-[#9699A6] mt-1">
             משתנים זמינים: {"{{contact.firstName}}"}, {"{{contact.lastName}}"},
             {"{{agent.name}}"}
           </p>
@@ -1077,14 +1068,14 @@ function CannedResponseForm({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={createMut.isPending || updateMut.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {editing ? "עדכן" : "צור תגובה"}
           </button>
@@ -1127,8 +1118,8 @@ function SlaPoliciesTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-primary">מדיניות SLA</h2>
-          <p className="text-xs text-text-tertiary">
+          <h2 className="text-base font-bold text-[#323338]">מדיניות SLA</h2>
+          <p className="text-xs text-[#9699A6]">
             הגדרת זמני תגובה ופתרון לפניות
           </p>
         </div>
@@ -1137,7 +1128,7 @@ function SlaPoliciesTab() {
             setEditing(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-all hover:shadow-md active:scale-[0.97]"
         >
           <Plus size={16} />
           מדיניות חדשה
@@ -1149,21 +1140,21 @@ function SlaPoliciesTab() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-card h-20 animate-pulse"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] h-20 animate-pulse"
             />
           ))}
         </div>
       ) : !policies || policies.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-card text-center py-12">
-          <Shield size={32} className="text-text-tertiary mx-auto mb-2" />
-          <p className="text-sm text-text-tertiary">אין מדיניות SLA</p>
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-center py-12">
+          <Shield size={32} className="text-[#9699A6] mx-auto mb-2" />
+          <p className="text-sm text-[#9699A6]">אין מדיניות SLA</p>
         </div>
       ) : (
         <div className="grid gap-3">
           {policies.map((p) => (
             <div
               key={p.id}
-              className="bg-white rounded-xl shadow-card p-4 flex items-center gap-4 hover:shadow-card-hover transition-all border-r-4"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4 flex items-center gap-4 hover:shadow-md transition-all border-r-4"
               style={{
                 borderRightColor: p.isDefault ? "#FDAB3D" : "#A25DDC",
               }}
@@ -1181,7 +1172,7 @@ function SlaPoliciesTab() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-text-primary">
+                  <h3 className="text-sm font-bold text-[#323338]">
                     {p.name}
                   </h3>
                   {p.isDefault && (
@@ -1192,20 +1183,20 @@ function SlaPoliciesTab() {
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-1.5">
-                  <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                    <Clock size={12} className="text-primary" />
+                  <div className="flex items-center gap-1.5 text-xs text-[#676879]">
+                    <Clock size={12} className="text-[#0073EA]" />
                     <span>
                       תגובה ראשונה: {formatMinutes(p.firstResponseMinutes)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <div className="flex items-center gap-1.5 text-xs text-[#676879]">
                     <Clock size={12} className="text-success" />
                     <span>פתרון: {formatMinutes(p.resolutionMinutes)}</span>
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
                     {p.businessHoursOnly ? "שעות עבודה" : "24/7"}
                   </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
                     {p._count.tickets} פניות
                   </span>
                 </div>
@@ -1216,15 +1207,15 @@ function SlaPoliciesTab() {
                     setEditing(p);
                     setShowForm(true);
                   }}
-                  className="p-1.5 rounded-md hover:bg-surface-secondary transition-colors"
+                  className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <Pencil size={14} className="text-text-tertiary" />
+                  <Pencil size={14} className="text-[#9699A6]" />
                 </button>
                 <button
                   onClick={() => deleteMut.mutate(p.id)}
-                  className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                  className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors"
                 >
-                  <Trash2 size={14} className="text-danger" />
+                  <Trash2 size={14} className="text-[#E44258]" />
                 </button>
               </div>
             </div>
@@ -1292,14 +1283,14 @@ function SlaPolicyForm({
     >
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             שם מדיניות *
           </label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             required
             placeholder="סטנדרטי, פרימיום, VIP..."
             autoFocus
@@ -1307,7 +1298,7 @@ function SlaPolicyForm({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               תגובה ראשונה (דקות) *
             </label>
             <input
@@ -1319,13 +1310,13 @@ function SlaPolicyForm({
                   firstResponseMinutes: parseInt(e.target.value) || 0,
                 }))
               }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               min={1}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               פתרון (דקות) *
             </label>
             <input
@@ -1337,7 +1328,7 @@ function SlaPolicyForm({
                   resolutionMinutes: parseInt(e.target.value) || 0,
                 }))
               }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               min={1}
               required
             />
@@ -1354,9 +1345,9 @@ function SlaPolicyForm({
                   businessHoursOnly: e.target.checked,
                 }))
               }
-              className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+              className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]"
             />
-            <span className="text-sm text-text-primary">שעות עבודה בלבד</span>
+            <span className="text-sm text-[#323338]">שעות עבודה בלבד</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -1365,23 +1356,23 @@ function SlaPolicyForm({
               onChange={(e) =>
                 setForm((f) => ({ ...f, isDefault: e.target.checked }))
               }
-              className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+              className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]"
             />
-            <span className="text-sm text-text-primary">ברירת מחדל</span>
+            <span className="text-sm text-[#323338]">ברירת מחדל</span>
           </label>
         </div>
         <div className="flex gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={createMut.isPending || updateMut.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {editing ? "עדכן" : "צור מדיניות"}
           </button>

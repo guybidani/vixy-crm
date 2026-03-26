@@ -447,22 +447,22 @@ export default function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center pt-[12vh]"
+      className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center pt-[12vh]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label="חיפוש גלובלי ופעולות מהירות"
     >
       <div
-        className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] w-full max-w-[520px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        className="bg-white rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] w-full max-w-[520px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
-        <div className="p-3 border-b border-border-light">
+        <div className="p-3 border-b border-[#E6E9EF]">
           <div className="relative">
             <Search
               size={18}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
             />
             <input
               ref={inputRef}
@@ -471,7 +471,7 @@ export default function CommandPalette({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder='חפש אנשי קשר, עסקאות, משימות... או הקלד ">" לפעולות'
-              className="w-full pr-10 pl-4 py-2.5 bg-surface-secondary rounded-xl text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+              className="w-full pr-10 pl-4 py-2.5 bg-[#F5F6F8] rounded-xl text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
               aria-label="חיפוש"
               autoComplete="off"
               spellCheck={false}
@@ -487,12 +487,12 @@ export default function CommandPalette({
         >
           {showLoading && (
             <div className="flex items-center justify-center py-10">
-              <Loader2 size={22} className="text-primary animate-spin" />
+              <Loader2 size={22} className="text-[#0073EA] animate-spin" />
             </div>
           )}
 
           {showEmpty && (
-            <div className="flex flex-col items-center py-10 text-text-tertiary">
+            <div className="flex flex-col items-center py-10 text-[#9699A6]">
               <SearchX size={28} className="mb-2 opacity-50" />
               <span className="text-sm">לא נמצאו תוצאות</span>
               <span className="text-xs mt-1 opacity-70">
@@ -504,8 +504,8 @@ export default function CommandPalette({
           {!showLoading &&
             groups.map((group) => (
               <div key={group.label}>
-                <div className="flex items-center gap-2 px-4 py-2 bg-surface-secondary/40 border-b border-border-light/50">
-                  <span className="text-[11px] font-bold text-text-tertiary">
+                <div className="flex items-center gap-2 px-4 py-2 bg-[#F5F6F8]/40 border-b border-[#E6E9EF]/50">
+                  <span className="text-[11px] font-bold text-[#9699A6]">
                     {group.label}
                   </span>
                 </div>
@@ -523,12 +523,12 @@ export default function CommandPalette({
                       onMouseEnter={() => setSelectedIndex(idx)}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors ${
                         isSelected
-                          ? "bg-primary/5"
-                          : "hover:bg-surface-secondary/50"
+                          ? "bg-[#0073EA]/5"
+                          : "hover:bg-[#F5F6F8]/50"
                       }`}
                     >
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        className="w-8 h-8 rounded-[4px] flex items-center justify-center shrink-0"
                         style={{
                           backgroundColor: item.iconBg,
                           color: item.iconColor,
@@ -537,17 +537,17 @@ export default function CommandPalette({
                         {item.icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-text-primary truncate block">
+                        <span className="text-sm font-medium text-[#323338] truncate block">
                           {item.title}
                         </span>
                         {item.subtitle && (
-                          <span className="text-[11px] text-text-tertiary truncate block">
+                          <span className="text-[11px] text-[#9699A6] truncate block">
                             {item.subtitle}
                           </span>
                         )}
                       </div>
                       {isSelected && (
-                        <kbd className="px-1.5 py-0.5 bg-surface-secondary rounded border border-border-light text-[10px] font-mono text-text-tertiary shrink-0">
+                        <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
                           Enter
                         </kbd>
                       )}
@@ -559,27 +559,27 @@ export default function CommandPalette({
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-border-light flex items-center gap-4 text-[10px] text-text-tertiary bg-surface-secondary/30">
+        <div className="px-4 py-2 border-t border-[#E6E9EF] flex items-center gap-4 text-[10px] text-[#9699A6] bg-[#F5F6F8]/30">
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light font-mono shadow-sm">
+            <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] font-mono shadow-sm">
               ↑↓
             </kbd>
             ניווט
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light font-mono shadow-sm">
+            <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] font-mono shadow-sm">
               Enter
             </kbd>
             בחירה
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light font-mono shadow-sm">
+            <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] font-mono shadow-sm">
               Esc
             </kbd>
             סגירה
           </span>
           <span className="flex items-center gap-1 mr-auto">
-            <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light font-mono shadow-sm">
+            <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] font-mono shadow-sm">
               &gt;
             </kbd>
             פעולות מהירות

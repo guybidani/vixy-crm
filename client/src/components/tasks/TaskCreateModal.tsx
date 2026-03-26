@@ -173,23 +173,23 @@ function SearchableDropdown<T extends { id: string }>({
 
   return (
     <div className="relative" ref={ref}>
-      <label className="block text-xs font-medium text-text-secondary mb-1">
+      <label className="block text-xs font-medium text-[#676879] mb-1">
         {label}
       </label>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2 border border-border rounded-lg text-sm bg-white hover:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors text-right"
+        className="w-full flex items-center justify-between px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white hover:border-[#0073EA]/50 focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 transition-colors text-right"
       >
-        <span className={selected ? "text-text-primary" : "text-text-tertiary"}>
+        <span className={selected ? "text-[#323338]" : "text-[#9699A6]"}>
           {selected ? getLabel(selected) : placeholder}
         </span>
-        <ChevronDown size={14} className="text-text-tertiary flex-shrink-0" />
+        <ChevronDown size={14} className="text-[#9699A6] flex-shrink-0" />
       </button>
       {open && (
-        <div className="absolute top-full mt-1 right-0 left-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-border-light overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-border-light">
-            <Search size={14} className="text-text-tertiary flex-shrink-0" />
+        <div className="absolute top-full mt-1 right-0 left-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E6E9EF]">
+            <Search size={14} className="text-[#9699A6] flex-shrink-0" />
             <input
               ref={searchRef}
               value={search}
@@ -207,18 +207,18 @@ function SearchableDropdown<T extends { id: string }>({
                   setOpen(false);
                   setSearch("");
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-surface-secondary transition-colors text-right"
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F5F6F8] transition-colors text-right"
               >
-                <X size={14} className="text-text-tertiary" />
-                <span className="text-[12px] text-text-secondary">הסר בחירה</span>
+                <X size={14} className="text-[#9699A6]" />
+                <span className="text-[12px] text-[#676879]">הסר בחירה</span>
               </button>
             )}
             {isLoading ? (
               <div className="flex items-center justify-center py-4">
-                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-center py-4 text-[12px] text-text-tertiary">
+              <div className="text-center py-4 text-[12px] text-[#9699A6]">
                 לא נמצאו תוצאות
               </div>
             ) : (
@@ -231,10 +231,10 @@ function SearchableDropdown<T extends { id: string }>({
                     setOpen(false);
                     setSearch("");
                   }}
-                  className={`w-full text-right px-3 py-2 text-[13px] hover:bg-surface-secondary transition-colors ${
+                  className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8] transition-colors ${
                     value === item.id
-                      ? "bg-primary/5 text-primary font-medium"
-                      : "text-text-primary"
+                      ? "bg-[#E8F3FF] text-[#0073EA] font-medium"
+                      : "text-[#323338]"
                   }`}
                 >
                   {getLabel(item)}
@@ -407,13 +407,13 @@ export default function TaskCreateModal({
             onChange={(e) => setField("title", e.target.value)}
             placeholder="מה המשימה? *"
             aria-label="כותרת המשימה"
-            className="w-full px-3 py-2.5 border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
+            className="w-full px-3 py-2.5 border border-[#E6E9EF] rounded-[4px] text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] placeholder:text-[#9699A6]"
             required
           />
 
           {/* Task Type — horizontal button group */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-2">
+            <label className="block text-xs font-medium text-[#676879] mb-2">
               סוג משימה
             </label>
             <div className="flex gap-2">
@@ -425,7 +425,7 @@ export default function TaskCreateModal({
                     key={tt.value}
                     type="button"
                     onClick={() => setField("taskType", tt.value)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-semibold border-2 transition-all"
                     style={
                       isActive
                         ? {
@@ -450,7 +450,7 @@ export default function TaskCreateModal({
 
           {/* Task Context — sales / service / general */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-2">
+            <label className="block text-xs font-medium text-[#676879] mb-2">
               הקשר
             </label>
             <div className="flex gap-2">
@@ -462,7 +462,7 @@ export default function TaskCreateModal({
                     key={tc.value}
                     type="button"
                     onClick={() => setField("taskContext", tc.value)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-semibold border-2 transition-all"
                     style={
                       isActive
                         ? {
@@ -487,7 +487,7 @@ export default function TaskCreateModal({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">
+            <label className="block text-xs font-medium text-[#676879] mb-1">
               תיאור
             </label>
             <textarea
@@ -496,13 +496,13 @@ export default function TaskCreateModal({
               placeholder="פרטים נוספים..."
               aria-label="תיאור המשימה"
               rows={2}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-text-tertiary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none placeholder:text-[#9699A6]"
             />
           </div>
 
           {/* Due Date + shortcuts */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">
+            <label className="block text-xs font-medium text-[#676879] mb-1">
               תאריך יעד
             </label>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -513,8 +513,8 @@ export default function TaskCreateModal({
                   onClick={() => setField("dueDate", shortcut.value)}
                   className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
                     form.dueDate === shortcut.value
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                      ? "bg-[#0073EA] text-white border-[#0073EA]"
+                      : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                   }`}
                 >
                   {shortcut.label}
@@ -527,7 +527,7 @@ export default function TaskCreateModal({
                     setField("dueDate", "");
                     setField("dueTime", "");
                   }}
-                  className="p-1 rounded text-text-tertiary hover:text-danger transition-colors"
+                  className="p-1 rounded text-[#9699A6] hover:text-[#E44258] transition-colors"
                   title="הסר תאריך"
                 >
                   <X size={14} />
@@ -538,7 +538,7 @@ export default function TaskCreateModal({
               type="date"
               value={form.dueDate}
               onChange={(e) => setField("dueDate", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
@@ -547,21 +547,21 @@ export default function TaskCreateModal({
           {form.dueDate && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-text-secondary mb-1">
+                <label className="block text-xs font-medium text-[#676879] mb-1">
                   שעה
                 </label>
                 <input
                   type="time"
                   value={form.dueTime}
                   onChange={(e) => setField("dueTime", e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                   dir="ltr"
                 />
               </div>
               {/* Reminder — only when dueTime is set */}
               {form.dueTime && (
                 <div>
-                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                  <label className="block text-xs font-medium text-[#676879] mb-1">
                     תזכורת
                   </label>
                   <select
@@ -569,7 +569,7 @@ export default function TaskCreateModal({
                     onChange={(e) =>
                       setField("reminderMinutes", Number(e.target.value))
                     }
-                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                    className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
                   >
                     {REMINDER_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -584,7 +584,7 @@ export default function TaskCreateModal({
 
           {/* Priority */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-2">
+            <label className="block text-xs font-medium text-[#676879] mb-2">
               עדיפות
             </label>
             <div className="flex gap-2">
@@ -595,10 +595,10 @@ export default function TaskCreateModal({
                     key={opt.value}
                     type="button"
                     onClick={() => setField("priority", opt.value)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-semibold border transition-all ${
                       isActive
                         ? "bg-white shadow-sm"
-                        : "bg-white border-border text-text-secondary hover:border-[var(--c)]"
+                        : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[var(--c)]"
                     }`}
                     style={
                       isActive
@@ -627,24 +627,24 @@ export default function TaskCreateModal({
               <button
                 type="button"
                 onClick={() => setField("isRecurring", !form.isRecurring)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border-2 transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-semibold border-2 transition-all ${
                   form.isRecurring
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white text-text-secondary border-border hover:border-primary hover:text-primary"
+                    ? "bg-[#0073EA] text-white border-[#0073EA]"
+                    : "bg-white text-[#676879] border-[#E6E9EF] hover:border-[#0073EA] hover:text-[#0073EA]"
                 }`}
               >
                 <Repeat size={14} />
                 <span>חזרה</span>
               </button>
               {form.isRecurring && (
-                <span className="text-[11px] text-text-tertiary">משימה חוזרת</span>
+                <span className="text-[11px] text-[#9699A6]">משימה חוזרת</span>
               )}
             </div>
             {form.isRecurring && (
-              <div className="space-y-3 p-3 bg-surface-secondary/50 rounded-lg border border-border-light">
+              <div className="space-y-3 p-3 bg-[#F5F6F8] rounded-lg border border-[#E6E9EF]">
                 {/* Recurrence type */}
                 <div>
-                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                  <label className="block text-xs font-medium text-[#676879] mb-1">
                     תדירות
                   </label>
                   <div className="flex gap-2">
@@ -656,10 +656,10 @@ export default function TaskCreateModal({
                           setField("recurrenceType", opt.value);
                           setField("recurrenceDay", "");
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        className={`px-3 py-1.5 rounded-[4px] text-[12px] font-semibold border transition-all ${
                           form.recurrenceType === opt.value
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                            ? "bg-[#0073EA] text-white border-[#0073EA]"
+                            : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                         }`}
                       >
                         {opt.label}
@@ -671,7 +671,7 @@ export default function TaskCreateModal({
                 {/* Weekly: day of week selector (Sun-Thu) */}
                 {form.recurrenceType === "WEEKLY" && (
                   <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                    <label className="block text-xs font-medium text-[#676879] mb-1">
                       יום בשבוע
                     </label>
                     <div className="flex gap-1.5">
@@ -680,10 +680,10 @@ export default function TaskCreateModal({
                           key={day.value}
                           type="button"
                           onClick={() => setField("recurrenceDay", day.value)}
-                          className={`w-9 h-9 rounded-lg text-xs font-bold border transition-all ${
+                          className={`w-9 h-9 rounded-[4px] text-[12px] font-bold border transition-all ${
                             form.recurrenceDay === day.value
-                              ? "bg-primary text-white border-primary"
-                              : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                              ? "bg-[#0073EA] text-white border-[#0073EA]"
+                              : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                           }`}
                         >
                           {day.label}
@@ -696,7 +696,7 @@ export default function TaskCreateModal({
                 {/* Monthly: day of month input */}
                 {form.recurrenceType === "MONTHLY" && (
                   <div>
-                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                    <label className="block text-xs font-medium text-[#676879] mb-1">
                       יום בחודש
                     </label>
                     <input
@@ -711,7 +711,7 @@ export default function TaskCreateModal({
                         )
                       }
                       placeholder="1-28"
-                      className="w-24 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                      className="w-24 px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                       dir="ltr"
                     />
                   </div>
@@ -719,14 +719,14 @@ export default function TaskCreateModal({
 
                 {/* End date */}
                 <div>
-                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                  <label className="block text-xs font-medium text-[#676879] mb-1">
                     עד תאריך (אופציונלי)
                   </label>
                   <input
                     type="date"
                     value={form.recurrenceEndDate}
                     onChange={(e) => setField("recurrenceEndDate", e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                    className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                     dir="ltr"
                   />
                 </div>
@@ -771,18 +771,18 @@ export default function TaskCreateModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-border-light">
+        <div className="flex gap-3 px-6 py-4 border-t border-[#E6E9EF]">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={!form.title.trim() || mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all hover:shadow-md text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-all hover:shadow-md text-[13px] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {mutation.isPending ? (
               <>

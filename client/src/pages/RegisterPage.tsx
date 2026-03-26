@@ -22,7 +22,7 @@ const strengthConfig: Record<
   Exclude<PasswordStrength, "none">,
   { label: string; color: string; width: string }
 > = {
-  weak: { label: "חלשה", color: "bg-danger", width: "33%" },
+  weak: { label: "חלשה", color: "bg-[#E44258]", width: "33%" },
   medium: { label: "בינונית", color: "bg-warning", width: "66%" },
   strong: { label: "חזקה", color: "bg-success", width: "100%" },
 };
@@ -106,16 +106,16 @@ export default function RegisterPage() {
         className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
         dir="rtl"
       >
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-card-hover border border-white/60 p-12 w-full max-w-md animate-fade-in-up text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-success to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-card-glow animate-scale-check">
+        <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-12 w-full max-w-md animate-fade-in-up text-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-success to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_4px_16px_rgba(0,115,234,0.3)] animate-scale-check">
             <Check className="text-white" size={40} strokeWidth={3} />
           </div>
-          <h1 className="text-2xl font-bold text-text-primary mb-2">
+          <h1 className="text-2xl font-bold text-[#323338] mb-2">
             ברוכים הבאים!
           </h1>
-          <p className="text-text-secondary">מעביר אתכם למערכת...</p>
+          <p className="text-[#676879]">מעביר אתכם למערכת...</p>
           <div className="mt-6 flex justify-center">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ export default function RegisterPage() {
   }
 
   const inputClass =
-    "w-full px-4 py-2.5 border border-border-light rounded-xl text-text-primary placeholder:text-text-tertiary bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-all";
+    "w-full px-4 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] focus-visible:ring-2 focus-visible:ring-[#0073EA] transition-all";
 
   const stepAnimation =
     stepDirection === "forward"
@@ -135,16 +135,16 @@ export default function RegisterPage() {
       className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
       dir="rtl"
     >
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-card-hover border border-white/60 p-8 w-full max-w-md animate-fade-in-up">
+      <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-8 w-full max-w-md animate-fade-in-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-card-glow">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-[0_4px_16px_rgba(0,115,234,0.3)]">
             <span className="text-white text-2xl font-bold">V</span>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">
+          <h1 className="text-2xl font-bold text-[#323338]">
             יצירת חשבון חדש
           </h1>
-          <p className="text-text-secondary mt-1">
+          <p className="text-[#676879] mt-1">
             {step === 1 ? "פרטים אישיים" : "סביבת עבודה"}
           </p>
         </div>
@@ -154,15 +154,15 @@ export default function RegisterPage() {
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
               step >= 1
-                ? "bg-gradient-to-br from-primary to-primary-dark text-white shadow-sm"
-                : "bg-surface-tertiary text-text-tertiary"
+                ? "bg-gradient-to-br from-[#0073EA] to-[#0060C2] text-white shadow-sm"
+                : "bg-[#F5F6F8] text-[#9699A6]"
             }`}
           >
             {step > 1 ? <Check size={14} strokeWidth={3} /> : "1"}
           </div>
-          <div className="w-16 h-1 rounded-full bg-surface-tertiary overflow-hidden">
+          <div className="w-16 h-1 rounded-full bg-[#F5F6F8] overflow-hidden">
             <div
-              className={`h-full bg-gradient-to-l from-primary to-primary-dark rounded-full transition-all duration-500 ease-out ${
+              className={`h-full bg-gradient-to-l from-[#0073EA] to-[#0060C2] rounded-full transition-all duration-500 ease-out ${
                 step >= 2 ? "w-full" : "w-0"
               }`}
             />
@@ -170,8 +170,8 @@ export default function RegisterPage() {
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
               step >= 2
-                ? "bg-gradient-to-br from-primary to-primary-dark text-white shadow-sm"
-                : "bg-surface-tertiary text-text-tertiary"
+                ? "bg-gradient-to-br from-[#0073EA] to-[#0060C2] text-white shadow-sm"
+                : "bg-[#F5F6F8] text-[#9699A6]"
             }`}
           >
             2
@@ -183,7 +183,7 @@ export default function RegisterPage() {
             <div key="step1" className={stepAnimation}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="register-name" className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-name" className="block text-[13px] font-medium text-[#323338] mb-1">
                     שם מלא
                   </label>
                   <input
@@ -197,7 +197,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="register-email" className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-email" className="block text-[13px] font-medium text-[#323338] mb-1">
                     אימייל
                   </label>
                   <input
@@ -212,7 +212,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="register-password" className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-password" className="block text-[13px] font-medium text-[#323338] mb-1">
                     סיסמה
                   </label>
                   <div className="relative">
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9699A6] hover:text-[#676879] transition-colors"
                       aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
                     >
                       {showPassword ? (
@@ -244,7 +244,7 @@ export default function RegisterPage() {
                   {/* Password strength indicator */}
                   {passwordStrength !== "none" && (
                     <div className="mt-2">
-                      <div className="h-1.5 w-full bg-surface-tertiary rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[#F5F6F8] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ease-out ${strengthConfig[passwordStrength].color}`}
                           style={{
@@ -253,9 +253,9 @@ export default function RegisterPage() {
                         />
                       </div>
                       <p
-                        className={`text-xs mt-1 font-medium ${
+                        className={`text-[12px] mt-1 font-medium ${
                           passwordStrength === "weak"
-                            ? "text-danger"
+                            ? "text-[#E44258]"
                             : passwordStrength === "medium"
                               ? "text-warning"
                               : "text-success"
@@ -268,7 +268,7 @@ export default function RegisterPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-gradient-to-l from-primary to-primary-dark hover:from-primary-hover hover:to-primary text-white font-semibold rounded-xl shadow-sm hover:shadow-card-glow hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
+                  className="w-full py-2.5 bg-gradient-to-l from-[#0073EA] to-[#0060C2] hover:from-[#0060C2] hover:to-[#0073EA] text-white font-semibold rounded-xl shadow-sm hover:shadow-[0_4px_16px_rgba(0,115,234,0.3)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200"
                 >
                   המשך
                 </button>
@@ -278,7 +278,7 @@ export default function RegisterPage() {
             <div key="step2" className={stepAnimation}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="register-workspace" className="block text-sm font-medium text-text-primary mb-1">
+                  <label htmlFor="register-workspace" className="block text-[13px] font-medium text-[#323338] mb-1">
                     שם העסק / סביבת העבודה
                   </label>
                   <input
@@ -291,26 +291,26 @@ export default function RegisterPage() {
                     required
                   />
                   {slug && (
-                    <p className="text-xs text-text-tertiary mt-1.5 font-mono" dir="ltr" style={{ textAlign: "left" }}>
+                    <p className="text-xs text-[#9699A6] mt-1.5 font-mono" dir="ltr" style={{ textAlign: "left" }}>
                       {slug}
                     </p>
                   )}
                 </div>
-                <p className="text-xs text-text-secondary leading-relaxed">
+                <p className="text-xs text-[#676879] leading-relaxed">
                   זה יהיה שם הסביבה שלכם. תוכלו להזמין חברי צוות בהמשך.
                 </p>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="flex-1 py-2.5 bg-white/60 hover:bg-white border border-border-light text-text-secondary font-semibold rounded-xl transition-all duration-200 hover:shadow-sm"
+                    className="flex-1 py-2.5 bg-white hover:bg-white border border-[#D0D4E4] text-[#676879] font-semibold rounded-xl transition-all duration-200 hover:shadow-sm"
                   >
                     חזרה
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 py-2.5 bg-gradient-to-l from-primary to-primary-dark hover:from-primary-hover hover:to-primary text-white font-semibold rounded-xl shadow-sm hover:shadow-card-glow hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 bg-gradient-to-l from-[#0073EA] to-[#0060C2] hover:from-[#0060C2] hover:to-[#0073EA] text-white font-semibold rounded-xl shadow-sm hover:shadow-[0_4px_16px_rgba(0,115,234,0.3)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -329,9 +329,9 @@ export default function RegisterPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-border-light" />
-          <span className="text-xs text-text-tertiary">או</span>
-          <div className="flex-1 h-px bg-border-light" />
+          <div className="flex-1 h-px bg-[#D0D4E4]" />
+          <span className="text-xs text-[#9699A6]">או</span>
+          <div className="flex-1 h-px bg-[#D0D4E4]" />
         </div>
 
         {/* Google Sign Up */}
@@ -349,11 +349,11 @@ export default function RegisterPage() {
           onError={(msg) => toast.error(msg)}
         />
 
-        <p className="text-center text-text-secondary text-sm mt-6">
+        <p className="text-center text-[#676879] text-[13px] mt-6">
           כבר יש לכם חשבון?{" "}
           <Link
             to="/login"
-            className="text-primary font-semibold hover:text-primary-dark hover:underline transition-colors"
+            className="text-[#0073EA] font-semibold hover:text-[#0060C2] hover:underline transition-colors"
           >
             התחברות
           </Link>
@@ -362,7 +362,7 @@ export default function RegisterPage() {
         <p className="text-center mt-4">
           <Link
             to="/"
-            className="text-text-tertiary text-xs hover:text-text-secondary hover:underline transition-colors"
+            className="text-[#9699A6] text-xs hover:text-[#676879] hover:underline transition-colors"
           >
             חזרה לדף הבית
           </Link>

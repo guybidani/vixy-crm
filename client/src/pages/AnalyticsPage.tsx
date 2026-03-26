@@ -68,7 +68,7 @@ function ActivityBreakdownChart({ data }: { data: ActivityBreakdownItem[] }) {
   const total = data.reduce((s, d) => s + d.count, 0);
 
   if (data.length === 0) {
-    return <p className="text-sm text-text-tertiary text-center py-8">אין נתונים לתקופה זו</p>;
+    return <p className="text-[13px] text-[#9699A6] text-center py-8">אין נתונים לתקופה זו</p>;
   }
 
   return (
@@ -80,11 +80,11 @@ function ActivityBreakdownChart({ data }: { data: ActivityBreakdownItem[] }) {
         const pct = Math.round((item.count / maxCount) * 100);
         return (
           <div key={item.type} className="space-y-1">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-text-secondary">{label}</span>
-              <span className="font-semibold text-text-primary">{item.count}</span>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-[#676879]">{label}</span>
+              <span className="font-semibold text-[#323338]">{item.count}</span>
             </div>
-            <div className="h-6 bg-surface-secondary rounded-md overflow-hidden">
+            <div className="h-6 bg-[#F5F6F8] rounded-md overflow-hidden">
               <div
                 className="h-full rounded-md transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: color }}
@@ -93,7 +93,7 @@ function ActivityBreakdownChart({ data }: { data: ActivityBreakdownItem[] }) {
           </div>
         );
       })}
-      <p className="text-xs text-text-tertiary text-center pt-1">סה״כ: {total} פעילויות</p>
+      <p className="text-xs text-[#9699A6] text-center pt-1">סה״כ: {total} פעילויות</p>
     </div>
   );
 }
@@ -111,7 +111,7 @@ function DealFunnelChart({ data }: { data: DealFunnelItem[] }) {
   const maxCount = Math.max(...sorted.map((d) => d.count), 1);
 
   if (sorted.length === 0) {
-    return <p className="text-sm text-text-tertiary text-center py-8">אין עסקאות בתקופה זו</p>;
+    return <p className="text-[13px] text-[#9699A6] text-center py-8">אין עסקאות בתקופה זו</p>;
   }
 
   return (
@@ -123,16 +123,16 @@ function DealFunnelChart({ data }: { data: DealFunnelItem[] }) {
         const pct = Math.round((item.count / maxCount) * 100);
         return (
           <div key={item.stage} className="space-y-1">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-text-secondary">{label}</span>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-[#676879]">{label}</span>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-text-tertiary">
+                <span className="text-xs text-[#9699A6]">
                   {item.value > 0 ? `₪${item.value.toLocaleString()}` : ""}
                 </span>
-                <span className="font-semibold text-text-primary">{item.count}</span>
+                <span className="font-semibold text-[#323338]">{item.count}</span>
               </div>
             </div>
-            <div className="h-5 bg-surface-secondary rounded-md overflow-hidden">
+            <div className="h-5 bg-[#F5F6F8] rounded-md overflow-hidden">
               <div
                 className="h-full rounded-md transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: color }}
@@ -151,7 +151,7 @@ function TaskCompletionDonut({ data }: { data: TaskCompletionData }) {
   const { totalCreated, totalCompleted, completionRate } = data;
 
   if (totalCreated === 0) {
-    return <p className="text-sm text-text-tertiary text-center py-8">אין משימות בתקופה זו</p>;
+    return <p className="text-[13px] text-[#9699A6] text-center py-8">אין משימות בתקופה זו</p>;
   }
 
   // SVG donut
@@ -187,18 +187,18 @@ function TaskCompletionDonut({ data }: { data: TaskCompletionData }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-bold text-text-primary">{completionRate}%</span>
-          <span className="text-xs text-text-tertiary">הושלמו</span>
+          <span className="text-2xl font-bold text-[#323338]">{completionRate}%</span>
+          <span className="text-xs text-[#9699A6]">הושלמו</span>
         </div>
       </div>
-      <div className="flex items-center gap-6 text-sm">
+      <div className="flex items-center gap-6 text-[13px]">
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#00CA72]" />
-          <span className="text-text-secondary">הושלמו: {totalCompleted}</span>
+          <span className="text-[#676879]">הושלמו: {totalCompleted}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-3 rounded-full bg-[#F0F0F5]" />
-          <span className="text-text-secondary">ממתינות: {totalCreated - totalCompleted}</span>
+          <span className="text-[#676879]">ממתינות: {totalCreated - totalCompleted}</span>
         </div>
       </div>
     </div>
@@ -209,7 +209,7 @@ function TaskCompletionDonut({ data }: { data: TaskCompletionData }) {
 
 function ContactGrowthLine({ data }: { data: ContactGrowthItem[] }) {
   if (data.length === 0) {
-    return <p className="text-sm text-text-tertiary text-center py-8">אין אנשי קשר חדשים בתקופה זו</p>;
+    return <p className="text-[13px] text-[#9699A6] text-center py-8">אין אנשי קשר חדשים בתקופה זו</p>;
   }
 
   const maxCount = Math.max(...data.map((d) => d.count), 1);
@@ -227,12 +227,12 @@ function ContactGrowthLine({ data }: { data: ContactGrowthItem[] }) {
           });
           return (
             <div key={item.weekStart} className="flex flex-col items-center gap-1 flex-1 max-w-12">
-              <span className="text-[10px] font-semibold text-text-primary">{item.count}</span>
+              <span className="text-[10px] font-semibold text-[#323338]">{item.count}</span>
               <div
                 className="w-full rounded-t-md bg-[#579BFC] transition-all duration-500"
                 style={{ height: barHeight }}
               />
-              <span className="text-[10px] text-text-tertiary whitespace-nowrap">{weekLabel}</span>
+              <span className="text-[10px] text-[#9699A6] whitespace-nowrap">{weekLabel}</span>
             </div>
           );
         })}
@@ -245,7 +245,7 @@ function ContactGrowthLine({ data }: { data: ContactGrowthItem[] }) {
 
 function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
   if (data.length === 0) {
-    return <p className="text-sm text-text-tertiary text-center py-8">אין נתונים לתקופה זו</p>;
+    return <p className="text-[13px] text-[#9699A6] text-center py-8">אין נתונים לתקופה זו</p>;
   }
 
   const maxCount = data[0]?.activitiesCount || 1;
@@ -256,7 +256,7 @@ function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
         const pct = Math.round((item.activitiesCount / maxCount) * 100);
         return (
           <div key={item.memberId} className="flex items-center gap-3">
-            <span className="w-6 h-6 rounded-full bg-primary-light flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+            <span className="w-6 h-6 rounded-full bg-[#0073EA]/10 flex items-center justify-center text-[12px] font-bold text-[#0073EA] flex-shrink-0">
               {idx + 1}
             </span>
             {item.avatarUrl ? (
@@ -266,16 +266,16 @@ function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <span className="w-8 h-8 rounded-full bg-surface-secondary flex items-center justify-center text-sm font-semibold text-text-secondary flex-shrink-0">
+              <span className="w-8 h-8 rounded-full bg-[#F5F6F8] flex items-center justify-center text-[13px] font-semibold text-[#676879] flex-shrink-0">
                 {item.name.charAt(0)}
               </span>
             )}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-text-primary font-medium truncate">{item.name}</span>
-                <span className="font-semibold text-text-primary">{item.activitiesCount}</span>
+              <div className="flex items-center justify-between text-[13px] mb-1">
+                <span className="text-[#323338] font-medium truncate">{item.name}</span>
+                <span className="font-semibold text-[#323338]">{item.activitiesCount}</span>
               </div>
-              <div className="h-2 bg-surface-secondary rounded-full overflow-hidden">
+              <div className="h-2 bg-[#F5F6F8] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[#A25DDC] transition-all duration-500"
                   style={{ width: `${pct}%` }}
@@ -328,22 +328,19 @@ export default function AnalyticsPage() {
 
   return (
     <PageShell
-      title={
-        <span className="flex items-center gap-2">
-          <BarChart3 size={22} className="text-primary" />
-          דוחות וניתוחים
-        </span>
-      }
+      boardStyle
+      emoji="📊"
+      title="דוחות וניתוחים"
       actions={
         <div className="flex items-center gap-2 flex-wrap">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.key}
               onClick={() => setRangeKey(opt.key)}
-              className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+              className={`px-3 py-1.5 text-[13px] rounded-[4px] transition-colors ${
                 rangeKey === opt.key
-                  ? "bg-primary text-white font-semibold"
-                  : "bg-white text-text-secondary hover:bg-surface-secondary border border-border-light"
+                  ? "bg-[#0073EA] text-white font-semibold"
+                  : "bg-white text-[#676879] hover:bg-[#F5F6F8] border border-[#E6E9EF]"
               }`}
             >
               {opt.label}
@@ -355,19 +352,19 @@ export default function AnalyticsPage() {
       {/* Custom date range inputs */}
       {rangeKey === "custom" && (
         <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-sm text-text-secondary">מתאריך:</label>
+          <label className="text-[13px] text-[#676879]">מתאריך:</label>
           <input
             type="date"
             value={customFrom}
             onChange={(e) => setCustomFrom(e.target.value)}
-            className="border border-border-light rounded-lg px-3 py-1.5 text-sm"
+            className="border border-[#E6E9EF] rounded-[4px] px-3 py-1.5 text-[13px]"
           />
-          <label className="text-sm text-text-secondary">עד תאריך:</label>
+          <label className="text-[13px] text-[#676879]">עד תאריך:</label>
           <input
             type="date"
             value={customTo}
             onChange={(e) => setCustomTo(e.target.value)}
-            className="border border-border-light rounded-lg px-3 py-1.5 text-sm"
+            className="border border-[#E6E9EF] rounded-[4px] px-3 py-1.5 text-[13px]"
           />
         </div>
       )}
@@ -378,12 +375,12 @@ export default function AnalyticsPage() {
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 size={18} className="text-[#6161FF]" />
-            <h3 className="font-semibold text-text-primary">פילוח פעילויות</h3>
+            <h3 className="font-semibold text-[#323338]">פילוח פעילויות</h3>
           </div>
           {activityQ.isLoading ? (
             <div className="animate-pulse space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 bg-surface-secondary rounded" />
+                <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
               ))}
             </div>
           ) : (
@@ -395,12 +392,12 @@ export default function AnalyticsPage() {
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={18} className="text-[#00CA72]" />
-            <h3 className="font-semibold text-text-primary">משפך עסקאות</h3>
+            <h3 className="font-semibold text-[#323338]">משפך עסקאות</h3>
           </div>
           {funnelQ.isLoading ? (
             <div className="animate-pulse space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-8 bg-surface-secondary rounded" />
+                <div key={i} className="h-8 bg-[#F5F6F8] rounded" />
               ))}
             </div>
           ) : (
@@ -412,11 +409,11 @@ export default function AnalyticsPage() {
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-4 h-4 rounded-full border-2 border-[#00CA72]" />
-            <h3 className="font-semibold text-text-primary">השלמת משימות</h3>
+            <h3 className="font-semibold text-[#323338]">השלמת משימות</h3>
           </div>
           {taskQ.isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="w-32 h-32 rounded-full bg-surface-secondary animate-pulse" />
+              <div className="w-32 h-32 rounded-full bg-[#F5F6F8] animate-pulse" />
             </div>
           ) : (
             <TaskCompletionDonut data={taskQ.data || { totalCreated: 0, totalCompleted: 0, pending: 0, completionRate: 0 }} />
@@ -427,14 +424,14 @@ export default function AnalyticsPage() {
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
             <Users size={18} className="text-[#579BFC]" />
-            <h3 className="font-semibold text-text-primary">גידול אנשי קשר</h3>
+            <h3 className="font-semibold text-[#323338]">גידול אנשי קשר</h3>
           </div>
           {growthQ.isLoading ? (
             <div className="animate-pulse flex items-end gap-1 justify-center" style={{ height: 120 }}>
               {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="flex-1 max-w-12 bg-surface-secondary rounded-t"
+                  className="flex-1 max-w-12 bg-[#F5F6F8] rounded-t"
                   style={{ height: 20 + Math.random() * 80 }}
                 />
               ))}
@@ -448,15 +445,15 @@ export default function AnalyticsPage() {
         <PageCard className="lg:col-span-2">
           <div className="flex items-center gap-2 mb-4">
             <Trophy size={18} className="text-[#FDAB3D]" />
-            <h3 className="font-semibold text-text-primary">מובילי פעילות</h3>
+            <h3 className="font-semibold text-[#323338]">מובילי פעילות</h3>
           </div>
           {performersQ.isLoading ? (
             <div className="animate-pulse space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-surface-secondary" />
-                  <div className="w-8 h-8 rounded-full bg-surface-secondary" />
-                  <div className="flex-1 h-6 bg-surface-secondary rounded" />
+                  <div className="w-6 h-6 rounded-full bg-[#F5F6F8]" />
+                  <div className="w-8 h-8 rounded-full bg-[#F5F6F8]" />
+                  <div className="flex-1 h-6 bg-[#F5F6F8] rounded" />
                 </div>
               ))}
             </div>

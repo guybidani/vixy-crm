@@ -64,7 +64,7 @@ export default function CalendarTab() {
   return (
     <div className="space-y-4">
       {/* Connection status card */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-card p-6">
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
         <div className="flex items-center gap-3 mb-5">
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -76,7 +76,7 @@ export default function CalendarTab() {
             <Calendar size={20} />
           </div>
           <div className="flex-1">
-            <h2 className="text-base font-bold text-text-primary">
+            <h2 className="text-base font-bold text-[#323338]">
               Google Calendar
             </h2>
             <div className="flex items-center gap-2 mt-0.5">
@@ -85,7 +85,7 @@ export default function CalendarTab() {
                   connected ? "bg-success" : "bg-text-tertiary"
                 }`}
               />
-              <span className="text-sm text-text-secondary">
+              <span className="text-sm text-[#676879]">
                 {connected ? "מחובר" : "לא מחובר"}
               </span>
             </div>
@@ -95,16 +95,16 @@ export default function CalendarTab() {
         {!connected ? (
           /* Disconnected state */
           <div className="text-center py-6">
-            <div className="w-16 h-16 mx-auto mb-4 bg-surface-secondary rounded-2xl flex items-center justify-center">
-              <Calendar size={28} className="text-text-tertiary" />
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#F5F6F8] rounded-2xl flex items-center justify-center">
+              <Calendar size={28} className="text-[#9699A6]" />
             </div>
-            <p className="text-sm text-text-secondary mb-4">
+            <p className="text-sm text-[#676879] mb-4">
               חבר את חשבון Google Calendar שלך כדי לסנכרן משימות ואירועים
             </p>
             <button
               onClick={() => connectMutation.mutate()}
               disabled={connectMutation.isPending}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
             >
               <ExternalLink size={16} />
               {connectMutation.isPending
@@ -116,20 +116,20 @@ export default function CalendarTab() {
           /* Connected state */
           <div className="space-y-4">
             {/* Account info */}
-            <div className="bg-surface-secondary/50 rounded-lg p-4 space-y-3">
+            <div className="bg-[#F5F6F8]/50 rounded-[4px] p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary">
+                <span className="text-sm text-[#676879]">
                   חשבון מחובר
                 </span>
-                <span className="text-sm font-semibold text-text-primary" dir="ltr">
+                <span className="text-[13px] font-semibold text-[#323338]" dir="ltr">
                   {status?.email || "-"}
                 </span>
               </div>
               {status?.calendarId && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-text-secondary">יומן</span>
+                  <span className="text-sm text-[#676879]">יומן</span>
                   <span
-                    className="text-sm font-semibold text-text-primary"
+                    className="text-[13px] font-semibold text-[#323338]"
                     dir="ltr"
                   >
                     {status.calendarId}
@@ -137,12 +137,12 @@ export default function CalendarTab() {
                 </div>
               )}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary">
+                <span className="text-sm text-[#676879]">
                   סנכרון אוטומטי
                 </span>
                 <span
-                  className={`text-sm font-semibold ${
-                    status?.syncEnabled ? "text-success" : "text-text-tertiary"
+                  className={`text-[13px] font-semibold ${
+                    status?.syncEnabled ? "text-success" : "text-[#9699A6]"
                   }`}
                 >
                   {status?.syncEnabled ? "פעיל" : "כבוי"}
@@ -150,10 +150,10 @@ export default function CalendarTab() {
               </div>
               {status?.lastSyncAt && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-text-secondary">
+                  <span className="text-sm text-[#676879]">
                     סנכרון אחרון
                   </span>
-                  <span className="text-sm text-text-primary">
+                  <span className="text-sm text-[#323338]">
                     {new Date(status.lastSyncAt).toLocaleString("he-IL")}
                   </span>
                 </div>
@@ -165,7 +165,7 @@ export default function CalendarTab() {
               <button
                 onClick={() => syncMutation.mutate()}
                 disabled={syncMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
               >
                 <RefreshCw
                   size={14}
@@ -176,7 +176,7 @@ export default function CalendarTab() {
 
               <button
                 onClick={() => setShowDisconnectConfirm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-danger/30 text-danger text-sm font-semibold rounded-lg hover:bg-danger/5 transition-all active:scale-[0.97]"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-danger/30 text-[#E44258] text-[13px] font-semibold rounded-[4px] hover:bg-[#E44258]/5 transition-all active:scale-[0.97]"
               >
                 <Unlink size={14} />
                 נתק חיבור
@@ -190,23 +190,23 @@ export default function CalendarTab() {
       {showDisconnectConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
-            <h3 className="text-base font-bold text-text-primary mb-2">
+            <h3 className="text-base font-bold text-[#323338] mb-2">
               נתק את Google Calendar?
             </h3>
-            <p className="text-sm text-text-secondary mb-5">
+            <p className="text-sm text-[#676879] mb-5">
               הסנכרון ייעצר ואירועים שסונכרנו יישארו ביומן.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDisconnectConfirm(false)}
-                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
               >
                 ביטול
               </button>
               <button
                 onClick={() => disconnectMutation.mutate()}
                 disabled={disconnectMutation.isPending}
-                className="flex-1 py-2 bg-danger hover:bg-danger/90 text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+                className="flex-1 py-2 bg-[#E44258] hover:bg-[#E44258]/90 text-white font-semibold rounded-[4px] transition-colors text-sm disabled:opacity-50"
               >
                 {disconnectMutation.isPending ? "מנתק..." : "נתק"}
               </button>

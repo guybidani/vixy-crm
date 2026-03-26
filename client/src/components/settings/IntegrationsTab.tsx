@@ -37,11 +37,11 @@ export default function IntegrationsTab() {
   return (
     <div className="space-y-4">
       {/* Page header */}
-      <div className="bg-white rounded-xl shadow-card p-6">
-        <h2 className="text-base font-bold text-text-primary mb-1">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
+        <h2 className="text-base font-bold text-[#323338] mb-1">
           אינטגרציות
         </h2>
-        <p className="text-sm text-text-secondary">
+        <p className="text-sm text-[#676879]">
           חבר את ה-CRM לכלים שאתה כבר משתמש בהם
         </p>
       </div>
@@ -53,7 +53,7 @@ export default function IntegrationsTab() {
       <KolioCard />
 
       {/* Future integrations placeholder */}
-      <div className="bg-white rounded-xl shadow-card p-6">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
         <div className="flex items-center gap-3">
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -62,10 +62,10 @@ export default function IntegrationsTab() {
             <Zap size={20} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-text-primary">Zapier / Make / n8n</h3>
-            <p className="text-xs text-text-secondary mt-0.5">בקרוב — חיבור לכלי אוטומציה חיצוניים</p>
+            <h3 className="text-[13px] font-bold text-[#323338]">Zapier / Make / n8n</h3>
+            <p className="text-[12px] text-[#676879] mt-0.5">בקרוב — חיבור לכלי אוטומציה חיצוניים</p>
           </div>
-          <span className="mr-auto text-[10px] font-bold px-2 py-1 bg-surface-secondary text-text-tertiary rounded-full">
+          <span className="mr-auto text-[10px] font-bold px-2 py-1 bg-[#F5F6F8] text-[#9699A6] rounded-full">
             בקרוב
           </span>
         </div>
@@ -83,10 +83,10 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-surface-tertiary transition-colors"
+      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-[#F5F6F8] transition-colors"
       title="העתק"
     >
-      {copied ? <Check size={12} className="text-success" /> : <Copy size={12} className="text-text-tertiary" />}
+      {copied ? <Check size={12} className="text-success" /> : <Copy size={12} className="text-[#9699A6]" />}
     </button>
   );
 }
@@ -100,7 +100,7 @@ function KolioCard() {
   const wsId = currentWorkspaceId ?? "...";
 
   return (
-    <div className="bg-white rounded-xl shadow-card p-6">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
       <div className="flex items-center gap-3 mb-5">
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -109,15 +109,15 @@ function KolioCard() {
           <Phone size={20} />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-text-primary">Kolio – ניתוח שיחות מכירה</h3>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <h3 className="text-[13px] font-bold text-[#323338]">Kolio – ניתוח שיחות מכירה</h3>
+          <p className="text-[12px] text-[#676879] mt-0.5">
             שיחות שמנותחות ב-Kolio יתווספו אוטומטית כפעילויות ב-CRM
           </p>
         </div>
       </div>
 
       <div className="space-y-2.5 mb-4">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-text-tertiary mb-1">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-[#9699A6] mb-1">
           פרטי חיבור ל-Kolio
         </p>
         {[
@@ -125,9 +125,9 @@ function KolioCard() {
           { label: "Workspace ID", value: wsId },
         ].map(({ label, value }) => (
           <div key={label} className="flex items-center gap-3">
-            <span className="text-xs text-text-secondary w-28 flex-shrink-0">{label}</span>
-            <div className="flex-1 flex items-center gap-1 bg-surface-secondary rounded-lg px-3 py-1.5 min-w-0">
-              <code className="text-xs font-mono text-text-primary truncate flex-1" dir="ltr">
+            <span className="text-[12px] text-[#676879] w-28 flex-shrink-0">{label}</span>
+            <div className="flex-1 flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] px-3 py-1.5 min-w-0">
+              <code className="text-[12px] font-mono text-[#323338] truncate flex-1" dir="ltr">
                 {value}
               </code>
               <CopyButton text={value} />
@@ -136,8 +136,8 @@ function KolioCard() {
         ))}
       </div>
 
-      <div className="p-3 bg-warning/5 border border-warning/20 rounded-lg">
-        <p className="text-xs text-text-secondary">
+      <div className="p-3 bg-warning/5 border border-warning/20 rounded-[4px]">
+        <p className="text-[12px] text-[#676879]">
           <span className="font-semibold text-warning">הגדרה נדרשת:</span>{" "}
           הוסף את{" "}
           <code className="font-mono bg-warning/10 px-1 rounded text-warning text-[11px]">KOLIO_WEBHOOK_SECRET</code>{" "}
@@ -147,7 +147,7 @@ function KolioCard() {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         {["סיכום השיחה", "ציון כולל ופירוט", "טיפים לאימון", "זיהוי לקוח אוטומטי"].map((item) => (
-          <div key={item} className="flex items-center gap-1.5 text-xs text-text-secondary">
+          <div key={item} className="flex items-center gap-1.5 text-[12px] text-[#676879]">
             <CheckCircle2 size={12} className="text-success flex-shrink-0" />
             {item}
           </div>
@@ -194,7 +194,7 @@ function GoogleCalendarCard() {
   const connected = status?.connected ?? false;
 
   return (
-    <div className="bg-white rounded-xl shadow-card p-6">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
       {/* Card header */}
       <div className="flex items-center gap-3 mb-5">
         {/* Google Calendar icon colors */}
@@ -209,15 +209,15 @@ function GoogleCalendarCard() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-bold text-text-primary">
+            <h3 className="text-[13px] font-bold text-[#323338]">
               Google Calendar
             </h3>
             {!isLoading && (
               <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-semibold ${
                   connected
                     ? "bg-success-light text-success"
-                    : "bg-surface-tertiary text-text-secondary"
+                    : "bg-[#F5F6F8] text-[#676879]"
                 }`}
               >
                 {connected ? (
@@ -231,7 +231,7 @@ function GoogleCalendarCard() {
               </span>
             )}
           </div>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="text-[12px] text-[#676879] mt-0.5">
             סנכרן משימות ואירועים עם Google Calendar שלך
           </p>
         </div>
@@ -241,19 +241,19 @@ function GoogleCalendarCard() {
       {isLoading ? (
         <div className="flex items-center gap-2 py-2">
           <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-text-secondary">טוען...</span>
+          <span className="text-sm text-[#676879]">טוען...</span>
         </div>
       ) : connected ? (
         /* Connected state */
         <div className="space-y-4">
-          <div className="bg-surface-secondary rounded-lg p-4 space-y-2.5">
+          <div className="bg-[#F5F6F8] rounded-[4px] p-4 space-y-2.5">
             {status?.email && (
               <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-text-secondary flex-shrink-0">
+                <span className="text-[12px] text-[#676879] flex-shrink-0">
                   חשבון מחובר
                 </span>
                 <span
-                  className="text-xs font-semibold text-text-primary truncate"
+                  className="text-[12px] font-semibold text-[#323338] truncate"
                   dir="ltr"
                 >
                   {status.email}
@@ -262,10 +262,10 @@ function GoogleCalendarCard() {
             )}
             {status?.lastSyncAt && (
               <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-text-secondary flex-shrink-0">
+                <span className="text-[12px] text-[#676879] flex-shrink-0">
                   סנכרון אחרון
                 </span>
-                <span className="text-xs text-text-primary">
+                <span className="text-[12px] text-[#323338]">
                   {new Date(status.lastSyncAt).toLocaleString("he-IL")}
                 </span>
               </div>
@@ -275,7 +275,7 @@ function GoogleCalendarCard() {
           <button
             onClick={handleDisconnect}
             disabled={disconnectMutation.isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-danger/30 text-danger text-sm font-semibold rounded-lg hover:bg-danger/5 transition-all active:scale-[0.97] disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-danger/30 text-[#E44258] text-[13px] font-semibold rounded-[4px] hover:bg-[#E44258]/5 transition-all active:scale-[0.97] disabled:opacity-50"
           >
             <Unlink size={14} />
             {disconnectMutation.isPending ? "מנתק..." : "נתק"}
@@ -287,7 +287,7 @@ function GoogleCalendarCard() {
           <button
             onClick={() => connectMutation.mutate()}
             disabled={connectMutation.isPending}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50"
           >
             <ExternalLink size={15} />
             {connectMutation.isPending ? "מתחבר..." : "חבר Google Calendar"}

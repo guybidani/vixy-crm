@@ -184,7 +184,7 @@ export default function SnoozeSettingsTab() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-card p-6">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-gray-200 rounded w-40" />
           <div className="h-10 bg-gray-200 rounded" />
@@ -200,13 +200,13 @@ export default function SnoozeSettingsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl shadow-card p-6">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-bold text-text-primary">
+            <h2 className="text-base font-bold text-[#323338]">
               הגדרות דחייה
             </h2>
-            <p className="text-xs text-text-tertiary mt-1">
+            <p className="text-[12px] text-[#9699A6] mt-1">
               הגדר אפשרויות דחייה מהירות למשימות. חברי הצוות יראו אפשרויות אלו
               בתפריט הדחייה.
             </p>
@@ -215,7 +215,7 @@ export default function SnoozeSettingsTab() {
             <div className="flex items-center gap-2">
               <button
                 onClick={resetToDefaults}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-tertiary hover:text-text-secondary border border-border-light rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#9699A6] hover:text-[#676879] border border-[#E6E9EF]-light rounded-[4px] hover:bg-gray-50 transition-colors"
                 title="חזור לברירת מחדל"
               >
                 <RotateCcw size={14} />
@@ -224,7 +224,7 @@ export default function SnoozeSettingsTab() {
               <button
                 onClick={handleSave}
                 disabled={!dirty || mutation.isPending}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-primary rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white bg-[#0073EA] rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Save size={14} />
                 {mutation.isPending ? "שומר..." : "שמור"}
@@ -238,7 +238,7 @@ export default function SnoozeSettingsTab() {
           {rows.map((row) => (
             <div
               key={row.id}
-              className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg border border-border-light"
+              className="flex items-center gap-3 p-3 bg-bg-secondary rounded-[4px] border border-[#E6E9EF]-light"
             >
               {/* Label */}
               <div className="flex-1 min-w-0">
@@ -250,14 +250,14 @@ export default function SnoozeSettingsTab() {
                   }
                   placeholder="תווית (למשל: שעתיים)"
                   disabled={!isAdmin}
-                  className="w-full text-sm font-medium bg-white border border-border-light rounded-md px-3 py-1.5 text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  className="w-full text-[13px] font-medium bg-white border border-[#E6E9EF]-light rounded-md px-3 py-1.5 text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-1 focus:ring-[#0073EA] disabled:bg-gray-50 disabled:cursor-not-allowed"
                   dir="rtl"
                 />
               </div>
 
               {/* Duration or Special badge */}
               {row.special ? (
-                <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-700 rounded-md border border-purple-200 whitespace-nowrap">
+                <span className="inline-flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium bg-purple-50 text-purple-700 rounded-md border border-purple-200 whitespace-nowrap">
                   {row.special === "tomorrow_9am" && "מחר 09:00"}
                   {row.special === "next_sunday_9am" && "יום ראשון 09:00"}
                 </span>
@@ -277,7 +277,7 @@ export default function SnoozeSettingsTab() {
                     min={1}
                     max={999}
                     disabled={!isAdmin}
-                    className="w-16 text-sm text-center bg-white border border-border-light rounded-md px-2 py-1.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="w-16 text-sm text-center bg-white border border-[#E6E9EF]-light rounded-md px-2 py-1.5 text-[#323338] focus:outline-none focus:ring-1 focus:ring-[#0073EA] disabled:bg-gray-50 disabled:cursor-not-allowed"
                   />
                   <select
                     value={row.durationUnit}
@@ -287,7 +287,7 @@ export default function SnoozeSettingsTab() {
                       })
                     }
                     disabled={!isAdmin}
-                    className="text-sm bg-white border border-border-light rounded-md px-2 py-1.5 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="text-sm bg-white border border-[#E6E9EF]-light rounded-md px-2 py-1.5 text-[#323338] focus:outline-none focus:ring-1 focus:ring-[#0073EA] disabled:bg-gray-50 disabled:cursor-not-allowed"
                     dir="rtl"
                   >
                     {(Object.entries(UNIT_LABELS) as [DurationUnit, string][]).map(
@@ -305,7 +305,7 @@ export default function SnoozeSettingsTab() {
               {isAdmin && (
                 <button
                   onClick={() => removeRow(row.id)}
-                  className="p-1.5 text-text-tertiary hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                  className="p-1.5 text-[#9699A6] hover:text-red-500 hover:bg-[#FFEEF0] rounded-md transition-colors"
                   title="מחק"
                 >
                   <Trash2 size={14} />
@@ -315,7 +315,7 @@ export default function SnoozeSettingsTab() {
           ))}
 
           {rows.length === 0 && (
-            <div className="text-center py-8 text-text-tertiary text-sm">
+            <div className="text-center py-8 text-[#9699A6] text-sm">
               אין אפשרויות דחייה מוגדרות. הוסף אפשרות או חזור לברירת מחדל.
             </div>
           )}
@@ -327,7 +327,7 @@ export default function SnoozeSettingsTab() {
             <button
               onClick={addDurationRow}
               disabled={rows.length >= 10}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/5 border border-primary/20 rounded-lg hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] bg-[#0073EA]/5 border border-[#0073EA]/20 rounded-[4px] hover:bg-[#0060C2]/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Plus size={14} />
               הוסף אפשרות
@@ -338,7 +338,7 @@ export default function SnoozeSettingsTab() {
                 key={preset.special}
                 onClick={() => addSpecialPreset(preset)}
                 disabled={rows.length >= 10}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-[4px] hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Plus size={14} />
                 {preset.label}
@@ -347,7 +347,7 @@ export default function SnoozeSettingsTab() {
           </div>
         )}
 
-        <p className="text-xs text-text-tertiary mt-4">
+        <p className="text-[12px] text-[#9699A6] mt-4">
           כל חבר צוות יוכל גם לבחור &quot;מותאם אישית...&quot; כדי לדחות
           בזמן חופשי (דקות / שעות / ימים).
         </p>

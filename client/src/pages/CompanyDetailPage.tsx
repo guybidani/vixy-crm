@@ -43,11 +43,11 @@ function EditableInfoRow({
   if (editing) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-text-tertiary">{icon}</span>
-        <span className="text-xs text-text-tertiary w-14">{label}</span>
+        <span className="text-[#9699A6]">{icon}</span>
+        <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
         <input
           autoFocus
-          className="flex-1 text-sm text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+          className="flex-1 text-sm text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
           value={editVal}
           dir={dir}
           onChange={(e) => setEditVal(e.target.value)}
@@ -69,12 +69,12 @@ function EditableInfoRow({
 
   return (
     <div className="flex items-center gap-2 group/row">
-      <span className="text-text-tertiary">{icon}</span>
-      <span className="text-xs text-text-tertiary w-14">{label}</span>
+      <span className="text-[#9699A6]">{icon}</span>
+      <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
       <span
         className={`text-sm flex-1 min-w-0 ${
-          value ? "text-text-primary" : "text-text-tertiary"
-        } cursor-text hover:bg-surface-secondary/80 rounded px-1 -mx-1 transition-colors`}
+          value ? "text-[#323338]" : "text-[#9699A6]"
+        } cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors`}
         dir={dir}
         onClick={() => {
           setEditVal(value);
@@ -89,7 +89,7 @@ function EditableInfoRow({
             setEditVal("");
             setEditing(true);
           }}
-          className="opacity-0 group-hover/row:opacity-100 text-primary text-[10px] transition-opacity"
+          className="opacity-0 group-hover/row:opacity-100 text-[#0073EA] text-[10px] transition-opacity"
         >
           +
         </button>
@@ -145,7 +145,7 @@ export default function CompanyDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">טוען...</p>
+        <p className="text-[#676879]">טוען...</p>
       </div>
     );
   }
@@ -153,7 +153,7 @@ export default function CompanyDetailPage() {
   if (!company) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">חברה לא נמצאה</p>
+        <p className="text-[#676879]">חברה לא נמצאה</p>
       </div>
     );
   }
@@ -163,7 +163,7 @@ export default function CompanyDetailPage() {
       {/* Breadcrumb */}
       <button
         onClick={() => navigate("/companies")}
-        className="flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition-colors"
+        className="flex items-center gap-1 text-[13px] font-normal text-[#676879] hover:text-[#0073EA] transition-colors"
       >
         <ArrowRight size={14} />
         חזרה לחברות
@@ -173,8 +173,8 @@ export default function CompanyDetailPage() {
       <PageCard>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary-light rounded-xl flex items-center justify-center">
-              <Building2 size={24} className="text-primary" />
+            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center">
+              <Building2 size={24} className="text-[#0073EA]" />
             </div>
             <div>
               {/* Click-to-edit company name */}
@@ -198,11 +198,11 @@ export default function CompanyDetailPage() {
                       setEditingName(false);
                     }
                   }}
-                  className="text-xl font-bold text-text-primary bg-white border border-primary rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30"
+                  className="text-xl font-bold text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
                 />
               ) : (
                 <h1
-                  className="text-xl font-bold text-text-primary cursor-text hover:bg-surface-secondary/80 rounded px-1 -mx-1 transition-colors"
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
                   onClick={() => {
                     setNameVal(company.name);
                     setEditingName(true);
@@ -211,7 +211,7 @@ export default function CompanyDetailPage() {
                   {company.name}
                 </h1>
               )}
-              <div className="flex items-center gap-4 mt-1 text-sm text-text-secondary">
+              <div className="flex items-center gap-4 mt-1 text-sm text-[#676879]">
                 {company.industry && <span>{company.industry}</span>}
                 {company.size && <span>{company.size} עובדים</span>}
               </div>
@@ -220,7 +220,7 @@ export default function CompanyDetailPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-danger hover:bg-red-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#676879] hover:text-[#E44258] hover:bg-[#FFEEF0] rounded-[4px] transition-colors"
             >
               <Trash2 size={14} />
               מחיקה
@@ -233,7 +233,7 @@ export default function CompanyDetailPage() {
         {/* Company Info Sidebar */}
         <div className="space-y-4">
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3">פרטי חברה</h3>
+            <h3 className="font-bold text-[#323338] mb-3">פרטי חברה</h3>
             <div className="space-y-3">
               <EditableInfoRow
                 icon={<Mail size={14} />}
@@ -278,8 +278,8 @@ export default function CompanyDetailPage() {
 
           {/* Notes */}
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
-              <FileText size={14} className="text-text-tertiary" />
+            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
+              <FileText size={14} className="text-[#9699A6]" />
               הערות
             </h3>
             {editingNotes ? (
@@ -299,18 +299,18 @@ export default function CompanyDetailPage() {
                     setEditingNotes(false);
                   }
                 }}
-                className="w-full min-h-[80px] text-sm text-text-primary bg-white border border-primary rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary/30 resize-y"
+                className="w-full min-h-[80px] text-sm text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-3 py-2 outline-none focus:ring-1 focus:ring-[#0073EA]/20 resize-y"
               />
             ) : (
               <div
-                className="text-sm text-text-primary whitespace-pre-wrap cursor-text hover:bg-surface-secondary/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px]"
+                className="text-sm text-[#323338] whitespace-pre-wrap cursor-text hover:bg-[#F5F6F8]/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px]"
                 onClick={() => {
                   setNotesVal(company.notes || "");
                   setEditingNotes(true);
                 }}
               >
                 {company.notes || (
-                  <span className="text-text-tertiary">
+                  <span className="text-[#9699A6]">
                     לחץ להוספת הערות...
                   </span>
                 )}
@@ -320,21 +320,21 @@ export default function CompanyDetailPage() {
 
           {/* Stats */}
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3">סיכום</h3>
+            <h3 className="font-bold text-[#323338] mb-3">סיכום</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-surface-secondary rounded-lg">
-                <Users size={18} className="mx-auto text-primary mb-1" />
-                <p className="text-lg font-bold text-text-primary">
+              <div className="text-center p-3 bg-[#F5F6F8] rounded-[4px]">
+                <Users size={18} className="mx-auto text-[#0073EA] mb-1" />
+                <p className="text-lg font-bold text-[#323338]">
                   {company.contacts?.length || 0}
                 </p>
-                <p className="text-xs text-text-tertiary">אנשי קשר</p>
+                <p className="text-[12px] text-[#9699A6]">אנשי קשר</p>
               </div>
-              <div className="text-center p-3 bg-surface-secondary rounded-lg">
+              <div className="text-center p-3 bg-[#F5F6F8] rounded-[4px]">
                 <Handshake size={18} className="mx-auto text-success mb-1" />
-                <p className="text-lg font-bold text-text-primary">
+                <p className="text-lg font-bold text-[#323338]">
                   {company.deals?.length || 0}
                 </p>
-                <p className="text-xs text-text-tertiary">עסקאות</p>
+                <p className="text-[12px] text-[#9699A6]">עסקאות</p>
               </div>
             </div>
           </PageCard>
@@ -351,8 +351,8 @@ export default function CompanyDetailPage() {
         <div className="col-span-2 space-y-4">
           {/* Contacts */}
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
-              <Users size={16} className="text-primary" />
+            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
+              <Users size={16} className="text-[#0073EA]" />
               אנשי קשר ({company.contacts?.length || 0})
             </h3>
             {company.contacts && company.contacts.length > 0 ? (
@@ -362,25 +362,25 @@ export default function CompanyDetailPage() {
                   return (
                     <div
                       key={contact.id}
-                      className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                       onClick={() => navigate(`/contacts/${contact.id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-8 h-8 bg-primary-light rounded-full flex items-center justify-center"
+                          className="w-8 h-8 bg-[#E8F3FF] rounded-full flex items-center justify-center"
                           role="img"
                           aria-label={`${contact.firstName} ${contact.lastName}`}
                         >
-                          <span className="text-primary text-xs font-bold">
+                          <span className="text-[#0073EA] text-[12px] font-bold">
                             {contact.firstName[0]}
                           </span>
                         </div>
                         <div>
-                          <span className="font-medium text-sm text-text-primary">
+                          <span className="font-medium text-sm text-[#323338]">
                             {contact.firstName} {contact.lastName}
                           </span>
                           {contact.position && (
-                            <span className="text-xs text-text-tertiary block">
+                            <span className="text-[12px] text-[#9699A6] block">
                               {contact.position}
                             </span>
                           )}
@@ -397,7 +397,7 @@ export default function CompanyDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין אנשי קשר
               </p>
             )}
@@ -405,7 +405,7 @@ export default function CompanyDetailPage() {
 
           {/* Deals */}
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
               <Handshake size={16} className="text-success" />
               עסקאות ({company.deals?.length || 0})
             </h3>
@@ -416,21 +416,21 @@ export default function CompanyDetailPage() {
                   return (
                     <div
                       key={deal.id}
-                      className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                       onClick={() => navigate(`/deals/${deal.id}`)}
                     >
                       <div>
-                        <span className="font-medium text-sm text-text-primary">
+                        <span className="font-medium text-sm text-[#323338]">
                           {deal.title}
                         </span>
                         {deal.contact && (
-                          <span className="text-xs text-text-tertiary block">
+                          <span className="text-[12px] text-[#9699A6] block">
                             {deal.contact.firstName} {deal.contact.lastName}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-text-primary">
+                        <span className="text-sm font-semibold text-[#323338]">
                           ₪{deal.value?.toLocaleString() || 0}
                         </span>
                         {stage && (
@@ -445,7 +445,7 @@ export default function CompanyDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין עסקאות
               </p>
             )}

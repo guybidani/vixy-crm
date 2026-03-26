@@ -152,7 +152,7 @@ function NotificationItem({ n, onRead, onNavigate }: NotificationItemProps) {
       tabIndex={0}
       aria-label={`${n.title}${!n.isRead ? " - לא נקרא" : ""}`}
       className={cn(
-        "group flex gap-3 px-4 py-3 hover:bg-[#F6F7FB] transition-colors cursor-pointer border-b border-border-light last:border-0",
+        "group flex gap-3 px-4 py-3 hover:bg-[#F6F7FB] transition-colors cursor-pointer border-b border-[#E6E9EF] last:border-0",
         !n.isRead && "bg-[#EEF4FF]",
       )}
       onClick={handleClick}
@@ -174,7 +174,7 @@ function NotificationItem({ n, onRead, onNavigate }: NotificationItemProps) {
             {initials(senderName)}
           </div>
         ) : (
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", cfg.bgInitial)}>
+          <div className={cn("w-8 h-8 rounded-[4px] flex items-center justify-center", cfg.bgInitial)}>
             <Icon size={16} className={cfg.color} />
           </div>
         )}
@@ -185,21 +185,21 @@ function NotificationItem({ n, onRead, onNavigate }: NotificationItemProps) {
         <p
           className={cn(
             "text-sm leading-snug",
-            !n.isRead ? "text-text-primary font-semibold" : "text-text-secondary font-normal",
+            !n.isRead ? "text-[#323338] font-semibold" : "text-[#676879] font-normal",
           )}
         >
           {n.title}
         </p>
         {n.body && (
-          <p className="text-xs text-text-tertiary mt-0.5 line-clamp-2">{n.body}</p>
+          <p className="text-[12px] text-[#9699A6] mt-0.5 line-clamp-2">{n.body}</p>
         )}
-        <span className="text-[10px] text-text-tertiary mt-1 block">{timeAgo(n.createdAt)}</span>
+        <span className="text-[10px] text-[#9699A6] mt-1 block">{timeAgo(n.createdAt)}</span>
       </div>
 
       {/* Unread dot */}
       <div className="flex-shrink-0 flex items-start pt-1">
         {!n.isRead && (
-          <span className="w-2 h-2 rounded-full bg-primary block" aria-label="לא נקרא" />
+          <span className="w-2 h-2 rounded-full bg-[#0073EA] block" aria-label="לא נקרא" />
         )}
       </div>
     </div>
@@ -314,7 +314,7 @@ export default function NotificationCenter() {
       {/* Bell button */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg hover:bg-surface-secondary transition-colors text-text-secondary"
+        className="relative p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879]"
         title="התראות"
         aria-label={unreadCount > 0 ? `התראות (${unreadCount} חדשות)` : "התראות"}
         aria-expanded={open}
@@ -333,13 +333,13 @@ export default function NotificationCenter() {
       {/* Dropdown panel */}
       {open && (
         <div
-          className="absolute left-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-border-light z-50 overflow-hidden"
+          className="absolute left-0 top-full mt-2 w-96 bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-[#E6E9EF] z-50 overflow-hidden"
           role="dialog"
           aria-label="פאנל התראות"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border-light bg-white sticky top-0 z-10">
-            <h3 className="font-bold text-text-primary text-sm">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E6E9EF] bg-white sticky top-0 z-10">
+            <h3 className="font-semibold text-[#323338] text-[15px]">
               התראות
               {unreadCount > 0 && (
                 <span className="mr-1.5 text-[10px] font-bold bg-[#D83A52] text-white rounded-full px-1.5 py-0.5">
@@ -352,7 +352,7 @@ export default function NotificationCenter() {
                 <button
                   onClick={() => markAllMut.mutate()}
                   disabled={markAllMut.isPending}
-                  className="text-xs text-primary hover:text-primary-hover flex items-center gap-1 disabled:opacity-50"
+                  className="text-[12px] text-[#0073EA] hover:text-[#0060C2] flex items-center gap-1 disabled:opacity-50"
                   title="סמן הכל כנקרא"
                 >
                   <CheckCheck size={14} />
@@ -361,7 +361,7 @@ export default function NotificationCenter() {
               )}
               <button
                 onClick={() => setOpen(false)}
-                className="p-1 rounded hover:bg-surface-secondary text-text-tertiary"
+                className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6]"
                 aria-label="סגור התראות"
               >
                 <X size={14} />
@@ -372,7 +372,7 @@ export default function NotificationCenter() {
           {/* List */}
           <div className="max-h-[480px] overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="py-14 text-center text-text-tertiary text-sm">
+              <div className="py-14 text-center text-[#9699A6] text-[13px]">
                 <Bell size={32} className="mx-auto mb-3 opacity-20" />
                 <p>אין התראות</p>
               </div>
@@ -381,7 +381,7 @@ export default function NotificationCenter() {
                 {/* Unread group */}
                 {unread.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 text-[11px] font-semibold text-text-tertiary uppercase tracking-wide bg-[#F6F7FB] border-b border-border-light">
+                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F5F6F8] border-b border-[#E6E9EF]">
                       חדש
                     </div>
                     {unread.map((n) => (
@@ -398,7 +398,7 @@ export default function NotificationCenter() {
                 {/* Read group */}
                 {read.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 text-[11px] font-semibold text-text-tertiary uppercase tracking-wide bg-[#F6F7FB] border-b border-border-light">
+                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F5F6F8] border-b border-[#E6E9EF]">
                       קודם
                     </div>
                     {read.map((n) => (
@@ -417,13 +417,13 @@ export default function NotificationCenter() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-4 py-2.5 border-t border-border-light bg-white text-center">
+            <div className="px-4 py-2.5 border-t border-[#E6E9EF] bg-white text-center">
               <button
                 onClick={() => {
                   navigate("/settings?tab=notifications");
                   setOpen(false);
                 }}
-                className="text-xs text-primary hover:text-primary-hover font-medium"
+                className="text-[12px] text-[#0073EA] hover:text-[#0060C2] font-medium"
               >
                 ראה הכל
               </button>

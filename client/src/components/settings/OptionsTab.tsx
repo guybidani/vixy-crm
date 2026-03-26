@@ -146,12 +146,12 @@ export default function OptionsTab() {
     <div className="space-y-4">
       {/* Sticky save bar */}
       {hasChanges && (
-        <div className="sticky top-16 z-20 bg-primary/95 text-white rounded-xl px-4 py-3 flex items-center justify-between shadow-lg">
+        <div className="sticky top-16 z-20 bg-[#0073EA]/95 text-white rounded-xl px-4 py-3 flex items-center justify-between shadow-lg">
           <span className="text-sm font-medium">יש שינויים שלא נשמרו</span>
           <div className="flex items-center gap-2">
             <button
               onClick={resetDraft}
-              className="px-3 py-1.5 text-xs bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-1"
+              className="px-3 py-1.5 text-xs bg-white/20 hover:bg-white/30 rounded-[4px] transition-colors flex items-center gap-1"
             >
               <RotateCcw size={12} />
               ביטול
@@ -159,7 +159,7 @@ export default function OptionsTab() {
             <button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="px-4 py-1.5 text-xs bg-white text-primary font-semibold rounded-lg hover:bg-white/90 transition-colors flex items-center gap-1"
+              className="px-4 py-1.5 text-[12px] bg-white text-[#0073EA] font-medium rounded-[4px] hover:bg-white/90 transition-colors flex items-center gap-1"
             >
               <Save size={12} />
               {saveMutation.isPending ? "שומר..." : "שמור שינויים"}
@@ -179,26 +179,26 @@ export default function OptionsTab() {
         return (
           <div
             key={cat.settingsKey}
-            className="bg-white rounded-xl shadow-card overflow-hidden"
+            className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden"
           >
             <button
               onClick={() =>
                 setExpandedCategory(isExpanded ? null : cat.settingsKey)
               }
-              className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-surface-secondary/50 transition-colors"
+              className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F5F6F8] transition-colors"
             >
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-text-primary">
+                <h3 className="text-[13px] font-semibold text-[#323338]">
                   {cat.title}
                 </h3>
-                <span className="text-xs text-text-tertiary">
+                <span className="text-[12px] text-[#9699A6]">
                   ({entries.length})
                 </span>
               </div>
               {isExpanded ? (
-                <ChevronUp size={16} className="text-text-tertiary" />
+                <ChevronUp size={16} className="text-[#9699A6]" />
               ) : (
-                <ChevronDown size={16} className="text-text-tertiary" />
+                <ChevronDown size={16} className="text-[#9699A6]" />
               )}
             </button>
 
@@ -207,7 +207,7 @@ export default function OptionsTab() {
                 {entries.map(([key, opt]: [string, any]) => (
                   <div
                     key={key}
-                    className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-surface-secondary/50 group"
+                    className="flex items-center gap-3 py-2 px-3 rounded-[4px] hover:bg-[#F5F6F8] group"
                   >
                     {/* Color */}
                     <div className="relative">
@@ -224,7 +224,7 @@ export default function OptionsTab() {
                         aria-label={`צבע ${opt.label}`}
                       />
                       {colorPickerOpen === `${cat.settingsKey}-${key}` && (
-                        <div className="absolute top-9 right-0 z-30 bg-white rounded-lg shadow-xl border border-border-light p-2 grid grid-cols-7 gap-1.5 min-w-[180px]">
+                        <div className="absolute top-9 right-0 z-30 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-2 grid grid-cols-7 gap-1.5 min-w-[180px]">
                           {COLOR_PRESETS.map((c) => (
                             <button
                               key={c}
@@ -234,7 +234,7 @@ export default function OptionsTab() {
                               }}
                               className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
                                 opt.color === c
-                                  ? "border-text-primary"
+                                  ? "border-[#323338]"
                                   : "border-transparent"
                               }`}
                               style={{ backgroundColor: c }}
@@ -256,11 +256,11 @@ export default function OptionsTab() {
                           e.target.value,
                         )
                       }
-                      className="flex-1 text-sm text-text-primary bg-transparent border-b border-transparent focus:border-primary outline-none py-1 transition-colors"
+                      className="flex-1 text-sm text-[#323338] bg-transparent border-b border-transparent focus:border-[#0073EA] outline-none py-1 transition-colors"
                     />
 
                     {/* Key badge */}
-                    <span className="text-[10px] text-text-tertiary bg-surface-secondary px-2 py-0.5 rounded font-mono">
+                    <span className="text-[10px] text-[#9699A6] bg-[#F5F6F8] px-2 py-0.5 rounded-[4px] font-mono">
                       {key}
                     </span>
 
@@ -277,8 +277,8 @@ export default function OptionsTab() {
                         }
                         className={`p-1 rounded transition-colors ${
                           opt.hidden
-                            ? "text-text-tertiary hover:text-text-secondary"
-                            : "text-text-secondary hover:text-text-primary"
+                            ? "text-[#9699A6] hover:text-[#676879]"
+                            : "text-[#676879] hover:text-[#323338]"
                         }`}
                         title={opt.hidden ? "הצג אפשרות" : "הסתר אפשרות"}
                         aria-label={opt.hidden ? "הצג אפשרות" : "הסתר אפשרות"}
@@ -295,27 +295,27 @@ export default function OptionsTab() {
       })}
 
       {/* Lead Sources */}
-      <div className="bg-white rounded-xl shadow-card overflow-hidden">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden">
         <button
           onClick={() =>
             setExpandedCategory(
               expandedCategory === "leadSources" ? null : "leadSources",
             )
           }
-          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-surface-secondary/50 transition-colors"
+          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F5F6F8] transition-colors"
         >
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-text-primary">
+            <h3 className="text-[13px] font-semibold text-[#323338]">
               מקורות לידים
             </h3>
-            <span className="text-xs text-text-tertiary">
+            <span className="text-[12px] text-[#9699A6]">
               ({leadSourcesDraft.length})
             </span>
           </div>
           {expandedCategory === "leadSources" ? (
-            <ChevronUp size={16} className="text-text-tertiary" />
+            <ChevronUp size={16} className="text-[#9699A6]" />
           ) : (
-            <ChevronDown size={16} className="text-text-tertiary" />
+            <ChevronDown size={16} className="text-[#9699A6]" />
           )}
         </button>
 
@@ -331,7 +331,7 @@ export default function OptionsTab() {
                     setLeadSourcesDraft(next);
                     setHasChanges(true);
                   }}
-                  className="flex-1 text-sm text-text-primary border border-border-light rounded-lg px-3 py-1.5 focus:border-primary outline-none transition-colors"
+                  className="flex-1 text-[13px] text-[#323338] border border-[#D0D4E4] rounded-[4px] px-3 py-1.5 focus:border-[#0073EA] outline-none transition-colors"
                 />
                 <button
                   onClick={() => {
@@ -340,7 +340,7 @@ export default function OptionsTab() {
                     );
                     setHasChanges(true);
                   }}
-                  className="p-1 text-text-tertiary hover:text-danger transition-colors"
+                  className="p-1 text-[#9699A6] hover:text-[#E44258] transition-colors"
                   aria-label="הסר מקור"
                 >
                   <Trash2 size={14} />
@@ -352,7 +352,7 @@ export default function OptionsTab() {
                 setLeadSourcesDraft([...leadSourcesDraft, ""]);
                 setHasChanges(true);
               }}
-              className="flex items-center gap-1 text-xs text-primary hover:text-primary-hover font-medium mt-1"
+              className="flex items-center gap-1 text-[12px] text-[#0073EA] hover:text-[#0060C2] font-medium mt-1"
             >
               <Plus size={14} />
               הוסף מקור

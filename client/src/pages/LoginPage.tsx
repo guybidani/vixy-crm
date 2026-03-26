@@ -32,21 +32,21 @@ export default function LoginPage() {
       className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
       dir="rtl"
     >
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-card-hover border border-white/60 p-8 w-full max-w-md animate-fade-in-up">
+      <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-8 w-full max-w-md animate-fade-in-up">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-card-glow">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-[0_4px_16px_rgba(0,115,234,0.3)]">
             <span className="text-white text-2xl font-bold">V</span>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">
+          <h1 className="text-2xl font-bold text-[#323338]">
             ברוכים הבאים ל-Vixy CRM
           </h1>
-          <p className="text-text-secondary mt-1">התחברו לחשבון שלכם</p>
+          <p className="text-[#676879] mt-1">התחברו לחשבון שלכם</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="login-email" className="block text-sm font-medium text-text-primary mb-1">
+            <label htmlFor="login-email" className="block text-[13px] font-medium text-[#323338] mb-1">
               אימייל
             </label>
             <input
@@ -54,7 +54,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border-light rounded-xl text-text-primary placeholder:text-text-tertiary bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
+              className="w-full px-4 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] focus-visible:ring-2 focus-visible:ring-[#0073EA] transition-all"
               placeholder="your@email.com"
               required
               dir="ltr"
@@ -62,7 +62,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="login-password" className="block text-sm font-medium text-text-primary mb-1">
+            <label htmlFor="login-password" className="block text-[13px] font-medium text-[#323338] mb-1">
               סיסמה
             </label>
             <div className="relative">
@@ -71,7 +71,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 border border-border-light rounded-xl text-text-primary placeholder:text-text-tertiary bg-white/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary transition-all"
+                className="w-full px-4 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] focus-visible:ring-2 focus-visible:ring-[#0073EA] transition-all"
                 placeholder="הזינו סיסמה"
                 required
                 dir="ltr"
@@ -79,7 +79,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary transition-colors"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9699A6] hover:text-[#676879] transition-colors"
                 aria-label={showPassword ? "הסתר סיסמה" : "הצג סיסמה"}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -90,7 +90,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-gradient-to-l from-primary to-primary-dark hover:from-primary-hover hover:to-primary text-white font-semibold rounded-xl shadow-sm hover:shadow-card-glow hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-gradient-to-l from-[#0073EA] to-[#0060C2] hover:from-[#0060C2] hover:to-[#0073EA] text-white font-semibold rounded-xl shadow-sm hover:shadow-[0_4px_16px_rgba(0,115,234,0.3)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -105,9 +105,9 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-border-light" />
-          <span className="text-xs text-text-tertiary">או</span>
-          <div className="flex-1 h-px bg-border-light" />
+          <div className="flex-1 h-px bg-[#D0D4E4]" />
+          <span className="text-xs text-[#9699A6]">או</span>
+          <div className="flex-1 h-px bg-[#D0D4E4]" />
         </div>
 
         {/* Google Sign In */}
@@ -125,11 +125,11 @@ export default function LoginPage() {
           onError={(msg) => toast.error(msg)}
         />
 
-        <p className="text-center text-text-secondary text-sm mt-6">
+        <p className="text-center text-[#676879] text-[13px] mt-6">
           אין לכם חשבון?{" "}
           <Link
             to="/register"
-            className="text-primary font-semibold hover:text-primary-dark hover:underline transition-colors"
+            className="text-[#0073EA] font-semibold hover:text-[#0060C2] hover:underline transition-colors"
           >
             הרשמה
           </Link>
@@ -138,15 +138,15 @@ export default function LoginPage() {
         <p className="text-center mt-4">
           <Link
             to="/"
-            className="text-text-tertiary text-xs hover:text-text-secondary hover:underline transition-colors"
+            className="text-[#9699A6] text-xs hover:text-[#676879] hover:underline transition-colors"
           >
             חזרה לדף הבית
           </Link>
         </p>
 
         {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-gradient-to-l from-primary-light/40 to-purple-light/30 rounded-xl border border-primary-light/60">
-          <p className="text-xs text-text-secondary text-center mb-2.5 font-medium">
+        <div className="mt-6 p-4 bg-gradient-to-l from-[#E8F3FF]/40 to-purple-light/30 rounded-xl border border-[#E8F3FF]/60">
+          <p className="text-xs text-[#676879] text-center mb-2.5 font-medium">
             משתמש הדגמה:
           </p>
           <div className="flex gap-2.5 justify-center">
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 setEmail("admin@vixy.co.il");
                 setPassword("admin123");
               }}
-              className="text-xs bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border-light hover:border-primary hover:bg-white hover:shadow-sm active:scale-95 transition-all text-text-secondary hover:text-primary font-medium cursor-pointer"
+              className="text-[12px] bg-white px-4 py-2 rounded-[4px] border border-[#D0D4E4] hover:border-[#0073EA] hover:bg-white hover:shadow-sm active:scale-95 transition-all text-[#676879] hover:text-[#0073EA] font-medium cursor-pointer"
               aria-label="מלא פרטי כניסה של מנהל הדגמה"
             >
               מנהל
@@ -167,7 +167,7 @@ export default function LoginPage() {
                 setEmail("agent@vixy.co.il");
                 setPassword("agent123");
               }}
-              className="text-xs bg-white/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-border-light hover:border-primary hover:bg-white hover:shadow-sm active:scale-95 transition-all text-text-secondary hover:text-primary font-medium cursor-pointer"
+              className="text-[12px] bg-white px-4 py-2 rounded-[4px] border border-[#D0D4E4] hover:border-[#0073EA] hover:bg-white hover:shadow-sm active:scale-95 transition-all text-[#676879] hover:text-[#0073EA] font-medium cursor-pointer"
               aria-label="מלא פרטי כניסה של נציג הדגמה"
             >
               נציג

@@ -13,7 +13,7 @@ export default function TeamLeaderboard() {
 
   if (isLoading) {
     return (
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card p-5 animate-pulse h-64" />
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 animate-pulse h-64" />
     );
   }
 
@@ -22,23 +22,23 @@ export default function TeamLeaderboard() {
   // If only 1 member, show invite message
   if (members.length === 1) {
     return (
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#EDE1F5]">
             <Trophy size={18} className="text-[#A25DDC]" />
           </div>
-          <h2 className="font-bold text-text-primary text-base">
+          <h2 className="font-semibold text-[#323338] text-[15px]">
             ביצועי צוות השבוע
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-surface-secondary flex items-center justify-center mb-3">
-            <UserPlus size={22} className="text-text-tertiary" />
+          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] flex items-center justify-center mb-3">
+            <UserPlus size={22} className="text-[#9699A6]" />
           </div>
-          <p className="text-sm text-text-secondary font-medium">
+          <p className="text-[13px] text-[#676879] font-medium">
             הזמן חברי צוות
           </p>
-          <p className="text-xs text-text-tertiary mt-1">
+          <p className="text-[12px] text-[#9699A6] mt-1">
             הוסף חברי צוות כדי לראות את טבלת הביצועים
           </p>
         </div>
@@ -51,17 +51,17 @@ export default function TeamLeaderboard() {
     members.reduce((sum, m) => sum + m.activitiesCount, 0) / members.length;
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 p-5">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#EDE1F5]">
             <Trophy size={18} className="text-[#A25DDC]" />
           </div>
-          <h2 className="font-bold text-text-primary text-base">
+          <h2 className="font-semibold text-[#323338] text-[15px]">
             ביצועי צוות השבוע
           </h2>
         </div>
-        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
+        <span className="text-[12px] font-medium px-3 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
           {members.length} חברי צוות
         </span>
       </div>
@@ -98,10 +98,10 @@ function MemberRow({
   );
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-secondary/50 transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-[4px] hover:bg-[#F5F6F8] transition-colors">
       {/* Rank */}
       <span className="w-7 text-center text-base flex-shrink-0">
-        {badge || <span className="text-xs text-text-tertiary font-bold">#{rank + 1}</span>}
+        {badge || <span className="text-[12px] text-[#9699A6] font-bold">#{rank + 1}</span>}
       </span>
 
       {/* Avatar */}
@@ -111,10 +111,10 @@ function MemberRow({
 
       {/* Name + progress */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text-primary truncate">
+        <p className="text-[13px] font-semibold text-[#323338] truncate">
           {member.name}
         </p>
-        <div className="w-full bg-surface-secondary rounded-full h-1.5 mt-1.5">
+        <div className="w-full bg-[#F5F6F8] rounded-full h-1.5 mt-1.5">
           <div
             className="h-1.5 rounded-full transition-all duration-500"
             style={{

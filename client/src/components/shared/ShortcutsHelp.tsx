@@ -48,7 +48,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 
 function Kbd({ children }: { children: string }) {
   return (
-    <kbd className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 bg-white border border-border rounded-md text-xs font-mono font-semibold text-text-primary shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+    <kbd className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 bg-white border border-[#E6E9EF] rounded-md text-xs font-mono font-semibold text-[#323338] shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
       {children}
     </kbd>
   );
@@ -75,29 +75,29 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
     >
       <div
-        className="bg-white rounded-2xl shadow-modal w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
         dir="rtl"
       >
         {/* Header */}
-        <div className="flex items-center gap-3 p-4 border-b border-border-light">
-          <div className="w-9 h-9 rounded-xl bg-primary-light flex items-center justify-center">
-            <Keyboard size={18} className="text-primary" />
+        <div className="flex items-center gap-3 p-4 border-b border-[#E6E9EF]">
+          <div className="w-9 h-9 rounded-xl bg-[#E8F3FF] flex items-center justify-center">
+            <Keyboard size={18} className="text-[#0073EA]" />
           </div>
-          <h2 className="text-base font-bold text-text-primary flex-1">
+          <h2 className="text-base font-bold text-[#323338] flex-1">
             קיצורי מקלדת
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
             aria-label="סגירה"
           >
-            <X size={16} className="text-text-tertiary" />
+            <X size={16} className="text-[#9699A6]" />
           </button>
         </div>
 
@@ -105,23 +105,23 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
         <div className="p-4 space-y-5 max-h-[60vh] overflow-y-auto">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title}>
-              <h3 className="text-xs font-bold text-text-tertiary uppercase mb-2.5 tracking-wide">
+              <h3 className="text-xs font-bold text-[#9699A6] uppercase mb-2.5 tracking-wide">
                 {group.title}
               </h3>
               <div className="space-y-1.5">
                 {group.shortcuts.map((shortcut) => (
                   <div
                     key={shortcut.label}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-surface-secondary/60 transition-colors"
+                    className="flex items-center justify-between py-1.5 px-2 rounded-[4px] hover:bg-[#F5F6F8]/60 transition-colors"
                   >
-                    <span className="text-sm text-text-primary">
+                    <span className="text-sm text-[#323338]">
                       {shortcut.label}
                     </span>
                     <div className="flex items-center gap-1" dir="ltr">
                       {shortcut.keys.map((key, i) => (
                         <span key={i} className="flex items-center gap-1">
                           {i > 0 && (
-                            <span className="text-[10px] text-text-tertiary mx-0.5">
+                            <span className="text-[10px] text-[#9699A6] mx-0.5">
                               +
                             </span>
                           )}
@@ -137,8 +137,8 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-border-light bg-surface-secondary/30">
-          <p className="text-[11px] text-text-tertiary text-center">
+        <div className="px-4 py-3 border-t border-[#E6E9EF] bg-[#F5F6F8]/30">
+          <p className="text-[11px] text-[#9699A6] text-center">
             קיצורים פעילים רק כשלא מקלידים בשדה טקסט
           </p>
         </div>

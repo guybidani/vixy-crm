@@ -125,10 +125,10 @@ export default function TodaysTasksWidget() {
 
   if (isLoading) {
     return (
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card p-5">
-        <div className="h-5 w-32 bg-surface-secondary rounded animate-pulse mb-4" />
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
+        <div className="h-5 w-32 bg-[#F5F6F8] rounded-[4px] animate-pulse mb-4" />
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-11 bg-surface-secondary rounded-lg animate-pulse mb-2" />
+          <div key={i} className="h-11 bg-[#F5F6F8] rounded-[4px] animate-pulse mb-2" />
         ))}
       </div>
     );
@@ -138,14 +138,14 @@ export default function TodaysTasksWidget() {
 
   return (
     <>
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h2 className="font-bold text-text-primary text-base">המשימות שלי</h2>
+            <h2 className="font-semibold text-[#323338] text-[15px]">המשימות שלי</h2>
             <div className="flex items-center gap-1.5">
               {overdue.length > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-danger/10 text-danger">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E44258]/10 text-[#E44258]">
                   {overdue.length} באיחור
                 </span>
               )}
@@ -158,7 +158,7 @@ export default function TodaysTasksWidget() {
           </div>
           <button
             onClick={() => navigate("/tasks")}
-            className="text-xs font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
+            className="text-[12px] font-medium text-[#0073EA] hover:text-[#0060C2] flex items-center gap-1 transition-colors"
           >
             הצג הכל
             <ArrowLeft size={12} />
@@ -168,8 +168,8 @@ export default function TodaysTasksWidget() {
         {totalActive === 0 && tomorrow.length === 0 ? (
           <div className="py-8 text-center">
             <CheckCircle2 size={32} className="text-success mx-auto mb-2" />
-            <p className="text-sm font-semibold text-text-primary">כל הכבוד! עדכנת הכל 🎉</p>
-            <p className="text-xs text-text-tertiary mt-1">אין משימות פתוחות להיום</p>
+            <p className="text-[13px] font-semibold text-[#323338]">כל הכבוד! עדכנת הכל 🎉</p>
+            <p className="text-[12px] text-[#9699A6] mt-1">אין משימות פתוחות להיום</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -202,7 +202,7 @@ export default function TodaysTasksWidget() {
               <div>
                 <button
                   onClick={() => setShowTomorrow(v => !v)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors py-1"
+                  className="flex items-center gap-1.5 text-[12px] font-medium text-[#676879] hover:text-[#323338] transition-colors py-1"
                 >
                   <ChevronDown
                     size={14}
@@ -256,9 +256,9 @@ function TaskGroup({
   label, count, accent, tasks, onDone, doneMutPending, hideHeader
 }: TaskGroupProps) {
   const accentClasses = {
-    danger: "text-danger",
+    danger: "text-[#E44258]",
     warning: "text-warning",
-    primary: "text-primary",
+    primary: "text-[#0073EA]",
   };
 
   return (
@@ -297,7 +297,7 @@ function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
   const priorityColor = PRIORITY_COLOR[task.priority] ?? "#C4C4C4";
 
   return (
-    <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-lg hover:bg-surface-secondary/60 transition-colors ${accent === "danger" ? "bg-danger/5" : ""}`}>
+    <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors ${accent === "danger" ? "bg-[#E44258]/5" : ""}`}>
       {/* Left border accent */}
       <div
         className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full opacity-60"
@@ -308,7 +308,7 @@ function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
       <button
         onClick={() => onDone(task)}
         disabled={doneMutPending}
-        className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-border hover:border-success hover:bg-success/10 transition-all flex items-center justify-center"
+        className="flex-shrink-0 w-5 h-5 rounded-full border-2 border-[#E6E9EF] hover:border-success hover:bg-success/10 transition-all flex items-center justify-center"
       >
         <Circle size={10} className="text-border group-hover:hidden" />
         <CheckCircle2 size={10} className="text-success hidden group-hover:block" />
@@ -324,15 +324,15 @@ function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
 
       {/* Title + contact */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-text-primary truncate leading-tight">{task.title}</p>
+        <p className="text-[13px] text-[#323338] truncate leading-tight">{task.title}</p>
         {task.contact && (
-          <p className="text-[11px] text-text-tertiary truncate">{task.contact.name}</p>
+          <p className="text-[11px] text-[#9699A6] truncate">{task.contact.name}</p>
         )}
       </div>
 
       {/* Time badge */}
       {time && (
-        <span className={`flex-shrink-0 text-[11px] font-semibold ${accent === "danger" ? "text-danger" : "text-text-secondary"}`}>
+        <span className={`flex-shrink-0 text-[11px] font-semibold ${accent === "danger" ? "text-[#E44258]" : "text-[#676879]"}`}>
           {time}
         </span>
       )}

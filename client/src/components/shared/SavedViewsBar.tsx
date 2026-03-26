@@ -99,29 +99,29 @@ export default function SavedViewsBar({
 
   return (
     <>
-      <div className="flex items-center gap-1.5 mb-3 flex-wrap" dir="rtl">
-        {/* "All" pill - always first */}
+      <div className="flex items-center gap-0 mb-3 border-b border-[#E6E9EF] -mx-0" dir="rtl">
+        {/* "All" tab */}
         <button
           onClick={() => onSelectView(null)}
-          className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-all border ${
+          className={`px-4 py-2 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap ${
             activeViewId === null
-              ? "bg-primary text-white border-primary shadow-sm"
-              : "bg-white text-text-secondary border-border hover:border-primary/40 hover:text-text-primary"
+              ? "text-[#0073EA] border-[#0073EA]"
+              : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
           }`}
         >
           הכל
         </button>
 
-        {/* Saved view pills */}
+        {/* Saved view tabs */}
         {views.map((view) => (
           <button
             key={view.id}
             onClick={() => onSelectView(view)}
             onContextMenu={(e) => handleContextMenu(e, view.id)}
-            className={`px-3 py-1.5 rounded-full text-[13px] font-medium transition-all border flex items-center gap-1.5 ${
+            className={`px-4 py-2 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap flex items-center gap-1.5 ${
               activeViewId === view.id
-                ? "bg-primary text-white border-primary shadow-sm"
-                : "bg-white text-text-secondary border-border hover:border-primary/40 hover:text-text-primary"
+                ? "text-[#0073EA] border-[#0073EA]"
+                : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
             }`}
           >
             {view.isDefault && (
@@ -129,8 +129,8 @@ export default function SavedViewsBar({
                 size={11}
                 className={
                   activeViewId === view.id
-                    ? "fill-white text-white"
-                    : "fill-yellow-400 text-yellow-400"
+                    ? "fill-[#0073EA] text-[#0073EA]"
+                    : "fill-[#FDAB3D] text-[#FDAB3D]"
                 }
               />
             )}
@@ -142,18 +142,18 @@ export default function SavedViewsBar({
         {hasActiveFilters && (
           <button
             onClick={() => setShowSaveDialog(true)}
-            className="px-2.5 py-1.5 rounded-full text-[13px] font-medium transition-all border border-dashed border-border hover:border-primary/40 text-text-tertiary hover:text-primary flex items-center gap-1"
+            className="px-3 py-2 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors flex items-center gap-1 border-b-[2px] border-transparent -mb-px"
           >
             <Plus size={13} />
             שמור כתצוגה
           </button>
         )}
 
-        {/* "+" button when no active filters - opens save dialog with empty filters */}
+        {/* "+" button when no active filters */}
         {!hasActiveFilters && views.length > 0 && (
           <button
             onClick={() => setShowSaveDialog(true)}
-            className="w-7 h-7 rounded-full text-text-tertiary hover:text-primary hover:bg-primary/5 flex items-center justify-center transition-all"
+            className="px-3 py-2 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] flex items-center justify-center transition-colors border-b-[2px] border-transparent -mb-px"
             title="שמור תצוגה חדשה"
           >
             <Plus size={14} />
@@ -165,12 +165,12 @@ export default function SavedViewsBar({
       {contextMenu && (
         <div
           ref={contextRef}
-          className="fixed z-50 bg-white rounded-lg shadow-lg border border-border py-1 min-w-[140px]"
+          className="fixed z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] py-1 min-w-[140px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <button
             onClick={() => deleteMutation.mutate(contextMenu.viewId)}
-            className="w-full px-3 py-2 text-sm text-right flex items-center gap-2 hover:bg-red-50 text-danger transition-colors"
+            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#FFEEF0] text-[#E44258] transition-colors"
           >
             <Trash2 size={14} />
             מחק תצוגה

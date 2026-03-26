@@ -122,11 +122,11 @@ function WelcomeBanner() {
   ];
 
   return (
-    <div className="relative bg-gradient-to-l from-[#6161FF]/10 via-white to-[#00CA72]/10 rounded-2xl border border-[#6161FF]/20 shadow-card p-6 mb-6 overflow-hidden">
+    <div className="relative bg-gradient-to-l from-[#6161FF]/10 via-white to-[#00CA72]/10 rounded-2xl border border-[#6161FF]/20 shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 mb-6 overflow-hidden">
       {/* dismiss */}
       <button
         onClick={dismiss}
-        className="absolute top-3 left-3 p-1.5 rounded-lg hover:bg-black/5 transition-colors text-text-tertiary hover:text-text-primary"
+        className="absolute top-3 left-3 p-1.5 rounded-[4px] hover:bg-black/5 transition-colors text-[#9699A6] hover:text-[#323338]"
         aria-label="סגור"
       >
         <X size={16} />
@@ -134,10 +134,10 @@ function WelcomeBanner() {
 
       {/* header */}
       <div className="mb-5">
-        <h2 className="text-lg font-bold text-text-primary mb-1">
+        <h2 className="text-lg font-bold text-[#323338] mb-1">
           ברוך הבא ל‑Vixy CRM! 🎉 בוא נתחיל
         </h2>
-        <p className="text-sm text-text-secondary">
+        <p className="text-sm text-[#676879]">
           שלושה צעדים פשוטים להתחלה — בצע אותם לפי הסדר לתוצאה הטובה ביותר.
         </p>
       </div>
@@ -147,7 +147,7 @@ function WelcomeBanner() {
         {steps.map((s) => (
           <div
             key={s.num}
-            className="bg-white rounded-xl border border-border-light p-4 flex flex-col gap-3 hover:shadow-md hover:border-primary/30 transition-all"
+            className="bg-white rounded-xl border border-[#E6E9EF] p-4 flex flex-col gap-3 hover:shadow-md hover:border-[#0073EA]/30 transition-all"
           >
             <div className="flex items-center gap-3">
               <div
@@ -157,20 +157,20 @@ function WelcomeBanner() {
                 {s.icon}
               </div>
               <div>
-                <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-[#9699A6] uppercase tracking-wide">
                   שלב {s.num}
                 </span>
-                <p className="text-sm font-bold text-text-primary leading-tight">
+                <p className="text-sm font-bold text-[#323338] leading-tight">
                   {s.title}
                 </p>
               </div>
             </div>
-            <p className="text-xs text-text-secondary leading-relaxed flex-1">
+            <p className="text-xs text-[#676879] leading-relaxed flex-1">
               {s.desc}
             </p>
             <button
               onClick={s.onClick}
-              className="w-full py-2 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold transition-all hover:shadow-sm active:scale-[0.97]"
+              className="w-full py-2 rounded-[4px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold transition-all hover:shadow-sm active:scale-[0.97]"
             >
               {s.cta}
             </button>
@@ -198,14 +198,14 @@ export default function DashboardPage() {
       <div>
         {/* Loading header */}
         <div className="mb-6">
-          <div className="h-8 w-56 bg-surface-secondary rounded-xl animate-pulse mb-2" />
-          <div className="h-4 w-40 bg-surface-secondary rounded animate-pulse" />
+          <div className="h-8 w-56 bg-[#F5F6F8] rounded-xl animate-pulse mb-2" />
+          <div className="h-4 w-40 bg-[#F5F6F8] rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl shadow-card p-6 h-28 animate-pulse"
+              className="bg-white rounded-2xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 h-28 animate-pulse"
             />
           ))}
         </div>
@@ -229,10 +229,10 @@ export default function DashboardPage() {
       {/* ===== HEADER ===== */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-0.5">
+          <h1 className="text-[22px] font-bold text-[#323338] mb-0.5">
             שלום, {user?.name} 👋
           </h1>
-          <p className="text-sm text-text-secondary">
+          <p className="text-[13px] text-[#676879]">
             {formatTodayDate()} · {getTodayMotivational()}
           </p>
         </div>
@@ -355,17 +355,17 @@ export default function DashboardPage() {
 
       {/* ===== AT RISK DEALS ===== */}
       {rottingDeals && rottingDeals.length > 0 && (
-        <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5 mb-6 border-t-4 border-t-warning">
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 mb-6 border-r-[3px] border-r-[#FDAB3D]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-warning/10">
                 <AlertTriangle size={18} className="text-warning" />
               </div>
               <div>
-                <h2 className="font-bold text-text-primary text-base">
+                <h2 className="font-bold text-[#323338] text-base">
                   עסקאות בסיכון
                 </h2>
-                <p className="text-xs text-text-secondary">
+                <p className="text-xs text-[#676879]">
                   ללא פעילות 14+ ימים
                 </p>
               </div>
@@ -379,22 +379,22 @@ export default function DashboardPage() {
               <div
                 key={deal.id}
                 onClick={() => navigate("/deals")}
-                className="flex items-center gap-3 p-3 bg-surface-secondary/50 rounded-xl hover:bg-surface-secondary transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-text-primary truncate">
+                  <p className="text-sm font-semibold text-[#323338] truncate">
                     {deal.title}
                   </p>
-                  <p className="text-xs text-text-secondary mt-0.5">
+                  <p className="text-xs text-[#676879] mt-0.5">
                     {deal.contact?.name || "—"}{" "}
                     {deal.owner && `· ${deal.owner}`}
                   </p>
                 </div>
                 <div className="text-left flex-shrink-0">
-                  <p className="text-sm font-bold text-text-primary">
+                  <p className="text-sm font-bold text-[#323338]">
                     ₪{deal.value.toLocaleString()}
                   </p>
-                  <p className="text-[10px] font-bold text-danger">
+                  <p className="text-[10px] font-bold text-[#E44258]">
                     {deal.daysSinceUpdate} ימים ללא פעילות
                   </p>
                 </div>
@@ -427,10 +427,10 @@ function QuickActionButton({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 hover:scale-[1.04] active:scale-[0.97] shadow-sm"
-      style={{ backgroundColor: bg, color }}
+      className="flex items-center gap-1 px-3 py-[6px] rounded-[4px] text-[13px] font-medium transition-colors border"
+      style={{ backgroundColor: bg, color, borderColor: `${color}30` }}
     >
-      <Plus size={13} />
+      <Plus size={14} strokeWidth={2.5} />
       {label}
     </button>
   );
@@ -479,29 +479,29 @@ function StatCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card p-5 cursor-pointer hover:shadow-card-hover hover:scale-[1.02] hover:bg-white transition-all duration-200 border-t-4 active:scale-[0.97] group"
-      style={{ borderTopColor: borderColor }}
+      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 cursor-pointer hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 border-r-[3px] group"
+      style={{ borderRightColor: borderColor }}
     >
       <div className="flex items-start justify-between mb-3">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200"
+          className="w-9 h-9 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: iconBg, color: iconColor }}
         >
           {icon}
         </div>
         <div
-          className="flex items-center gap-0.5 text-[11px] font-bold"
+          className="flex items-center gap-0.5 text-[11px] font-semibold"
           style={{ color: trendColor }}
         >
-          <TrendIcon size={13} />
+          <TrendIcon size={12} />
           <span>{trendLabel}</span>
         </div>
       </div>
-      <p className="text-3xl font-bold text-text-primary leading-tight">
+      <p className="text-[28px] font-bold text-[#323338] leading-tight">
         {value.toLocaleString()}
       </p>
-      <p className="text-sm text-text-secondary mt-0.5">{label}</p>
-      <p className="text-xs text-text-tertiary mt-1 font-medium">{subValue}</p>
+      <p className="text-[13px] text-[#676879] mt-0.5">{label}</p>
+      <p className="text-[11px] text-[#9699A6] mt-1">{subValue}</p>
     </div>
   );
 }
@@ -523,24 +523,24 @@ function PipelineFunnelWidget({
   const maxCount = pipeline.length > 0 ? Math.max(...pipeline.map((p) => p.count)) : 1;
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-bold text-text-primary text-base">
+          <h2 className="font-semibold text-[#323338] text-[15px]">
             צינור מכירות
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="text-[12px] text-[#676879] mt-0.5">
             לפי שלב
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
+          <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
             ₪{totalValue.toLocaleString()}
           </span>
           <button
             onClick={onNavigate}
-            className="text-xs font-semibold text-primary hover:text-primary-hover transition-colors"
+            className="text-[12px] font-medium text-[#0073EA] hover:underline transition-colors"
           >
             הצג הכל →
           </button>
@@ -549,13 +549,13 @@ function PipelineFunnelWidget({
 
       {pipeline.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
-          <Handshake size={32} className="text-text-tertiary mb-2" />
-          <p className="text-sm text-text-tertiary">אין עסקאות פתוחות</p>
+          <Handshake size={32} className="text-[#9699A6] mb-2" />
+          <p className="text-sm text-[#9699A6]">אין עסקאות פתוחות</p>
         </div>
       ) : (
         <div className="space-y-3">
           {/* Stacked horizontal bar */}
-          <div className="flex rounded-xl overflow-hidden h-8 mb-5 shadow-inner bg-surface-secondary gap-0.5">
+          <div className="flex rounded-xl overflow-hidden h-8 mb-5 shadow-inner bg-[#F5F6F8] gap-0.5">
             {pipeline.map((p) => {
               const pct =
                 totalValue > 0 ? (p.value / totalValue) * 100 : 0;
@@ -588,18 +588,18 @@ function PipelineFunnelWidget({
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="text-sm text-text-primary flex-1 font-medium">
+                  <span className="text-sm text-[#323338] flex-1 font-medium">
                     {dealStages[p.stage]?.label || p.stage}
                   </span>
-                  <span className="text-xs text-text-tertiary">
+                  <span className="text-xs text-[#9699A6]">
                     {p.count} עסקאות
                   </span>
-                  <span className="text-sm font-bold text-text-primary w-24 text-left">
+                  <span className="text-sm font-bold text-[#323338] w-24 text-left">
                     ₪{p.value.toLocaleString()}
                   </span>
                 </div>
                 {/* Horizontal progress bar */}
-                <div className="h-1.5 bg-surface-secondary rounded-full overflow-hidden mr-5">
+                <div className="h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden mr-5">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -637,26 +637,26 @@ function ActivityFeedWidget({
   activityTypes: Record<string, { label: string }>;
 }) {
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-card hover:shadow-glass transition-shadow duration-200 p-5">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-bold text-text-primary text-base">
+          <h2 className="font-semibold text-[#323338] text-[15px]">
             פעילות אחרונה
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="text-[12px] text-[#676879] mt-0.5">
             כל הצוות
           </p>
         </div>
-        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-surface-secondary text-text-secondary">
+        <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
           {activities.length} פעילויות
         </span>
       </div>
 
       {activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center">
-          <TrendingUp size={32} className="text-text-tertiary mb-2" />
-          <p className="text-sm text-text-tertiary">אין פעילות אחרונה</p>
+          <TrendingUp size={32} className="text-[#9699A6] mb-2" />
+          <p className="text-sm text-[#9699A6]">אין פעילות אחרונה</p>
         </div>
       ) : (
         <div className="space-y-0.5">
@@ -669,7 +669,7 @@ function ActivityFeedWidget({
             return (
               <div
                 key={a.id}
-                className="flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-lg hover:bg-surface-secondary/50 transition-all duration-150 group"
+                className="flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8]/50 transition-all duration-150 group"
               >
                 {/* Icon bubble */}
                 <div
@@ -681,7 +681,7 @@ function ActivityFeedWidget({
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-text-primary truncate leading-tight">
+                  <p className="text-sm text-[#323338] truncate leading-tight">
                     {a.subject ||
                       (contactName
                         ? `${activityTypes[a.type]?.label || a.type} — ${contactName}`
@@ -689,14 +689,14 @@ function ActivityFeedWidget({
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {contactName && (
-                      <span className="text-[11px] text-text-tertiary truncate">
+                      <span className="text-[11px] text-[#9699A6] truncate">
                         {contactName}
                       </span>
                     )}
                     {a.deal && (
                       <>
-                        <span className="text-text-tertiary text-[10px]">·</span>
-                        <span className="text-[11px] text-text-tertiary truncate">
+                        <span className="text-[#9699A6] text-[10px]">·</span>
+                        <span className="text-[11px] text-[#9699A6] truncate">
                           {a.deal.title}
                         </span>
                       </>
@@ -706,10 +706,10 @@ function ActivityFeedWidget({
 
                 {/* Time + member */}
                 <div className="flex-shrink-0 text-left">
-                  <p className="text-xs text-text-tertiary">
+                  <p className="text-xs text-[#9699A6]">
                     {formatRelativeTime(a.createdAt)}
                   </p>
-                  <p className="text-[11px] text-text-tertiary mt-0.5 truncate max-w-[80px]">
+                  <p className="text-[11px] text-[#9699A6] mt-0.5 truncate max-w-[80px]">
                     {a.member?.user?.name}
                   </p>
                 </div>

@@ -79,8 +79,8 @@ class RouteErrorBoundary extends Component<
           <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center">
             <span className="text-red-500 text-2xl">!</span>
           </div>
-          <h2 className="text-xl font-bold text-text-primary">משהו השתבש</h2>
-          <p className="text-sm text-text-secondary">
+          <h2 className="text-xl font-bold text-[#323338]">משהו השתבש</h2>
+          <p className="text-sm text-[#676879]">
             אירעה שגיאה בלתי צפויה. נסה לרענן את הדף.
           </p>
           <button
@@ -88,7 +88,7 @@ class RouteErrorBoundary extends Component<
               this.setState({ hasError: false });
               window.location.reload();
             }}
-            className="px-6 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm"
+            className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors text-[13px]"
           >
             נסה שוב
           </button>
@@ -113,12 +113,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
-            <span className="text-primary text-xl font-bold">V</span>
+          <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <span className="text-[#0073EA] text-xl font-bold">V</span>
           </div>
-          <p className="text-text-secondary text-sm">טוען...</p>
+          <p className="text-[#676879] text-sm">טוען...</p>
         </div>
       </div>
     );
@@ -146,12 +146,12 @@ function HomeRoute() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface-secondary flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
-            <span className="text-primary text-xl font-bold">V</span>
+          <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <span className="text-[#0073EA] text-xl font-bold">V</span>
           </div>
-          <p className="text-text-secondary text-sm">טוען...</p>
+          <p className="text-[#676879] text-sm">טוען...</p>
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ function AppLayout() {
   useTaskReminders();
 
   return (
-    <div className="min-h-screen bg-surface-secondary" dir="rtl">
+    <div className="min-h-screen bg-[#F5F6F8]" dir="rtl">
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -281,17 +281,17 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div
-          className="min-h-screen bg-surface-secondary flex items-center justify-center"
+          className="min-h-screen bg-[#F5F6F8] flex items-center justify-center"
           dir="rtl"
         >
           <div className="text-center max-w-md">
             <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-red-500 text-2xl">!</span>
             </div>
-            <h1 className="text-xl font-bold text-text-primary mb-2">
+            <h1 className="text-xl font-bold text-[#323338] mb-2">
               משהו השתבש
             </h1>
-            <p className="text-sm text-text-secondary mb-4">
+            <p className="text-sm text-[#676879] mb-4">
               אירעה שגיאה בלתי צפויה. נסה לרענן את הדף.
             </p>
             <button
@@ -299,7 +299,7 @@ class ErrorBoundary extends Component<
                 this.setState({ hasError: false });
                 window.location.href = "/";
               }}
-              className="px-6 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm"
+              className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors text-[13px]"
             >
               חזור לדף הבית
             </button>

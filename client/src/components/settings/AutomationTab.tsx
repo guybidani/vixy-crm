@@ -87,10 +87,10 @@ export default function AutomationTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-primary">
+          <h2 className="text-base font-bold text-[#323338]">
             סדרות מעקב אוטומטיות
           </h2>
-          <p className="text-xs text-text-tertiary">
+          <p className="text-[12px] text-[#9699A6]">
             הגדר סדרות מעקב אוטומטיות כשליד לא עונה. המערכת תשלח הודעות ותיצור
             משימות בהתאם לשלבים שהגדרת.
           </p>
@@ -100,7 +100,7 @@ export default function AutomationTab() {
             setEditing(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97]"
         >
           <Plus size={16} />
           סדרה חדשה
@@ -112,15 +112,15 @@ export default function AutomationTab() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-card h-24 animate-pulse"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] h-24 animate-pulse"
             />
           ))}
         </div>
       ) : !sequences || sequences.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-card text-center py-12">
-          <Play size={32} className="text-text-tertiary mx-auto mb-2" />
-          <p className="text-sm text-text-tertiary">אין סדרות מעקב</p>
-          <p className="text-xs text-text-tertiary mt-1">
+        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-center py-12">
+          <Play size={32} className="text-[#9699A6] mx-auto mb-2" />
+          <p className="text-sm text-[#9699A6]">אין סדרות מעקב</p>
+          <p className="text-[12px] text-[#9699A6] mt-1">
             צור סדרה ראשונה כדי להתחיל לעקוב אחרי לידים שלא עונים
           </p>
         </div>
@@ -131,7 +131,7 @@ export default function AutomationTab() {
             return (
               <div
                 key={seq.id}
-                className="bg-white rounded-xl shadow-card overflow-hidden border-r-4 transition-all"
+                className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden border-r-4 transition-all"
                 style={{
                   borderRightColor: seq.isActive ? "#00CA72" : "#C4C4C4",
                 }}
@@ -140,18 +140,18 @@ export default function AutomationTab() {
                 <div className="px-4 py-3 flex items-center gap-3">
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : seq.id)}
-                    className="p-1 rounded hover:bg-surface-secondary transition-colors"
+                    className="p-1 rounded hover:bg-[#F5F6F8] transition-colors"
                   >
                     {isExpanded ? (
-                      <ChevronUp size={16} className="text-text-tertiary" />
+                      <ChevronUp size={16} className="text-[#9699A6]" />
                     ) : (
-                      <ChevronDown size={16} className="text-text-tertiary" />
+                      <ChevronDown size={16} className="text-[#9699A6]" />
                     )}
                   </button>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-text-primary">
+                      <h3 className="text-[13px] font-bold text-[#323338]">
                         {seq.name}
                       </h3>
                       <span
@@ -161,15 +161,15 @@ export default function AutomationTab() {
                       >
                         {seq.isActive ? "פעיל" : "מושהה"}
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
                         {seq.steps.length} שלבים
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
                         {seq._count.executions} הרצות
                       </span>
                     </div>
                     {seq.description && (
-                      <p className="text-xs text-text-tertiary mt-0.5">
+                      <p className="text-[12px] text-[#9699A6] mt-0.5">
                         {seq.description}
                       </p>
                     )}
@@ -178,13 +178,13 @@ export default function AutomationTab() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => toggleMut.mutate(seq.id)}
-                      className="p-1.5 rounded-md hover:bg-surface-secondary transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
                       title={seq.isActive ? "השהה" : "הפעל"}
                     >
                       {seq.isActive ? (
-                        <Pause size={14} className="text-text-tertiary" />
+                        <Pause size={14} className="text-[#9699A6]" />
                       ) : (
-                        <Play size={14} className="text-text-tertiary" />
+                        <Play size={14} className="text-[#9699A6]" />
                       )}
                     </button>
                     <button
@@ -192,24 +192,24 @@ export default function AutomationTab() {
                         setEditing(seq);
                         setShowForm(true);
                       }}
-                      className="p-1.5 rounded-md hover:bg-surface-secondary transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
                     >
-                      <Pencil size={14} className="text-text-tertiary" />
+                      <Pencil size={14} className="text-[#9699A6]" />
                     </button>
                     <button
                       onClick={() => setSeqToDelete(seq.id)}
-                      className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors"
                     >
-                      <Trash2 size={14} className="text-danger" />
+                      <Trash2 size={14} className="text-[#E44258]" />
                     </button>
                   </div>
                 </div>
 
                 {/* Expanded steps */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-border-light">
+                  <div className="px-4 pb-4 border-t border-[#E6E9EF]">
                     <div className="mt-3 flex gap-4 mb-3">
-                      <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                      <div className="flex items-center gap-1.5 text-[12px] text-[#676879]">
                         <span className="font-semibold">טריגר:</span>
                         {seq.triggerStatuses.map((s) => {
                           const opt = STATUS_OPTIONS.find((o) => o.value === s);
@@ -226,7 +226,7 @@ export default function AutomationTab() {
                           );
                         })}
                       </div>
-                      <div className="text-xs text-text-secondary">
+                      <div className="text-[12px] text-[#676879]">
                         <span className="font-semibold">סיום:</span>{" "}
                         {END_ACTIONS.find((a) => a.value === seq.endAction)
                           ?.label || seq.endAction}
@@ -241,10 +241,10 @@ export default function AutomationTab() {
                         return (
                           <div
                             key={step.id}
-                            className="flex items-center gap-3 p-2.5 bg-surface-secondary rounded-lg"
+                            className="flex items-center gap-3 p-2.5 bg-[#F5F6F8] rounded-[4px]"
                           >
                             <div
-                              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                              className="w-7 h-7 rounded-[4px] flex items-center justify-center flex-shrink-0"
                               style={{
                                 backgroundColor: `${ch?.color || "#6161FF"}20`,
                               }}
@@ -256,10 +256,10 @@ export default function AutomationTab() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-text-primary">
+                                <span className="text-[12px] font-bold text-[#323338]">
                                   שלב {step.stepNumber}
                                 </span>
-                                <span className="text-[10px] text-text-tertiary">
+                                <span className="text-[10px] text-[#9699A6]">
                                   המתן {step.delayDays} ימים
                                 </span>
                                 <span
@@ -272,13 +272,13 @@ export default function AutomationTab() {
                                 </span>
                               </div>
                               {step.messageTemplate && (
-                                <p className="text-[10px] text-text-tertiary mt-0.5 truncate">
+                                <p className="text-[10px] text-[#9699A6] mt-0.5 truncate">
                                   {step.messageTemplate}
                                 </p>
                               )}
                             </div>
                             {idx < seq.steps.length - 1 && (
-                              <span className="text-text-tertiary text-xs">
+                              <span className="text-[#9699A6] text-[12px]">
                                 &darr;
                               </span>
                             )}
@@ -456,15 +456,15 @@ function SequenceForm({
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white px-6 py-4 border-b border-border-light flex items-center justify-between z-10">
-          <h2 className="text-lg font-bold text-text-primary">
+        <div className="sticky top-0 bg-white px-6 py-4 border-b border-[#E6E9EF] flex items-center justify-between z-10">
+          <h2 className="text-lg font-bold text-[#323338]">
             {editing ? "עריכת סדרת מעקב" : "סדרת מעקב חדשה"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
           >
-            <X size={18} className="text-text-tertiary" />
+            <X size={18} className="text-[#9699A6]" />
           </button>
         </div>
 
@@ -472,7 +472,7 @@ function SequenceForm({
           {/* Name + Description */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-[13px] font-medium text-[#323338] mb-1">
                 שם הסדרה *
               </label>
               <input
@@ -481,14 +481,14 @@ function SequenceForm({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 required
                 autoFocus
                 placeholder="מעקב לידים חדשים"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
+              <label className="block text-[13px] font-medium text-[#323338] mb-1">
                 תיאור
               </label>
               <input
@@ -497,7 +497,7 @@ function SequenceForm({
                 onChange={(e) =>
                   setForm((f) => ({ ...f, description: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 placeholder="סדרת מעקב ללידים שלא עונים"
               />
             </div>
@@ -505,7 +505,7 @@ function SequenceForm({
 
           {/* Trigger Statuses */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
+            <label className="block text-[13px] font-medium text-[#323338] mb-2">
               הפעל עבור סטטוסים
             </label>
             <div className="flex gap-2">
@@ -516,10 +516,10 @@ function SequenceForm({
                     key={opt.value}
                     type="button"
                     onClick={() => toggleStatus(opt.value)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border-2 ${
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all border-2 ${
                       active
                         ? "text-white border-transparent"
-                        : "text-text-secondary border-border bg-white hover:border-border"
+                        : "text-[#676879] border-[#E6E9EF] bg-white hover:border-[#E6E9EF]"
                     }`}
                     style={
                       active
@@ -536,7 +536,7 @@ function SequenceForm({
 
           {/* End Action */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               פעולת סיום (כשהסדרה מסתיימת ללא מענה)
             </label>
             <select
@@ -544,7 +544,7 @@ function SequenceForm({
               onChange={(e) =>
                 setForm((f) => ({ ...f, endAction: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {END_ACTIONS.map((a) => (
                 <option key={a.value} value={a.value}>
@@ -556,7 +556,7 @@ function SequenceForm({
 
           {/* Steps */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
+            <label className="block text-[13px] font-medium text-[#323338] mb-2">
               שלבי המעקב
             </label>
             <div className="space-y-3">
@@ -567,12 +567,12 @@ function SequenceForm({
                 return (
                   <div
                     key={idx}
-                    className="border border-border rounded-xl p-3 bg-surface-secondary/30"
+                    className="border border-[#E6E9EF] rounded-xl p-3 bg-[#F5F6F8]/30"
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <GripVertical size={14} className="text-text-tertiary" />
+                      <GripVertical size={14} className="text-[#9699A6]" />
                       <span
-                        className="text-xs font-bold text-white px-2 py-0.5 rounded-full"
+                        className="text-[12px] font-bold text-white px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: ch?.color || "#6161FF" }}
                       >
                         שלב {step.stepNumber}
@@ -582,15 +582,15 @@ function SequenceForm({
                         <button
                           type="button"
                           onClick={() => removeStep(idx)}
-                          className="p-1 rounded hover:bg-red-50 transition-colors"
+                          className="p-1 rounded hover:bg-[#FFEEF0] transition-colors"
                         >
-                          <X size={14} className="text-danger" />
+                          <X size={14} className="text-[#E44258]" />
                         </button>
                       )}
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[10px] text-text-tertiary mb-0.5">
+                        <label className="block text-[10px] text-[#9699A6] mb-0.5">
                           המתן (ימים)
                         </label>
                         <input
@@ -604,11 +604,11 @@ function SequenceForm({
                               parseInt(e.target.value) || 1,
                             )
                           }
-                          className="w-full px-2.5 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+                          className="w-full px-2.5 py-1.5 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 bg-white"
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="block text-[10px] text-text-tertiary mb-0.5">
+                        <label className="block text-[10px] text-[#9699A6] mb-0.5">
                           ערוץ
                         </label>
                         <select
@@ -616,7 +616,7 @@ function SequenceForm({
                           onChange={(e) =>
                             updateStep(idx, "channel", e.target.value)
                           }
-                          className="w-full px-2.5 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
+                          className="w-full px-2.5 py-1.5 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 bg-white"
                         >
                           {CHANNEL_OPTIONS.map((c) => (
                             <option key={c.value} value={c.value}>
@@ -628,7 +628,7 @@ function SequenceForm({
                     </div>
                     {step.channel !== "CALL_TASK" && (
                       <div className="mt-2">
-                        <label className="block text-[10px] text-text-tertiary mb-0.5">
+                        <label className="block text-[10px] text-[#9699A6] mb-0.5">
                           תבנית הודעה (אופציונלי)
                         </label>
                         <textarea
@@ -636,11 +636,11 @@ function SequenceForm({
                           onChange={(e) =>
                             updateStep(idx, "messageTemplate", e.target.value)
                           }
-                          className="w-full px-2.5 py-1.5 border border-border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white resize-none"
+                          className="w-full px-2.5 py-1.5 border border-[#E6E9EF] rounded-[4px] text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 bg-white resize-none"
                           rows={2}
                           placeholder="היי {{firstName}}, רציתי לבדוק אם עדיין מעוניין/ת..."
                         />
-                        <p className="text-[9px] text-text-tertiary mt-0.5">
+                        <p className="text-[9px] text-[#9699A6] mt-0.5">
                           משתנים: {"{{firstName}}"}, {"{{lastName}}"},{" "}
                           {"{{fullName}}"}
                         </p>
@@ -653,7 +653,7 @@ function SequenceForm({
             <button
               type="button"
               onClick={addStep}
-              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary-light rounded-lg transition-colors"
+              className="mt-2 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-[#0073EA] hover:bg-[#0060C2]-light rounded-[4px] transition-colors"
             >
               <Plus size={14} />
               הוסף שלב
@@ -661,11 +661,11 @@ function SequenceForm({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-2 border-t border-border-light">
+          <div className="flex gap-3 pt-2 border-t border-[#E6E9EF]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+              className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
             >
               ביטול
             </button>
@@ -678,7 +678,7 @@ function SequenceForm({
                 form.triggerStatuses.length === 0 ||
                 steps.length === 0
               }
-              className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all hover:shadow-md text-sm disabled:opacity-50"
+              className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-all hover:shadow-md text-sm disabled:opacity-50"
             >
               {editing ? "עדכן סדרה" : "צור סדרה"}
             </button>

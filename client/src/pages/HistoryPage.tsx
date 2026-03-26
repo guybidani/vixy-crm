@@ -47,7 +47,7 @@ function ContactCard({ item }: { item: RecentContact }) {
     <button
       type="button"
       onClick={() => navigate(`/contacts/${contact.id}`)}
-      className="w-full bg-white rounded-xl shadow-card hover:shadow-md transition-all duration-200 p-4 flex items-center gap-4 text-right group hover:translate-y-[-1px]"
+      className="w-full bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-md transition-all duration-200 p-4 flex items-center gap-4 text-right group hover:translate-y-[-1px]"
     >
       {/* Avatar */}
       <div className="w-11 h-11 rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0">
@@ -59,7 +59,7 @@ function ContactCard({ item }: { item: RecentContact }) {
       {/* Main info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-bold text-text-primary truncate">
+          <span className="font-bold text-[#323338] truncate">
             {fullName}
           </span>
           {/* Activity type badge */}
@@ -79,16 +79,16 @@ function ContactCard({ item }: { item: RecentContact }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-text-secondary">
+        <div className="flex items-center gap-3 text-[12px] text-[#676879]">
           <span className="flex items-center gap-1">
-            <Clock size={12} className="text-text-tertiary" />
+            <Clock size={12} className="text-[#9699A6]" />
             {getRelativeTime(lastActivity.createdAt)}
           </span>
           {contact.phone && (
             <a
               href={`tel:${contact.phone}`}
               onClick={(e) => e.stopPropagation()}
-              className="hover:text-primary transition-colors"
+              className="hover:text-[#0073EA] transition-colors"
               dir="ltr"
             >
               {contact.phone}
@@ -104,10 +104,10 @@ function ContactCard({ item }: { item: RecentContact }) {
 
       {/* Right side: interaction count */}
       <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center">
+        <div className="w-8 h-8 rounded-lg bg-[#F5F6F8] flex items-center justify-center">
           <TypeIcon size={16} style={{ color: config?.color || "#6161FF" }} />
         </div>
-        <span className="text-[10px] text-text-tertiary font-medium">
+        <span className="text-[10px] text-[#9699A6] font-medium">
           {activityCount} אינטראקציות
         </span>
       </div>
@@ -124,12 +124,9 @@ export default function HistoryPage() {
 
   return (
     <PageShell
-      title={
-        <span className="flex items-center gap-2">
-          <Clock size={22} className="text-primary" />
-          היסטוריה
-        </span>
-      }
+      boardStyle
+      emoji="📋"
+      title="היסטוריה"
       subtitle="10 אנשי הקשר האחרונים שדיברת איתם"
     >
       {isLoading ? (
@@ -137,19 +134,19 @@ export default function HistoryPage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-card p-4 animate-pulse flex items-center gap-4"
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4 animate-pulse flex items-center gap-4"
             >
-              <div className="w-11 h-11 rounded-full bg-surface-secondary" />
+              <div className="w-11 h-11 rounded-full bg-[#F5F6F8]" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-surface-secondary rounded w-1/3" />
-                <div className="h-3 bg-surface-secondary rounded w-1/2" />
+                <div className="h-4 bg-[#F5F6F8] rounded w-1/3" />
+                <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
               </div>
             </div>
           ))}
         </div>
       ) : recentContacts.length === 0 ? (
         <EmptyState
-          icon={<Clock size={32} className="text-text-tertiary" />}
+          icon={<Clock size={32} className="text-[#9699A6]" />}
           title="אין היסטוריה עדיין"
           description="התחל לתקשר עם לקוחות — שיחות, אימיילים, פגישות וווטסאפ יופיעו כאן"
         />

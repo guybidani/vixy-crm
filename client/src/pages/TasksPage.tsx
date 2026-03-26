@@ -36,7 +36,6 @@ import MondayPersonCell from "../components/shared/MondayPersonCell";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
-import ViewToggle from "../components/shared/ViewToggle";
 import ExportButton from "../components/shared/ExportButton";
 import TaskDetailPanel from "../components/tasks/TaskDetailPanel";
 import TaskCreateModal from "../components/tasks/TaskCreateModal";
@@ -203,10 +202,10 @@ function ContactAvatar({ name, onClick }: { name: string; onClick?: () => void }
       className="flex items-center gap-1.5 group/contact"
       title={name}
     >
-      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <span className="text-[9px] font-bold text-primary">{initials}</span>
-      </div>
-      <span className="text-xs text-text-secondary group-hover/contact:text-primary transition-colors hidden sm:inline truncate max-w-[90px]">
+      <div className="w-6 h-6 rounded-full bg-[#0073EA]/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-[9px] font-bold text-[#0073EA]">{initials}</span>
+</div>
+      <span className="text-xs text-[#676879] group-hover/contact:text-[#0073EA] transition-colors hidden sm:inline truncate max-w-[90px]">
         {name}
       </span>
     </button>
@@ -232,7 +231,7 @@ function PriorityBadge({ priority }: { priority: string }) {
 // ─── DueDateCell ─────────────────────────────────────────────────────────────
 
 function DueDateCell({ dueDate, dueTime, status }: { dueDate: string | null; dueTime: string | null; status: string }) {
-  if (!dueDate) return <span className="text-[11px] text-text-tertiary">—</span>;
+  if (!dueDate) return <span className="text-[11px] text-[#9699A6]">—</span>;
 
   const due = new Date(dueDate);
   due.setHours(0, 0, 0, 0);
@@ -252,10 +251,10 @@ function DueDateCell({ dueDate, dueTime, status }: { dueDate: string | null; due
     <span
       className={`flex items-center gap-1 text-[11px] rounded px-1.5 py-0.5 flex-shrink-0 ${
         isOverdue
-          ? "bg-danger/10 text-danger font-bold"
+          ? "bg-[#E44258]/10 text-[#E44258] font-bold"
           : isToday
           ? "bg-warning/10 text-warning font-bold"
-          : "text-text-secondary"
+          : "text-[#676879]"
       }`}
     >
       {isOverdue ? <AlertTriangle size={10} /> : isToday ? <Clock size={10} /> : <Calendar size={10} />}
@@ -292,25 +291,25 @@ function TaskDotMenu({
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="p-1 rounded hover:bg-surface-secondary opacity-0 group-hover/row:opacity-100 transition-opacity text-text-tertiary hover:text-text-primary"
+        className="p-1 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/row:opacity-100 transition-opacity text-[#9699A6] hover:text-[#323338]"
         title="פעולות"
       >
         <MoreHorizontal size={14} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-border-light z-30 py-1 min-w-[140px]">
+        <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] z-30 py-1 min-w-[140px]">
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
-            className="w-full text-right px-3 py-2 text-sm hover:bg-surface-secondary flex items-center gap-2 transition-colors text-text-primary"
+            className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8] flex items-center gap-2 transition-colors text-[#323338]"
           >
-            <Pencil size={13} className="text-text-tertiary" />
+            <Pencil size={13} className="text-[#9699A6]" />
             עריכה
           </button>
           <SnoozeDropdown taskId={task.id} onSnoozed={() => setOpen(false)} />
-          <div className="border-t border-border-light my-1" />
+          <div className="border-t border-[#E6E9EF] my-1" />
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
-            className="w-full text-right px-3 py-2 text-sm hover:bg-danger/5 flex items-center gap-2 transition-colors text-danger"
+            className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#E44258]/5 flex items-center gap-2 transition-colors text-[#E44258]"
           >
             <Trash2 size={13} />
             מחיקה
@@ -343,7 +342,7 @@ function InlineTaskCreate({ dueDate }: { dueDate?: string }) {
     return (
       <button
         onClick={() => setIsAdding(true)}
-        className="w-full px-4 py-2 text-sm text-text-tertiary hover:text-primary hover:bg-[#F5F6FF] transition-colors flex items-center gap-2 border-t border-border-light"
+        className="w-full px-4 py-2 text-[13px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#F5F6FF] transition-colors flex items-center gap-2 border-t border-[#E6E9EF]"
       >
         <Plus size={14} />
         <span>+ משימה חדשה</span>
@@ -351,7 +350,7 @@ function InlineTaskCreate({ dueDate }: { dueDate?: string }) {
     );
   }
   return (
-    <div className="px-4 py-2.5 flex items-center gap-2 border-t border-border-light bg-[#F5F6FF]">
+    <div className="px-4 py-2.5 flex items-center gap-2 border-t border-[#E6E9EF] bg-[#F5F6FF]">
       <input
         autoFocus
         type="text"
@@ -363,16 +362,16 @@ function InlineTaskCreate({ dueDate }: { dueDate?: string }) {
         }}
         placeholder="כותרת משימה חדשה..."
         dir="rtl"
-        className="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+        className="flex-1 px-3 py-1.5 text-[13px] border border-[#E6E9EF] rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
       />
       <button
         onClick={() => { if (title.trim()) mutation.mutate(); }}
         disabled={!title.trim() || mutation.isPending}
-        className="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+        className="px-3 py-1.5 bg-[#0073EA] text-white text-[12px] font-semibold rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
       >
         {mutation.isPending ? "..." : "הוסף"}
       </button>
-      <button onClick={() => { setIsAdding(false); setTitle(""); }} className="p-1 rounded text-text-tertiary hover:text-text-primary">
+      <button onClick={() => { setIsAdding(false); setTitle(""); }} className="p-1 rounded text-[#9699A6] hover:text-[#323338]">
         <X size={14} />
       </button>
     </div>
@@ -409,9 +408,9 @@ function TaskRow({
 
   return (
     <div
-      className={`group/row flex items-center gap-3 px-3 py-2.5 border-b border-border-light last:border-0 transition-colors cursor-pointer
+      className={`group/row flex items-center gap-3 px-3 py-2.5 border-b border-[#E6E9EF] last:border-0 transition-colors cursor-pointer
         ${isDone ? "opacity-60" : ""}
-        ${selected ? "bg-primary/5" : "hover:bg-[#F5F6FF]"}
+        ${selected ? "bg-[#0073EA]/5" : "hover:bg-[#F5F6FF]"}
       `}
       onClick={onClick}
     >
@@ -421,7 +420,7 @@ function TaskRow({
           type="checkbox"
           checked={selected ?? false}
           onChange={(e) => { e.stopPropagation(); onToggleSelect(); }}
-          className={`w-4 h-4 rounded border-border text-primary focus:ring-primary/30 flex-shrink-0 cursor-pointer transition-opacity ${
+          className={`w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]/20 flex-shrink-0 cursor-pointer transition-opacity ${
             showCheckbox || selected ? "opacity-100" : "opacity-0 group-hover/row:opacity-100"
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -441,7 +440,7 @@ function TaskRow({
               ? "text-success"
               : task.status === "IN_PROGRESS"
               ? "text-warning"
-              : "text-text-tertiary hover:text-success"
+              : "text-[#9699A6] hover:text-success"
           }
         />
       </button>
@@ -455,10 +454,10 @@ function TaskRow({
           value={task.title}
           onChange={(val) => inlineUpdate(task.id, { title: val })}
           placeholder="כותרת משימה"
-          className={isDone ? "line-through text-text-tertiary" : "font-semibold text-text-primary"}
+          className={isDone ? "line-through text-[#9699A6]" : "font-semibold text-[#323338]"}
         />
         {task.description && (
-          <p className="text-xs text-text-tertiary mt-0.5 truncate">{task.description}</p>
+          <p className="text-xs text-[#9699A6] mt-0.5 truncate">{task.description}</p>
         )}
       </div>
 
@@ -490,7 +489,7 @@ function TaskRow({
 
         {/* Recurring icon */}
         {task.isRecurring && (
-          <span className="text-primary/70 flex-shrink-0" title="משימה חוזרת">
+          <span className="text-[#0073EA]/70 flex-shrink-0" title="משימה חוזרת">
             <Repeat size={11} />
           </span>
         )}
@@ -555,7 +554,7 @@ function DateGroupSection({
   }, [config.key]);
 
   return (
-    <div className="bg-white rounded-xl shadow-card overflow-hidden border border-border-light">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden border border-[#E6E9EF]">
       {/* Group header */}
       <button
         className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors hover:opacity-90"
@@ -570,7 +569,7 @@ function DateGroupSection({
             transform: open ? "rotate(0deg)" : "rotate(-90deg)",
           }}
         />
-        <span className="font-bold text-sm" style={{ color: config.headerTextColor }}>
+        <span className="font-bold text-[13px]" style={{ color: config.headerTextColor }}>
           {config.label}
         </span>
         <span
@@ -588,7 +587,7 @@ function DateGroupSection({
       {open && (
         <div>
           {/* Column headers */}
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-surface-secondary/40 border-b border-border-light text-[11px] font-semibold text-text-tertiary">
+          <div className="flex items-center gap-3 px-3 py-1.5 bg-[#F5F6F8]/40 border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6]">
             <div className="w-4 h-4 flex-shrink-0" />
             <div className="w-5 h-5 flex-shrink-0" />
             <div className="w-20 flex-shrink-0" />
@@ -601,7 +600,7 @@ function DateGroupSection({
           </div>
 
           {tasks.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-text-tertiary">{config.emptyLabel}</div>
+            <div className="px-4 py-6 text-center text-[13px] text-[#9699A6]">{config.emptyLabel}</div>
           ) : (
             tasks.map((task) => (
               <TaskRow
@@ -636,7 +635,7 @@ function FilterChip({ label, color, active, onClick }: { label: string; color?: 
       className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
         active
           ? "text-white shadow-sm"
-          : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
+          : "bg-white border border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
       }`}
       style={active ? { backgroundColor: color || "#6161FF" } : undefined}
     >
@@ -672,8 +671,8 @@ function PriorityFilterDropdown({ value, onChange }: { value: string; onChange: 
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
           value
-            ? "bg-primary text-white border-primary shadow-sm"
-            : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+            ? "bg-[#0073EA] text-white border-[#0073EA] shadow-sm"
+            : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
         }`}
       >
         {value && <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: PRIORITY_COLORS[value] || "#C3C6D4" }} />}
@@ -681,13 +680,13 @@ function PriorityFilterDropdown({ value, onChange }: { value: string; onChange: 
         <ChevronDown size={11} />
       </button>
       {open && (
-        <div className="absolute top-full mt-1 right-0 bg-white border border-border rounded-lg shadow-modal z-20 py-1 min-w-[130px]">
+        <div className="absolute top-full mt-1 right-0 bg-white border border-[#E6E9EF] rounded-[4px] shadow-modal z-20 py-1 min-w-[130px]">
           {PRIORITY_OPTIONS.map((opt) => (
             <button
               key={opt.key}
               onClick={() => { onChange(opt.key); setOpen(false); }}
-              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-primary/5 flex items-center gap-2 transition-colors ${
-                value === opt.key ? "text-primary font-semibold" : "text-text-primary"
+              className={`w-full text-right px-3 py-1.5 text-[12px] hover:bg-[#0073EA]/5 flex items-center gap-2 transition-colors ${
+                value === opt.key ? "text-[#0073EA] font-semibold" : "text-[#323338]"
               }`}
             >
               {opt.key && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLORS[opt.key] || "#C3C6D4" }} />}
@@ -720,11 +719,11 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
     })();
   return (
     <div
-      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-danger" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-card-hover hover:-translate-y-0.5"}`}
+      className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-[#E44258]" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-md hover:-translate-y-0.5"}`}
       style={{ borderLeftColor: isDragging ? "#6161FF" : isTaskOverdue ? "#FF4D4F" : borderColor }}
     >
-      <span className={`font-semibold text-sm block mb-1.5 ${isDone ? "line-through text-text-tertiary" : "text-text-primary"}`}>{task.title}</span>
-      {task.description && <p className="text-xs text-text-tertiary truncate mb-2">{task.description}</p>}
+      <span className={`font-semibold text-[13px] block mb-1.5 ${isDone ? "line-through text-[#9699A6]" : "text-[#323338]"}`}>{task.title}</span>
+      {task.description && <p className="text-xs text-[#9699A6] truncate mb-2">{task.description}</p>}
       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
         <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white" style={{ backgroundColor: priorityInfo?.color || "#C4C4C4" }}>
           {priorityInfo?.label || task.priority}
@@ -739,24 +738,24 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
           ) : null;
         })()}
       </div>
-      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
+      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#E6E9EF]">
         <div className="flex items-center gap-1">
-          {task.contact && <span className="text-[11px] text-text-secondary truncate max-w-[80px]">{task.contact.name}</span>}
+          {task.contact && <span className="text-[11px] text-[#676879] truncate max-w-[80px]">{task.contact.name}</span>}
         </div>
         <div className="flex items-center gap-2">
           {task.isRecurring && (
-            <span className="text-primary/70" title="משימה חוזרת">
+            <span className="text-[#0073EA]/70" title="משימה חוזרת">
               <Repeat size={11} />
             </span>
           )}
           <DueDateCell dueDate={task.dueDate} dueTime={task.dueTime} status={task.status} />
           {task.assignee ? (
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-primary" title={task.assignee.name}>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-[#0073EA]" title={task.assignee.name}>
               <span className="text-white text-[9px] font-bold">{task.assignee.name[0]}</span>
             </div>
           ) : (
             <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-border" title="לא הוקצה">
-              <User size={10} className="text-text-tertiary" />
+              <User size={10} className="text-[#9699A6]" />
             </div>
           )}
         </div>
@@ -784,21 +783,21 @@ function StatsBar({ tasks }: { tasks: Task[] }) {
   }).length;
   const completed = tasks.filter((t) => t.status === "DONE").length;
   return (
-    <div className="flex items-center gap-4 px-4 py-2.5 bg-white rounded-xl border border-border shadow-card text-sm flex-wrap">
-      <span className="text-text-secondary">
-        <span className="font-semibold text-text-primary">{tasks.length}</span> משימות
+    <div className="flex items-center gap-4 px-4 py-2.5 bg-white rounded-xl border border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-[13px] flex-wrap">
+      <span className="text-[#676879]">
+        <span className="font-semibold text-[#323338]">{tasks.length}</span> משימות
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
-      <span className="text-text-secondary">
-        באיחור: <span className={`font-semibold ${overdue > 0 ? "text-danger" : "text-text-tertiary"}`}>{overdue}</span>
+      <span className="text-[#676879]">
+        באיחור: <span className={`font-semibold ${overdue > 0 ? "text-[#E44258]" : "text-[#9699A6]"}`}>{overdue}</span>
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
-      <span className="text-text-secondary">
-        היום: <span className={`font-semibold ${dueToday > 0 ? "text-warning" : "text-text-tertiary"}`}>{dueToday}</span>
+      <span className="text-[#676879]">
+        היום: <span className={`font-semibold ${dueToday > 0 ? "text-warning" : "text-[#9699A6]"}`}>{dueToday}</span>
       </span>
       <span className="text-border select-none hidden sm:inline">|</span>
-      <span className="text-text-secondary">
-        הושלמו: <span className={`font-semibold ${completed > 0 ? "text-success" : "text-text-tertiary"}`}>{completed}</span>
+      <span className="text-[#676879]">
+        הושלמו: <span className={`font-semibold ${completed > 0 ? "text-success" : "text-[#9699A6]"}`}>{completed}</span>
       </span>
     </div>
   );
@@ -1006,16 +1005,24 @@ export default function TasksPage() {
     <div className="flex h-full">
       <div className={`flex-1 min-w-0 ${selectedTaskId ? "ml-[400px]" : ""}`}>
         <PageShell
+          boardStyle
+          emoji="✅"
           title="המשימות שלי"
           subtitle={`${allTasks.length} משימות`}
+          views={[
+            { key: "table", label: "טבלה" },
+            { key: "kanban", label: "לוח" },
+          ]}
+          activeView={viewMode}
+          onViewChange={(key) => setViewMode(key as "kanban" | "table")}
           actions={
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { setMyTasksOnly(!myTasksOnly); }}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-semibold rounded-[4px] transition-all ${
                   myTasksOnly
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
+                    ? "bg-[#0073EA] text-white shadow-sm"
+                    : "bg-white border border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                 }`}
               >
                 <User size={14} />
@@ -1024,7 +1031,7 @@ export default function TasksPage() {
               <div className="relative">
                 <button
                   onClick={() => setShowSortMenu(!showSortMenu)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-lg bg-white border border-border text-text-secondary hover:border-primary hover:text-primary transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2 text-[13px] font-semibold rounded-[4px] bg-white border border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA] transition-all"
                 >
                   <SortAsc size={14} />
                   מיון
@@ -1032,7 +1039,7 @@ export default function TasksPage() {
                 {showSortMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowSortMenu(false)} />
-                    <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-border-light z-20 py-1 min-w-[160px]">
+                    <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-[#E6E9EF] z-20 py-1 min-w-[160px]">
                       {sortOptions.map((opt) => (
                         <button
                           key={opt.key}
@@ -1041,7 +1048,7 @@ export default function TasksPage() {
                             else { setSortBy(opt.key); setSortDir(opt.key === "dueDate" ? "asc" : "desc"); }
                             setShowSortMenu(false);
                           }}
-                          className={`w-full text-right px-3 py-2 text-sm hover:bg-surface-secondary/50 transition-colors ${sortBy === opt.key ? "text-primary font-semibold" : "text-text-secondary"}`}
+                          className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8]/50 transition-colors ${sortBy === opt.key ? "text-[#0073EA] font-semibold" : "text-[#676879]"}`}
                         >
                           {opt.label}
                           {sortBy === opt.key && <span className="text-[10px] mr-1">{sortDir === "asc" ? "↑" : "↓"}</span>}
@@ -1051,13 +1058,12 @@ export default function TasksPage() {
                   </>
                 )}
               </div>
-              <ViewToggle viewMode={viewMode} onChange={setViewMode} />
               <ExportButton entity="tasks" filters={{}} />
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+                className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
               >
-                <Plus size={16} />
+                <Plus size={15} strokeWidth={2.5} />
                 משימה חדשה
               </button>
             </div>
@@ -1069,7 +1075,7 @@ export default function TasksPage() {
           {/* Date filter tabs + search row */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Date filter tabs */}
-            <div className="flex items-center gap-1 bg-white border border-border rounded-lg p-1">
+            <div className="flex items-center gap-1 bg-white border border-[#E6E9EF] rounded-[4px] p-1">
               {DATE_FILTER_OPTIONS.map((opt) => (
                 <button
                   key={opt.key}
@@ -1078,8 +1084,8 @@ export default function TasksPage() {
                     dateFilter === opt.key
                       ? opt.key === "overdue"
                         ? "bg-danger text-white shadow-sm"
-                        : "bg-primary text-white shadow-sm"
-                      : "text-text-secondary hover:text-text-primary"
+                        : "bg-[#0073EA] text-white shadow-sm"
+                      : "text-[#676879] hover:text-[#323338]"
                   }`}
                 >
                   {opt.label}
@@ -1089,17 +1095,17 @@ export default function TasksPage() {
 
             {/* Search */}
             <div className="relative flex-1 max-w-xs">
-              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+              <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none" />
               <input
                 type="text"
                 value={searchRaw}
                 onChange={(e) => setSearchRaw(e.target.value)}
                 placeholder="חפש משימה..."
                 dir="rtl"
-                className="w-full pr-9 pl-8 py-1.5 text-sm border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary placeholder:text-text-tertiary"
+                className="w-full pr-9 pl-8 py-1.5 text-[13px] border border-[#E6E9EF] rounded-[4px] bg-white focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] placeholder:text-[#9699A6]"
               />
               {searchRaw && (
-                <button onClick={() => setSearchRaw("")} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-danger transition-colors">
+                <button onClick={() => setSearchRaw("")} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] hover:text-[#E44258] transition-colors">
                   <X size={12} />
                 </button>
               )}
@@ -1121,7 +1127,7 @@ export default function TasksPage() {
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                     isActive
                       ? "text-white shadow-sm"
-                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                      : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                   }`}
                   style={isActive ? { backgroundColor: opt.color, borderColor: opt.color } : undefined}
                 >
@@ -1141,7 +1147,7 @@ export default function TasksPage() {
                   className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
                     taskTypeFilter === value
                       ? "text-white shadow-sm"
-                      : "bg-white border-border text-text-secondary hover:border-primary hover:text-primary"
+                      : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
                   }`}
                   style={taskTypeFilter === value ? { backgroundColor: cfg.color, borderColor: cfg.color } : undefined}
                 >
@@ -1168,13 +1174,13 @@ export default function TasksPage() {
             </div>
           ) : tasks.length === 0 ? (
             <EmptyState
-              icon={<CheckCircle2 size={28} className="text-text-tertiary" />}
+              icon={<CheckCircle2 size={28} className="text-[#9699A6]" />}
               title="אין משימות"
               description="צרו משימה חדשה כדי להתחיל לעקוב אחרי המשימות שלכם."
               action={
                 <button
                   onClick={() => setShowCreate(true)}
-                  className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-colors"
+                  className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
                 >
                   צור משימה ראשונה
                 </button>
@@ -1228,7 +1234,7 @@ export default function TasksPage() {
             onClick={() => setSelectedTaskId(null)}
             aria-hidden="true"
           />
-          <div className="fixed top-0 left-0 h-full w-full md:w-[400px] bg-white/95 backdrop-blur-md shadow-[-4px_0_24px_rgba(0,0,0,0.08)] border-r border-border-light z-40 overflow-y-auto animate-slide-in-left max-h-screen">
+          <div className="fixed top-0 left-0 h-full w-full md:w-[400px] bg-white/95 backdrop-blur-md shadow-[-4px_0_24px_rgba(0,0,0,0.08)] border-r border-[#E6E9EF] z-40 overflow-y-auto animate-slide-in-left max-h-screen">
             <div className="p-5">
               <TaskDetailPanel taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
             </div>
@@ -1245,7 +1251,7 @@ export default function TasksPage() {
         <button
           onClick={handleBulkMarkDone}
           disabled={bulkUpdateMutation.isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors disabled:opacity-50"
         >
           <CheckCircle2 size={14} />
           סמן כמושלם
@@ -1253,13 +1259,13 @@ export default function TasksPage() {
         <div ref={bulkPriorityRef} className="relative">
           <button
             onClick={() => setShowBulkPriorityMenu((v) => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
           >
             <ChevronDown size={14} />
             שנה עדיפות
           </button>
           {showBulkPriorityMenu && (
-            <div className="absolute bottom-full mb-2 right-0 bg-[#404046] rounded-lg shadow-lg border border-white/10 py-1 min-w-[130px] z-50">
+            <div className="absolute bottom-full mb-2 right-0 bg-[#404046] rounded-[4px] shadow-lg border border-white/10 py-1 min-w-[130px] z-50">
               {[
                 { key: "URGENT", label: "דחוף", color: "#FB275D" },
                 { key: "HIGH", label: "גבוה", color: "#FDAB3D" },

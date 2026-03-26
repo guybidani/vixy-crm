@@ -29,7 +29,7 @@ interface EntityDocumentsSectionProps {
 }
 
 function getSmallFileIcon(mimeType: string | null) {
-  if (!mimeType) return <File size={16} className="text-text-tertiary" />;
+  if (!mimeType) return <File size={16} className="text-[#9699A6]" />;
   if (mimeType.startsWith("image/"))
     return <Image size={16} className="text-[#00CA72]" />;
   if (mimeType.includes("pdf"))
@@ -94,11 +94,11 @@ export default function EntityDocumentsSection({
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
+        <h3 className="text-sm font-bold text-[#323338] flex items-center gap-1.5">
           <FileText size={15} className="text-[#FF642E]" />
           מסמכים
           {docLinks.length > 0 && (
-            <span className="text-xs bg-surface-secondary text-text-tertiary px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-[#F5F6F8] text-[#9699A6] px-1.5 py-0.5 rounded-full">
               {docLinks.length}
             </span>
           )}
@@ -106,7 +106,7 @@ export default function EntityDocumentsSection({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-primary"
+            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#0073EA]"
           >
             <Plus size={16} />
           </button>
@@ -116,15 +116,15 @@ export default function EntityDocumentsSection({
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-border-light py-1 w-44 z-50">
+              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1 w-44 z-50">
                 <button
                   onClick={() => {
                     setShowMenu(false);
                     fileInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-secondary transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <Upload size={14} className="text-text-tertiary" />
+                  <Upload size={14} className="text-[#9699A6]" />
                   העלה קובץ
                 </button>
                 <button
@@ -132,9 +132,9 @@ export default function EntityDocumentsSection({
                     setShowMenu(false);
                     setShowCreateRichText(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-secondary transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <FileText size={14} className="text-text-tertiary" />
+                  <FileText size={14} className="text-[#9699A6]" />
                   מסמך חדש
                 </button>
                 <button
@@ -142,9 +142,9 @@ export default function EntityDocumentsSection({
                     setShowMenu(false);
                     setShowLinkModal(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary hover:bg-surface-secondary transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
                 >
-                  <Link2 size={14} className="text-text-tertiary" />
+                  <Link2 size={14} className="text-[#9699A6]" />
                   קשר מסמך קיים
                 </button>
               </div>
@@ -164,12 +164,12 @@ export default function EntityDocumentsSection({
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-surface-secondary rounded-lg p-3 animate-pulse h-12"
+              className="bg-[#F5F6F8] rounded-[4px] p-3 animate-pulse h-12"
             />
           ))}
         </div>
       ) : docLinks.length === 0 ? (
-        <p className="text-xs text-text-tertiary py-3 text-center">
+        <p className="text-xs text-[#9699A6] py-3 text-center">
           אין מסמכים מקושרים
         </p>
       ) : (
@@ -177,9 +177,9 @@ export default function EntityDocumentsSection({
           {docLinks.map((link: EntityDocumentLink) => (
             <div
               key={link.id}
-              className="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-secondary/50 hover:bg-surface-secondary transition-colors group"
+              className="flex items-center gap-2.5 p-2.5 rounded-[4px] bg-[#F5F6F8]/50 hover:bg-[#F5F6F8] transition-colors group"
             >
-              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-[4px] bg-white flex items-center justify-center flex-shrink-0">
                 {link.document.type === "RICH_TEXT" ? (
                   <FileText size={16} className="text-[#6161FF]" />
                 ) : (
@@ -187,10 +187,10 @@ export default function EntityDocumentsSection({
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
+                <p className="text-sm font-medium text-[#323338] truncate">
                   {link.document.title}
                 </p>
-                <p className="text-[10px] text-text-tertiary">
+                <p className="text-[10px] text-[#9699A6]">
                   {link.document.type === "FILE"
                     ? formatSize(link.document.fileSize)
                     : "מסמך טקסט"}
@@ -202,7 +202,7 @@ export default function EntityDocumentsSection({
                     href={`/uploads/${link.document.fileUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 rounded hover:bg-white text-text-tertiary hover:text-primary transition-colors"
+                    className="p-1 rounded hover:bg-white text-[#9699A6] hover:text-[#0073EA] transition-colors"
                     title="הורדה"
                   >
                     <Download size={13} />
@@ -215,7 +215,7 @@ export default function EntityDocumentsSection({
                       linkId: link.id,
                     })
                   }
-                  className="p-1 rounded hover:bg-white text-text-tertiary hover:text-red-500 transition-colors"
+                  className="p-1 rounded hover:bg-white text-[#9699A6] hover:text-red-500 transition-colors"
                   title="הסר קישור"
                 >
                   <X size={13} />
@@ -298,7 +298,7 @@ function LinkExistingDocModal({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="חיפוש מסמכים..."
-          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary mb-3"
+          className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] mb-3"
           autoFocus
         />
         <div className="max-h-64 overflow-y-auto space-y-1">
@@ -307,27 +307,27 @@ function LinkExistingDocModal({
               key={doc.id}
               onClick={() => linkMut.mutate(doc.id)}
               disabled={linkMut.isPending}
-              className="w-full flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-surface-secondary transition-colors text-right"
+              className="w-full flex items-center gap-2.5 p-2.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-right"
             >
-              <div className="w-8 h-8 rounded-lg bg-surface-secondary flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-[4px] bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
                 {doc.type === "RICH_TEXT" ? (
                   <FileText size={16} className="text-[#6161FF]" />
                 ) : (
-                  <File size={16} className="text-text-tertiary" />
+                  <File size={16} className="text-[#9699A6]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
+                <p className="text-sm font-medium text-[#323338] truncate">
                   {doc.title}
                 </p>
-                <p className="text-[10px] text-text-tertiary">
+                <p className="text-[10px] text-[#9699A6]">
                   {new Date(doc.createdAt).toLocaleDateString("he-IL")}
                 </p>
               </div>
             </button>
           ))}
           {data?.data.length === 0 && (
-            <p className="text-sm text-text-tertiary text-center py-4">
+            <p className="text-sm text-[#9699A6] text-center py-4">
               לא נמצאו מסמכים
             </p>
           )}
@@ -380,20 +380,20 @@ function QuickCreateRichText({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="כותרת המסמך"
-          className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary mb-4"
+          className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] mb-4"
           autoFocus
         />
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
           >
             ביטול
           </button>
           <button
             onClick={() => createMut.mutate()}
             disabled={createMut.isPending || !title.trim()}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-sm disabled:opacity-50"
           >
             {createMut.isPending ? "יוצר..." : "צור"}
           </button>

@@ -210,7 +210,7 @@ export default function ContactsPage() {
               }}
             />
             {row.position && (
-              <span className="text-text-tertiary text-[11px] block truncate">
+              <span className="text-[#9699A6] text-[11px] block truncate">
                 {row.position}
               </span>
             )}
@@ -284,7 +284,7 @@ export default function ContactsPage() {
         return (
           <div className="flex items-center gap-2">
             <LeadHeatBadge heat={heat} size="sm" />
-            <span className="text-xs text-text-tertiary">{score}</span>
+            <span className="text-xs text-[#9699A6]">{score}</span>
           </div>
         );
       },
@@ -305,7 +305,7 @@ export default function ContactsPage() {
               </span>
             ))}
             {row.tags.length > 2 && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
                 +{row.tags.length - 2}
               </span>
             )}
@@ -316,7 +316,7 @@ export default function ContactsPage() {
               e.stopPropagation();
               setSelectedContactId(row.id);
             }}
-            className="flex items-center gap-1 text-[11px] text-text-tertiary hover:text-primary px-2 py-1 rounded-md hover:bg-primary/5 border border-dashed border-transparent hover:border-primary/30 transition-all group/tag"
+            className="flex items-center gap-1 text-[11px] text-[#9699A6] hover:text-[#0073EA] px-2 py-1 rounded-[4px] hover:bg-[#0073EA]/5 border border-dashed border-transparent hover:border-[#0073EA]/30 transition-all group/tag"
           >
             <Tag size={11} className="opacity-50 group-hover/tag:opacity-100" />
             <span>הוסף תגית</span>
@@ -330,18 +330,18 @@ export default function ContactsPage() {
       width: "140px",
       render: (row: Contact) => {
         if (!row.nextFollowUpDate) {
-          return <span className="text-[11px] text-text-tertiary">—</span>;
+          return <span className="text-[11px] text-[#9699A6]">—</span>;
         }
         const fuDate = new Date(row.nextFollowUpDate);
         fuDate.setHours(0, 0, 0, 0);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const diff = Math.round((fuDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        let colorClass = "text-text-secondary";
+        let colorClass = "text-[#676879]";
         let badge: React.ReactNode = null;
         if (diff < 0) {
-          colorClass = "text-danger font-bold";
-          badge = <AlertTriangle size={10} className="text-danger" />;
+          colorClass = "text-[#E44258] font-bold";
+          badge = <AlertTriangle size={10} className="text-[#E44258]" />;
         } else if (diff === 0) {
           colorClass = "text-warning font-bold";
           badge = <Calendar size={10} className="text-warning" />;
@@ -390,19 +390,27 @@ export default function ContactsPage() {
   return (
     <PageShell
       title="אנשי קשר"
-      subtitle={`${data?.pagination.total || 0} אנשי קשר`}
+      emoji="👥"
+      boardStyle
+      subtitle={data?.pagination.total ? `${data.pagination.total} אנשי קשר` : undefined}
+      views={[
+        { key: "table", label: "טבלה" },
+        { key: "kanban", label: "קנבאן" },
+        { key: "cards", label: "כרטיסים" },
+      ]}
+      activeView={viewMode}
+      onViewChange={(key) => setViewMode(key as "table" | "kanban" | "cards")}
       actions={
         <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} showCards />
           <ExportButton
             entity="contacts"
             filters={{ status: statusFilter, search: debouncedSearch }}
           />
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2.5} />
             איש קשר חדש
           </button>
         </div>
@@ -451,7 +459,7 @@ export default function ContactsPage() {
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="חיפוש לפי שם, אימייל או טלפון..."
-            className="w-full max-w-sm px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+            className="w-full max-w-sm px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
           />
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -467,7 +475,7 @@ export default function ContactsPage() {
                 />
               ))}
               {(data?.data || []).length === 0 && (
-                <div className="col-span-full text-center py-20 text-text-tertiary text-sm">
+                <div className="col-span-full text-center py-20 text-[#9699A6] text-sm">
                   לא נמצאו אנשי קשר
                 </div>
               )}
@@ -596,8 +604,8 @@ function ContactCard({
     <div
       className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${
         isDragging
-          ? "shadow-lg opacity-90 border-l-primary"
-          : "border-l-transparent hover:shadow-md hover:border-l-primary"
+          ? "shadow-lg opacity-90 border-l-[#0073EA]"
+          : "border-l-transparent hover:shadow-md hover:border-l-[#0073EA]"
       }`}
     >
       {/* Avatar + Name */}
@@ -611,11 +619,11 @@ function ContactCard({
           {contact.firstName?.[0] || "?"}
         </div>
         <div className="min-w-0 flex-1">
-          <span className="font-semibold text-sm text-text-primary block truncate">
+          <span className="font-semibold text-sm text-[#323338] block truncate">
             {contact.fullName}
           </span>
           {contact.position && (
-            <span className="text-text-tertiary text-[11px] block truncate">
+            <span className="text-[#9699A6] text-[11px] block truncate">
               {contact.position}
             </span>
           )}
@@ -625,8 +633,8 @@ function ContactCard({
       {/* Company */}
       {contact.company && (
         <div className="flex items-center gap-1.5 mb-1">
-          <Building2 size={11} className="text-text-tertiary" />
-          <span className="text-xs text-text-secondary truncate">
+          <Building2 size={11} className="text-[#9699A6]" />
+          <span className="text-xs text-[#676879] truncate">
             {contact.company.name}
           </span>
         </div>
@@ -636,23 +644,23 @@ function ContactCard({
       {contact.email && (
         <p
           dir="ltr"
-          className="text-xs text-text-tertiary truncate mb-1 text-right"
+          className="text-xs text-[#9699A6] truncate mb-1 text-right"
         >
           {contact.email}
         </p>
       )}
 
       {/* Bottom: Lead score + tags */}
-      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border-light">
+      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#E6E9EF]">
         {/* Lead score bar */}
         <div className="flex items-center gap-1.5 flex-1">
-          <div className="flex-1 h-1.5 bg-surface-secondary rounded-full overflow-hidden max-w-[60px]">
+          <div className="flex-1 h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden max-w-[60px]">
             <div
               className="h-full rounded-full"
               style={{ width: `${score}%`, backgroundColor: barColor }}
             />
           </div>
-          <span className="text-[10px] font-semibold text-text-tertiary">
+          <span className="text-[10px] font-semibold text-[#9699A6]">
             {score}
           </span>
         </div>
@@ -692,7 +700,7 @@ function ContactCRMCard({
     <button
       type="button"
       onClick={onClick}
-      className="bg-white rounded-2xl shadow-sm border border-border-light hover:shadow-md hover:border-primary/30 transition-all text-right group w-full p-4 flex flex-col gap-3 cursor-pointer"
+      className="bg-white rounded-2xl shadow-sm border border-[#E6E9EF] hover:shadow-md hover:border-[#0073EA]/30 transition-all text-right group w-full p-4 flex flex-col gap-3 cursor-pointer"
     >
       {/* Header: avatar + name */}
       <div className="flex items-center gap-3">
@@ -704,11 +712,11 @@ function ContactCRMCard({
           {initials}
         </div>
         <div className="min-w-0 flex-1 text-right">
-          <span className="font-bold text-sm text-text-primary block truncate">
+          <span className="font-bold text-sm text-[#323338] block truncate">
             {contact.fullName}
           </span>
           {contact.position && (
-            <span className="text-[11px] text-text-tertiary block truncate">
+            <span className="text-[11px] text-[#9699A6] block truncate">
               {contact.position}
             </span>
           )}
@@ -718,8 +726,8 @@ function ContactCRMCard({
       {/* Company */}
       {contact.company && (
         <div className="flex items-center gap-2">
-          <Building2 size={12} className="text-text-tertiary flex-shrink-0" />
-          <span className="text-xs text-text-secondary truncate">
+          <Building2 size={12} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-xs text-[#676879] truncate">
             {contact.company.name}
           </span>
         </div>
@@ -728,8 +736,8 @@ function ContactCRMCard({
       {/* Phone */}
       {contact.phone && (
         <div className="flex items-center gap-2">
-          <Phone size={12} className="text-text-tertiary flex-shrink-0" />
-          <span className="text-xs text-text-secondary truncate" dir="ltr">
+          <Phone size={12} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-xs text-[#676879] truncate" dir="ltr">
             {contact.phone}
           </span>
         </div>
@@ -738,15 +746,15 @@ function ContactCRMCard({
       {/* Email */}
       {contact.email && (
         <div className="flex items-center gap-2">
-          <Mail size={12} className="text-text-tertiary flex-shrink-0" />
-          <span className="text-xs text-text-secondary truncate" dir="ltr">
+          <Mail size={12} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-xs text-[#676879] truncate" dir="ltr">
             {contact.email}
           </span>
         </div>
       )}
 
       {/* Footer: last activity + tags */}
-      <div className="flex items-center justify-between pt-2 border-t border-border-light mt-auto">
+      <div className="flex items-center justify-between pt-2 border-t border-[#E6E9EF] mt-auto">
         <div className="flex gap-1">
           {contact.tags.slice(0, 2).map((t) => (
             <span
@@ -758,13 +766,13 @@ function ContactCRMCard({
             </span>
           ))}
           {contact.tags.length > 2 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-surface-secondary text-text-tertiary">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
               +{contact.tags.length - 2}
             </span>
           )}
         </div>
         {contact.lastActivityAt && (
-          <span className="text-[10px] text-text-tertiary flex items-center gap-1">
+          <span className="text-[10px] text-[#9699A6] flex items-center gap-1">
             <Calendar size={10} />
             {new Date(contact.lastActivityAt).toLocaleDateString("he-IL", {
               day: "numeric",
@@ -804,16 +812,16 @@ function ContactsEmptyState({ onAdd }: { onAdd: () => void }) {
         </div>
       </div>
 
-      <h3 className="text-xl font-bold text-text-primary mb-2">
+      <h3 className="text-xl font-bold text-[#323338] mb-2">
         עדיין אין אנשי קשר
       </h3>
-      <p className="text-sm text-text-secondary max-w-xs mb-6 leading-relaxed">
+      <p className="text-sm text-[#676879] max-w-xs mb-6 leading-relaxed">
         הוסף לידים ואנשי קשר כדי לעקוב אחרי שיחות, עסקאות ומשימות — הכל במקום אחד.
       </p>
 
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
+        className="flex items-center gap-2 px-6 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
       >
         <UserPlus size={16} />
         הוסף איש קשר ראשון
@@ -836,12 +844,12 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
+      className={`px-3 py-[5px] rounded-[4px] text-[12px] font-medium transition-all ${
         active
-          ? "text-white shadow-sm"
-          : "bg-white border border-border text-text-secondary hover:border-primary hover:text-primary"
+          ? "text-white"
+          : "bg-white border border-[#D0D4E4] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
       }`}
-      style={active ? { backgroundColor: color || "#6161FF" } : undefined}
+      style={active ? { backgroundColor: color || "#0073EA" } : undefined}
     >
       {label}
     </button>
@@ -896,26 +904,26 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               שם פרטי *
             </label>
             <input
               type="text"
               value={form.firstName}
               onChange={(e) => setField("firstName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               שם משפחה *
             </label>
             <input
               type="text"
               value={form.lastName}
               onChange={(e) => setField("lastName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
             />
           </div>
@@ -923,26 +931,26 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               אימייל
             </label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               טלפון
             </label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
@@ -950,13 +958,13 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               חברה
             </label>
             <select
               value={form.companyId}
               onChange={(e) => setField("companyId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               <option value="">ללא חברה</option>
               {companies?.data.map((c) => (
@@ -967,26 +975,26 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-sm font-medium text-[#323338] mb-1">
               תפקיד
             </label>
             <input
               type="text"
               value={form.position}
               onChange={(e) => setField("position", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-sm font-medium text-[#323338] mb-1">
             מקור
           </label>
           <select
             value={form.source}
             onChange={(e) => setField("source", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
           >
             <option value="">בחרו מקור</option>
             {leadSources.map((src) => (
@@ -1001,14 +1009,14 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור איש קשר"}
           </button>

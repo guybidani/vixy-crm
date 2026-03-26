@@ -111,7 +111,7 @@ export default function ColumnEditorModal({
           </label>
           <input
             autoFocus
-            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-lg text-sm focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
+            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
             placeholder="לדוגמה: סטטוס"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -182,7 +182,7 @@ export default function ColumnEditorModal({
                       className="w-8 h-8 rounded-lg border border-[#E6E9EF] flex-shrink-0"
                       style={{ backgroundColor: opt.color }}
                     />
-                    <div className="absolute top-full mt-1 right-0 z-10 bg-white shadow-xl border border-[#E6E9EF] rounded-lg p-2 hidden group-hover:grid grid-cols-5 gap-1 min-w-[140px]">
+                    <div className="absolute top-full mt-1 right-0 z-10 bg-white shadow-xl border border-[#E6E9EF] rounded-[4px] p-2 hidden group-hover:grid grid-cols-5 gap-1 min-w-[140px]">
                       {DEFAULT_COLORS.map((c) => (
                         <button
                           key={c}
@@ -203,7 +203,7 @@ export default function ColumnEditorModal({
                   </div>
                   {/* Label input */}
                   <input
-                    className="flex-1 px-3 py-1.5 border border-[#D0D4E4] rounded-lg text-sm focus:outline-none focus:border-[#0073EA]"
+                    className="flex-1 px-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA]"
                     value={opt.label}
                     onChange={(e) => {
                       const updated = [...options];
@@ -255,7 +255,7 @@ export default function ColumnEditorModal({
         <button
           onClick={handleSubmit}
           disabled={!label.trim() || addMut.isPending}
-          className="w-full py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition-colors"
+          className="w-full py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-[4px] transition-colors"
         >
           {addMut.isPending ? "מוסיף..." : "הוסף עמודה"}
         </button>

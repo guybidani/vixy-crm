@@ -404,20 +404,25 @@ export default function DealsPage() {
   return (
     <PageShell
       title="עסקאות"
-      subtitle={`${totalDeals} עסקאות${viewMode === "kanban" ? ` | ₪${totalPipelineValue.toLocaleString()} בצינור` : ""}`}
+      emoji="🤝"
+      boardStyle
+      subtitle={totalDeals ? `${totalDeals} עסקאות` : undefined}
+      views={[
+        { key: "table", label: "טבלה" },
+        { key: "kanban", label: "קנבאן" },
+      ]}
+      activeView={viewMode}
+      onViewChange={(key) => setViewMode(key as ViewMode)}
       actions={
         <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
           <ExportButton entity="deals" filters={{ search: debouncedSearch }} />
-          {viewMode === "kanban" && (
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
-            >
-              <Plus size={16} />
-              עסקה חדשה
-            </button>
-          )}
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            עסקה חדשה
+          </button>
         </div>
       }
     >
@@ -435,43 +440,28 @@ export default function DealsPage() {
         />
       )}
 
-      {/* Monday-style tabs */}
+      {/* Sub-view tabs within table mode */}
       {viewMode === "table" && (
-        <div
-          role="tablist"
-          aria-label="תצוגת עסקאות"
-          className="flex items-center gap-0 mb-4 border-b border-[#E6E9EF]"
-        >
-          <button
-            role="tab"
-            aria-selected={tableTab === "table"}
-            onClick={() => setTableTab("table")}
-            className={`px-4 py-2 text-[13px] font-medium transition-colors ${
-              tableTab === "table"
-                ? "text-[#0073EA] border-b-2 border-[#0073EA]"
-                : "text-[#676879] hover:text-[#323338]"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <Table2 size={14} />
-              טבלה
-            </div>
-          </button>
-          <button
-            role="tab"
-            aria-selected={tableTab === "chart"}
-            onClick={() => setTableTab("chart")}
-            className={`px-4 py-2 text-[13px] font-medium transition-colors ${
-              tableTab === "chart"
-                ? "text-[#0073EA] border-b-2 border-[#0073EA]"
-                : "text-[#676879] hover:text-[#323338]"
-            }`}
-          >
-            <div className="flex items-center gap-1.5">
-              <BarChart3 size={14} />
-              תרשים
-            </div>
-          </button>
+        <div role="tablist" className="flex items-center gap-0 mb-4 border-b border-[#E6E9EF]">
+          {([
+            { key: "table", label: "טבלה", Icon: Table2 },
+            { key: "chart", label: "תרשים", Icon: BarChart3 },
+          ] as const).map(({ key, label, Icon }) => (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={tableTab === key}
+              onClick={() => setTableTab(key)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px ${
+                tableTab === key
+                  ? "text-[#0073EA] border-[#0073EA]"
+                  : "text-[#676879] border-transparent hover:text-[#323338]"
+              }`}
+            >
+              <Icon size={14} />
+              {label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -578,11 +568,11 @@ export default function DealsPage() {
         <Modal open={true} onClose={() => setLostModal(null)} title="סיבת הפסד">
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">סיבה *</label>
+              <label className="block text-[13px] font-medium text-[#323338] mb-1">סיבה *</label>
               <select
                 value={lossReason}
                 onChange={(e) => setLossReason(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 <option value="price">מחיר</option>
                 <option value="competition">תחרות</option>
@@ -592,20 +582,20 @@ export default function DealsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">הערה (אופציונלי)</label>
+              <label className="block text-[13px] font-medium text-[#323338] mb-1">הערה (אופציונלי)</label>
               <textarea
                 value={lossNote}
                 onChange={(e) => setLossNote(e.target.value)}
                 rows={3}
                 placeholder="פרט את הסיבה..."
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
               />
             </div>
             <div className="flex gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => setLostModal(null)}
-                className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>
@@ -613,7 +603,7 @@ export default function DealsPage() {
                 type="button"
                 onClick={handleLostSubmit}
                 disabled={lostMutation.isPending}
-                className="flex-1 py-2 bg-[#E2445C] hover:bg-[#C7364E] text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+                className="flex-1 py-2 bg-[#E2445C] hover:bg-[#C7364E] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
               >
                 {lostMutation.isPending ? "שומר..." : "סמן כהפסד"}
               </button>
@@ -917,16 +907,16 @@ function DealsEmptyState({ onAdd }: { onAdd: () => void }) {
         </div>
       </div>
 
-      <h3 className="text-xl font-bold text-text-primary mb-2">
+      <h3 className="text-xl font-bold text-[#323338] mb-2">
         עדיין אין עסקאות
       </h3>
-      <p className="text-sm text-text-secondary max-w-xs mb-6 leading-relaxed">
+      <p className="text-[13px] text-[#676879] max-w-xs mb-6 leading-relaxed">
         צור עסקה ראשונה, קשר אותה לאיש קשר ועקוב אחרי ההתקדמות בצינור המכירות.
       </p>
 
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
+        className="flex items-center gap-2 px-6 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
       >
         <Plus size={16} />
         צור עסקה ראשונה
@@ -1000,40 +990,40 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
     <Modal open={true} onClose={onClose} title="עסקה חדשה">
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             שם עסקה *
           </label>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setField("title", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               סכום (₪)
             </label>
             <input
               type="number"
               value={form.value}
               onChange={(e) => setField("value", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               תאריך סגירה צפוי
             </label>
             <input
               type="date"
               value={form.expectedClose}
               onChange={(e) => setField("expectedClose", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
@@ -1041,13 +1031,13 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               איש קשר *
             </label>
             <select
               value={form.contactId}
               onChange={(e) => setField("contactId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               required
             >
               <option value="">בחרו איש קשר</option>
@@ -1059,13 +1049,13 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               חברה
             </label>
             <select
               value={form.companyId}
               onChange={(e) => setField("companyId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               <option value="">ללא חברה</option>
               {companies?.data.map((c) => (
@@ -1079,13 +1069,13 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               שלב
             </label>
             <select
               value={form.stage}
               onChange={(e) => setField("stage", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(dealStages).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -1095,13 +1085,13 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               עדיפות
             </label>
             <select
               value={form.priority}
               onChange={(e) => setField("priority", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -1116,14 +1106,14 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור עסקה"}
           </button>

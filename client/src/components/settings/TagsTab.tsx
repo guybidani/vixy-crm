@@ -95,7 +95,7 @@ export default function TagsTab() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-text-tertiary text-sm">
+      <div className="flex items-center justify-center py-12 text-[#9699A6] text-[13px]">
         טוען...
       </div>
     );
@@ -104,7 +104,7 @@ export default function TagsTab() {
   return (
     <div className="space-y-4">
       {/* Create new tag */}
-      <div className="bg-white rounded-xl shadow-card p-4">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
         {showCreate ? (
           <div className="flex items-center gap-3">
             <input
@@ -112,7 +112,7 @@ export default function TagsTab() {
               onChange={(e) => setNewName(e.target.value)}
               placeholder="שם התגית..."
               autoFocus
-              className="flex-1 text-sm px-3 py-2 border border-border-light rounded-lg outline-none focus:border-primary"
+              className="flex-1 text-[13px] px-3 py-2 border border-[#D0D4E4] rounded-[4px] outline-none focus:border-[#0073EA]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && newName.trim()) {
                   createMutation.mutate({
@@ -129,7 +129,7 @@ export default function TagsTab() {
                   onClick={() => setNewColor(c)}
                   className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
                     newColor === c
-                      ? "border-text-primary"
+                      ? "border-[#323338]"
                       : "border-transparent"
                   }`}
                   style={{ backgroundColor: c }}
@@ -145,7 +145,7 @@ export default function TagsTab() {
                 })
               }
               disabled={!newName.trim() || createMutation.isPending}
-              className="px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary-hover rounded-lg transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-[4px] transition-colors disabled:opacity-50"
             >
               צור
             </button>
@@ -154,7 +154,7 @@ export default function TagsTab() {
                 setShowCreate(false);
                 setNewName("");
               }}
-              className="p-2 text-text-tertiary hover:text-text-primary"
+              className="p-2 text-[#9699A6] hover:text-[#323338]"
             >
               <X size={16} />
             </button>
@@ -162,7 +162,7 @@ export default function TagsTab() {
         ) : (
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 text-sm text-primary font-semibold hover:bg-primary-light px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 text-[13px] text-[#0073EA] font-medium hover:bg-[#E8F3FF] px-3 py-2 rounded-[4px] transition-colors"
           >
             <Plus size={16} />
             צור תגית חדשה
@@ -171,17 +171,17 @@ export default function TagsTab() {
       </div>
 
       {/* Tags list */}
-      <div className="bg-white rounded-xl shadow-card overflow-hidden">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden">
         {tags.length === 0 ? (
-          <div className="text-center py-12 text-text-tertiary text-sm">
+          <div className="text-center py-12 text-[#9699A6] text-[13px]">
             אין תגיות עדיין. צור תגית חדשה כדי להתחיל.
           </div>
         ) : (
-          <div className="divide-y divide-border-light">
+          <div className="divide-y divide-[#E6E9EF]">
             {tags.map((tag: Tag) => (
               <div
                 key={tag.id}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-surface-secondary/30 transition-colors group"
+                className="flex items-center gap-3 px-5 py-3 hover:bg-[#F5F6F8] transition-colors group"
               >
                 {editingId === tag.id ? (
                   <>
@@ -196,7 +196,7 @@ export default function TagsTab() {
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       autoFocus
-                      className="flex-1 text-sm px-2 py-1 border border-primary rounded outline-none"
+                      className="flex-1 text-[13px] px-2 py-1 border border-[#0073EA] rounded-[4px] outline-none"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") saveEdit();
                         if (e.key === "Escape") setEditingId(null);
@@ -209,7 +209,7 @@ export default function TagsTab() {
                           onClick={() => setEditColor(c)}
                           className={`w-4 h-4 rounded-full border transition-transform hover:scale-125 ${
                             editColor === c
-                              ? "border-text-primary"
+                              ? "border-[#323338]"
                               : "border-transparent"
                           }`}
                           style={{ backgroundColor: c }}
@@ -218,13 +218,13 @@ export default function TagsTab() {
                     </div>
                     <button
                       onClick={saveEdit}
-                      className="p-1.5 text-primary hover:bg-primary-light rounded transition-colors"
+                      className="p-1.5 text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
                     >
                       <Check size={14} />
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="p-1.5 text-text-tertiary hover:text-text-primary transition-colors"
+                      className="p-1.5 text-[#9699A6] hover:text-[#323338] transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -236,22 +236,22 @@ export default function TagsTab() {
                       className="w-7 h-7 rounded-full flex-shrink-0"
                       style={{ backgroundColor: tag.color }}
                     />
-                    <span className="flex-1 text-sm font-medium text-text-primary">
+                    <span className="flex-1 text-[13px] font-medium text-[#323338]">
                       {tag.name}
                     </span>
-                    <span className="text-[11px] text-text-tertiary">
+                    <span className="text-[11px] text-[#9699A6]">
                       {tag._count.contacts + tag._count.deals} שימושים
                     </span>
                     <button
                       onClick={() => startEdit(tag)}
-                      className="p-1.5 text-text-tertiary hover:text-primary rounded opacity-0 group-hover:opacity-100 transition-all"
+                      className="p-1.5 text-[#9699A6] hover:text-[#0073EA] rounded-[4px] opacity-0 group-hover:opacity-100 transition-all"
                       title="ערוך"
                     >
                       <Pencil size={14} />
                     </button>
                     <button
                       onClick={() => setTagToDelete({ id: tag.id, name: tag.name })}
-                      className="p-1.5 text-text-tertiary hover:text-danger rounded opacity-0 group-hover:opacity-100 transition-all"
+                      className="p-1.5 text-[#9699A6] hover:text-[#E44258] rounded opacity-0 group-hover:opacity-100 transition-all"
                       title="מחק"
                     >
                       <Trash2 size={14} />

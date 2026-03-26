@@ -494,10 +494,10 @@ export default function BoardPage() {
     return (
       <PageShell title="בורד לא נמצא">
         <div className="text-center py-16">
-          <p className="text-text-secondary mb-4">הבורד המבוקש לא נמצא</p>
+          <p className="text-[#676879] mb-4">הבורד המבוקש לא נמצא</p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="text-primary hover:underline text-sm"
+            className="text-[#0073EA] hover:underline text-[13px]"
           >
             חזור לדשבורד
           </button>
@@ -951,7 +951,30 @@ export default function BoardPage() {
 
   return (
     <PageShell
-      title={boardTitle}
+      title={
+        <span
+          className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1.5"
+          onClick={() => {
+            setEditingBoardName(true);
+            setBoardNameValue(board?.name || "");
+          }}
+        >
+          {board?.isPrivate && <Lock size={14} className="text-[#6161FF]" />}
+          {board?.name || "טוען..."}
+          <Pencil size={13} className="text-[#9699A6] opacity-0 group-hover:opacity-100" />
+        </span>
+      }
+      emoji="📋"
+      boardStyle
+      views={[
+        { key: "table", label: "טבלה" },
+        { key: "kanban", label: "קנבאן" },
+        { key: "calendar", label: "לוח שנה" },
+      ]}
+      activeView={viewMode === "kanban" ? "kanban" : "table"}
+      onViewChange={(key) => {
+        if (key === "table" || key === "kanban") handleViewModeChange(key);
+      }}
       actions={
         <div className="flex items-center gap-2">
           {canManagePermissions && (
@@ -976,58 +999,30 @@ export default function BoardPage() {
           >
             + עמודה חדשה
           </button>
-          <button
-            onClick={() => addGroupMut.mutate()}
-            className="px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
-          >
-            + קבוצה חדשה
-          </button>
         </div>
       }
     >
-      {/* ── Monday.com-style View Switcher ── */}
-      <div className="flex items-end border-b border-[#E6E9EF] mb-4 -mt-2">
-        {/* Table tab */}
-        <button
-          onClick={() => handleViewModeChange("table")}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors relative ${
-            viewMode === "table"
-              ? "text-[#0073EA]"
-              : "text-[#676879] hover:text-[#323338]"
-          }`}
-        >
-          <List size={15} />
-          טבלה
-          {viewMode === "table" && (
-            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0073EA] rounded-t" />
-          )}
-        </button>
-        {/* Kanban tab */}
-        <button
-          onClick={() => handleViewModeChange("kanban")}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors relative ${
-            viewMode === "kanban"
-              ? "text-[#0073EA]"
-              : "text-[#676879] hover:text-[#323338]"
-          }`}
-        >
-          <Columns2 size={15} />
-          קנבאן
-          {viewMode === "kanban" && (
-            <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0073EA] rounded-t" />
-          )}
-        </button>
-        {/* Calendar tab — coming soon */}
-        <button
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium text-[#C3C6D4] cursor-not-allowed relative"
-          title="בקרוב"
-        >
-          <CalendarDays size={15} />
-          לוח שנה
-          <span className="text-[10px] bg-[#F5F6F8] text-[#9699A6] px-1.5 py-0.5 rounded-full font-normal">בקרוב</span>
-        </button>
-      </div>
+      {/* Board name inline editing — shown in board content area */}
+      {editingBoardName && (
+        <div className="mb-4">
+          <input
+            autoFocus
+            className="text-[18px] font-bold bg-transparent outline-none border-b-2 border-[#0073EA] text-[#323338] py-0.5 min-w-[200px]"
+            value={boardNameValue}
+            onChange={(e) => setBoardNameValue(e.target.value)}
+            onBlur={() => {
+              if (boardNameValue.trim() && boardNameValue !== board?.name) {
+                updateBoardMut.mutate({ name: boardNameValue.trim() });
+              }
+              setEditingBoardName(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+              if (e.key === "Escape") setEditingBoardName(false);
+            }}
+          />
+        </div>
+      )}
 
       {/* Board empty state */}
       {!isLoading &&
@@ -1114,6 +1109,7 @@ export default function BoardPage() {
           onGroupByChange={handleGroupByChange}
           activeFilters={activeFilters}
           onFiltersChange={handleFiltersChange}
+          onAddGroup={() => addGroupMut.mutate()}
         />
       ) : /* Kanban View */
       kanbanColumns.length > 0 ? (
@@ -1292,7 +1288,7 @@ function BoardEmptyState({ onAddItem }: { onAddItem: () => void }) {
 
       <button
         onClick={onAddItem}
-        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.97] pointer-events-auto"
+        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] shadow-sm hover:shadow-md transition-all active:scale-[0.97] pointer-events-auto"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <line x1="7" y1="1" x2="7" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>

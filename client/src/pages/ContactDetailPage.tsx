@@ -67,7 +67,7 @@ export default function ContactDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">טוען...</p>
+        <p className="text-[#676879]">טוען...</p>
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function ContactDetailPage() {
   if (!contact) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-text-secondary">איש קשר לא נמצא</p>
+        <p className="text-[#676879]">איש קשר לא נמצא</p>
       </div>
     );
   }
@@ -87,7 +87,7 @@ export default function ContactDetailPage() {
       {/* Breadcrumb */}
       <button
         onClick={() => navigate("/contacts")}
-        className="flex items-center gap-1 text-sm text-text-secondary hover:text-primary transition-colors"
+        className="flex items-center gap-1 text-[13px] text-[#676879] hover:text-[#0073EA] transition-colors"
       >
         <ArrowRight size={14} />
         חזרה לאנשי קשר
@@ -97,13 +97,13 @@ export default function ContactDetailPage() {
       <PageCard>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary-light rounded-xl flex items-center justify-center">
-              <span className="text-primary text-xl font-bold">
+            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center">
+              <span className="text-[#0073EA] text-xl font-bold">
                 {contact.firstName?.[0] || "?"}
               </span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-text-primary">
+              <h1 className="text-xl font-bold text-[#323338]">
                 {contact.firstName} {contact.lastName}
               </h1>
               <div className="flex items-center gap-3 mt-1">
@@ -117,7 +117,7 @@ export default function ContactDetailPage() {
                   heat={contact.leadHeat || heatFromScore(contact.leadScore)}
                   size="md"
                 />
-                <span className="text-xs text-text-tertiary">
+                <span className="text-[12px] text-[#9699A6]">
                   {contact.leadScore}/100
                 </span>
               </div>
@@ -126,14 +126,14 @@ export default function ContactDetailPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-primary hover:bg-primary-light rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#676879] hover:text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
             >
               <Edit2 size={14} />
               עריכה
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-danger hover:bg-red-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#676879] hover:text-[#E44258] hover:bg-[#FFEEF0] rounded-[4px] transition-colors"
             >
               <Trash2 size={14} />
               מחיקה
@@ -146,7 +146,7 @@ export default function ContactDetailPage() {
         {/* Contact Info Sidebar */}
         <div className="space-y-4">
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3">פרטי קשר</h3>
+            <h3 className="font-bold text-[#323338] mb-3">פרטי קשר</h3>
             <div className="space-y-3">
               {contact.email && (
                 <InfoRow
@@ -197,7 +197,7 @@ export default function ContactDetailPage() {
           {/* Tags */}
           {contact.tags && contact.tags.length > 0 && (
             <PageCard>
-              <h3 className="font-bold text-text-primary mb-3">תגיות</h3>
+              <h3 className="font-bold text-[#323338] mb-3">תגיות</h3>
               <div className="flex gap-1.5 flex-wrap">
                 {contact.tags.map((t: any) => (
                   <span
@@ -230,34 +230,34 @@ export default function ContactDetailPage() {
               <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                 <MessageSquare size={12} className="text-white" />
               </div>
-              <h3 className="font-bold text-text-primary">WhatsApp</h3>
+              <h3 className="font-bold text-[#323338]">WhatsApp</h3>
               <span className="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full font-semibold">
                 Jony
               </span>
             </div>
             {contact.phone ? (
               <div className="space-y-2">
-                <div className="bg-green-50 rounded-lg p-3">
-                  <p className="text-xs text-green-700 mb-2">
+                <div className="bg-green-50 rounded-[4px] p-3">
+                  <p className="text-[12px] text-green-700 mb-2">
                     שלח הודעת WhatsApp ישירות ל-{contact.firstName}
                   </p>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       placeholder="כתוב הודעה..."
-                      className="flex-1 px-2.5 py-1.5 border border-green-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-green-300 bg-white"
+                      className="flex-1 px-2.5 py-1.5 border border-green-200 rounded-[4px] text-[12px] focus:outline-none focus:ring-2 focus:ring-green-300 bg-white"
                     />
-                    <button className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                    <button className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-[4px] transition-colors">
                       <Send size={12} />
                     </button>
                   </div>
                 </div>
-                <p className="text-[10px] text-text-tertiary text-center">
+                <p className="text-[10px] text-[#9699A6] text-center">
                   מופעל ע״י Jony WhatsApp API
                 </p>
               </div>
             ) : (
-              <p className="text-xs text-text-tertiary text-center py-2">
+              <p className="text-[12px] text-[#9699A6] text-center py-2">
                 יש להוסיף טלפון לשליחת הודעות
               </p>
             )}
@@ -269,10 +269,10 @@ export default function ContactDetailPage() {
               <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
                 <Brain size={12} className="text-white" />
               </div>
-              <h3 className="font-bold text-text-primary">ניתוח שיחות AI</h3>
+              <h3 className="font-bold text-[#323338]">ניתוח שיחות AI</h3>
             </div>
             <div className="space-y-2">
-              <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-right">
+              <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-purple-50 hover:bg-purple-100 rounded-[4px] transition-colors text-right">
                 <Mic size={14} className="text-purple-500" />
                 <div className="flex-1">
                   <span className="text-xs font-medium text-purple-700 block">
@@ -283,11 +283,11 @@ export default function ContactDetailPage() {
                   </span>
                 </div>
               </button>
-              <div className="bg-surface-secondary rounded-lg p-2.5">
-                <p className="text-[10px] text-text-tertiary text-center">
+              <div className="bg-[#F5F6F8] rounded-[4px] p-2.5">
+                <p className="text-[10px] text-[#9699A6] text-center">
                   אין שיחות מנותחות עדיין
                 </p>
-                <p className="text-[10px] text-text-tertiary text-center mt-0.5">
+                <p className="text-[10px] text-[#9699A6] text-center mt-0.5">
                   תמלול + סיכום + פעולות המשך אוטומטיות
                 </p>
               </div>
@@ -297,17 +297,17 @@ export default function ContactDetailPage() {
           {/* Vixy Campaigns */}
           <PageCard>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+              <div className="w-6 h-6 bg-[#0073EA] rounded-full flex items-center justify-center">
                 <Megaphone size={12} className="text-white" />
               </div>
-              <h3 className="font-bold text-text-primary">Vixy קמפיינים</h3>
+              <h3 className="font-bold text-[#323338]">Vixy קמפיינים</h3>
             </div>
-            <div className="bg-primary-light/50 rounded-lg p-3 text-center">
-              <Megaphone size={24} className="text-primary mx-auto mb-1.5" />
-              <p className="text-xs font-medium text-primary">
+            <div className="bg-[#E8F3FF]/50 rounded-[4px] p-3 text-center">
+              <Megaphone size={24} className="text-[#0073EA] mx-auto mb-1.5" />
+              <p className="text-[12px] font-medium text-[#0073EA]">
                 בקרוב - חיבור ל-Vixy
               </p>
-              <p className="text-[10px] text-text-tertiary mt-0.5">
+              <p className="text-[10px] text-[#9699A6] mt-0.5">
                 צפו בקמפיינים, הוצאות, ולידים שהגיעו מ-Vixy
               </p>
             </div>
@@ -319,8 +319,8 @@ export default function ContactDetailPage() {
           {/* Deals */}
           <PageCard>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-text-primary flex items-center gap-2">
-                <Handshake size={16} className="text-primary" />
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
+                <Handshake size={16} className="text-[#0073EA]" />
                 עסקאות ({contact.deals?.length || 0})
               </h3>
             </div>
@@ -331,21 +331,21 @@ export default function ContactDetailPage() {
                   return (
                     <div
                       key={deal.id}
-                      className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                       onClick={() => navigate(`/deals/${deal.id}`)}
                     >
                       <div>
-                        <span className="font-medium text-sm text-text-primary">
+                        <span className="font-medium text-sm text-[#323338]">
                           {deal.title}
                         </span>
                         {deal.assignee && (
-                          <span className="text-xs text-text-tertiary block">
+                          <span className="text-[12px] text-[#9699A6] block">
                             {deal.assignee.user.name}
                           </span>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-text-primary">
+                        <span className="text-sm font-semibold text-[#323338]">
                           ₪{deal.value?.toLocaleString() || 0}
                         </span>
                         {stage && (
@@ -360,7 +360,7 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין עסקאות
               </p>
             )}
@@ -369,7 +369,7 @@ export default function ContactDetailPage() {
           {/* Tickets */}
           <PageCard>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-text-primary flex items-center gap-2">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
                 <Ticket size={16} className="text-purple-500" />
                 פניות ({contact.tickets?.length || 0})
               </h3>
@@ -382,10 +382,10 @@ export default function ContactDetailPage() {
                   return (
                     <div
                       key={ticket.id}
-                      className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg hover:bg-surface-tertiary transition-colors cursor-pointer"
+                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
-                      <span className="font-medium text-sm text-text-primary">
+                      <span className="font-medium text-sm text-[#323338]">
                         {ticket.subject}
                       </span>
                       <div className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין פניות
               </p>
             )}
@@ -416,7 +416,7 @@ export default function ContactDetailPage() {
           {/* Tasks */}
           <PageCard>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-text-primary flex items-center gap-2">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
                 <CheckSquare size={16} className="text-success" />
                 משימות ({contact.tasks?.length || 0})
               </h3>
@@ -428,14 +428,14 @@ export default function ContactDetailPage() {
                   return (
                     <div
                       key={task.id}
-                      className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg"
+                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px]"
                     >
                       <div className="flex items-center gap-2">
                         <div
                           className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
                             task.status === "DONE"
                               ? "bg-success border-success"
-                              : "border-border"
+                              : "border-[#E6E9EF]"
                           }`}
                         >
                           {task.status === "DONE" && (
@@ -445,8 +445,8 @@ export default function ContactDetailPage() {
                         <span
                           className={`font-medium text-sm ${
                             task.status === "DONE"
-                              ? "line-through text-text-tertiary"
-                              : "text-text-primary"
+                              ? "line-through text-[#9699A6]"
+                              : "text-[#323338]"
                           }`}
                         >
                           {task.title}
@@ -454,7 +454,7 @@ export default function ContactDetailPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         {task.dueDate && (
-                          <span className="text-xs text-text-tertiary">
+                          <span className="text-[12px] text-[#9699A6]">
                             {new Date(task.dueDate).toLocaleDateString("he-IL")}
                           </span>
                         )}
@@ -470,7 +470,7 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין משימות
               </p>
             )}
@@ -478,27 +478,27 @@ export default function ContactDetailPage() {
 
           {/* Activity Timeline */}
           <PageCard>
-            <h3 className="font-bold text-text-primary mb-3 flex items-center gap-2">
-              <Calendar size={16} className="text-text-secondary" />
+            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
+              <Calendar size={16} className="text-[#676879]" />
               היסטוריית פעילות
             </h3>
             {contact.activities && contact.activities.length > 0 ? (
               <div className="relative">
-                <div className="absolute right-[11px] top-2 bottom-2 w-0.5 bg-border-light" />
+                <div className="absolute right-[11px] top-2 bottom-2 w-0.5 bg-[#E6E9EF]" />
                 <div className="space-y-4">
                   {contact.activities.map((activity: any) => {
                     const typeInfo = activityTypes[activity.type];
                     return (
                       <div key={activity.id} className="flex gap-3 relative">
-                        <div className="w-6 h-6 rounded-full bg-white border-2 border-border flex items-center justify-center flex-shrink-0 z-10">
+                        <div className="w-6 h-6 rounded-full bg-white border-2 border-[#E6E9EF] flex items-center justify-center flex-shrink-0 z-10">
                           <ActivityIcon type={activity.type} />
                         </div>
                         <div className="flex-1 pb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-text-primary">
+                            <span className="text-sm font-medium text-[#323338]">
                               {typeInfo?.label || activity.type}
                             </span>
-                            <span className="text-xs text-text-tertiary">
+                            <span className="text-[12px] text-[#9699A6]">
                               {new Date(activity.createdAt).toLocaleDateString(
                                 "he-IL",
                               )}{" "}
@@ -512,17 +512,17 @@ export default function ContactDetailPage() {
                             </span>
                           </div>
                           {activity.subject && (
-                            <p className="text-sm text-text-secondary mt-0.5">
+                            <p className="text-sm text-[#676879] mt-0.5">
                               {activity.subject}
                             </p>
                           )}
                           {activity.body && (
-                            <p className="text-xs text-text-tertiary mt-0.5">
+                            <p className="text-[12px] text-[#9699A6] mt-0.5">
                               {activity.body}
                             </p>
                           )}
                           {activity.member?.user?.name && (
-                            <span className="text-xs text-text-tertiary">
+                            <span className="text-[12px] text-[#9699A6]">
                               — {activity.member.user.name}
                             </span>
                           )}
@@ -533,7 +533,7 @@ export default function ContactDetailPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-text-tertiary text-center py-4">
+              <p className="text-sm text-[#9699A6] text-center py-4">
                 אין פעילות
               </p>
             )}
@@ -578,10 +578,10 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-text-tertiary">{icon}</span>
-      <span className="text-xs text-text-tertiary w-14">{label}</span>
+      <span className="text-[#9699A6]">{icon}</span>
+      <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
       <span
-        className={`text-sm text-text-primary ${onClick ? "cursor-pointer hover:text-primary" : ""}`}
+        className={`text-sm text-[#323338] ${onClick ? "cursor-pointer hover:text-[#0073EA]" : ""}`}
         dir={dir}
         onClick={onClick}
       >
@@ -593,7 +593,7 @@ function InfoRow({
 
 function ActivityIcon({ type }: { type: string }) {
   const size = 12;
-  const cls = "text-text-tertiary";
+  const cls = "text-[#9699A6]";
   switch (type) {
     case "NOTE":
       return <StickyNote size={size} className={cls} />;
@@ -680,26 +680,26 @@ function EditContactModal({
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               שם פרטי *
             </label>
             <input
               type="text"
               value={form.firstName}
               onChange={(e) => setField("firstName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               שם משפחה *
             </label>
             <input
               type="text"
               value={form.lastName}
               onChange={(e) => setField("lastName", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
             />
           </div>
@@ -707,26 +707,26 @@ function EditContactModal({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               אימייל
             </label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               טלפון
             </label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
@@ -734,13 +734,13 @@ function EditContactModal({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               חברה
             </label>
             <select
               value={form.companyId}
               onChange={(e) => setField("companyId", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               <option value="">ללא חברה</option>
               {companies?.data.map((c) => (
@@ -751,27 +751,27 @@ function EditContactModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               תפקיד
             </label>
             <input
               type="text"
               value={form.position}
               onChange={(e) => setField("position", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               סטטוס
             </label>
             <select
               value={form.status}
               onChange={(e) => setField("status", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(contactStatuses).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -781,7 +781,7 @@ function EditContactModal({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               ציון ליד (0-100)
             </label>
             <input
@@ -790,13 +790,13 @@ function EditContactModal({
               max={100}
               value={form.leadScore}
               onChange={(e) => setField("leadScore", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </div>
 
           {/* Lead Heat */}
           <div>
-            <label className="block text-sm font-semibold text-text-secondary mb-2">
+            <label className="block text-sm font-semibold text-[#676879] mb-2">
               חום ליד
             </label>
             <LeadHeatPicker
@@ -810,14 +810,14 @@ function EditContactModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "שומר..." : "שמור שינויים"}
           </button>

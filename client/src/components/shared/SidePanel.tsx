@@ -63,14 +63,14 @@ export default function SidePanel({
       >
         {/* Header */}
         {title && (
-          <div className="sticky top-0 z-10 bg-white border-b border-border-light px-6 py-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+          <div className="sticky top-0 z-10 bg-white border-b border-[#E6E9EF] px-5 py-3.5 flex items-center justify-between">
+            <h2 className="text-[15px] font-semibold text-[#323338]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-text-primary"
+              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
               aria-label="סגור"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
         )}
@@ -79,7 +79,7 @@ export default function SidePanel({
           <div className="sticky top-0 z-10 bg-white px-6 py-3 flex items-center justify-end">
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary hover:text-text-primary"
+              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#323338]"
               aria-label="סגור"
             >
               <X size={18} />

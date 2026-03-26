@@ -31,7 +31,7 @@ export default function BulkActionBar({
       {onAddTag && (
         <button
           onClick={onAddTag}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
         >
           <Tag size={14} />
           הוסף תגית
@@ -41,7 +41,7 @@ export default function BulkActionBar({
       {onChangeStatus && (
         <button
           onClick={onChangeStatus}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-white/10 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
         >
           <ArrowRight size={14} />
           שנה סטטוס
@@ -54,7 +54,7 @@ export default function BulkActionBar({
         <button
           onClick={onDelete}
           disabled={deleting}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm hover:bg-red-500/20 text-red-300 rounded-lg transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-red-500/20 text-red-300 rounded-[4px] transition-colors disabled:opacity-50"
         >
           <Trash2 size={14} />
           מחק
@@ -65,7 +65,7 @@ export default function BulkActionBar({
 
       <button
         onClick={onClear}
-        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+        className="p-1.5 hover:bg-white/10 rounded-[4px] transition-colors"
         aria-label="בטל בחירה"
       >
         <X size={16} />

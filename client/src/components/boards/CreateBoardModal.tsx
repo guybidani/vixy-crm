@@ -122,7 +122,7 @@ export default function CreateBoardModal({
               onClick={() => handleSelectTemplate(blankTemplate.key)}
               className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-dashed border-[#C5CAD8] hover:border-[#0073EA] hover:bg-[#F0F7FF] transition-all group"
             >
-              <div className="w-10 h-10 rounded-lg bg-[#F0F2F5] group-hover:bg-[#D2E8FF] flex items-center justify-center text-[#676879] group-hover:text-[#0073EA] transition-colors flex-shrink-0">
+              <div className="w-10 h-10 rounded-[4px] bg-[#F0F2F5] group-hover:bg-[#D2E8FF] flex items-center justify-center text-[#676879] group-hover:text-[#0073EA] transition-colors flex-shrink-0">
                 <LayoutGrid size={20} />
               </div>
               <div className="text-right flex-1">
@@ -184,7 +184,7 @@ export default function CreateBoardModal({
           </label>
           <input
             autoFocus
-            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-lg text-sm focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
+            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
             placeholder="לדוגמה: ניהול לידים"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -196,7 +196,7 @@ export default function CreateBoardModal({
           <button
             onClick={handleCreate}
             disabled={!name.trim() || createMut.isPending}
-            className="w-full mt-4 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm rounded-lg transition-colors"
+            className="w-full mt-4 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-[4px] transition-colors"
           >
             {createMut.isPending ? "יוצר..." : "צור בורד"}
           </button>

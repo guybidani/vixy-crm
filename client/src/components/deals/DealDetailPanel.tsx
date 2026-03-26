@@ -302,14 +302,14 @@ export default function DealDetailPanel({
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="p-1.5 rounded-lg hover:bg-red-50 text-[#676879] hover:text-red-500 transition-colors"
+                className="p-1.5 rounded-[4px] hover:bg-[#FFEEF0] text-[#676879] hover:text-[#E44258] transition-colors"
                 title="מחק עסקה"
               >
                 <Trash2 size={16} />
               </button>
               <button
                 onClick={handleClose}
-                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
                 aria-label="סגור"
               >
                 <X size={18} />
@@ -551,7 +551,7 @@ export default function DealDetailPanel({
                     {!editingNotes && (
                       <button
                         onClick={() => { setEditingNotes(true); setNotes(deal?.notes || ""); }}
-                        className="text-xs text-[#676879] hover:text-[#0073EA] transition-colors"
+                        className="text-[12px] text-[#676879] hover:text-[#0073EA] transition-colors"
                       >
                         ערוך
                       </button>
@@ -566,7 +566,7 @@ export default function DealDetailPanel({
                         onBlur={() => {
                           if (notes === (deal?.notes || "")) setEditingNotes(false);
                         }}
-                        className="w-full min-h-[180px] px-3 py-2 text-sm border border-[#C5C7D0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] resize-y"
+                        className="w-full min-h-[180px] px-3 py-2 text-[13px] border border-[#C5C7D0] rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] resize-y"
                         placeholder="הוסף הערות..."
                       />
                       <div className="flex items-center justify-between">
@@ -575,7 +575,7 @@ export default function DealDetailPanel({
                         </span>
                         <button
                           onClick={() => setEditingNotes(false)}
-                          className="px-3 py-1.5 text-xs text-[#676879] hover:bg-[#F5F6F8] rounded-lg transition-colors"
+                          className="px-3 py-1.5 text-[12px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
                         >
                           סגור
                         </button>
@@ -583,7 +583,7 @@ export default function DealDetailPanel({
                     </div>
                   ) : (
                     <p
-                      className="text-sm text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F5F6F8] rounded-lg p-2 -m-2 transition-colors min-h-[80px]"
+                      className="text-[13px] text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F5F6F8] rounded-[4px] p-2 -m-2 transition-colors min-h-[80px]"
                       onClick={() => { setEditingNotes(true); setNotes(deal?.notes || ""); }}
                     >
                       {deal.notes || "לחץ להוספת הערות..."}
@@ -930,7 +930,7 @@ function HealthBadge({ health }: { health: DealHealth }) {
       <button
         type="button"
         onClick={() => setShowBreakdown((v) => !v)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-colors hover:bg-[#F5F6F8]"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border transition-colors hover:bg-[#F5F6F8]"
         style={{ borderColor: health.color + "40" }}
       >
         <HeartPulse size={13} style={{ color: health.color }} />
@@ -1066,7 +1066,7 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
           return (
             <div
               key={field.key}
-              className="bg-[#F7F7F9] rounded-lg p-2 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
+              className="bg-[#F7F7F9] rounded-[4px] p-2 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
               onClick={() => !isEditing && startEdit(field.key)}
             >
               <div className="flex items-center gap-1 mb-1">

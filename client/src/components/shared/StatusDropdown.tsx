@@ -50,7 +50,7 @@ export default function StatusDropdown({
         onClick={disabled ? undefined : () => setOpen(!open)}
       />
       {open && (
-        <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-modal border border-border-light py-1 min-w-[140px] animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] py-1 min-w-[140px] animate-in fade-in slide-in-from-top-1 duration-150">
           {Object.entries(options).map(([key, opt]) => (
             <button
               key={key}
@@ -58,7 +58,7 @@ export default function StatusDropdown({
                 onChange(key);
                 setOpen(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-surface-secondary transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-[#F5F6F8] transition-colors"
             >
               <span
                 className="inline-flex items-center justify-center font-semibold rounded-full text-[11px] px-3 py-[3px] min-w-[56px] text-white"
@@ -67,7 +67,7 @@ export default function StatusDropdown({
                 {opt.label}
               </span>
               {key === value && (
-                <Check size={14} className="text-text-secondary mr-auto" />
+                <Check size={14} className="text-[#676879] mr-auto" />
               )}
             </button>
           ))}

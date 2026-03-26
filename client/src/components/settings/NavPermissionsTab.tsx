@@ -113,7 +113,7 @@ export default function NavPermissionsTab() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="bg-white rounded-xl shadow-card h-16 animate-pulse"
+            className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] h-16 animate-pulse"
           />
         ))}
       </div>
@@ -122,9 +122,9 @@ export default function NavPermissionsTab() {
 
   if (!members || members.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-card text-center py-12">
-        <Users size={32} className="text-text-tertiary mx-auto mb-2" />
-        <p className="text-sm text-text-tertiary">אין חברי צוות</p>
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] text-center py-12">
+        <Users size={32} className="text-[#9699A6] mx-auto mb-2" />
+        <p className="text-sm text-[#9699A6]">אין חברי צוות</p>
       </div>
     );
   }
@@ -133,32 +133,32 @@ export default function NavPermissionsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-text-primary">
+          <h2 className="text-base font-bold text-[#323338]">
             הרשאות ניווט
           </h2>
-          <p className="text-xs text-text-tertiary">
+          <p className="text-[12px] text-[#9699A6]">
             קבע אילו חלקים במערכת כל חבר צוות יכול לראות בתפריט הניווט
           </p>
         </div>
         <button
           onClick={() => saveMut.mutate()}
           disabled={!isDirty || saveMut.isPending}
-          className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save size={16} />
           {saveMut.isPending ? "שומר..." : "שמור שינויים"}
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-card overflow-hidden">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" dir="rtl">
             <thead>
-              <tr className="border-b border-border-light bg-[#F7F7F9]">
-                <th className="text-right px-4 py-3 text-xs font-bold text-text-tertiary min-w-[200px]">
+              <tr className="border-b border-[#E6E9EF] bg-[#F7F7F9]">
+                <th className="text-right px-4 py-3 text-[12px] font-bold text-[#9699A6] min-w-[200px]">
                   חבר צוות
                 </th>
-                <th className="px-2 py-3 text-center text-xs font-bold text-text-tertiary w-14">
+                <th className="px-2 py-3 text-center text-[12px] font-bold text-[#9699A6] w-14">
                   הכל
                 </th>
                 {NAV_ITEMS.map((item) => {
@@ -170,12 +170,12 @@ export default function NavPermissionsTab() {
                     >
                       <div className="flex flex-col items-center gap-1">
                         <div
-                          className="w-7 h-7 rounded-lg flex items-center justify-center"
+                          className="w-7 h-7 rounded-[4px] flex items-center justify-center"
                           style={{ backgroundColor: `${item.dot}20` }}
                         >
                           <Icon size={14} style={{ color: item.dot }} />
                         </div>
-                        <span className="text-[10px] font-semibold text-text-tertiary leading-tight">
+                        <span className="text-[10px] font-semibold text-[#9699A6] leading-tight">
                           {item.label}
                         </span>
                       </div>
@@ -184,7 +184,7 @@ export default function NavPermissionsTab() {
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-light">
+            <tbody className="divide-y divide-[#E6E9EF]">
               {members.map((member) => {
                 const isOwner = member.role === "OWNER";
                 const role = ROLE_COLORS[member.role] || ROLE_COLORS.AGENT;
@@ -206,12 +206,12 @@ export default function NavPermissionsTab() {
                           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                           style={{ backgroundColor: memberAvatarColor }}
                         >
-                          <span className="text-white text-xs font-bold">
+                          <span className="text-white text-[12px] font-bold">
                             {member.name?.charAt(0) || "?"}
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-text-primary truncate">
+                          <p className="text-[13px] font-semibold text-[#323338] truncate">
                             {member.name}
                           </p>
                           <div className="flex items-center gap-1.5 mt-0.5">
@@ -222,7 +222,7 @@ export default function NavPermissionsTab() {
                               {isOwner && <Crown size={8} />}
                               {role.label}
                             </span>
-                            <span className="text-[10px] text-text-tertiary truncate">
+                            <span className="text-[10px] text-[#9699A6] truncate">
                               {member.email}
                             </span>
                           </div>
@@ -237,7 +237,7 @@ export default function NavPermissionsTab() {
                         checked={isOwner || allChecked}
                         disabled={isOwner}
                         onChange={() => toggleAll(member.memberId)}
-                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                        className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                       />
                     </td>
 
@@ -253,7 +253,7 @@ export default function NavPermissionsTab() {
                           onChange={() =>
                             togglePermission(member.memberId, item.key)
                           }
-                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                          className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                         />
                       </td>
                     ))}
@@ -266,9 +266,9 @@ export default function NavPermissionsTab() {
       </div>
 
       {/* Info box */}
-      <div className="flex items-start gap-2 bg-[#F5F6FF] rounded-lg p-3 border border-primary/10">
-        <Shield size={16} className="text-primary flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-text-secondary space-y-1">
+      <div className="flex items-start gap-2 bg-[#F5F6FF] rounded-[4px] p-3 border border-[#0073EA]/10">
+        <Shield size={16} className="text-[#0073EA] flex-shrink-0 mt-0.5" />
+        <div className="text-[12px] text-[#676879] space-y-1">
           <p>
             <strong>בעלים</strong> תמיד רואה את כל חלקי המערכת ולא ניתן להגביל
             אותו.

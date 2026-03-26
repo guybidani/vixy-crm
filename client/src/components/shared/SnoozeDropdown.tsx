@@ -69,7 +69,7 @@ export default function SnoozeDropdown({
             e.stopPropagation();
             setOpen((v) => !v);
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border text-text-secondary hover:border-warning hover:text-warning hover:bg-warning/5 transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[4px] border border-[#E6E9EF] text-[#676879] hover:border-warning hover:text-warning hover:bg-warning/5 transition-all"
           title="דחה משימה"
           aria-label="דחה משימה"
         >
@@ -82,17 +82,17 @@ export default function SnoozeDropdown({
             e.stopPropagation();
             setOpen((v) => !v);
           }}
-          className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-surface-tertiary transition-all"
+          className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#F5F6F8] transition-all"
           title="דחה משימה"
           aria-label="דחה משימה"
         >
-          <AlarmClockOff size={12} className="text-text-secondary" />
+          <AlarmClockOff size={12} className="text-[#676879]" />
         </button>
       )}
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-30 bg-white rounded-xl shadow-glass border border-border py-1 min-w-[160px]">
-          <div className="px-3 py-1.5 text-[10px] font-bold text-text-tertiary uppercase border-b border-border-light">
+        <div className="absolute left-0 top-full mt-1 z-30 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#E6E9EF] py-1 min-w-[160px]">
+          <div className="px-3 py-1.5 text-[10px] font-bold text-[#9699A6] uppercase border-b border-[#E6E9EF]">
             דחה משימה
           </div>
           {options.map((opt) => (
@@ -102,11 +102,11 @@ export default function SnoozeDropdown({
                 e.stopPropagation();
                 handleSnooze(opt);
               }}
-              className="w-full text-right px-3 py-1.5 text-xs hover:bg-surface-secondary transition-colors flex items-center gap-2"
+              className="w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
             >
               <Clock
                 size={11}
-                className="text-text-tertiary flex-shrink-0"
+                className="text-[#9699A6] flex-shrink-0"
               />
               {opt.label}
             </button>

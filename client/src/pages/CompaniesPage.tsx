@@ -12,7 +12,6 @@ import MondayTextCell from "../components/shared/MondayTextCell";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
-import ViewToggle from "../components/shared/ViewToggle";
 import ExportButton from "../components/shared/ExportButton";
 import {
   listCompanies,
@@ -186,7 +185,7 @@ export default function CompaniesPage() {
       render: (row: Company) => (
         <div className="flex items-center gap-1.5">
           <Users size={14} className="text-[#6161FF]" />
-          <span className="font-semibold text-sm text-text-primary">
+          <span className="font-semibold text-[13px] text-[#323338]">
             {row.contactCount}
           </span>
         </div>
@@ -199,7 +198,7 @@ export default function CompaniesPage() {
       render: (row: Company) => (
         <div className="flex items-center gap-1.5">
           <Handshake size={14} className="text-[#00CA72]" />
-          <span className="font-semibold text-sm text-text-primary">
+          <span className="font-semibold text-[13px] text-[#323338]">
             {row.dealCount}
           </span>
         </div>
@@ -209,20 +208,27 @@ export default function CompaniesPage() {
 
   return (
     <PageShell
+      boardStyle
+      emoji="🏢"
       title="חברות"
       subtitle={`${data?.pagination.total || 0} חברות`}
+      views={[
+        { key: "table", label: "טבלה" },
+        { key: "kanban", label: "לוח" },
+      ]}
+      activeView={viewMode}
+      onViewChange={(key) => setViewMode(key as "kanban" | "table")}
       actions={
         <div className="flex items-center gap-2">
-          <ViewToggle viewMode={viewMode} onChange={setViewMode} />
           <ExportButton
             entity="companies"
             filters={{ search: debouncedSearch }}
           />
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
-            <Plus size={16} />
+            <Plus size={15} strokeWidth={2.5} />
             חברה חדשה
           </button>
         </div>
@@ -277,8 +283,8 @@ function CompanyCard({
     <div
       className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${
         isDragging
-          ? "shadow-lg opacity-90 border-l-primary"
-          : "border-l-transparent hover:shadow-md hover:border-l-primary"
+          ? "shadow-lg opacity-90 border-l-[#0073EA]"
+          : "border-l-transparent hover:shadow-md hover:border-l-[#0073EA]"
       }`}
     >
       {/* Company icon + name */}
@@ -289,29 +295,29 @@ function CompanyCard({
         >
           <Building2 size={14} />
         </div>
-        <span className="font-semibold text-sm text-text-primary truncate">
+        <span className="font-semibold text-[13px] text-[#323338] truncate">
           {company.name}
         </span>
       </div>
 
       {/* Industry badge */}
       {company.industry && (
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-secondary text-text-secondary inline-block mb-2">
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879] inline-block mb-2">
           {company.industry}
         </span>
       )}
 
       {/* Bottom row: contacts + deals count */}
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border-light">
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E6E9EF]">
         <div className="flex items-center gap-1.5">
           <Users size={12} className="text-[#6161FF]" />
-          <span className="text-[11px] font-semibold text-text-secondary">
+          <span className="text-[11px] font-semibold text-[#676879]">
             {company.contactCount}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Handshake size={12} className="text-[#00CA72]" />
-          <span className="text-[11px] font-semibold text-text-secondary">
+          <span className="text-[11px] font-semibold text-[#676879]">
             {company.dealCount}
           </span>
         </div>
@@ -363,54 +369,54 @@ function CreateCompanyModal({ onClose }: { onClose: () => void }) {
     <Modal open={true} onClose={onClose} title="חברה חדשה">
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             שם חברה *
           </label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               אימייל
             </label>
             <input
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               טלפון
             </label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => setField("phone", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
               dir="ltr"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
             אתר אינטרנט
           </label>
           <input
             type="url"
             value={form.website}
             onChange={(e) => setField("website", e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+            className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             dir="ltr"
             placeholder="https://"
           />
@@ -418,13 +424,13 @@ function CreateCompanyModal({ onClose }: { onClose: () => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               תעשייה
             </label>
             <select
               value={form.industry}
               onChange={(e) => setField("industry", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] bg-white"
             >
               <option value="">בחרו תעשייה</option>
               <option value="טכנולוגיה">טכנולוגיה</option>
@@ -438,13 +444,13 @@ function CreateCompanyModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">
+            <label className="block text-[13px] font-medium text-[#323338] mb-1">
               גודל
             </label>
             <select
               value={form.size}
               onChange={(e) => setField("size", e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] bg-white"
             >
               <option value="">בחרו גודל</option>
               <option value="1-10">1-10 עובדים</option>
@@ -460,14 +466,14 @@ function CreateCompanyModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+            className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors text-sm disabled:opacity-50"
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
           >
             {mutation.isPending ? "יוצר..." : "צור חברה"}
           </button>

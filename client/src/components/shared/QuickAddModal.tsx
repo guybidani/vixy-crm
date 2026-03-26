@@ -29,9 +29,9 @@ const TASK_TYPES = [
 ];
 
 const INPUT_CLASS =
-  "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white";
+  "w-full px-3 py-[7px] border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white";
 const SELECT_CLASS =
-  "w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white";
+  "w-full px-3 py-[7px] border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white";
 
 interface QuickAddModalProps {
   open: boolean;
@@ -66,7 +66,7 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/35 backdrop-blur-sm z-50 flex items-start justify-center pt-[12vh]"
+      className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-[12vh]"
       onClick={onClose}
     >
       <div
@@ -78,10 +78,10 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <h2 className="text-sm font-bold text-text-primary">הוספה מהירה</h2>
+          <h2 className="text-[15px] font-semibold text-[#323338]">הוספה מהירה</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-secondary transition-colors text-text-tertiary"
+            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
             aria-label="סגור"
           >
             <X size={16} />
@@ -89,7 +89,7 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-4 pb-3 border-b border-border-light">
+        <div className="flex gap-1 px-4 pb-3 border-b border-[#E6E9EF]">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -97,10 +97,10 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
                 setTab(t.key);
                 setTimeout(() => firstInputRef.current?.focus(), 60);
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-medium transition-all ${
                 tab === t.key
                   ? "text-white"
-                  : "text-text-secondary hover:bg-surface-secondary"
+                  : "text-[#676879] hover:bg-[#F5F6F8]"
               }`}
               style={tab === t.key ? { backgroundColor: t.color } : undefined}
             >
@@ -113,12 +113,12 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
         {/* Tab icon accent */}
         <div className="px-4 pt-3 pb-1 flex items-center gap-2">
           <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
+            className="w-7 h-7 rounded-[4px] flex items-center justify-center"
             style={{ backgroundColor: activeTab.bg, color: activeTab.color }}
           >
             {activeTab.icon}
           </div>
-          <span className="text-sm font-semibold text-text-primary">
+          <span className="text-[13px] font-semibold text-[#323338]">
             {activeTab.label} חדש
           </span>
         </div>
@@ -438,7 +438,7 @@ function BoardItemForm({
       {/* Board selector */}
       {loadingBoards ? (
         <div className="flex items-center justify-center py-4">
-          <Loader2 size={18} className="animate-spin text-primary" />
+          <Loader2 size={18} className="animate-spin text-[#0073EA]" />
         </div>
       ) : (
         <select
@@ -504,14 +504,14 @@ function FormFooter({
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+        className="flex-1 py-[7px] bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-medium rounded-[4px] transition-colors text-[13px]"
       >
         ביטול
       </button>
       <button
         type="submit"
         disabled={isPending || disabled}
-        className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all hover:shadow-md text-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
+        className="flex-1 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors text-[13px] disabled:opacity-50 flex items-center justify-center gap-1.5"
       >
         {isPending ? (
           <>

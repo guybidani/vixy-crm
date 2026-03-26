@@ -87,12 +87,12 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
   const activeSequences = sequences?.filter((s) => s.isActive) || [];
 
   return (
-    <div className="bg-white rounded-xl shadow-card p-4">
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 bg-[#FF642E] rounded-full flex items-center justify-center">
           <Zap size={12} className="text-white" />
         </div>
-        <h3 className="font-bold text-text-primary">מעקב אוטומטי</h3>
+        <h3 className="font-bold text-[#323338]">מעקב אוטומטי</h3>
       </div>
 
       {activeExecution ? (
@@ -105,7 +105,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
         <div className="relative">
           <button
             onClick={() => setShowSequencePicker(!showSequencePicker)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#FF642E]/10 hover:bg-[#FF642E]/20 text-[#FF642E] rounded-lg transition-colors text-sm font-semibold"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#FF642E]/10 hover:bg-[#FF642E]/20 text-[#FF642E] rounded-[4px] transition-colors text-[13px] font-semibold"
           >
             <Play size={14} />
             הפעל סדרת מעקב
@@ -113,9 +113,9 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
           </button>
 
           {showSequencePicker && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-border-light z-10 max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-[4px] shadow-lg border border-[#E6E9EF] z-10 max-h-48 overflow-y-auto">
               {activeSequences.length === 0 ? (
-                <p className="text-xs text-text-tertiary text-center py-4">
+                <p className="text-xs text-[#9699A6] text-center py-4">
                   אין סדרות פעילות. צור סדרה בהגדרות &rarr; אוטומציה
                 </p>
               ) : (
@@ -124,12 +124,12 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
                     key={seq.id}
                     onClick={() => startMut.mutate(seq.id)}
                     disabled={startMut.isPending}
-                    className="w-full text-right px-3 py-2.5 hover:bg-[#F5F6FF] transition-colors border-b border-border-light last:border-b-0"
+                    className="w-full text-right px-3 py-2.5 hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF] last:border-b-0"
                   >
-                    <span className="text-sm font-semibold text-text-primary block">
+                    <span className="text-sm font-semibold text-[#323338] block">
                       {seq.name}
                     </span>
-                    <span className="text-[10px] text-text-tertiary">
+                    <span className="text-[10px] text-[#9699A6]">
                       {seq.steps.length} שלבים
                       {seq.description ? ` · ${seq.description}` : ""}
                     </span>
@@ -143,8 +143,8 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
 
       {/* Past executions */}
       {pastExecutions.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-border-light">
-          <p className="text-[10px] font-semibold text-text-tertiary mb-2">
+        <div className="mt-3 pt-3 border-t border-[#E6E9EF]">
+          <p className="text-[10px] font-semibold text-[#9699A6] mb-2">
             היסטוריה
           </p>
           <div className="space-y-1.5">
@@ -155,7 +155,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
               return (
                 <div key={exec.id} className="flex items-center gap-2 text-xs">
                   <StatusIcon size={12} style={{ color: statusInfo.color }} />
-                  <span className="text-text-secondary flex-1 truncate">
+                  <span className="text-[#676879] flex-1 truncate">
                     {exec.sequence.name}
                   </span>
                   <span
@@ -196,7 +196,7 @@ function ActiveExecutionView({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-text-primary">
+        <span className="text-xs font-semibold text-[#323338]">
           {execution.sequence.name}
         </span>
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white bg-[#00CA72]">
@@ -207,12 +207,12 @@ function ActiveExecutionView({
       {/* Progress bar */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] text-text-tertiary">
+          <span className="text-[10px] text-[#9699A6]">
             שלב {currentStep}/{totalSteps}
           </span>
-          <span className="text-[10px] text-text-tertiary">{progress}%</span>
+          <span className="text-[10px] text-[#9699A6]">{progress}%</span>
         </div>
-        <div className="h-2 bg-surface-secondary rounded-full overflow-hidden">
+        <div className="h-2 bg-[#F5F6F8] rounded-full overflow-hidden">
           <div
             className="h-full bg-[#FF642E] rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -230,12 +230,12 @@ function ActiveExecutionView({
           return (
             <div
               key={step.id}
-              className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[10px] font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-[4px] text-[10px] font-semibold transition-all ${
                 isDone
                   ? "bg-[#00CA72]/10 text-[#00CA72]"
                   : isCurrent
                     ? "bg-[#FF642E]/10 text-[#FF642E] ring-1 ring-[#FF642E]/30"
-                    : "bg-surface-secondary text-text-tertiary"
+                    : "bg-[#F5F6F8] text-[#9699A6]"
               }`}
               title={`שלב ${step.stepNumber}: ${ch?.label || step.channel}`}
             >
@@ -248,9 +248,9 @@ function ActiveExecutionView({
 
       {/* Next action */}
       {nextChannelInfo && execution.nextRunAt && (
-        <div className="flex items-center gap-2 p-2 bg-[#FF642E]/5 rounded-lg">
+        <div className="flex items-center gap-2 p-2 bg-[#FF642E]/5 rounded-[4px]">
           <Clock size={12} className="text-[#FF642E]" />
-          <span className="text-[10px] text-text-secondary">
+          <span className="text-[10px] text-[#676879]">
             פעולה הבאה:{" "}
             <span className="font-semibold">{nextChannelInfo.label}</span> ב-
             {new Date(execution.nextRunAt).toLocaleDateString("he-IL")}
@@ -262,7 +262,7 @@ function ActiveExecutionView({
       <button
         onClick={onStop}
         disabled={stopping}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-danger bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[12px] font-semibold text-[#E44258] bg-[#FFEEF0] hover:bg-red-100 rounded-[4px] transition-colors"
       >
         <Square size={12} />
         {stopping ? "מבטל..." : "עצור סדרה"}

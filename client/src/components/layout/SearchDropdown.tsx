@@ -116,12 +116,12 @@ export default function SearchDropdown({
     >
       {isLoading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 size={20} className="text-primary animate-spin" />
+          <Loader2 size={20} className="text-[#0073EA] animate-spin" />
         </div>
       )}
 
       {!isLoading && debouncedQuery.length >= 2 && !hasResults && (
-        <div className="flex flex-col items-center py-8 text-text-tertiary">
+        <div className="flex flex-col items-center py-8 text-[#9699A6]">
           <SearchX size={24} className="mb-2" />
           <span className="text-sm">לא נמצאו תוצאות</span>
         </div>
@@ -133,9 +133,9 @@ export default function SearchDropdown({
           (section) =>
             section.items.length > 0 && (
               <div key={section.key}>
-                <div className="flex items-center gap-2 px-3 py-2 bg-surface-secondary/50 border-b border-[#E6E9EF]">
-                  <section.icon size={14} className="text-text-tertiary" />
-                  <span className="text-[11px] font-bold text-text-tertiary uppercase">
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#F5F6F8] border-b border-[#E6E9EF]">
+                  <section.icon size={14} className="text-[#9699A6]" />
+                  <span className="text-[11px] font-bold text-[#9699A6] uppercase">
                     {section.label}
                   </span>
                 </div>
@@ -143,13 +143,13 @@ export default function SearchDropdown({
                   <button
                     key={item.id}
                     onClick={() => navigateTo(section.getPath(item))}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-surface-secondary/50 text-right transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#F5F6F8] text-right transition-colors"
                   >
-                    <span className="text-sm text-text-primary font-medium truncate">
+                    <span className="text-[13px] text-[#323338] font-medium truncate">
                       {section.getTitle(item)}
                     </span>
                     {section.getSubtitle(item) && (
-                      <span className="text-[11px] text-text-tertiary truncate mr-auto">
+                      <span className="text-[11px] text-[#9699A6] truncate mr-auto">
                         {section.getSubtitle(item)}
                       </span>
                     )}

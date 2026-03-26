@@ -80,6 +80,10 @@ interface MondayBoardProps<T extends { id: string }> {
   onNewItem?: () => void;
   onNewItemInGroup?: (groupKey: string) => void;
   newItemLabel?: string;
+  /** Optional new item dropdown menu items */
+  newItemMenuItems?: Array<{ label: string; icon?: ReactNode; onClick: () => void }>;
+  /** Optional "Add group" callback */
+  onAddGroup?: () => void;
   search?: string;
   onSearchChange?: (search: string) => void;
   searchPlaceholder?: string;
@@ -131,6 +135,8 @@ export default function MondayBoard<T extends { id: string }>({
   onNewItem,
   onNewItemInGroup,
   newItemLabel = "פריט חדש",
+  newItemMenuItems,
+  onAddGroup,
   search,
   onSearchChange,
   searchPlaceholder = "חיפוש...",
@@ -608,13 +614,11 @@ export default function MondayBoard<T extends { id: string }>({
       {/* ── Toolbar ──────────────────────────── */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         {onNewItem && (
-          <button
+          <NewItemButton
+            label={newItemLabel}
             onClick={onNewItem}
-            className="flex items-center gap-1.5 pl-2 pr-3 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
-          >
-            <Plus size={16} strokeWidth={2.5} />
-            {newItemLabel}
-          </button>
+            menuItems={newItemMenuItems}
+          />
         )}
 
         {onSearchChange && (
@@ -663,7 +667,7 @@ export default function MondayBoard<T extends { id: string }>({
 
           {/* Filter dropdown */}
           {filterOpen && (
-            <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[300px]">
+            <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[300px]">
               <div className="p-3 border-b border-[#E6E9EF] flex items-center justify-between">
                 <span className="text-[13px] font-semibold text-[#323338]">
                   סינון לפי עמודה
@@ -976,7 +980,7 @@ export default function MondayBoard<T extends { id: string }>({
         groupedData.map((group, groupIdx) => (
           <div key={group.key} className="mb-6">
             {/* Group Header */}
-            <div className="flex items-center gap-1.5 mb-1 select-none group/header">
+            <div className="flex items-center gap-1.5 mb-1 select-none group/header pr-[6px]" style={{ borderRight: `3px solid ${group.color}` }}>
               <button
                 onClick={() => toggleGroup(group.key)}
                 aria-expanded={!collapsedGroups[group.key]}
@@ -1387,7 +1391,7 @@ export default function MondayBoard<T extends { id: string }>({
                                   onDeleteItem(row);
                                 }}
                                 aria-label="מחק פריט"
-                                className="p-1 rounded hover:bg-red-50 text-transparent group-hover/row:text-[#C3C6D4] hover:!text-[#FB275D] transition-all"
+                                className="p-1 rounded hover:bg-[#FFEEF0] text-transparent group-hover/row:text-[#C3C6D4] hover:!text-[#FB275D] transition-all"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1476,6 +1480,17 @@ export default function MondayBoard<T extends { id: string }>({
         ))
       )}
 
+      {/* ── Add Group button ──────────────────── */}
+      {onAddGroup && !loading && (
+        <button
+          onClick={onAddGroup}
+          className="flex items-center gap-1.5 px-3 py-2 mt-1 text-[13px] text-[#676879] hover:text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors w-fit"
+        >
+          <Plus size={15} strokeWidth={2} />
+          הוסף קבוצה
+        </button>
+      )}
+
       {/* Context Menu */}
       {contextMenu && contextMenuItems && (
         <RowContextMenu
@@ -1509,6 +1524,81 @@ export default function MondayBoard<T extends { id: string }>({
               הבא
             </button>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── New Item Split Button ─────────────────────────── */
+
+function NewItemButton({
+  label,
+  onClick,
+  menuItems,
+}: {
+  label: string;
+  onClick: () => void;
+  menuItems?: Array<{ label: string; icon?: ReactNode; onClick: () => void }>;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  if (!menuItems || menuItems.length === 0) {
+    return (
+      <button
+        onClick={onClick}
+        className="flex items-center gap-1.5 pl-2 pr-3 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        {label}
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative flex" ref={ref}>
+      {/* Main action */}
+      <button
+        onClick={onClick}
+        className="flex items-center gap-1.5 pl-2 pr-3 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-r-[4px] transition-colors"
+      >
+        <Plus size={16} strokeWidth={2.5} />
+        {label}
+      </button>
+      {/* Dropdown trigger */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="px-1.5 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white transition-colors rounded-l-[4px] border-r border-white/25"
+        aria-label="עוד אפשרויות"
+      >
+        <ChevronDown size={13} strokeWidth={2.5} />
+      </button>
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_4px_20px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1 min-w-[180px]">
+          {menuItems.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                item.onClick();
+                setOpen(false);
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -1549,7 +1639,7 @@ function GroupMenu({
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[160px]"
+      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[160px]"
     >
       {onRename && (
         <button
@@ -1570,7 +1660,7 @@ function GroupMenu({
             שנה צבע
           </button>
           {showColorPicker && (
-            <div className="absolute top-0 left-full mr-1 z-[60] bg-white shadow-xl border border-[#E6E9EF] rounded-lg p-2 grid grid-cols-5 gap-1.5">
+            <div className="absolute top-0 left-full mr-1 z-[60] bg-white shadow-xl border border-[#E6E9EF] rounded-[4px] p-2 grid grid-cols-5 gap-1.5">
               {GROUP_COLORS.map((c) => (
                 <button
                   key={c}
@@ -1593,7 +1683,7 @@ function GroupMenu({
       {onDelete && (
         <button
           onClick={onDelete}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-red-50 transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
         >
           <Trash2 size={14} />
           מחק קבוצה
@@ -1643,7 +1733,7 @@ function ColumnMenu({
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 left-0 z-50 bg-white rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[160px]"
+      className="absolute top-full mt-1 left-0 z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.15)] border border-[#E6E9EF] py-1 min-w-[160px]"
     >
       {isSortable && onSort && (
         <button
@@ -1708,7 +1798,7 @@ function ColumnMenu({
       {onDelete && colKey !== "name" && (
         <button
           onClick={onDelete}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-red-50 transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
         >
           <Trash2 size={13} />
           מחק עמודה
@@ -1884,7 +1974,7 @@ export function MondayStatusCell({
       {/* Dropdown */}
       {open && (
         <div
-          className="absolute top-full mt-1 right-1/2 translate-x-1/2 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-[#E6E9EF] p-3 min-w-[280px] animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute top-full mt-1 right-1/2 translate-x-1/2 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-[#E6E9EF] p-3 min-w-[280px] animate-in fade-in slide-in-from-top-1 duration-150"
           onClick={(e) => e.stopPropagation()}
         >
           {!editing ? (
@@ -1940,7 +2030,7 @@ export function MondayStatusCell({
                       />
                       {/* Color picker popover */}
                       {colorPickerIdx === i && (
-                        <div className="absolute top-full mt-1 right-0 z-[60] bg-white shadow-xl border border-[#E6E9EF] rounded-lg p-2 grid grid-cols-5 gap-1.5 min-w-[150px]">
+                        <div className="absolute top-full mt-1 right-0 z-[60] bg-white shadow-xl border border-[#E6E9EF] rounded-[4px] p-2 grid grid-cols-5 gap-1.5 min-w-[150px]">
                           {LABEL_COLORS.map((c) => (
                             <button
                               key={c}
@@ -2256,7 +2346,7 @@ function HideColumnsDropdown<T>({
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[220px]"
+      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[220px]"
     >
       <div className="p-3 border-b border-[#E6E9EF] flex items-center justify-between">
         <span className="text-[13px] font-semibold text-[#323338]">
@@ -2320,7 +2410,7 @@ function GroupByDropdown({
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[200px]"
+      className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] min-w-[200px]"
     >
       <div className="p-3 border-b border-[#E6E9EF]">
         <span className="text-[13px] font-semibold text-[#323338]">

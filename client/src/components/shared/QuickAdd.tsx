@@ -93,21 +93,21 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]"
+      className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-[15vh]"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-modal w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {!type ? (
           <>
             {/* Search header */}
-            <div className="p-4 border-b border-border-light">
+            <div className="p-4 border-b border-[#E6E9EF]">
               <div className="relative">
                 <Search
                   size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
                 />
                 <input
                   ref={searchRef}
@@ -115,7 +115,7 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="מה ברצונך ליצור?"
-                  className="w-full pr-9 pl-4 py-2.5 bg-surface-secondary rounded-lg text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-colors"
+                  className="w-full pr-9 pl-4 py-2.5 bg-[#F5F6F8] rounded-[4px] text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
                   autoFocus
                 />
               </div>
@@ -135,27 +135,27 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
                     {t.icon}
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-text-primary">
+                    <span className="text-sm font-semibold text-[#323338]">
                       {t.label} חדש
                     </span>
-                    <span className="text-xs text-text-tertiary block">
+                    <span className="text-xs text-[#9699A6] block">
                       יצירה מהירה
                     </span>
                   </div>
                 </button>
               ))}
               {filteredTypes.length === 0 && (
-                <p className="text-center text-sm text-text-tertiary py-6">
+                <p className="text-center text-sm text-[#9699A6] py-6">
                   לא נמצאו תוצאות
                 </p>
               )}
             </div>
-            <div className="px-4 py-2.5 border-t border-border-light flex items-center gap-3 text-[10px] text-text-tertiary bg-surface-secondary/50">
-              <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light text-[10px] font-mono shadow-sm">
+            <div className="px-4 py-2.5 border-t border-[#E6E9EF] flex items-center gap-3 text-[10px] text-[#9699A6] bg-[#F5F6F8]/50">
+              <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] text-[10px] font-mono shadow-sm">
                 Ctrl+K
               </kbd>
               <span>פתיחה מהירה</span>
-              <kbd className="px-1.5 py-0.5 bg-white rounded border border-border-light text-[10px] font-mono shadow-sm mr-2">
+              <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] text-[10px] font-mono shadow-sm mr-2">
                 Esc
               </kbd>
               <span>סגירה</span>
@@ -310,11 +310,11 @@ function QuickForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex items-center gap-3 p-4 border-b border-border-light">
+      <div className="flex items-center gap-3 p-4 border-b border-[#E6E9EF]">
         <button
           type="button"
           onClick={onBack}
-          className="text-text-tertiary hover:text-text-primary transition-colors text-sm"
+          className="text-[#9699A6] hover:text-[#323338] transition-colors text-sm"
         >
           &larr; חזרה
         </button>
@@ -324,15 +324,15 @@ function QuickForm({
         >
           {config.icon}
         </div>
-        <h3 className="text-sm font-bold text-text-primary">
+        <h3 className="text-sm font-bold text-[#323338]">
           {config.label} חדש
         </h3>
         <button
           type="button"
           onClick={onClose}
-          className="mr-auto p-1.5 rounded-lg hover:bg-surface-secondary transition-colors"
+          className="mr-auto p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
         >
-          <X size={16} className="text-text-tertiary" />
+          <X size={16} className="text-[#9699A6]" />
         </button>
       </div>
 
@@ -347,7 +347,7 @@ function QuickForm({
                   setContactForm((f) => ({ ...f, firstName: e.target.value }))
                 }
                 placeholder="שם פרטי *"
-                className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                 required
                 autoFocus
               />
@@ -358,7 +358,7 @@ function QuickForm({
                   setContactForm((f) => ({ ...f, lastName: e.target.value }))
                 }
                 placeholder="שם משפחה"
-                className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               />
             </div>
             <input
@@ -368,7 +368,7 @@ function QuickForm({
                 setContactForm((f) => ({ ...f, email: e.target.value }))
               }
               placeholder="אימייל"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
             <input
               type="tel"
@@ -377,7 +377,7 @@ function QuickForm({
                 setContactForm((f) => ({ ...f, phone: e.target.value }))
               }
               placeholder="טלפון"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </>
         )}
@@ -391,7 +391,7 @@ function QuickForm({
                 setDealForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="שם העסקה *"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
               autoFocus
             />
@@ -402,7 +402,7 @@ function QuickForm({
                 setDealForm((f) => ({ ...f, value: e.target.value }))
               }
               placeholder="שווי (₪)"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
             <div className="grid grid-cols-2 gap-3">
               <select
@@ -410,7 +410,7 @@ function QuickForm({
                 onChange={(e) =>
                   setDealForm((f) => ({ ...f, stage: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 {Object.entries(dealStages).map(([key, val]) => (
                   <option key={key} value={key}>
@@ -423,7 +423,7 @@ function QuickForm({
                 onChange={(e) =>
                   setDealForm((f) => ({ ...f, priority: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+                className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
               >
                 {Object.entries(priorities).map(([key, val]) => (
                   <option key={key} value={key}>
@@ -444,7 +444,7 @@ function QuickForm({
                 setTicketForm((f) => ({ ...f, subject: e.target.value }))
               }
               placeholder="נושא הפנייה *"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
               autoFocus
             />
@@ -454,7 +454,7 @@ function QuickForm({
                 setTicketForm((f) => ({ ...f, description: e.target.value }))
               }
               placeholder="תיאור (אופציונלי)"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
               rows={3}
             />
             <select
@@ -462,7 +462,7 @@ function QuickForm({
               onChange={(e) =>
                 setTicketForm((f) => ({ ...f, priority: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
             >
               {Object.entries(priorities).map(([key, val]) => (
                 <option key={key} value={key}>
@@ -482,7 +482,7 @@ function QuickForm({
                 setTaskForm((f) => ({ ...f, title: e.target.value }))
               }
               placeholder="שם המשימה *"
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               required
               autoFocus
             />
@@ -492,24 +492,24 @@ function QuickForm({
               onChange={(e) =>
                 setTaskForm((f) => ({ ...f, dueDate: e.target.value }))
               }
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </>
         )}
       </div>
 
-      <div className="flex gap-3 p-4 border-t border-border-light">
+      <div className="flex gap-3 p-4 border-t border-[#E6E9EF]">
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2 bg-surface-tertiary hover:bg-border text-text-secondary font-semibold rounded-lg transition-colors text-sm"
+          className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
         >
           ביטול
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-all hover:shadow-md text-sm disabled:opacity-50"
+          className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-all hover:shadow-md text-sm disabled:opacity-50"
         >
           {isPending ? "שומר..." : "צור"}
         </button>

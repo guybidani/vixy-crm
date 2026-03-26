@@ -113,14 +113,14 @@ export default function TagSelector({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-0.5 text-[11px] text-text-tertiary hover:text-primary font-medium px-1.5 py-0.5 rounded hover:bg-primary-light transition-colors"
+        className="flex items-center gap-0.5 text-[11px] text-[#9699A6] hover:text-[#0073EA] font-medium px-1.5 py-0.5 rounded hover:bg-[#E8F3FF] transition-colors"
       >
         <Plus size={12} />
         תגית
       </button>
 
       {open && (
-        <div className="absolute top-7 right-0 z-30 bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] w-56">
+        <div className="absolute top-7 right-0 z-30 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] w-56">
           {/* Search */}
           <div className="p-2 border-b border-[#E6E9EF]">
             <input
@@ -128,7 +128,7 @@ export default function TagSelector({
               onChange={(e) => setSearch(e.target.value)}
               placeholder="חיפוש תגיות..."
               autoFocus
-              className="w-full text-xs px-2 py-1.5 bg-surface-secondary rounded border-none outline-none placeholder:text-text-tertiary"
+              className="w-full text-xs px-2 py-1.5 bg-[#F5F6F8] rounded border-none outline-none placeholder:text-[#9699A6]"
             />
           </div>
 
@@ -138,22 +138,22 @@ export default function TagSelector({
               <button
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-surface-secondary/50 text-right transition-colors"
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#F5F6F8]/50 text-right transition-colors"
               >
                 <span
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: tag.color }}
                 />
-                <span className="text-xs text-text-primary flex-1 truncate">
+                <span className="text-xs text-[#323338] flex-1 truncate">
                   {tag.name}
                 </span>
                 {currentTagIds.has(tag.id) && (
-                  <Check size={12} className="text-primary flex-shrink-0" />
+                  <Check size={12} className="text-[#0073EA] flex-shrink-0" />
                 )}
               </button>
             ))}
             {filteredTags.length === 0 && !showCreate && (
-              <p className="text-[11px] text-text-tertiary text-center py-3">
+              <p className="text-[11px] text-[#9699A6] text-center py-3">
                 לא נמצאו תגיות
               </p>
             )}
@@ -168,7 +168,7 @@ export default function TagSelector({
                   onChange={(e) => setNewTagName(e.target.value)}
                   placeholder="שם התגית..."
                   autoFocus
-                  className="w-full text-xs px-2 py-1.5 border border-[#E6E9EF] rounded outline-none focus:border-primary"
+                  className="w-full text-xs px-2 py-1.5 border border-[#E6E9EF] rounded outline-none focus:border-[#0073EA]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && newTagName.trim()) {
                       createMutation.mutate({
@@ -185,7 +185,7 @@ export default function TagSelector({
                       onClick={() => setNewTagColor(c)}
                       className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${
                         newTagColor === c
-                          ? "border-text-primary"
+                          ? "border-[#323338]"
                           : "border-transparent"
                       }`}
                       style={{ backgroundColor: c }}
@@ -202,7 +202,7 @@ export default function TagSelector({
                       })
                     }
                     disabled={!newTagName.trim() || createMutation.isPending}
-                    className="flex-1 text-[11px] font-semibold text-white bg-primary hover:bg-primary-hover rounded py-1 transition-colors disabled:opacity-50"
+                    className="flex-1 text-[11px] font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded py-1 transition-colors disabled:opacity-50"
                   >
                     צור
                   </button>
@@ -211,7 +211,7 @@ export default function TagSelector({
                       setShowCreate(false);
                       setNewTagName("");
                     }}
-                    className="px-2 text-text-tertiary hover:text-text-primary"
+                    className="px-2 text-[#9699A6] hover:text-[#323338]"
                   >
                     <X size={14} />
                   </button>
@@ -220,7 +220,7 @@ export default function TagSelector({
             ) : (
               <button
                 onClick={() => setShowCreate(true)}
-                className="w-full flex items-center gap-1.5 text-[11px] text-primary font-medium px-2 py-1 rounded hover:bg-primary-light transition-colors"
+                className="w-full flex items-center gap-1.5 text-[11px] text-[#0073EA] font-medium px-2 py-1 rounded hover:bg-[#E8F3FF] transition-colors"
               >
                 <Plus size={12} />
                 צור תגית חדשה

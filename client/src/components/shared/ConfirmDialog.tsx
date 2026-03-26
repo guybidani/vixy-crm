@@ -49,12 +49,12 @@ export default function ConfirmDialog({
   return (
     <Modal open={open} onClose={onCancel} title={title} maxWidth="max-w-sm">
       <div className="px-6 py-4">
-        <p className="text-sm text-text-secondary mb-6">{message}</p>
+        <p className="text-[13px] text-[#676879] mb-6">{message}</p>
         <div className="flex items-center justify-end gap-2">
           <button
             ref={cancelRef}
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-border-light text-text-secondary hover:bg-surface-secondary transition-colors"
+            className="px-4 py-[7px] text-[13px] font-medium rounded-[4px] border border-[#D0D4E4] text-[#676879] hover:bg-[#F5F6F8] transition-colors"
           >
             {cancelText}
           </button>
@@ -63,8 +63,8 @@ export default function ConfirmDialog({
             disabled={confirmed}
             className={
               variant === "danger"
-                ? "px-4 py-2 text-sm font-medium rounded-lg bg-danger text-white hover:bg-danger/90 transition-colors disabled:opacity-50"
-                : "px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 transition-colors disabled:opacity-50"
+                ? "px-4 py-[7px] text-[13px] font-medium rounded-[4px] bg-[#E44258] text-white hover:bg-[#C93048] transition-colors disabled:opacity-50"
+                : "px-4 py-[7px] text-[13px] font-medium rounded-[4px] bg-[#FDAB3D] text-white hover:bg-[#E09232] transition-colors disabled:opacity-50"
             }
           >
             {confirmText}

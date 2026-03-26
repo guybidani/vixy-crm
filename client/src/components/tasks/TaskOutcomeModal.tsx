@@ -156,14 +156,14 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 " onClick={onClose} />
 
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-surface-secondary transition-colors"
+          className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F6F8] transition-colors"
         >
-          <X size={14} className="text-text-secondary" />
+          <X size={14} className="text-[#676879]" />
         </button>
 
         {/* Header */}
@@ -171,16 +171,16 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
           <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-3">
             <CheckCircle2 size={24} className="text-success" />
           </div>
-          <h3 className="font-bold text-text-primary text-base">
+          <h3 className="font-bold text-[#323338] text-base">
             {typeLabel} הושלמה!
           </h3>
-          <p className="text-xs text-text-secondary mt-1 truncate px-4">{task.title}</p>
+          <p className="text-xs text-[#676879] mt-1 truncate px-4">{task.title}</p>
         </div>
 
         {/* Result options */}
         {showResults && (
           <div className="mb-4">
-            <p className="text-xs font-semibold text-text-secondary mb-2">מה היה התוצאה?</p>
+            <p className="text-xs font-semibold text-[#676879] mb-2">מה היה התוצאה?</p>
             <div className="grid grid-cols-3 gap-2">
               {options.map(opt => (
                 <button
@@ -188,8 +188,8 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
                   onClick={() => setSelected(opt.value)}
                   className={`flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all text-xs font-semibold ${
                     selected === opt.value
-                      ? "border-primary bg-primary/5 text-primary"
-                      : "border-border text-text-secondary hover:border-border-dark"
+                      ? "border-[#0073EA] bg-[#E8F3FF] text-[#0073EA]"
+                      : "border-[#E6E9EF] text-[#676879] hover:border-[#E6E9EF]-dark"
                   }`}
                 >
                   <span className="text-lg leading-none">{opt.emoji}</span>
@@ -208,7 +208,7 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
             placeholder="הערות (אופציונלי)..."
             rows={2}
             dir="rtl"
-            className="w-full text-sm border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-primary transition-colors text-text-primary placeholder:text-text-tertiary"
+            className="w-full text-sm border border-[#E6E9EF] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338] placeholder:text-[#9699A6]"
           />
         </div>
 
@@ -219,17 +219,17 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
               type="checkbox"
               checked={followUp}
               onChange={e => setFollowUp(e.target.checked)}
-              className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary"
+              className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]/20 accent-[#0073EA]"
             />
-            <CalendarPlus size={14} className="text-text-secondary" />
-            <span className="text-xs font-semibold text-text-primary">תזמן משימת המשך</span>
+            <CalendarPlus size={14} className="text-[#676879]" />
+            <span className="text-xs font-semibold text-[#323338]">תזמן משימת המשך</span>
           </label>
 
           {followUp && (
-            <div className="mt-3 space-y-3 p-3 bg-surface-secondary/50 rounded-xl border border-border">
+            <div className="mt-3 space-y-3 p-3 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF]">
               {/* Quick presets */}
               <div>
-                <p className="text-[11px] font-semibold text-text-secondary mb-1.5">מתי?</p>
+                <p className="text-[11px] font-semibold text-[#676879] mb-1.5">מתי?</p>
                 <div className="flex gap-1.5 flex-wrap" dir="rtl">
                   {[
                     { key: "tomorrow", label: "מחר", days: 1 },
@@ -241,8 +241,8 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
                       onClick={() => handlePreset(p.key, p.days)}
                       className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all ${
                         activePreset === p.key
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-text-secondary hover:border-border-dark"
+                          ? "border-[#0073EA] bg-[#0073EA]/10 text-[#0073EA]"
+                          : "border-[#E6E9EF] text-[#676879] hover:border-[#E6E9EF]-dark"
                       }`}
                     >
                       {p.label}
@@ -252,8 +252,8 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
                     onClick={handlePresetMonth}
                     className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all ${
                       activePreset === "month"
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-text-secondary hover:border-border-dark"
+                        ? "border-[#0073EA] bg-[#0073EA]/10 text-[#0073EA]"
+                        : "border-[#E6E9EF] text-[#676879] hover:border-[#E6E9EF]-dark"
                     }`}
                   >
                     בעוד חודש
@@ -263,54 +263,54 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
               {/* Custom date */}
               <div>
-                <p className="text-[11px] font-semibold text-text-secondary mb-1">תאריך</p>
+                <p className="text-[11px] font-semibold text-[#676879] mb-1">תאריך</p>
                 <input
                   type="date"
                   value={followUpDate}
                   onChange={e => handleDateChange(e.target.value)}
                   min={formatDateForInput(new Date())}
-                  className="w-full text-xs border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary transition-colors text-text-primary"
+                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
                 />
               </div>
 
               {/* Time (optional) */}
               <div>
-                <p className="text-[11px] font-semibold text-text-secondary mb-1">שעה (אופציונלי)</p>
+                <p className="text-[11px] font-semibold text-[#676879] mb-1">שעה (אופציונלי)</p>
                 <input
                   type="time"
                   value={followUpTime}
                   onChange={e => setFollowUpTime(e.target.value)}
-                  className="w-full text-xs border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary transition-colors text-text-primary"
+                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
                 />
               </div>
 
               {/* Follow-up type */}
               <div>
-                <p className="text-[11px] font-semibold text-text-secondary mb-1">סוג משימה</p>
+                <p className="text-[11px] font-semibold text-[#676879] mb-1">סוג משימה</p>
                 <div className="relative">
                   <select
                     value={followUpType}
                     onChange={e => setFollowUpType(e.target.value as TaskType)}
                     dir="rtl"
-                    className="w-full text-xs border border-border rounded-lg px-2.5 py-1.5 pr-3 appearance-none bg-white focus:outline-none focus:border-primary transition-colors text-text-primary"
+                    className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 pr-3 appearance-none bg-white focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
                   >
                     {FOLLOW_UP_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
-                  <ChevronDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none" />
+                  <ChevronDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none" />
                 </div>
               </div>
 
               {/* Title */}
               <div>
-                <p className="text-[11px] font-semibold text-text-secondary mb-1">כותרת</p>
+                <p className="text-[11px] font-semibold text-[#676879] mb-1">כותרת</p>
                 <input
                   type="text"
                   value={followUpTitle}
                   onChange={e => setFollowUpTitle(e.target.value)}
                   dir="rtl"
-                  className="w-full text-xs border border-border rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-primary transition-colors text-text-primary"
+                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
                 />
               </div>
             </div>
@@ -322,14 +322,14 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
           <button
             onClick={handleSkip}
             disabled={saving}
-            className="flex-1 py-2 text-sm font-semibold text-text-secondary bg-surface-secondary hover:bg-border rounded-xl transition-colors"
+            className="flex-1 py-2 text-[13px] font-semibold text-[#676879] bg-[#F5F6F8] hover:bg-[#E6E9EF] rounded-xl transition-colors"
           >
             דלג
           </button>
           <button
             onClick={handleConfirm}
             disabled={saving}
-            className="flex-2 px-6 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary-hover rounded-xl transition-colors disabled:opacity-50"
+            className="flex-2 px-6 py-2 text-sm font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-xl transition-colors disabled:opacity-50"
           >
             {saving ? "שומר..." : "שמור ✓"}
           </button>

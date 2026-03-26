@@ -43,7 +43,7 @@ export default function RichTextEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-primary underline cursor-pointer",
+          class: "text-[#0073EA] underline cursor-pointer",
           rel: "noopener noreferrer",
         },
       }),
@@ -58,7 +58,7 @@ export default function RichTextEditor({
       attributes: {
         class: cn(
           "prose prose-sm max-w-none focus:outline-none min-h-[200px] px-4 py-3",
-          "prose-headings:text-text-primary prose-p:text-text-primary prose-li:text-text-primary",
+          "prose-headings:text-[#323338] prose-p:text-[#323338] prose-li:text-[#323338]",
           "[direction:rtl] [text-align:right]",
         ),
         dir: "rtl",
@@ -79,7 +79,7 @@ export default function RichTextEditor({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border-light bg-white",
+          "rounded-[4px] border border-[#E6E9EF] bg-white",
           className,
         )}
       >
@@ -91,12 +91,12 @@ export default function RichTextEditor({
   return (
     <div
       className={cn(
-        "rounded-lg border border-border-light bg-white overflow-hidden focus-within:border-primary transition-colors",
+        "rounded-[4px] border border-[#E6E9EF] bg-white overflow-hidden focus-within:border-[#0073EA] transition-colors",
         className,
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border-light bg-surface-secondary/30 flex-wrap">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E6E9EF] bg-[#F5F6F8]/30 flex-wrap">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -119,7 +119,7 @@ export default function RichTextEditor({
           <UnderlineIcon size={15} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-border-light mx-1" />
+        <div className="w-px h-5 bg-[#E6E9EF] mx-1" />
 
         <ToolbarButton
           active={editor.isActive("heading", { level: 1 })}
@@ -140,7 +140,7 @@ export default function RichTextEditor({
           <Heading2 size={15} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-border-light mx-1" />
+        <div className="w-px h-5 bg-[#E6E9EF] mx-1" />
 
         <ToolbarButton
           active={editor.isActive("bulletList")}
@@ -157,7 +157,7 @@ export default function RichTextEditor({
           <ListOrdered size={15} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-border-light mx-1" />
+        <div className="w-px h-5 bg-[#E6E9EF] mx-1" />
 
         <ToolbarButton
           active={editor.isActive({ textAlign: "right" })}
@@ -181,7 +181,7 @@ export default function RichTextEditor({
           <AlignLeft size={15} />
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-border-light mx-1" />
+        <div className="w-px h-5 bg-[#E6E9EF] mx-1" />
 
         <ToolbarButton
           active={editor.isActive("link")}
@@ -230,8 +230,8 @@ function ToolbarButton({
       className={cn(
         "p-1.5 rounded transition-colors",
         active
-          ? "bg-primary/10 text-primary"
-          : "text-text-tertiary hover:bg-surface-secondary hover:text-text-primary",
+          ? "bg-[#0073EA]/10 text-[#0073EA]"
+          : "text-[#9699A6] hover:bg-[#F5F6F8] hover:text-[#323338]",
       )}
     >
       {children}
