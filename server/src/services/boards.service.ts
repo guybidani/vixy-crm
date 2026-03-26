@@ -308,11 +308,26 @@ export async function deleteGroup(
 // ITEMS
 // ══════════════════════════════════════════════════════════════════
 
+export async function createBoardItemActivity(data: {
+  itemId: string;
+  actorId?: string;
+  actorName?: string;
+  type: string;
+  columnKey?: string;
+  columnLabel?: string;
+  oldValue?: string;
+  newValue?: string;
+}) {
+  return prisma.boardItemActivity.create({ data });
+}
+
 export async function addItem(
   workspaceId: string,
   boardId: string,
   groupId: string,
   data: { name: string },
+  actorId?: string,
+  actorName?: string,
 ) {
   const board = await prisma.board.findFirst({
     where: { id: boardId, workspaceId },
@@ -324,7 +339,7 @@ export async function addItem(
     _max: { order: true },
   });
 
-  return prisma.boardItem.create({
+  const item = await prisma.boardItem.create({
     data: {
       boardId,
       groupId,
@@ -339,6 +354,16 @@ export async function addItem(
       },
     },
   });
+
+  await createBoardItemActivity({
+    itemId: item.id,
+    actorId,
+    actorName,
+    type: "item_created",
+    newValue: data.name,
+  });
+
+  return item;
 }
 
 export async function updateItem(
@@ -346,13 +371,17 @@ export async function updateItem(
   boardId: string,
   itemId: string,
   data: Partial<{ name: string; groupId: string; order: number }>,
+  actorId?: string,
+  actorName?: string,
 ) {
   const board = await prisma.board.findFirst({
     where: { id: boardId, workspaceId },
   });
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
 
-  return prisma.boardItem.update({
+  const existing = await prisma.boardItem.findFirst({ where: { id: itemId } });
+
+  const updated = await prisma.boardItem.update({
     where: { id: itemId },
     data,
     include: {
@@ -363,6 +392,31 @@ export async function updateItem(
       },
     },
   });
+
+  if (existing) {
+    if (data.name && data.name !== existing.name) {
+      await createBoardItemActivity({
+        itemId,
+        actorId,
+        actorName,
+        type: "name_changed",
+        oldValue: existing.name,
+        newValue: data.name,
+      });
+    }
+    if (data.groupId && data.groupId !== existing.groupId) {
+      await createBoardItemActivity({
+        itemId,
+        actorId,
+        actorName,
+        type: "item_moved",
+        oldValue: existing.groupId,
+        newValue: data.groupId,
+      });
+    }
+  }
+
+  return updated;
 }
 
 export async function deleteItem(
@@ -393,11 +447,33 @@ export async function updateItemValues(
     dateValue?: string | null;
     jsonValue?: any;
   }>,
+  actorId?: string,
+  actorName?: string,
 ) {
   const board = await prisma.board.findFirst({
     where: { id: boardId, workspaceId },
   });
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  // Fetch existing values + column info for activity logging
+  const existingValues = await prisma.boardItemValue.findMany({
+    where: { itemId, columnId: { in: values.map((v) => v.columnId) } },
+    include: { column: { select: { key: true, label: true } } },
+  });
+  const existingMap = new Map(existingValues.map((ev) => [ev.columnId, ev]));
+
+  // Fetch column info for columns that don't have existing values yet
+  const missingColumnIds = values
+    .map((v) => v.columnId)
+    .filter((id) => !existingMap.has(id));
+  const newColumns =
+    missingColumnIds.length > 0
+      ? await prisma.boardColumn.findMany({
+          where: { id: { in: missingColumnIds } },
+          select: { id: true, key: true, label: true },
+        })
+      : [];
+  const newColumnMap = new Map(newColumns.map((c) => [c.id, c]));
 
   const results = await Promise.all(
     values.map((v) =>
@@ -422,6 +498,47 @@ export async function updateItemValues(
       }),
     ),
   );
+
+  // Log activity for each changed value
+  for (const v of values) {
+    const existing = existingMap.get(v.columnId);
+    const col = existing?.column ?? newColumnMap.get(v.columnId);
+
+    const getDisplayValue = (val: typeof existing | undefined) => {
+      if (!val) return undefined;
+      if (val.textValue != null) return val.textValue;
+      if (val.numberValue != null) return String(val.numberValue);
+      if (val.dateValue != null) return val.dateValue.toISOString();
+      if (val.jsonValue != null) return JSON.stringify(val.jsonValue);
+      return undefined;
+    };
+
+    const newDisplay =
+      v.textValue != null
+        ? v.textValue
+        : v.numberValue != null
+          ? String(v.numberValue)
+          : v.dateValue != null
+            ? v.dateValue
+            : v.jsonValue != null
+              ? JSON.stringify(v.jsonValue)
+              : undefined;
+
+    const oldDisplay = getDisplayValue(existing);
+
+    if (oldDisplay !== newDisplay) {
+      await createBoardItemActivity({
+        itemId,
+        actorId,
+        actorName,
+        type: "value_changed",
+        columnKey: col?.key,
+        columnLabel: col?.label,
+        oldValue: oldDisplay,
+        newValue: newDisplay,
+      });
+    }
+  }
 
   return results;
 }
@@ -616,6 +733,199 @@ export async function createItemComment(
         },
       },
     },
+  });
+}
+
+export async function editItemComment(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  commentId: string,
+  userId: string,
+  body: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const comment = await prisma.boardItemComment.findFirst({
+    where: { id: commentId, itemId },
+    include: { author: true },
+  });
+  if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
+
+  // Only the comment author can edit
+  if (comment.author.userId !== userId) {
+    throw new AppError(403, "FORBIDDEN", "Only the comment author can edit this comment");
+  }
+
+  return prisma.boardItemComment.update({
+    where: { id: commentId },
+    data: { body, editedAt: new Date() },
+    include: {
+      author: {
+        include: {
+          user: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function deleteItemComment(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  commentId: string,
+  userId: string,
+  workspaceRole: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const comment = await prisma.boardItemComment.findFirst({
+    where: { id: commentId, itemId },
+    include: { author: true },
+  });
+  if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
+
+  const isAuthor = comment.author.userId === userId;
+  const isBoardAdmin = workspaceRole === "OWNER" || workspaceRole === "ADMIN";
+
+  if (!isAuthor && !isBoardAdmin) {
+    // Check board-level ADMIN access
+    const member = await prisma.workspaceMember.findFirst({ where: { workspaceId, userId } });
+    if (!member) throw new AppError(403, "FORBIDDEN", "Not a workspace member");
+    const access = await prisma.boardAccess.findUnique({
+      where: { boardId_memberId: { boardId, memberId: member.id } },
+    });
+    if (!access || access.permission !== "ADMIN") {
+      throw new AppError(403, "FORBIDDEN", "Only the comment author or board admin can delete this comment");
+    }
+  }
+
+  return prisma.boardItemComment.delete({ where: { id: commentId } });
+}
+
+export async function toggleCommentReaction(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  commentId: string,
+  userId: string,
+  emoji: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const comment = await prisma.boardItemComment.findFirst({ where: { id: commentId, itemId } });
+  if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
+
+  const reactions = (comment.reactions as Record<string, string[]>) ?? {};
+  const users: string[] = reactions[emoji] ?? [];
+
+  if (users.includes(userId)) {
+    reactions[emoji] = users.filter((u) => u !== userId);
+    if (reactions[emoji].length === 0) delete reactions[emoji];
+  } else {
+    reactions[emoji] = [...users, userId];
+  }
+
+  return prisma.boardItemComment.update({
+    where: { id: commentId },
+    data: { reactions },
+    include: {
+      author: {
+        include: {
+          user: { select: { id: true, name: true, avatarUrl: true } },
+        },
+      },
+    },
+  });
+}
+
+export async function getItemActivities(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.boardItemActivity.findMany({
+    where: { itemId },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+}
+
+export async function duplicateItem(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  actorId?: string,
+  actorName?: string,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const original = await prisma.boardItem.findFirst({
+    where: { id: itemId, boardId },
+    include: { values: true },
+  });
+  if (!original) throw new AppError(404, "NOT_FOUND", "Board item not found");
+
+  const newItem = await prisma.boardItem.create({
+    data: {
+      boardId: original.boardId,
+      groupId: original.groupId,
+      name: original.name,
+      description: original.description,
+      order: original.order + 1,
+      values: {
+        create: original.values.map((v) => ({
+          columnId: v.columnId,
+          textValue: v.textValue,
+          numberValue: v.numberValue,
+          dateValue: v.dateValue,
+          jsonValue: v.jsonValue ?? undefined,
+        })),
+      },
+    },
+    include: {
+      values: {
+        include: {
+          column: { select: { id: true, key: true, type: true } },
+        },
+      },
+    },
+  });
+
+  await createBoardItemActivity({
+    itemId: newItem.id,
+    actorId,
+    actorName,
+    type: "item_created",
+    newValue: newItem.name,
+  });
+
+  return newItem;
+}
+
+export async function updateItemDescription(
+  workspaceId: string,
+  boardId: string,
+  itemId: string,
+  description: string | null,
+) {
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
+
+  return prisma.boardItem.update({
+    where: { id: itemId },
+    data: { description },
   });
 }
 

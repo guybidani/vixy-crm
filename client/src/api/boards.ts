@@ -56,6 +56,7 @@ export interface BoardItem {
   order: number;
   createdAt: string;
   values: BoardItemValue[];
+  description?: string | null;
 }
 
 export interface BoardGroup {
@@ -285,6 +286,8 @@ export interface BoardItemComment {
   body: string;
   createdAt: string;
   updatedAt: string;
+  editedAt?: string | null;
+  reactions?: Record<string, string[]>;
   author: {
     id: string;
     user: {
@@ -303,6 +306,58 @@ export function createBoardItemComment(boardId: string, itemId: string, body: st
   return api<BoardItemComment>(`/boards/${boardId}/items/${itemId}/comments`, {
     method: "POST",
     body: JSON.stringify({ body }),
+  });
+}
+
+export function updateBoardItemComment(boardId: string, itemId: string, commentId: string, body: string) {
+  return api<BoardItemComment>(`/boards/${boardId}/items/${itemId}/comments/${commentId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function deleteBoardItemComment(boardId: string, itemId: string, commentId: string) {
+  return api(`/boards/${boardId}/items/${itemId}/comments/${commentId}`, { method: "DELETE" });
+}
+
+export function reactToBoardItemComment(boardId: string, itemId: string, commentId: string, emoji: string) {
+  return api<BoardItemComment>(`/boards/${boardId}/items/${itemId}/comments/${commentId}/reactions`, {
+    method: "POST",
+    body: JSON.stringify({ emoji }),
+  });
+}
+
+// ── Board Item Activities ────────────────────────────────────────────
+
+export interface BoardItemActivity {
+  id: string;
+  itemId: string;
+  actorId: string | null;
+  actorName: string | null;
+  type: string;
+  columnKey: string | null;
+  columnLabel: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAt: string;
+}
+
+export function getBoardItemActivities(boardId: string, itemId: string) {
+  return api<BoardItemActivity[]>(`/boards/${boardId}/items/${itemId}/activities`);
+}
+
+// ── Duplicate item ───────────────────────────────────────────────────
+
+export function duplicateBoardItem(boardId: string, itemId: string) {
+  return api<BoardItem>(`/boards/${boardId}/items/${itemId}/duplicate`, { method: "POST" });
+}
+
+// ── Item description ─────────────────────────────────────────────────
+
+export function updateBoardItemDescription(boardId: string, itemId: string, description: string | null) {
+  return api<BoardItem>(`/boards/${boardId}/items/${itemId}/description`, {
+    method: "PATCH",
+    body: JSON.stringify({ description }),
   });
 }
 

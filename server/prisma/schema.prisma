@@ -950,6 +950,7 @@ model BoardItem {
   group        BoardGroup  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   groupId      String      @map("group_id")
   name         String
+  description  String?     @db.Text
   order        Int         @default(0)
   done         Boolean     @default(false)
   parentItemId String?     @map("parent_item_id")
@@ -957,9 +958,10 @@ model BoardItem {
   subItems     BoardItem[] @relation("SubItems")
   createdAt    DateTime    @default(now()) @map("created_at")
 
-  values   BoardItemValue[]
-  comments BoardItemComment[]
-  files    BoardItemFile[]
+  values     BoardItemValue[]
+  comments   BoardItemComment[]
+  files      BoardItemFile[]
+  activities BoardItemActivity[]
 
   @@index([groupId, order])
   @@index([parentItemId])
@@ -988,11 +990,30 @@ model BoardItemComment {
   author    WorkspaceMember @relation(fields: [authorId], references: [id])
   authorId  String          @map("author_id")
   body      String          @db.Text
+  reactions Json?           @default("{}")
+  editedAt  DateTime?       @map("edited_at")
   createdAt DateTime        @default(now()) @map("created_at")
   updatedAt DateTime        @updatedAt @map("updated_at")
 
   @@index([itemId])
   @@map("board_item_comments")
+}
+
+model BoardItemActivity {
+  id          String    @id @default(uuid())
+  item        BoardItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  itemId      String    @map("item_id")
+  actorId     String?   @map("actor_id")
+  actorName   String?   @map("actor_name")
+  type        String
+  columnKey   String?   @map("column_key")
+  columnLabel String?   @map("column_label")
+  oldValue    String?   @map("old_value")
+  newValue    String?   @map("new_value")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([itemId, createdAt])
+  @@map("board_item_activities")
 }
 
 model BoardItemValue {

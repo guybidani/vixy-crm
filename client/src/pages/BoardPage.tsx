@@ -1257,6 +1257,12 @@ export default function BoardPage() {
           columns={board.columns}
           onClose={() => setSelectedItemId(null)}
           onUpdated={() => qc.invalidateQueries({ queryKey: ["board", id] })}
+          onDelete={(itemId) => {
+            deleteItemMut.mutate(itemId);
+            setSelectedItemId(null);
+          }}
+          allItems={board.groups.flatMap((g) => g.items.map((i) => ({ id: i.id, name: i.name })))}
+          onNavigate={(itemId) => setSelectedItemId(itemId)}
         />
       )}
     </PageShell>

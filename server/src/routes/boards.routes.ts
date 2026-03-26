@@ -363,11 +363,17 @@ boardsRouter.post(
   validate(addItemSchema),
   async (req, res, next) => {
     try {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+        include: { user: { select: { name: true } } },
+      });
       const item = await boardsService.addItem(
         req.workspaceId!,
         req.params.id as string,
         req.params.groupId as string,
         req.body,
+        req.user!.userId,
+        member?.user.name,
       );
       res.status(201).json(item);
     } catch (err) {
@@ -383,11 +389,17 @@ boardsRouter.patch(
   validate(updateItemSchema),
   async (req, res, next) => {
     try {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+        include: { user: { select: { name: true } } },
+      });
       const item = await boardsService.updateItem(
         req.workspaceId!,
         req.params.id as string,
         req.params.itemId as string,
         req.body,
+        req.user!.userId,
+        member?.user.name,
       );
       res.json(item);
     } catch (err) {
@@ -431,11 +443,17 @@ boardsRouter.put(
   validate(updateValuesSchema),
   async (req, res, next) => {
     try {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+        include: { user: { select: { name: true } } },
+      });
       const results = await boardsService.updateItemValues(
         req.workspaceId!,
         req.params.id as string,
         req.params.itemId as string,
         req.body.values,
+        req.user!.userId,
+        member?.user.name,
       );
       res.json(results);
     } catch (err) {
@@ -485,6 +503,135 @@ boardsRouter.post(
         req.body.body,
       );
       res.status(201).json(comment);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /boards/:id/items/:itemId/comments/:commentId
+boardsRouter.patch(
+  "/:id/items/:itemId/comments/:commentId",
+  requireBoardPermission("EDITOR"),
+  validate(createCommentSchema),
+  async (req, res, next) => {
+    try {
+      const comment = await boardsService.editItemComment(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.params.commentId as string,
+        req.user!.userId,
+        req.body.body,
+      );
+      res.json(comment);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// DELETE /boards/:id/items/:itemId/comments/:commentId
+boardsRouter.delete(
+  "/:id/items/:itemId/comments/:commentId",
+  requireBoardPermission("EDITOR"),
+  async (req, res, next) => {
+    try {
+      await boardsService.deleteItemComment(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.params.commentId as string,
+        req.user!.userId,
+        req.workspaceRole!,
+      );
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /boards/:id/items/:itemId/comments/:commentId/reactions
+const reactionSchema = z.object({ emoji: z.string().min(1) });
+
+boardsRouter.post(
+  "/:id/items/:itemId/comments/:commentId/reactions",
+  requireBoardPermission("EDITOR"),
+  validate(reactionSchema),
+  async (req, res, next) => {
+    try {
+      const comment = await boardsService.toggleCommentReaction(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.params.commentId as string,
+        req.user!.userId,
+        req.body.emoji,
+      );
+      res.json(comment);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// GET /boards/:id/items/:itemId/activities
+boardsRouter.get("/:id/items/:itemId/activities", async (req, res, next) => {
+  try {
+    const activities = await boardsService.getItemActivities(
+      req.workspaceId!,
+      req.params.id as string,
+      req.params.itemId as string,
+    );
+    res.json(activities);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /boards/:id/items/:itemId/duplicate
+boardsRouter.post(
+  "/:id/items/:itemId/duplicate",
+  requireBoardPermission("EDITOR"),
+  async (req, res, next) => {
+    try {
+      const member = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
+        include: { user: { select: { name: true } } },
+      });
+      const item = await boardsService.duplicateItem(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.user!.userId,
+        member?.user.name,
+      );
+      res.status(201).json(item);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// PATCH /boards/:id/items/:itemId/description
+const updateDescriptionSchema = z.object({
+  description: z.string().nullable(),
+});
+
+boardsRouter.patch(
+  "/:id/items/:itemId/description",
+  requireBoardPermission("EDITOR"),
+  validate(updateDescriptionSchema),
+  async (req, res, next) => {
+    try {
+      const item = await boardsService.updateItemDescription(
+        req.workspaceId!,
+        req.params.id as string,
+        req.params.itemId as string,
+        req.body.description,
+      );
+      res.json(item);
     } catch (err) {
       next(err);
     }
