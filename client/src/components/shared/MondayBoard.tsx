@@ -1960,9 +1960,11 @@ export function MondayStatusCell({
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        className="w-full h-full min-h-[32px] flex items-center justify-center text-[#C3C6D4] hover:bg-[#F5F6F8] transition-colors"
+        className="w-full h-full min-h-[32px] flex items-center justify-center px-1"
       >
-        —
+        <span className="w-full py-1 rounded-[4px] bg-[#C4C4C4] text-white text-[11px] font-semibold text-center block leading-tight">
+          לא הוגדר
+        </span>
       </button>
       {open && !editing && (
         <div className="absolute top-full left-0 z-50 bg-white rounded-[8px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1.5 min-w-[160px]">
