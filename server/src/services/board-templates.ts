@@ -22,7 +22,21 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
     icon: "LayoutGrid",
     color: "#579BFC",
     defaultGroupName: "קבוצה חדשה",
-    columns: [{ key: "name", label: "שם", type: "TEXT" }],
+    columns: [
+      { key: "name", label: "שם", type: "TEXT" },
+      {
+        key: "status",
+        label: "סטטוס",
+        type: "STATUS",
+        width: "140px",
+        options: [
+          { key: "todo", label: "לביצוע", color: "#579BFC" },
+          { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
+          { key: "done", label: "הושלם", color: "#00CA72" },
+          { key: "stuck", label: "תקוע", color: "#FB275D" },
+        ],
+      },
+    ],
   },
 
   sales_pipeline: {

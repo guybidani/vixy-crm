@@ -45,12 +45,32 @@ export default function ColumnEditorModal({
   const qc = useQueryClient();
   const [label, setLabel] = useState("");
   const [type, setType] = useState("TEXT");
+
+  const STATUS_DEFAULTS = [
+    { key: "todo", label: "לביצוע", color: "#579BFC" },
+    { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
+    { key: "done", label: "הושלם", color: "#00CA72" },
+    { key: "stuck", label: "תקוע", color: "#FB275D" },
+  ];
+  const PRIORITY_DEFAULTS = [
+    { key: "low", label: "נמוך", color: "#66CCFF" },
+    { key: "medium", label: "בינוני", color: "#6161FF" },
+    { key: "high", label: "גבוה", color: "#FDAB3D" },
+    { key: "urgent", label: "דחוף", color: "#FB275D" },
+  ];
+
+  function handleTypeChange(newType: string) {
+    setType(newType);
+    if (newType === "STATUS") setOptions(STATUS_DEFAULTS);
+    if (newType === "PRIORITY") setOptions(PRIORITY_DEFAULTS);
+  }
   const [options, setOptions] = useState<
     Array<{ key: string; label: string; color: string }>
   >([
-    { key: "option1", label: "אפשרות 1", color: "#00CA72" },
-    { key: "option2", label: "אפשרות 2", color: "#FDAB3D" },
-    { key: "option3", label: "אפשרות 3", color: "#FB275D" },
+    { key: "todo", label: "לביצוע", color: "#579BFC" },
+    { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
+    { key: "done", label: "הושלם", color: "#00CA72" },
+    { key: "stuck", label: "תקוע", color: "#FB275D" },
   ]);
 
   const addMut = useMutation({
@@ -67,9 +87,10 @@ export default function ColumnEditorModal({
     setLabel("");
     setType("TEXT");
     setOptions([
-      { key: "option1", label: "אפשרות 1", color: "#00CA72" },
-      { key: "option2", label: "אפשרות 2", color: "#FDAB3D" },
-      { key: "option3", label: "אפשרות 3", color: "#FB275D" },
+      { key: "todo", label: "לביצוע", color: "#579BFC" },
+      { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
+      { key: "done", label: "הושלם", color: "#00CA72" },
+      { key: "stuck", label: "תקוע", color: "#FB275D" },
     ]);
   }
 
@@ -130,7 +151,7 @@ export default function ColumnEditorModal({
               return (
                 <button
                   key={ct.value}
-                  onClick={() => setType(ct.value)}
+                  onClick={() => handleTypeChange(ct.value)}
                   className={cn(
                     "flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-center hover:shadow-sm",
                     selected
