@@ -237,33 +237,6 @@ export default function DealsPage() {
       ),
     },
     {
-      key: "contact",
-      label: "איש קשר",
-      width: "160px",
-      render: (row) => (
-        <MondayPersonCell
-          value={row.contact}
-          options={contactOptions}
-          onChange={(id) => inlineUpdate(row.id, { contactId: id! })}
-          placeholder="בחר איש קשר"
-        />
-      ),
-    },
-    {
-      key: "value",
-      label: "סכום",
-      width: "130px",
-      sortable: true,
-      summary: "sum",
-      render: (row) => (
-        <MondayNumberCell
-          value={row.value}
-          onChange={(val) => inlineUpdate(row.id, { value: val })}
-          prefix="₪"
-        />
-      ),
-    },
-    {
       key: "stage",
       label: "סטטוס",
       width: "150px",
