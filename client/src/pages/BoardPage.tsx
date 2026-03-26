@@ -400,6 +400,12 @@ export default function BoardPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
   });
 
+  const moveItemMut = useMutation({
+    mutationFn: (p: { itemId: string; groupId: string }) =>
+      updateBoardItem(id!, p.itemId, { groupId: p.groupId }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+  });
+
   const deleteItemMut = useMutation({
     mutationFn: (itemId: string) => deleteBoardItem(id!, itemId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
@@ -1111,6 +1117,9 @@ export default function BoardPage() {
           onFiltersChange={handleFiltersChange}
           onAddGroup={() => addGroupMut.mutate()}
           onAddColumn={() => setColumnEditorOpen(true)}
+          onMoveItem={(itemId, targetGroupKey) => {
+            moveItemMut.mutate({ itemId, groupId: targetGroupKey });
+          }}
         />
       ) : /* Kanban View */
       kanbanColumns.length > 0 ? (

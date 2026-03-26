@@ -23,6 +23,7 @@ import {
   Eye,
   EyeOff,
   Layers,
+  GripVertical,
 } from "lucide-react";
 import RowContextMenu, { type ContextMenuItem } from "./RowContextMenu";
 import { cn } from "../../lib/utils";
@@ -111,6 +112,8 @@ interface MondayBoardProps<T extends { id: string }> {
   onAddColumn?: () => void;
   /** Row delete */
   onDeleteItem?: (row: T) => void;
+  /** Move item to a different group */
+  onMoveItem?: (itemId: string, targetGroupKey: string) => void;
   /** Context menu items builder */
   contextMenuItems?: (row: T) => ContextMenuItem[];
   /** Columns available for dynamic grouping */
@@ -157,6 +160,7 @@ export default function MondayBoard<T extends { id: string }>({
   onColumnReorder,
   onAddColumn,
   onDeleteItem,
+  onMoveItem,
   contextMenuItems,
   groupByColumns,
   groupByKey: controlledGroupByKey,
@@ -182,6 +186,10 @@ export default function MondayBoard<T extends { id: string }>({
   const [colOrder, setColOrder] = useState<string[]>(() => columns.map((c) => c.key));
   const dragColRef = useRef<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
+  // ── Row drag-to-move state ──
+  const [dragItemId, setDragItemId] = useState<string | null>(null);
+  const [dragOverGroupKey, setDragOverGroupKey] = useState<string | null>(null);
 
   // Keep colOrder in sync when columns prop changes (new col added / removed)
   useEffect(() => {
@@ -1130,6 +1138,7 @@ export default function MondayBoard<T extends { id: string }>({
                         className="w-[6px] p-0"
                         style={{ backgroundColor: group.color }}
                       />
+                      {onMoveItem && <th className="w-[20px] p-0 bg-white border-b border-[#D0D4E4]" />}
                       <th className="w-[36px] px-1 py-2 bg-white border-b border-[#D0D4E4]">
                         <input
                           type="checkbox"
@@ -1341,7 +1350,20 @@ export default function MondayBoard<T extends { id: string }>({
                   </thead>
 
                   {/* Rows */}
-                  <tbody>
+                  <tbody
+                    onDragOver={(e) => { if (dragItemId) { e.preventDefault(); setDragOverGroupKey(group.key); } }}
+                    onDragLeave={(e) => { if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) setDragOverGroupKey(null); }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragItemId && dragOverGroupKey === group.key) {
+                        const sourceGroup = groups.find((g) => g.items.some((i) => i.id === dragItemId));
+                        if (sourceGroup?.key !== group.key) onMoveItem?.(dragItemId, group.key);
+                      }
+                      setDragItemId(null);
+                      setDragOverGroupKey(null);
+                    }}
+                    className={cn(dragOverGroupKey === group.key && dragItemId && "bg-[#EEF4FF]")}
+                  >
                     {group.items.length === 0 ? (
                       <tr>
                         <td
@@ -1350,7 +1372,7 @@ export default function MondayBoard<T extends { id: string }>({
                         />
                         <td
                           colSpan={
-                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0)
+                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0) + (onMoveItem ? 1 : 0)
                           }
                           className="px-4 py-8 text-center text-[13px] text-[#676879]"
                         >
@@ -1361,9 +1383,13 @@ export default function MondayBoard<T extends { id: string }>({
                       group.items.map((row, rowIdx) => (
                         <tr
                           key={row.id}
+                          draggable={!!onMoveItem}
+                          onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragItemId(row.id); }}
+                          onDragEnd={() => { setDragItemId(null); setDragOverGroupKey(null); }}
                           className={cn(
                             "group/row border-b border-[#E6E9EF] transition-colors hover:bg-[#F5F6F8]",
                             newItemId === row.id && "animate-row-slide-in",
+                            dragItemId === row.id && "opacity-40",
                           )}
                           onContextMenu={(e) => {
                             if (contextMenuItems) {
@@ -1381,6 +1407,14 @@ export default function MondayBoard<T extends { id: string }>({
                             className="w-[6px] p-0"
                             style={{ backgroundColor: group.color }}
                           />
+                          {/* Drag handle */}
+                          {onMoveItem && (
+                            <td className="w-[20px] p-0 bg-white group-hover/row:bg-[#F5F6F8]">
+                              <span className="flex items-center justify-center text-[#C3C6D4] opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
+                                <GripVertical size={13} />
+                              </span>
+                            </td>
+                          )}
                           {/* Checkbox */}
                           <td className="w-[36px] px-1 py-0 bg-white group-hover/row:bg-[#F5F6F8]">
                             <input
@@ -1466,7 +1500,7 @@ export default function MondayBoard<T extends { id: string }>({
                         />
                         <td
                           colSpan={
-                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0)
+                            visibleColumns.length + 1 + (onDeleteItem ? 1 : 0) + (onMoveItem ? 1 : 0)
                           }
                           className="p-0"
                         >
