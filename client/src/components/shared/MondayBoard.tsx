@@ -105,6 +105,8 @@ interface MondayBoardProps<T extends { id: string }> {
   /** Column management callbacks */
   onColumnRename?: (colKey: string, newLabel: string) => void;
   onColumnDelete?: (colKey: string) => void;
+  /** Called when column order changes (keys in new order) */
+  onColumnReorder?: (orderedKeys: string[]) => void;
   /** Called when user clicks the + add column button */
   onAddColumn?: () => void;
   /** Row delete */
@@ -152,6 +154,7 @@ export default function MondayBoard<T extends { id: string }>({
   onGroupColorChange,
   onColumnRename,
   onColumnDelete,
+  onColumnReorder,
   onAddColumn,
   onDeleteItem,
   contextMenuItems,
@@ -174,6 +177,21 @@ export default function MondayBoard<T extends { id: string }>({
   const [editingColKey, setEditingColKey] = useState<string | null>(null);
   const [editingColLabel, setEditingColLabel] = useState("");
   const [colMenuKey, setColMenuKey] = useState<string | null>(null);
+
+  // ── Column drag-to-reorder state ──
+  const [colOrder, setColOrder] = useState<string[]>(() => columns.map((c) => c.key));
+  const dragColRef = useRef<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
+  // Keep colOrder in sync when columns prop changes (new col added / removed)
+  useEffect(() => {
+    setColOrder((prev) => {
+      const newKeys = columns.map((c) => c.key);
+      const kept = prev.filter((k) => newKeys.includes(k));
+      const added = newKeys.filter((k) => !kept.includes(k));
+      return [...kept, ...added];
+    });
+  }, [columns]);
 
   // ── Sort state ──
   const [sortColumn, setSortColumn] = useState<string | null>(null);
@@ -323,11 +341,14 @@ export default function MondayBoard<T extends { id: string }>({
     return result;
   }, [sortedGroups, groupByKey, statusOptions]);
 
-  // Filter visible columns (hide hidden ones)
+  // Filter visible columns (hide hidden ones) + apply drag order
   const visibleColumns = useMemo(() => {
-    if (hiddenColumns.size === 0) return columns;
-    return columns.filter((c) => !hiddenColumns.has(c.key));
-  }, [columns, hiddenColumns]);
+    const ordered = colOrder
+      .map((k) => columns.find((c) => c.key === k))
+      .filter(Boolean) as typeof columns;
+    if (hiddenColumns.size === 0) return ordered;
+    return ordered.filter((c) => !hiddenColumns.has(c.key));
+  }, [columns, hiddenColumns, colOrder]);
 
   function toggleGroup(key: string) {
     setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -1141,12 +1162,42 @@ export default function MondayBoard<T extends { id: string }>({
                       {visibleColumns.map((col, i) => (
                         <th
                           key={col.key}
+                          draggable={col.key !== "__add_col"}
+                          onDragStart={() => { dragColRef.current = col.key; }}
+                          onDragOver={(e) => {
+                            if (col.key === "__add_col") return;
+                            e.preventDefault();
+                            setDragOverCol(col.key);
+                          }}
+                          onDragLeave={() => setDragOverCol(null)}
+                          onDrop={() => {
+                            const from = dragColRef.current;
+                            const to = col.key;
+                            if (!from || from === to || to === "__add_col") {
+                              setDragOverCol(null);
+                              return;
+                            }
+                            setColOrder((prev) => {
+                              const next = [...prev];
+                              const fi = next.indexOf(from);
+                              const ti = next.indexOf(to);
+                              next.splice(fi, 1);
+                              next.splice(ti, 0, from);
+                              onColumnReorder?.(next);
+                              return next;
+                            });
+                            dragColRef.current = null;
+                            setDragOverCol(null);
+                          }}
+                          onDragEnd={() => { dragColRef.current = null; setDragOverCol(null); }}
                           className={cn(
-                            "px-3 py-2 text-right text-[12px] font-normal text-[#676879] bg-white border-b border-[#D0D4E4] group/col relative",
+                            "px-3 py-2 text-right text-[12px] font-normal text-[#676879] bg-white border-b border-[#D0D4E4] group/col relative select-none",
                             i < visibleColumns.length - 1 &&
                               "border-l border-[#E6E9EF]",
                             i === 0 && "sticky right-[42px] z-10 after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-[#E6E9EF]",
                             col.key === "__add_col" && onAddColumn && "cursor-pointer hover:bg-[#F5F6F8] transition-colors",
+                            col.key !== "__add_col" && "cursor-grab",
+                            dragOverCol === col.key && "bg-[#EEF4FF] border-r-2 border-r-[#0073EA]",
                           )}
                           style={col.width ? { width: col.width } : undefined}
                           onClick={col.key === "__add_col" && onAddColumn ? onAddColumn : undefined}
