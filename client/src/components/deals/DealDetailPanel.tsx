@@ -672,8 +672,8 @@ export default function DealDetailPanel({
 
                   {/* Probability */}
                   <FieldRow icon={<span className="text-[11px] font-bold text-[#676879]">%</span>} label="סיכוי">
-                    <div
-                      className="flex items-center gap-2 cursor-pointer group"
+                    <button
+                      className="flex items-center gap-2 group"
                       onClick={() => startEdit("probability", String(deal.probability || 0))}
                     >
                       {editingField === "probability" ? (
@@ -705,7 +705,7 @@ export default function DealDetailPanel({
                           </span>
                         </>
                       )}
-                    </div>
+                    </button>
                   </FieldRow>
 
                   {/* Close date */}
@@ -1064,9 +1064,9 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
           const isEditing = editingField === field.key;
 
           return (
-            <div
+            <button
               key={field.key}
-              className="bg-[#F7F7F9] rounded-[4px] p-2 cursor-pointer hover:bg-[#ECEDF0] transition-colors"
+              className="bg-[#F7F7F9] rounded-[4px] p-2 hover:bg-[#ECEDF0] transition-colors text-right w-full"
               onClick={() => !isEditing && startEdit(field.key)}
             >
               <div className="flex items-center gap-1 mb-1">
@@ -1111,7 +1111,7 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
                   )}
                 </p>
               )}
-            </div>
+            </button>
           );
         })}
       </div>

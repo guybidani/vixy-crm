@@ -147,21 +147,13 @@ function NotificationItem({ n, onRead, onNavigate }: NotificationItemProps) {
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
       aria-label={`${n.title}${!n.isRead ? " - לא נקרא" : ""}`}
       className={cn(
-        "group flex gap-3 px-4 py-3 hover:bg-[#F6F7FB] transition-colors cursor-pointer border-b border-[#E6E9EF] last:border-0",
+        "w-full text-right group flex gap-3 px-4 py-3 hover:bg-[#F6F7FB] transition-colors border-b border-[#E6E9EF] last:border-0",
         !n.isRead && "bg-[#EEF4FF]",
       )}
       onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
     >
       {/* Avatar / icon */}
       <div className="flex-shrink-0 mt-0.5">
@@ -202,7 +194,7 @@ function NotificationItem({ n, onRead, onNavigate }: NotificationItemProps) {
           <span className="w-2 h-2 rounded-full bg-[#0073EA] block" aria-label="לא נקרא" />
         )}
       </div>
-    </div>
+    </button>
   );
 }
 

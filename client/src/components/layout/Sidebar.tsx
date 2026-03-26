@@ -388,17 +388,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setCreateBoardOpen(true);
                         }}
                         className="p-0.5 rounded hover:bg-white/80 hover:text-[#0073EA] transition-colors text-[#9699A6]"
-                        role="button"
                         aria-label="צור בורד חדש"
                       >
                         <Plus size={13} />
-                      </span>
+                      </button>
                       <ChevronDown
                         size={13}
                         className={cn(

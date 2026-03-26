@@ -892,11 +892,10 @@ export default function BoardItemDetailPanel({
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Drop zone */}
                 <div className="flex-shrink-0 px-5 pt-4 pb-3">
-                  <div
+                  <label
                     onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                     onDragLeave={() => setIsDragOver(false)}
                     onDrop={handleFilesDrop}
-                    onClick={() => fileInputRef.current?.click()}
                     className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all ${
                       isDragOver
                         ? "border-[#0073EA] bg-[#EDF3FB]"
@@ -913,14 +912,14 @@ export default function BoardItemDetailPanel({
                         <span className="text-[13px] text-[#0073EA] font-medium">מעלה...</span>
                       </div>
                     )}
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={handleFilesInput}
-                  />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={handleFilesInput}
+                    />
+                  </label>
                 </div>
 
                 {/* Files list */}

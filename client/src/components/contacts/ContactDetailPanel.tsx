@@ -1483,9 +1483,9 @@ function RelatedTab({
             {contact.deals.map((deal: any) => {
               const stage = dealStages[deal.stage];
               return (
-                <div
+                <button
                   key={deal.id}
-                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
                   onClick={() => navigate(`/deals`)}
                 >
                   <div>
@@ -1506,7 +1506,7 @@ function RelatedTab({
                       <StatusBadge label={stage.label} color={stage.color} />
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1529,9 +1529,9 @@ function RelatedTab({
               const status = ticketStatuses[ticket.status];
               const priority = priorities[ticket.priority];
               return (
-                <div
+                <button
                   key={ticket.id}
-                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
                   onClick={() => navigate(`/tickets/${ticket.id}`)}
                 >
                   <span className="font-medium text-sm text-[#323338]">
@@ -1548,7 +1548,7 @@ function RelatedTab({
                       <StatusBadge label={status.label} color={status.color} />
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -1923,13 +1923,13 @@ function LeadScoreRing({
   }
 
   return (
-    <div
-      className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+    <button
+      className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
       onClick={() => {
         setVal(String(score));
         setEditing(true);
       }}
-      title="לחץ לעריכה"
+      aria-label="ערוך ציון"
     >
       <div className="relative w-8 h-8">
         <svg className="w-8 h-8 -rotate-90" viewBox="0 0 36 36">
@@ -1953,7 +1953,7 @@ function LeadScoreRing({
         </span>
       </div>
       <span className="text-xs text-[#9699A6]">ציון</span>
-    </div>
+    </button>
   );
 }
 
