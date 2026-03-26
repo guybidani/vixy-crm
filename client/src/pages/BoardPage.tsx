@@ -230,6 +230,7 @@ function buildRows(board: Board): MondayGroup<BoardRow>[] {
         _groupId: group.id,
         _groupColor: group.color,
         name: item.name,
+        __lastActivityAt: item.lastActivityAt ?? item.updatedAt ?? null,
       };
       for (const val of item.values) {
         const colDef = board.columns.find((c) => c.id === val.columnId);
@@ -844,6 +845,38 @@ export default function BoardPage() {
               },
             };
           }),
+        // Last activity column
+        {
+          key: "__lastActivityAt",
+          label: "פעולה אחרונה",
+          width: "130px",
+          sortable: true,
+          sortValue: (row: BoardRow) => row.__lastActivityAt ? new Date(row.__lastActivityAt).getTime() : 0,
+          render: (row: BoardRow) => {
+            if (!row.__lastActivityAt) return <span className="text-[#C3C6D4] text-[12px]">—</span>;
+            const d = new Date(row.__lastActivityAt);
+            const now = Date.now();
+            const diff = now - d.getTime();
+            const mins = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            let label: string;
+            if (mins < 1) label = "עכשיו";
+            else if (mins < 60) label = `לפני ${mins}ד'`;
+            else if (hours < 24) label = `לפני ${hours}ש'`;
+            else if (days === 1) label = "אתמול";
+            else if (days < 7) label = `לפני ${days} ימים`;
+            else label = d.toLocaleDateString("he-IL");
+            return (
+              <span
+                className="text-[12px] text-[#676879]"
+                title={d.toLocaleString("he-IL")}
+              >
+                {label}
+              </span>
+            );
+          },
+        },
         // "+" column to add new columns
         {
           key: "__add_col",

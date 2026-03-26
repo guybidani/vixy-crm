@@ -55,6 +55,8 @@ export interface BoardItem {
   name: string;
   order: number;
   createdAt: string;
+  updatedAt?: string | null;
+  lastActivityAt?: string | null;
   values: BoardItemValue[];
   description?: string | null;
 }

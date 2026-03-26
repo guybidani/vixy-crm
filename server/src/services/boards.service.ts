@@ -383,7 +383,7 @@ export async function updateItem(
 
   const updated = await prisma.boardItem.update({
     where: { id: itemId },
-    data,
+    data: { ...data, lastActivityAt: new Date() },
     include: {
       values: {
         include: {
@@ -539,6 +539,12 @@ export async function updateItemValues(
       });
     }
   }
+
+  // Update lastActivityAt on the item
+  await prisma.boardItem.update({
+    where: { id: itemId },
+    data: { lastActivityAt: new Date() },
+  });
 
   return results;
 }
@@ -724,7 +730,7 @@ export async function createItemComment(
   const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
   if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
-  return prisma.boardItemComment.create({
+  const comment = await prisma.boardItemComment.create({
     data: { itemId, authorId, body },
     include: {
       author: {
@@ -734,6 +740,8 @@ export async function createItemComment(
       },
     },
   });
+  await prisma.boardItem.update({ where: { id: itemId }, data: { lastActivityAt: new Date() } });
+  return comment;
 }
 
 export async function editItemComment(
@@ -925,7 +933,7 @@ export async function updateItemDescription(
 
   return prisma.boardItem.update({
     where: { id: itemId },
-    data: { description },
+    data: { description, lastActivityAt: new Date() },
   });
 }
 
