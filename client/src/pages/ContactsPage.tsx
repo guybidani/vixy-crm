@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,8 +11,6 @@ import PageShell from "../components/layout/PageShell";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
 import StatusDropdown from "../components/shared/StatusDropdown";
-import SidePanel from "../components/shared/SidePanel";
-import ContactDetailPanel from "../components/contacts/ContactDetailPanel";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
@@ -37,6 +36,7 @@ import MondayPersonCell from "../components/shared/MondayPersonCell";
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "cards">("table");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
@@ -45,9 +45,6 @@ export default function ContactsPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedContactId, setSelectedContactId] = useState<string | null>(
-    null,
-  );
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [needsFollowUp, setNeedsFollowUp] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
@@ -314,7 +311,7 @@ export default function ContactsPage() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setSelectedContactId(row.id);
+              navigate(`/contacts/${row.id}`);
             }}
             className="flex items-center gap-1 text-[11px] text-[#9699A6] hover:text-[#0073EA] px-2 py-1 rounded-[4px] hover:bg-[#0073EA]/5 border border-dashed border-transparent hover:border-[#0073EA]/30 transition-all group/tag"
           >
@@ -423,7 +420,7 @@ export default function ContactsPage() {
             <ContactCard contact={contact} isDragging={isDragging} />
           )}
           onDragEnd={handleKanbanDragEnd}
-          onCardClick={(contact) => setSelectedContactId(contact.id)}
+          onCardClick={(contact) => navigate(`/contacts/${contact.id}`)}
           loading={boardLoading}
           emptyText="אין אנשי קשר"
         />
@@ -471,7 +468,7 @@ export default function ContactsPage() {
                 <ContactCRMCard
                   key={contact.id}
                   contact={contact}
-                  onClick={() => setSelectedContactId(contact.id)}
+                  onClick={() => navigate(`/contacts/${contact.id}`)}
                 />
               ))}
               {(data?.data || []).length === 0 && (
@@ -546,20 +543,6 @@ export default function ContactsPage() {
           )}
         </>
       )}
-
-      {/* Side Panel - Contact Detail */}
-      <SidePanel
-        open={!!selectedContactId}
-        onClose={() => setSelectedContactId(null)}
-        width="lg"
-      >
-        {selectedContactId && (
-          <ContactDetailPanel
-            contactId={selectedContactId}
-            onClose={() => setSelectedContactId(null)}
-          />
-        )}
-      </SidePanel>
 
       {showCreate && (
         <CreateContactModal onClose={() => setShowCreate(false)} />

@@ -329,9 +329,9 @@ export default function ContactDetailPage() {
                 {contact.deals.map((deal: any) => {
                   const stage = dealStages[deal.stage];
                   return (
-                    <div
+                    <button
                       key={deal.id}
-                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
                       onClick={() => navigate(`/deals/${deal.id}`)}
                     >
                       <div>
@@ -355,7 +355,7 @@ export default function ContactDetailPage() {
                           />
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -380,9 +380,9 @@ export default function ContactDetailPage() {
                   const status = ticketStatuses[ticket.status];
                   const priority = priorities[ticket.priority];
                   return (
-                    <div
+                    <button
                       key={ticket.id}
-                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
+                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
                       <span className="font-medium text-sm text-[#323338]">
@@ -402,7 +402,7 @@ export default function ContactDetailPage() {
                           />
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -580,13 +580,17 @@ function InfoRow({
     <div className="flex items-center gap-2">
       <span className="text-[#9699A6]">{icon}</span>
       <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
-      <span
-        className={`text-sm text-[#323338] ${onClick ? "cursor-pointer hover:text-[#0073EA]" : ""}`}
-        dir={dir}
-        onClick={onClick}
-      >
-        {value}
-      </span>
+      {onClick ? (
+        <button
+          className="text-sm text-[#323338] hover:text-[#0073EA] transition-colors"
+          dir={dir}
+          onClick={onClick}
+        >
+          {value}
+        </button>
+      ) : (
+        <span className="text-sm text-[#323338]" dir={dir}>{value}</span>
+      )}
     </div>
   );
 }
