@@ -61,7 +61,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 transition-all duration-200 border-b border-[#E6E9EF]",
         // Mobile: full width. Desktop: offset by sidebar
         "right-0 md:right-[220px]",
-        sidebarCollapsed && "md:right-14",
+        sidebarCollapsed && "md:right-12",
       )}
     >
       {/* Mobile hamburger — leftmost on mobile, hidden on desktop */}

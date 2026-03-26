@@ -230,7 +230,7 @@ function AppLayout() {
         className={cn(
           "pt-14 transition-all duration-200 min-h-screen",
           // Mobile: no margin. Desktop: sidebar margin
-          sidebarCollapsed ? "md:mr-14" : "md:mr-[220px]",
+          sidebarCollapsed ? "md:mr-12" : "md:mr-[220px]",
         )}
       >
         <div className="p-3 sm:p-6">
