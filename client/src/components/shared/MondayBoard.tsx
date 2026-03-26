@@ -105,6 +105,8 @@ interface MondayBoardProps<T extends { id: string }> {
   /** Column management callbacks */
   onColumnRename?: (colKey: string, newLabel: string) => void;
   onColumnDelete?: (colKey: string) => void;
+  /** Called when user clicks the + add column button */
+  onAddColumn?: () => void;
   /** Row delete */
   onDeleteItem?: (row: T) => void;
   /** Context menu items builder */
@@ -150,6 +152,7 @@ export default function MondayBoard<T extends { id: string }>({
   onGroupColorChange,
   onColumnRename,
   onColumnDelete,
+  onAddColumn,
   onDeleteItem,
   contextMenuItems,
   groupByColumns,
@@ -1143,8 +1146,10 @@ export default function MondayBoard<T extends { id: string }>({
                             i < visibleColumns.length - 1 &&
                               "border-l border-[#E6E9EF]",
                             i === 0 && "sticky right-[42px] z-10 after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-[#E6E9EF]",
+                            col.key === "__add_col" && onAddColumn && "cursor-pointer hover:bg-[#F5F6F8] transition-colors",
                           )}
                           style={col.width ? { width: col.width } : undefined}
+                          onClick={col.key === "__add_col" && onAddColumn ? onAddColumn : undefined}
                         >
                           {/* Editable column label */}
                           {editingColKey === col.key && onColumnRename ? (

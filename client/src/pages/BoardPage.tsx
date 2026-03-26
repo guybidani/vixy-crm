@@ -1110,6 +1110,7 @@ export default function BoardPage() {
           activeFilters={activeFilters}
           onFiltersChange={handleFiltersChange}
           onAddGroup={() => addGroupMut.mutate()}
+          onAddColumn={() => setColumnEditorOpen(true)}
         />
       ) : /* Kanban View */
       kanbanColumns.length > 0 ? (

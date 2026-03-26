@@ -170,26 +170,47 @@ export default function ColumnEditorModal({
         {/* Status/Priority Options */}
         {showOptions && (
           <div>
-            <label className="block text-sm font-medium text-[#323338] mb-1.5">
-              אפשרויות
+            <label className="block text-sm font-medium text-[#323338] mb-2">
+              אפשרויות סטטוס
             </label>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {options.map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  {/* Color picker */}
-                  <div className="relative group">
+                <div key={i} className="flex items-center gap-2 group/opt">
+                  {/* Monday-style colored pill preview */}
+                  <div
+                    className="h-7 min-w-[80px] flex-1 rounded-[4px] flex items-center justify-center text-white text-[12px] font-semibold cursor-text relative"
+                    style={{ backgroundColor: opt.color }}
+                  >
+                    <input
+                      className="w-full bg-transparent text-white text-center text-[12px] font-semibold placeholder-white/70 outline-none border-none"
+                      placeholder="שם אפשרות..."
+                      value={opt.label}
+                      onChange={(e) => {
+                        const updated = [...options];
+                        updated[i] = {
+                          ...updated[i],
+                          label: e.target.value,
+                          key: e.target.value
+                            .toLowerCase()
+                            .replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, "_") || `option_${i}`,
+                        };
+                        setOptions(updated);
+                      }}
+                    />
+                  </div>
+                  {/* Color picker dots */}
+                  <div className="relative group/color flex-shrink-0">
                     <button
-                      className="w-8 h-8 rounded-lg border border-[#E6E9EF] flex-shrink-0"
+                      className="w-6 h-6 rounded-full border-2 border-white shadow-sm flex-shrink-0 hover:scale-110 transition-transform"
                       style={{ backgroundColor: opt.color }}
                     />
-                    <div className="absolute top-full mt-1 right-0 z-10 bg-white shadow-xl border border-[#E6E9EF] rounded-[4px] p-2 hidden group-hover:grid grid-cols-5 gap-1 min-w-[140px]">
+                    <div className="absolute top-full mt-1 right-0 z-20 bg-white shadow-xl border border-[#E6E9EF] rounded-[8px] p-2 hidden group-hover/color:grid grid-cols-5 gap-1.5 min-w-[150px]">
                       {DEFAULT_COLORS.map((c) => (
                         <button
                           key={c}
                           className={cn(
-                            "w-6 h-6 rounded",
-                            c === opt.color &&
-                              "ring-2 ring-offset-1 ring-[#323338]",
+                            "w-6 h-6 rounded-full hover:scale-110 transition-transform",
+                            c === opt.color && "ring-2 ring-offset-1 ring-[#323338]",
                           )}
                           style={{ backgroundColor: c }}
                           onClick={() => {
@@ -201,31 +222,13 @@ export default function ColumnEditorModal({
                       ))}
                     </div>
                   </div>
-                  {/* Label input */}
-                  <input
-                    className="flex-1 px-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA]"
-                    value={opt.label}
-                    onChange={(e) => {
-                      const updated = [...options];
-                      updated[i] = {
-                        ...updated[i],
-                        label: e.target.value,
-                        key: e.target.value
-                          .toLowerCase()
-                          .replace(/[^a-zA-Z0-9\u0590-\u05FF]/g, "_"),
-                      };
-                      setOptions(updated);
-                    }}
-                  />
                   {/* Delete */}
                   {options.length > 1 && (
                     <button
-                      onClick={() =>
-                        setOptions(options.filter((_, j) => j !== i))
-                      }
-                      className="p-1 text-[#C3C6D4] hover:text-[#FB275D] transition-colors"
+                      onClick={() => setOptions(options.filter((_, j) => j !== i))}
+                      className="p-1 text-[#C3C6D4] hover:text-[#FB275D] transition-colors opacity-0 group-hover/opt:opacity-100"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   )}
                 </div>
