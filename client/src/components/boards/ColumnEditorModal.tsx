@@ -51,6 +51,8 @@ export default function ColumnEditorModal({
     { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
     { key: "done", label: "הושלם", color: "#00CA72" },
     { key: "stuck", label: "תקוע", color: "#FB275D" },
+    { key: "waiting", label: "בהמתנה", color: "#9D99B9" },
+    { key: "not_relevant", label: "לא רלוונטי", color: "#C4C4C4" },
   ];
   const PRIORITY_DEFAULTS = [
     { key: "low", label: "נמוך", color: "#66CCFF" },
@@ -72,12 +74,7 @@ export default function ColumnEditorModal({
   }
   const [options, setOptions] = useState<
     Array<{ key: string; label: string; color: string }>
-  >([
-    { key: "todo", label: "לביצוע", color: "#579BFC" },
-    { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-    { key: "done", label: "הושלם", color: "#00CA72" },
-    { key: "stuck", label: "תקוע", color: "#FB275D" },
-  ]);
+  >(STATUS_DEFAULTS);
 
   const addMut = useMutation({
     mutationFn: (data: Parameters<typeof addBoardColumn>[1]) =>
@@ -92,12 +89,7 @@ export default function ColumnEditorModal({
   function resetForm() {
     setLabel("");
     setType("TEXT");
-    setOptions([
-      { key: "todo", label: "לביצוע", color: "#579BFC" },
-      { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-      { key: "done", label: "הושלם", color: "#00CA72" },
-      { key: "stuck", label: "תקוע", color: "#FB275D" },
-    ]);
+    setOptions(STATUS_DEFAULTS);
   }
 
   function handleSubmit() {
