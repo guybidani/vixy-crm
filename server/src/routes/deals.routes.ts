@@ -156,8 +156,15 @@ dealsRouter.post(
             error: { code: "NOT_FOUND", message: "Tag not found" },
           });
         }
+        // Verify all deals belong to this workspace before tagging —
+        // prevents BOLA: attacker submitting foreign deal IDs to attach tags
+        const ownedDeals = await prisma.deal.findMany({
+          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          select: { id: true },
+        });
+        const ownedIds = ownedDeals.map((d) => d.id);
         await Promise.all(
-          ids.map((dealId: string) =>
+          ownedIds.map((dealId: string) =>
             prisma.tagOnDeal.upsert({
               where: { dealId_tagId: { dealId, tagId: data.tagId } },
               create: { dealId, tagId: data.tagId },

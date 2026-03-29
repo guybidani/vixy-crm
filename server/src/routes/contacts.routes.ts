@@ -112,8 +112,15 @@ contactsRouter.post(
             error: { code: "NOT_FOUND", message: "Tag not found" },
           });
         }
+        // Verify all contacts belong to this workspace before tagging —
+        // prevents BOLA: attacker submitting foreign contact IDs to attach tags
+        const ownedContacts = await prisma.contact.findMany({
+          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          select: { id: true },
+        });
+        const ownedIds = ownedContacts.map((c) => c.id);
         await Promise.all(
-          ids.map((contactId: string) =>
+          ownedIds.map((contactId: string) =>
             prisma.tagOnContact.upsert({
               where: { contactId_tagId: { contactId, tagId: data.tagId } },
               create: { contactId, tagId: data.tagId },
