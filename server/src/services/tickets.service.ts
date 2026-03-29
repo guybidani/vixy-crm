@@ -55,7 +55,15 @@ export async function list(params: ListParams) {
       ] } },
     ];
   }
-  if (status) where.status = status as any;
+  if (status) {
+    // Support comma-separated multi-status filter e.g. "RESOLVED,CLOSED"
+    const statusValues = status.split(",").map((s) => s.trim()).filter(Boolean);
+    if (statusValues.length === 1) {
+      where.status = statusValues[0] as any;
+    } else if (statusValues.length > 1) {
+      where.status = { in: statusValues as any[] };
+    }
+  }
   if (priority) where.priority = priority as any;
   if (assigneeId) where.assigneeId = assigneeId;
   if (contactId) where.contactId = contactId;

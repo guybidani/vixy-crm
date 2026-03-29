@@ -116,16 +116,12 @@ export default function TicketsPage() {
 
   useEffect(() => setPage(1), [debouncedSearch, statusFilter]);
 
-  // Build status param — handle combined "RESOLVED,CLOSED"
-  const statusParam = statusFilter === "RESOLVED,CLOSED" ? undefined : statusFilter || undefined;
-  const closedFilter = statusFilter === "RESOLVED,CLOSED";
-
   const { data, isLoading } = useQuery({
     queryKey: ["tickets", { search: debouncedSearch, statusFilter, page }],
     queryFn: () =>
       listTickets({
         search: debouncedSearch || undefined,
-        status: statusParam,
+        status: statusFilter || undefined,
         page,
         limit: 50,
         sortBy: "createdAt",
@@ -133,14 +129,10 @@ export default function TicketsPage() {
       }),
   });
 
-  // Filter resolved/closed client-side when that tab is active
   const allRows = data?.data || [];
-  const rows = closedFilter
-    ? allRows.filter((t) => t.status === "RESOLVED" || t.status === "CLOSED")
-    : allRows;
 
   // Sort: urgency score desc
-  const sortedRows = [...rows].sort(
+  const sortedRows = [...allRows].sort(
     (a, b) => (b.urgencyScore ?? 0) - (a.urgencyScore ?? 0),
   );
 
