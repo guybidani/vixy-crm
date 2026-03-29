@@ -410,15 +410,19 @@ export async function create(
     notes?: string;
   },
 ) {
-  // Verify foreign key references belong to this workspace
-  if (data.contactId) {
-    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
-    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
-  }
-  if (data.companyId) {
-    const company = await prisma.company.findFirst({ where: { id: data.companyId, workspaceId } });
-    if (!company) throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
-  }
+  // Verify foreign key references in parallel — independent queries
+  const [contactRef, companyRef] = await Promise.all([
+    data.contactId
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      : null,
+    data.companyId
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
+  if (data.contactId && !contactRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  if (data.companyId && !companyRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
 
   const deal = await prisma.deal.create({
     data: {
@@ -480,22 +484,21 @@ export async function update(
   /** memberId of the user triggering the update, used as fallback for auto-task creation */
   triggeredByMemberId?: string,
 ) {
-  const existing = await prisma.deal.findFirst({
-    where: { id, workspaceId },
-  });
-  if (!existing) {
-    throw new AppError(404, "NOT_FOUND", "Deal not found");
-  }
-
-  // Verify foreign key references belong to this workspace
-  if (data.contactId) {
-    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
-    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
-  }
-  if (data.companyId) {
-    const company = await prisma.company.findFirst({ where: { id: data.companyId, workspaceId } });
-    if (!company) throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
-  }
+  // Fetch deal + FK references in parallel — all independent queries
+  const [existing, contactRef, companyRef] = await Promise.all([
+    prisma.deal.findFirst({ where: { id, workspaceId } }),
+    data.contactId
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      : null,
+    data.companyId
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
+  if (!existing) throw new AppError(404, "NOT_FOUND", "Deal not found");
+  if (data.contactId && !contactRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  if (data.companyId && !companyRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
 
   const updateData: any = { ...data };
 
