@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// useNavigate removed - not currently used
 import {
   Plus,
   Inbox,
@@ -56,6 +56,7 @@ const PIPELINE_STAGES = [
 
 export default function LeadsPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [qualifyingId, setQualifyingId] = useState<string | null>(null);
@@ -86,13 +87,14 @@ export default function LeadsPage() {
       });
       return deal;
     },
-    onSuccess: () => {
+    onSuccess: (deal) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success("ליד הוסמך ועסקה נוצרה בהצלחה!");
       setQualifyingId(null);
+      navigate(`/deals?open=${deal.id}`);
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה בהסמכת ליד");
