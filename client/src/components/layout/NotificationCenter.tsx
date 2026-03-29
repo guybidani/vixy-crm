@@ -78,13 +78,13 @@ function getEntityPath(n: Notification): string | null {
   if (!n.entityId) return null;
   switch (n.entityType) {
     case "DEAL":
-      return `/deals`;
+      return `/deals?open=${n.entityId}`;
     case "CONTACT":
       return `/contacts/${n.entityId}`;
     case "TICKET":
       return `/tickets/${n.entityId}`;
     case "TASK":
-      return `/tasks`;
+      return `/tasks?selected=${n.entityId}`;
     case "BOARD":
     case "BOARD_ITEM":
       // entityId could be boardId or itemId — use boardId from metadata if available

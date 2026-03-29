@@ -834,11 +834,17 @@ export default function TasksPage() {
       setShowCreate(true);
       setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
     }
+    // Clear the ?selected= param once we've opened the task panel
+    const selectedId = searchParams.get("selected");
+    if (selectedId) {
+      setSelectedTaskId(selectedId);
+      setSearchParams((prev) => { prev.delete("selected"); return prev; }, { replace: true });
+    }
   }, []);
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [searchRaw, setSearchRaw] = useState("");
   const searchQuery = useDebounce(searchRaw, 300);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(() => searchParams.get("selected") || null);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
