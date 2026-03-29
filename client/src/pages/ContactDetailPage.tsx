@@ -22,7 +22,6 @@ import {
   Mic,
   Brain,
   Megaphone,
-  Send,
   Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -36,6 +35,7 @@ import { getContact, updateContact, deleteContact } from "../api/contacts";
 import { createActivity } from "../api/activities";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { getWhatsAppUrl } from "../utils/phone";
 
 export default function ContactDetailPage() {
   const {
@@ -261,29 +261,18 @@ export default function ContactDetailPage() {
               </span>
             </div>
             {contact.phone ? (
-              <div className="space-y-2">
-                <div className="bg-green-50 rounded-[4px] p-3">
-                  <p className="text-[12px] text-green-700 mb-2">
-                    שלח הודעת WhatsApp ישירות ל-{contact.firstName}
-                  </p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="כתוב הודעה..."
-                      className="flex-1 px-2.5 py-1.5 border border-green-200 rounded-[4px] text-[12px] focus:outline-none focus:ring-2 focus:ring-green-300 bg-white"
-                    />
-                    <button className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-[4px] transition-colors">
-                      <Send size={12} />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-[10px] text-[#9699A6] text-center">
-                  מופעל ע״י Jony WhatsApp API
-                </p>
-              </div>
+              <a
+                href={getWhatsAppUrl(contact.phone)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-[4px] transition-colors text-[12px] font-medium w-full justify-center"
+              >
+                <MessageSquare size={13} />
+                פתח שיחה עם {contact.firstName}
+              </a>
             ) : (
               <p className="text-[12px] text-[#9699A6] text-center py-2">
-                יש להוסיף טלפון לשליחת הודעות
+                יש להוסיף טלפון לפתיחת שיחה
               </p>
             )}
           </PageCard>

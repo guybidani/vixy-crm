@@ -47,12 +47,7 @@ import { createActivity, updateActivity, deleteActivity } from "../../api/activi
 import { createTask, type TaskType } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
-
-function getWhatsAppUrl(phone: string): string {
-  const cleaned = phone.replace(/\D/g, "");
-  const international = cleaned.startsWith("0") ? "972" + cleaned.slice(1) : cleaned;
-  return `https://wa.me/${international}`;
-}
+import { getWhatsAppUrl } from "../../utils/phone";
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -694,26 +689,18 @@ function InfoTab({
             </span>
           </div>
           {contact.phone ? (
-            <div className="space-y-2">
-              <div className="bg-white rounded-lg p-3 border border-[#E6E9EF]">
-                <p className="text-xs text-[#676879] mb-2">
-                  שלח הודעת WhatsApp ל-{contact.firstName}
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="כתוב הודעה..."
-                    className="flex-1 px-2.5 py-1.5 border border-[#E6E9EF] rounded-[4px] text-[12px] focus:outline-none focus:ring-2 focus:ring-[#25D366]/30 bg-white"
-                  />
-                  <button className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20BD5C] text-white rounded-[4px] transition-colors">
-                    <Send size={12} />
-                  </button>
-                </div>
-              </div>
-            </div>
+            <a
+              href={getWhatsAppUrl(contact.phone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 bg-[#25D366] hover:bg-[#20BD5C] text-white rounded-[4px] transition-colors text-[12px] font-medium w-full justify-center"
+            >
+              <MessageSquare size={13} />
+              פתח שיחה עם {contact.firstName}
+            </a>
           ) : (
             <p className="text-xs text-[#9699A6] text-center py-2">
-              יש להוסיף טלפון לשליחת הודעות
+              יש להוסיף טלפון לפתיחת שיחה
             </p>
           )}
         </div>
