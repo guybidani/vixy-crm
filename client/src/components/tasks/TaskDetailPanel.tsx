@@ -576,7 +576,7 @@ export default function TaskDetailPanel({
             <div className="space-y-1.5">
               {task.contact && (
                 <button
-                  onClick={() => navigate(`/contacts?detail=${task.contact!.id}`)}
+                  onClick={() => navigate(`/contacts/${task.contact!.id}`)}
                   className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
                   <User size={14} className="text-[#0073EA]" />
@@ -589,7 +589,7 @@ export default function TaskDetailPanel({
               )}
               {task.deal && (
                 <button
-                  onClick={() => navigate(`/deals`)}
+                  onClick={() => navigate(`/deals?open=${task.deal!.id}`)}
                   className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Handshake size={14} className="text-success" />
@@ -602,7 +602,7 @@ export default function TaskDetailPanel({
               )}
               {task.ticket && (
                 <button
-                  onClick={() => navigate(`/tickets`)}
+                  onClick={() => navigate(`/tickets/${task.ticket!.id}`)}
                   className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Ticket size={14} className="text-warning" />
