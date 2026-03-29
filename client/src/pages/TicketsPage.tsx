@@ -472,12 +472,13 @@ function TicketDetailPanel({
               />
               {/* Contact link */}
               {ticket.contact && (
-                <span className="flex items-center gap-1 text-xs text-[#0073EA] cursor-pointer hover:underline"
+                <button
+                  className="flex items-center gap-1 text-xs text-[#0073EA] cursor-pointer hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
                   onClick={onNavigateFull}
                 >
                   <User size={12} />
                   {ticket.contact.firstName} {ticket.contact.lastName}
-                </span>
+                </button>
               )}
               {showSlaAlert && (
                 <span className="flex items-center gap-1 text-xs font-bold text-[#E44258] bg-[#E44258]/10 px-2 py-0.5 rounded-full">

@@ -413,6 +413,14 @@ function TaskRow({
         ${selected ? "bg-[#0073EA]/5" : "hover:bg-[#F5F6FF]"}
       `}
       onClick={onClick}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? "button" : undefined}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
     >
       {/* Checkbox */}
       {onToggleSelect && (
