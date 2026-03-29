@@ -674,6 +674,13 @@ function ReplyComposer({
     mutation.mutate();
   }
 
+  function handleTextareaKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      if (body.trim() && !mutation.isPending) mutation.mutate();
+    }
+  }
+
   function insertCannedResponse(canned: CannedResponse) {
     // Interpolate variables
     let text = canned.body;
@@ -786,6 +793,7 @@ function ReplyComposer({
               : "border-[#E6E9EF] focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
           }`}
           rows={2}
+          onKeyDown={handleTextareaKeyDown}
         />
         <button
           type="submit"

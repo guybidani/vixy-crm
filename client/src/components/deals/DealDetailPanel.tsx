@@ -859,12 +859,17 @@ export default function DealDetailPanel({
                         >
                           {task.title}
                         </button>
-                        {task.dueDate && (
-                          <span className="text-[11px] text-[#676879] flex items-center gap-0.5 flex-shrink-0">
-                            <Calendar size={11} />
-                            {new Date(task.dueDate).toLocaleDateString("he-IL")}
-                          </span>
-                        )}
+                        {task.dueDate && (() => {
+                          const due = new Date(task.dueDate);
+                          const isOverdue = task.status !== "DONE" && due < new Date();
+                          return (
+                            <span className={`text-[11px] flex items-center gap-0.5 flex-shrink-0 ${isOverdue ? "text-[#E44258] font-semibold" : "text-[#676879]"}`}>
+                              <Calendar size={11} />
+                              {due.toLocaleDateString("he-IL")}
+                              {isOverdue && <span className="text-[9px] bg-[#E44258]/10 text-[#E44258] px-1 py-0.5 rounded">באיחור</span>}
+                            </span>
+                          );
+                        })()}
                         {task.assignee && (
                           <Avatar name={task.assignee.user.name} size={20} />
                         )}
