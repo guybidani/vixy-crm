@@ -229,7 +229,15 @@ function DraggableCard({
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className="cursor-grab active:cursor-grabbing"
+      onKeyDown={onClick ? (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      } : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      role={onClick ? "button" : undefined}
+      className="cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1 rounded-xl"
     >
       {children}
     </div>
