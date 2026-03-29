@@ -378,7 +378,7 @@ export default function DashboardPage() {
             {rottingDeals.map((deal: any) => (
               <button
                 key={deal.id}
-                onClick={() => navigate("/deals")}
+                onClick={() => navigate(`/deals?open=${deal.id}`)}
                 className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
               >
                 <div className="flex-1 min-w-0">
@@ -636,6 +636,7 @@ function ActivityFeedWidget({
   }>;
   activityTypes: Record<string, { label: string }>;
 }) {
+  const navigate = useNavigate();
   return (
     <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
       {/* Header */}
@@ -666,10 +667,20 @@ function ActivityFeedWidget({
               ? `${a.contact.firstName} ${a.contact.lastName}`
               : null;
 
+            const activityTarget = a.contact
+              ? `/contacts/${a.contact.id}`
+              : a.deal
+              ? `/deals?open=${a.deal.id}`
+              : null;
+
             return (
               <div
                 key={a.id}
-                className="flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8]/50 transition-all duration-150 group"
+                role={activityTarget ? "button" : undefined}
+                tabIndex={activityTarget ? 0 : undefined}
+                onClick={activityTarget ? () => navigate(activityTarget) : undefined}
+                onKeyDown={activityTarget ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(activityTarget); } } : undefined}
+                className={`flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8]/50 transition-all duration-150 group${activityTarget ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1" : ""}`}
               >
                 {/* Icon bubble */}
                 <div
