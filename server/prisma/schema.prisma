@@ -956,6 +956,7 @@ model BoardItem {
   parentItemId String?     @map("parent_item_id")
   parentItem   BoardItem?  @relation("SubItems", fields: [parentItemId], references: [id], onDelete: Cascade)
   subItems     BoardItem[] @relation("SubItems")
+  lastActivityAt DateTime? @map("last_activity_at")
   createdAt    DateTime    @default(now()) @map("created_at")
 
   values     BoardItemValue[]

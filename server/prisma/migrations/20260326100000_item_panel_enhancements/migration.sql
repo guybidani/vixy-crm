@@ -1,12 +1,13 @@
--- AlterTable: add description to board_items
-ALTER TABLE "board_items" ADD COLUMN "description" TEXT;
+-- AlterTable: add description and last_activity_at to board_items
+ALTER TABLE "board_items" ADD COLUMN IF NOT EXISTS "description" TEXT;
+ALTER TABLE "board_items" ADD COLUMN IF NOT EXISTS "last_activity_at" TIMESTAMP(3);
 
 -- AlterTable: add reactions and edited_at to board_item_comments
-ALTER TABLE "board_item_comments" ADD COLUMN "reactions" JSONB DEFAULT '{}';
-ALTER TABLE "board_item_comments" ADD COLUMN "edited_at" TIMESTAMP(3);
+ALTER TABLE "board_item_comments" ADD COLUMN IF NOT EXISTS "reactions" JSONB DEFAULT '{}';
+ALTER TABLE "board_item_comments" ADD COLUMN IF NOT EXISTS "edited_at" TIMESTAMP(3);
 
 -- CreateTable: board_item_activities
-CREATE TABLE "board_item_activities" (
+CREATE TABLE IF NOT EXISTS "board_item_activities" (
     "id" TEXT NOT NULL,
     "item_id" TEXT NOT NULL,
     "actor_id" TEXT,
@@ -22,7 +23,10 @@ CREATE TABLE "board_item_activities" (
 );
 
 -- CreateIndex
-CREATE INDEX "board_item_activities_item_id_created_at_idx" ON "board_item_activities"("item_id", "created_at");
+CREATE INDEX IF NOT EXISTS "board_item_activities_item_id_created_at_idx" ON "board_item_activities"("item_id", "created_at");
 
--- AddForeignKey
-ALTER TABLE "board_item_activities" ADD CONSTRAINT "board_item_activities_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "board_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (ignore if already exists)
+DO $$ BEGIN
+  ALTER TABLE "board_item_activities" ADD CONSTRAINT "board_item_activities_item_id_fkey" FOREIGN KEY ("item_id") REFERENCES "board_items"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
