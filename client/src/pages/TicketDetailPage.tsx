@@ -13,6 +13,11 @@ import {
   CheckCircle2,
   Zap,
   X,
+  Plus,
+  PhoneCall,
+  AtSign,
+  Calendar,
+  StickyNote,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import StatusBadge from "../components/shared/StatusBadge";
@@ -26,6 +31,7 @@ import {
   type TicketDetail,
   type TicketMessage,
 } from "../api/tickets";
+import { listActivities, createActivity, type Activity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 export default function TicketDetailPage() {
@@ -340,6 +346,9 @@ export default function TicketDetailPage() {
             </div>
           )}
 
+          {/* Internal activity log */}
+          {id && <TicketActivityLog ticketId={id} />}
+
           {/* Documents */}
           {id && (
             <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
@@ -348,6 +357,143 @@ export default function TicketDetailPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const ACTIVITY_TYPES = [
+  { key: "NOTE", label: "הערה", icon: StickyNote, color: "#676879" },
+  { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00CA72" },
+  { key: "EMAIL", label: "מייל", icon: AtSign, color: "#579BFC" },
+  { key: "MEETING", label: "פגישה", icon: Calendar, color: "#FFCB00" },
+] as const;
+
+type ActivityType = (typeof ACTIVITY_TYPES)[number]["key"];
+
+function TicketActivityLog({ ticketId }: { ticketId: string }) {
+  const queryClient = useQueryClient();
+  const [showCompose, setShowCompose] = useState(false);
+  const [activityType, setActivityType] = useState<ActivityType>("NOTE");
+  const [activityBody, setActivityBody] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const { data: activities = [] } = useQuery({
+    queryKey: ["activities", { ticketId }],
+    queryFn: () => listActivities({ ticketId }),
+  });
+
+  async function handleLog() {
+    if (!activityBody.trim() || posting) return;
+    setPosting(true);
+    try {
+      await createActivity({ type: activityType, body: activityBody.trim(), ticketId });
+      setActivityBody("");
+      setShowCompose(false);
+      queryClient.invalidateQueries({ queryKey: ["activities", { ticketId }] });
+      toast.success("פעילות נרשמה");
+    } catch {
+      toast.error("שגיאה ברישום הפעילות");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-[#323338]">פעילויות</h3>
+        <button
+          type="button"
+          onClick={() => setShowCompose((v) => !v)}
+          className="flex items-center gap-1 text-[11px] text-[#0073EA] hover:bg-[#F0F7FF] px-2 py-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+        >
+          <Plus size={12} />
+          רשום פעילות
+        </button>
+      </div>
+
+      {showCompose && (
+        <div className="mb-3 border border-[#E6E9EF] rounded-lg p-3 space-y-2">
+          {/* Type selector */}
+          <div className="flex gap-1">
+            {ACTIVITY_TYPES.map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setActivityType(t.key)}
+                  className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] ${
+                    activityType === t.key
+                      ? "text-white"
+                      : "text-[#676879] hover:bg-[#F5F6F8]"
+                  }`}
+                  style={activityType === t.key ? { backgroundColor: t.color } : {}}
+                >
+                  <Icon size={11} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <textarea
+            className="w-full text-sm border border-[#E6E9EF] rounded-lg p-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA] placeholder-[#9699A6]"
+            rows={3}
+            placeholder="תוכן הפעילות..."
+            value={activityBody}
+            onChange={(e) => setActivityBody(e.target.value)}
+            dir="rtl"
+          />
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => { setShowCompose(false); setActivityBody(""); }}
+              className="text-[12px] px-3 py-1.5 text-[#676879] hover:bg-[#F5F6F8] rounded-md transition-colors"
+            >
+              ביטול
+            </button>
+            <button
+              type="button"
+              onClick={handleLog}
+              disabled={!activityBody.trim() || posting}
+              className="text-[12px] px-3 py-1.5 bg-[#0073EA] hover:bg-[#0060C7] text-white rounded-md transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            >
+              {posting ? "שומר..." : "שמור"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activities.length === 0 ? (
+        <p className="text-[12px] text-[#9699A6] text-center py-3">
+          אין פעילויות עדיין
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {activities.slice(0, 5).map((act: Activity) => {
+            const typeInfo = ACTIVITY_TYPES.find((t) => t.key === act.type);
+            const Icon = typeInfo?.icon ?? StickyNote;
+            return (
+              <div key={act.id} className="flex items-start gap-2">
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ backgroundColor: (typeInfo?.color ?? "#676879") + "20" }}
+                >
+                  <Icon size={11} style={{ color: typeInfo?.color ?? "#676879" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-[#323338] leading-snug line-clamp-2">
+                    {act.body || act.subject || "—"}
+                  </p>
+                  <span className="text-[10px] text-[#9699A6]">
+                    {act.member?.user.name} · {new Date(act.createdAt).toLocaleDateString("he-IL")}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
