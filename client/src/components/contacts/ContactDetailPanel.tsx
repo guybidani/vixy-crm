@@ -1544,15 +1544,16 @@ function RelatedTab({
             {contact.tasks.map((task: any) => {
               const priority = priorities[task.priority];
               return (
-                <div
+                <button
                   key={task.id}
-                  className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl"
+                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
+                  onClick={() => navigate(`/tasks?selected=${task.id}`)}
                 >
                   <div className="flex items-center gap-2">
                     <div
-                      className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                         task.status === "DONE"
-                          ? "bg-success border-success"
+                          ? "bg-[#00CA72] border-[#00CA72]"
                           : "border-[#E6E9EF]"
                       }`}
                     >
@@ -1583,7 +1584,7 @@ function RelatedTab({
                       />
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

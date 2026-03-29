@@ -301,24 +301,18 @@ export async function create(
     const dueDateNorm = new Date(dueDate);
     dueDateNorm.setHours(0, 0, 0, 0);
 
-    if (dueDateNorm.getTime() === today.getTime()) {
-      const assignee = task.assignee
-        ? await prisma.workspaceMember.findUnique({
-            where: { id: task.assigneeId },
-          })
-        : null;
-      if (assignee) {
-        notificationService
-          .create({
-            workspaceId,
-            userId: assignee.userId,
-            type: "TASK_DUE",
-            title: `המשימה "${task.title}" מתבצעת היום`,
-            entityType: "task",
-            entityId: task.id,
-          })
-          .catch(() => {});
-      }
+    if (dueDateNorm.getTime() === today.getTime() && task.assignee) {
+      // task.assignee is already included in the create response — no extra DB query needed
+      notificationService
+        .create({
+          workspaceId,
+          userId: task.assignee.userId,
+          type: "TASK_DUE",
+          title: `המשימה "${task.title}" מתבצעת היום`,
+          entityType: "task",
+          entityId: task.id,
+        })
+        .catch(() => {});
     }
   }
 
@@ -555,24 +549,18 @@ export async function update(
     const dueDateNorm = new Date(dueDate);
     dueDateNorm.setHours(0, 0, 0, 0);
 
-    if (dueDateNorm.getTime() === today.getTime()) {
-      const assignee = updated.assignee
-        ? await prisma.workspaceMember.findUnique({
-            where: { id: updated.assigneeId },
-          })
-        : null;
-      if (assignee) {
-        notificationService
-          .create({
-            workspaceId,
-            userId: assignee.userId,
-            type: "TASK_DUE",
-            title: `המשימה "${updated.title}" מתבצעת היום`,
-            entityType: "task",
-            entityId: id,
-          })
-          .catch(() => {});
-      }
+    if (dueDateNorm.getTime() === today.getTime() && updated.assignee) {
+      // updated.assignee is already included in the update response — no extra DB query needed
+      notificationService
+        .create({
+          workspaceId,
+          userId: updated.assignee.userId,
+          type: "TASK_DUE",
+          title: `המשימה "${updated.title}" מתבצעת היום`,
+          entityType: "task",
+          entityId: id,
+        })
+        .catch(() => {});
     }
   }
 

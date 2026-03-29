@@ -78,6 +78,14 @@ export async function getTeamPerformance(
 }
 
 export async function getDashboardStats(workspaceId: string) {
+  // Compute all time boundaries once (avoid repeated Date.now() calls)
+  const now = Date.now();
+  const weekAgo = new Date(now - SEVEN_DAYS_MS);
+  const fourteenDaysAgo = new Date(now - FOURTEEN_DAYS_MS);
+  const todayEnd = new Date(new Date().setHours(23, 59, 59, 999));
+  const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+
+  // All 13 queries in a single Promise.all — no sequential waterfall
   const [
     contactsTotal,
     contactsThisWeek,
@@ -89,18 +97,16 @@ export async function getDashboardStats(workspaceId: string) {
     tasksOverdue,
     recentActivities,
     myTasks,
+    tasksCompletedThisWeek,
+    callsThisWeek,
+    rottingDeals,
   ] = await Promise.all([
     // Total contacts
     prisma.contact.count({ where: { workspaceId } }),
 
     // New contacts this week
     prisma.contact.count({
-      where: {
-        workspaceId,
-        createdAt: {
-          gte: new Date(Date.now() - SEVEN_DAYS_MS),
-        },
-      },
+      where: { workspaceId, createdAt: { gte: weekAgo } },
     }),
 
     // Open deals aggregate (not WON or LOST)
@@ -146,16 +152,16 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         status: { notIn: ["DONE", "CANCELLED"] },
-        dueDate: { lte: new Date(new Date().setHours(23, 59, 59, 999)) },
+        dueDate: { lte: todayEnd },
       },
     }),
 
-    // Overdue tasks
+    // Overdue tasks (strictly before today)
     prisma.task.count({
       where: {
         workspaceId,
         status: { notIn: ["DONE", "CANCELLED"] },
-        dueDate: { lt: new Date(new Date().setHours(0, 0, 0, 0)) },
+        dueDate: { lt: todayStart },
       },
     }),
 
@@ -184,11 +190,8 @@ export async function getDashboardStats(workspaceId: string) {
       orderBy: { dueDate: "asc" },
       take: 10,
     }),
-  ]);
 
-  // Completed tasks this week + calls this week
-  const weekAgo = new Date(Date.now() - SEVEN_DAYS_MS);
-  const [tasksCompletedThisWeek, callsThisWeek, rottingDeals] = await Promise.all([
+    // Tasks completed this week
     prisma.task.count({
       where: {
         workspaceId,
@@ -196,6 +199,8 @@ export async function getDashboardStats(workspaceId: string) {
         completedAt: { gte: weekAgo },
       },
     }),
+
+    // Calls this week
     prisma.activity.count({
       where: {
         workspaceId,
@@ -203,21 +208,15 @@ export async function getDashboardStats(workspaceId: string) {
         createdAt: { gte: weekAgo },
       },
     }),
+
     // Deals with no CRM activity in 14+ days (rotting/at risk)
-    // Use lastActivityAt (stamped when real activities like calls/notes happen),
-    // falling back to createdAt for deals that have never had an activity logged.
     prisma.deal.findMany({
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
         OR: [
-          {
-            lastActivityAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
-          },
-          {
-            lastActivityAt: null,
-            createdAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
-          },
+          { lastActivityAt: { lt: fourteenDaysAgo } },
+          { lastActivityAt: null, createdAt: { lt: fourteenDaysAgo } },
         ],
       },
       include: {
