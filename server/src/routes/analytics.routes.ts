@@ -9,10 +9,18 @@ function parseDateRange(req: { query: { from?: string; to?: string } }) {
   const defaultTo = now;
 
   const fromRaw = req.query.from ? new Date(req.query.from as string) : defaultFrom;
-  const toRaw = req.query.to ? new Date(req.query.to as string) : defaultTo;
+  let toRaw = req.query.to ? new Date(req.query.to as string) : defaultTo;
 
   const from = isNaN(fromRaw.getTime()) ? defaultFrom : fromRaw;
-  const to = isNaN(toRaw.getTime()) ? defaultTo : toRaw;
+  let to = isNaN(toRaw.getTime()) ? defaultTo : toRaw;
+
+  // When an explicit date string (YYYY-MM-DD) is provided without time,
+  // new Date('2026-03-29') resolves to midnight (start of day) — this
+  // silently excludes all data from that day. Set to end-of-day instead.
+  if (req.query.to && /^\d{4}-\d{2}-\d{2}$/.test(req.query.to as string)) {
+    to = new Date(to);
+    to.setHours(23, 59, 59, 999);
+  }
 
   return { from, to };
 }
