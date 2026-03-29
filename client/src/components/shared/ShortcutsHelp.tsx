@@ -18,9 +18,10 @@ interface ShortcutGroup {
 
 const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
-    title: "יצירה מהירה",
+    title: "חיפוש ויצירה",
     shortcuts: [
-      { keys: ["Ctrl", "K"], label: "פתיחה מהירה" },
+      { keys: ["Ctrl", "K"], label: "חיפוש כללי" },
+      { keys: ["Ctrl", "Shift", "K"], label: "הוספה מהירה" },
       { keys: ["N"], label: "משימה חדשה" },
       { keys: ["C"], label: "איש קשר חדש" },
       { keys: ["D"], label: "עסקה חדשה" },
