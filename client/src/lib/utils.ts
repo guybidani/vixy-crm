@@ -50,6 +50,21 @@ export function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString("he-IL");
 }
 
+// ── Minute-granularity relative time (Hebrew) ────────────────
+/** Return a Hebrew relative-time string with minute/hour/day granularity. */
+export function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "עכשיו";
+  if (mins < 60) return `לפני ${mins} דק'`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `לפני ${hours} שע'`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "אתמול";
+  if (days < 7) return `לפני ${days} ימים`;
+  return new Date(dateStr).toLocaleDateString("he-IL");
+}
+
 // ── Mutation error handler ────────────────────────────────────
 /** Standard onError handler for react-query mutations. */
 export function handleMutationError(err: unknown, fallback = "שגיאה בביצוע הפעולה") {

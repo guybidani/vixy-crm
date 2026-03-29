@@ -33,7 +33,7 @@ import {
   UserCircle2,
   Pencil,
 } from "lucide-react";
-import { avatarColor } from "../../lib/utils";
+import { avatarColor, timeAgo } from "../../lib/utils";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
 import StatusDropdown from "../shared/StatusDropdown";
@@ -800,19 +800,6 @@ const PRIORITY_DOT_COLORS: Record<string, string> = {
   MEDIUM: "#579BFC",
   LOW: "#C4C4C4",
 };
-
-// ── Relative time helper ──────────────────────────────────────────────────────
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דקות`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `לפני ${hrs} שעות`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `לפני ${days} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
 
 type ComposeTab = "NOTE" | "CALL" | "EMAIL" | "MEETING";
 type FilterType = "ALL" | "CALL" | "EMAIL" | "NOTE" | "MEETING";

@@ -21,7 +21,7 @@ import {
   type Notification,
 } from "../../api/notifications";
 import { getSocket } from "../../lib/socket";
-import { cn } from "../../lib/utils";
+import { cn, timeAgo } from "../../lib/utils";
 
 const TYPE_CONFIG: Record<
   string,
@@ -93,18 +93,6 @@ function getEntityPath(n: Notification): string | null {
     default:
       return null;
   }
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} שע'`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "אתמול";
-  return `לפני ${days} ימים`;
 }
 
 /** Get initials from a name string (used for avatar) */

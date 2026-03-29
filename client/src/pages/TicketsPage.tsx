@@ -37,6 +37,7 @@ import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useAuth } from "../hooks/useAuth";
+import { timeAgo } from "../lib/utils";
 
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   email: <Mail size={12} />,
@@ -61,18 +62,6 @@ const PRIORITY_BORDER: Record<string, string> = {
   MEDIUM: "#6161FF",
   LOW: "#C4C4C4",
 };
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "עכשיו";
-  if (mins < 60) return `לפני ${mins} דק'`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `לפני ${hours} ש'`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `לפני ${days} ימים`;
-  return new Date(dateStr).toLocaleDateString("he-IL");
-}
 
 function isUrgentOverdue(ticket: Ticket): boolean {
   if (ticket.priority !== "URGENT") return false;
