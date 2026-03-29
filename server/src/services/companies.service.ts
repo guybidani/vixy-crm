@@ -104,7 +104,31 @@ export async function getById(workspaceId: string, id: string) {
     throw new AppError(404, "NOT_FOUND", "Company not found");
   }
 
-  return company;
+  // Fetch recent activities from all contacts and deals belonging to this company
+  const contactIds = company.contacts.map((c) => c.id);
+  const dealIds = company.deals.map((d) => d.id);
+
+  const activities =
+    contactIds.length > 0 || dealIds.length > 0
+      ? await prisma.activity.findMany({
+          where: {
+            workspaceId,
+            OR: [
+              ...(contactIds.length > 0 ? [{ contactId: { in: contactIds } }] : []),
+              ...(dealIds.length > 0 ? [{ dealId: { in: dealIds } }] : []),
+            ],
+          },
+          include: {
+            member: { include: { user: { select: { name: true } } } },
+            contact: { select: { id: true, firstName: true, lastName: true } },
+            deal: { select: { id: true, title: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 30,
+        })
+      : [];
+
+  return { ...company, activities };
 }
 
 export async function create(

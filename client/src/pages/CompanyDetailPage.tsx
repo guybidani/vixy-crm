@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,12 +13,19 @@ import {
   Trash2,
   Factory,
   FileText,
+  Calendar,
+  Plus,
+  PhoneCall,
+  MessageCircle,
+  Bot,
+  StickyNote,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { getCompany, updateCompany, deleteCompany, type Company } from "../api/companies";
+import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 /* ── Inline-editable row (local helper) ───────────────────────── */
@@ -98,9 +105,19 @@ function EditableInfoRow({
   );
 }
 
+const ACTIVITY_ICONS: Record<string, any> = {
+  NOTE: StickyNote,
+  CALL: PhoneCall,
+  EMAIL: Mail,
+  MEETING: Calendar,
+  WHATSAPP: MessageCircle,
+  STATUS_CHANGE: ArrowRight,
+  SYSTEM: Bot,
+};
+
 /* ── Main page ────────────────────────────────────────────────── */
 export default function CompanyDetailPage() {
-  const { contactStatuses, dealStages } = useWorkspaceOptions();
+  const { contactStatuses, dealStages, activityTypes } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -114,6 +131,13 @@ export default function CompanyDetailPage() {
   /* Inline-edit state for notes */
   const [editingNotes, setEditingNotes] = useState(false);
   const [notesVal, setNotesVal] = useState("");
+
+  /* Activity log state */
+  const [showLogActivity, setShowLogActivity] = useState(false);
+  const [activityType, setActivityType] = useState<"NOTE" | "CALL" | "EMAIL" | "MEETING" | "WHATSAPP">("NOTE");
+  const [activityBody, setActivityBody] = useState("");
+  const [loggingActivity, setLoggingActivity] = useState(false);
+  const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: company, isLoading } = useQuery({
     queryKey: ["company", id],
@@ -141,6 +165,28 @@ export default function CompanyDetailPage() {
     },
     onError: () => toast.error("שגיאה בעדכון"),
   });
+
+  async function logActivity() {
+    if (!activityBody.trim() || loggingActivity) return;
+    // Log against the first contact of this company if any, otherwise just a note with no entity
+    const firstContactId = (company as any)?.contacts?.[0]?.id;
+    setLoggingActivity(true);
+    try {
+      await createActivity({
+        type: activityType,
+        body: activityBody.trim(),
+        ...(firstContactId ? { contactId: firstContactId } : {}),
+      });
+      setActivityBody("");
+      setShowLogActivity(false);
+      queryClient.invalidateQueries({ queryKey: ["company", id] });
+      toast.success("פעילות נרשמה");
+    } catch {
+      toast.error("שגיאה ברישום הפעילות");
+    } finally {
+      setLoggingActivity(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -448,6 +494,147 @@ export default function CompanyDetailPage() {
             ) : (
               <p className="text-sm text-[#9699A6] text-center py-4">
                 אין עסקאות
+              </p>
+            )}
+          </PageCard>
+
+          {/* Activity Timeline */}
+          <PageCard>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
+                <Calendar size={16} className="text-[#676879]" />
+                היסטוריית פעילות
+              </h3>
+              <button
+                onClick={() => {
+                  setShowLogActivity((v) => !v);
+                  setTimeout(() => activityTextareaRef.current?.focus(), 50);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                רשום פעילות
+              </button>
+            </div>
+
+            {/* Inline log form */}
+            {showLogActivity && (
+              <div className="mb-4 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
+                <div className="flex gap-1 flex-wrap">
+                  {([
+                    { key: "NOTE", label: "הערה", color: "#6161FF" },
+                    { key: "CALL", label: "שיחה", color: "#00CA72" },
+                    { key: "EMAIL", label: "מייל", color: "#579BFC" },
+                    { key: "MEETING", label: "פגישה", color: "#A25DDC" },
+                    { key: "WHATSAPP", label: "ווטסאפ", color: "#25D366" },
+                  ] as const).map(({ key, label, color }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActivityType(key)}
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors ${
+                        activityType === key ? "text-white" : "text-[#676879] bg-white border border-[#E6E9EF] hover:border-[#C5C7D0]"
+                      }`}
+                      style={activityType === key ? { backgroundColor: color } : {}}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  ref={activityTextareaRef}
+                  value={activityBody}
+                  onChange={(e) => setActivityBody(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      logActivity();
+                    }
+                    if (e.key === "Escape") setShowLogActivity(false);
+                  }}
+                  placeholder={
+                    activityType === "CALL" ? "תאר את השיחה..." :
+                    activityType === "EMAIL" ? "סכם את המייל..." :
+                    activityType === "MEETING" ? "סכם את הפגישה..." :
+                    activityType === "WHATSAPP" ? "תאר את שיחת הווטסאפ..." :
+                    "כתוב הערה..."
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 text-[13px] bg-white border border-[#E6E9EF] rounded-[4px] outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#9699A6]">Ctrl+Enter לשמירה</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setShowLogActivity(false); setActivityBody(""); }}
+                      className="px-3 py-1 text-[12px] text-[#676879] hover:bg-white rounded-[4px] transition-colors"
+                    >
+                      ביטול
+                    </button>
+                    <button
+                      onClick={logActivity}
+                      disabled={!activityBody.trim() || loggingActivity}
+                      className="px-4 py-1 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold rounded-[4px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {loggingActivity ? "שומר..." : "שמור"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(company as any).activities && (company as any).activities.length > 0 ? (
+              <div className="relative">
+                <div className="absolute right-[11px] top-2 bottom-2 w-0.5 bg-[#E6E9EF]" />
+                <div className="space-y-4">
+                  {(company as any).activities.map((activity: any) => {
+                    const typeInfo = activityTypes[activity.type];
+                    const ActivityIconComp = ACTIVITY_ICONS[activity.type] || StickyNote;
+                    return (
+                      <div key={activity.id} className="flex gap-3 relative">
+                        <div className="w-6 h-6 rounded-full bg-white border-2 border-[#E6E9EF] flex items-center justify-center flex-shrink-0 z-10 text-[#9699A6]">
+                          <ActivityIconComp size={12} />
+                        </div>
+                        <div className="flex-1 pb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium text-[#323338]">
+                              {typeInfo?.label || activity.type}
+                            </span>
+                            {activity.contact && (
+                              <button
+                                className="text-[11px] text-[#0073EA] hover:underline"
+                                onClick={() => navigate(`/contacts/${activity.contact.id}`)}
+                              >
+                                {activity.contact.firstName} {activity.contact.lastName}
+                              </button>
+                            )}
+                            {activity.deal && (
+                              <button
+                                className="text-[11px] text-[#00CA72] hover:underline"
+                                onClick={() => navigate(`/deals?open=${activity.deal.id}`)}
+                              >
+                                {activity.deal.title}
+                              </button>
+                            )}
+                            <span className="text-[12px] text-[#9699A6]">
+                              {new Date(activity.createdAt).toLocaleDateString("he-IL")}{" "}
+                              {new Date(activity.createdAt).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          {activity.body && (
+                            <p className="text-[12px] text-[#9699A6] mt-0.5">{activity.body}</p>
+                          )}
+                          {activity.member?.user?.name && (
+                            <span className="text-[12px] text-[#9699A6]">— {activity.member.user.name}</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-[#9699A6] text-center py-4">
+                אין פעילות
               </p>
             )}
           </PageCard>

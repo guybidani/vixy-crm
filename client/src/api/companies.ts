@@ -35,7 +35,7 @@ export function listCompanies(params?: {
 }
 
 export function getCompany(id: string) {
-  return api<Company & { contacts: any[]; deals: any[] }>(`/companies/${id}`);
+  return api<Company & { contacts: any[]; deals: any[]; activities: any[] }>(`/companies/${id}`);
 }
 
 export function createCompany(data: {
