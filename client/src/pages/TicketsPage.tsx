@@ -606,13 +606,25 @@ function TicketDetailPanel({
                 {ticket.contact.email && (
                   <div className="flex items-center gap-1 text-[11px] text-[#676879]">
                     <Mail size={11} className="text-[#9699A6] flex-shrink-0" />
-                    <span dir="ltr" className="truncate">{ticket.contact.email}</span>
+                    <a
+                      href={`mailto:${ticket.contact.email}`}
+                      dir="ltr"
+                      className="truncate hover:text-[#0073EA] hover:underline transition-colors"
+                    >
+                      {ticket.contact.email}
+                    </a>
                   </div>
                 )}
                 {ticket.contact.phone && (
                   <div className="flex items-center gap-1 text-[11px] text-[#676879]">
                     <Phone size={11} className="text-[#9699A6] flex-shrink-0" />
-                    <span dir="ltr">{ticket.contact.phone}</span>
+                    <a
+                      href={`tel:${ticket.contact.phone}`}
+                      dir="ltr"
+                      className="hover:text-[#0073EA] hover:underline transition-colors"
+                    >
+                      {ticket.contact.phone}
+                    </a>
                   </div>
                 )}
               </div>
