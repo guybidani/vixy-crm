@@ -392,6 +392,7 @@ function TicketDetailPanel({
   const { ticketStatuses, priorities } = useWorkspaceOptions();
   const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: ticket, isLoading } = useQuery({
@@ -483,7 +484,7 @@ function TicketDetailPanel({
               {ticket.contact && (
                 <button
                   className="flex items-center gap-1 text-xs text-[#0073EA] cursor-pointer hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
-                  onClick={onNavigateFull}
+                  onClick={() => navigate(`/contacts/${ticket.contact!.id}`)}
                 >
                   <User size={12} />
                   {ticket.contact.firstName} {ticket.contact.lastName}
@@ -599,9 +600,13 @@ function TicketDetailPanel({
                       {ticket.contact.firstName[0]}
                     </span>
                   </div>
-                  <span className="text-[12px] font-medium text-[#323338]">
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/contacts/${ticket.contact!.id}`)}
+                    className="text-[12px] font-medium text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+                  >
                     {ticket.contact.firstName} {ticket.contact.lastName}
-                  </span>
+                  </button>
                 </div>
                 {ticket.contact.email && (
                   <div className="flex items-center gap-1 text-[11px] text-[#676879]">
