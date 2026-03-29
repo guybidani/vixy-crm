@@ -266,7 +266,13 @@ export default function CompaniesPage() {
       )}
 
       {showCreate && (
-        <CreateCompanyModal onClose={() => setShowCreate(false)} />
+        <CreateCompanyModal
+          onClose={() => setShowCreate(false)}
+          onCreated={(id) => {
+            setShowCreate(false);
+            navigate(`/companies/${id}`);
+          }}
+        />
       )}
     </PageShell>
   );
@@ -326,7 +332,13 @@ function CompanyCard({
   );
 }
 
-function CreateCompanyModal({ onClose }: { onClose: () => void }) {
+function CreateCompanyModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated?: (id: string) => void;
+}) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     name: "",
@@ -347,10 +359,14 @@ function CreateCompanyModal({ onClose }: { onClose: () => void }) {
         industry: form.industry || undefined,
         size: form.size || undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       toast.success("חברה נוצרה בהצלחה!");
-      onClose();
+      if (onCreated) {
+        onCreated(data.id);
+      } else {
+        onClose();
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה ביצירת חברה");
