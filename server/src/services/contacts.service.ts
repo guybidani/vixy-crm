@@ -237,13 +237,22 @@ export async function update(
   }
 
   const { nextFollowUpDate, ...restData } = data;
+
+  // Only stamp lastActivityAt when a meaningful CRM event occurs, not on
+  // trivial data edits (phone/email/position fixes). Status/score changes
+  // represent actual sales progression and warrant an activity stamp.
+  const isSignificantChange =
+    (data.status !== undefined && data.status !== existing.status) ||
+    (data.leadScore !== undefined && data.leadScore !== existing.leadScore) ||
+    (data.leadHeat !== undefined && data.leadHeat !== existing.leadHeat);
+
   const updated = await prisma.contact.update({
     where: { id },
     data: {
       ...restData,
       status: restData.status as any,
       leadHeat: restData.leadHeat as any,
-      lastActivityAt: new Date(),
+      ...(isSignificantChange && { lastActivityAt: new Date() }),
       ...(nextFollowUpDate !== undefined && {
         nextFollowUpDate: nextFollowUpDate ? new Date(nextFollowUpDate) : null,
       }),
