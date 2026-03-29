@@ -215,8 +215,7 @@ export default function DashboardPage() {
 
   const { kpis, pipeline, recentActivities, rottingDeals } = data;
 
-  // Compute calls this week from recentActivities (CALL type in the feed + kpis data)
-  const callsThisWeek = recentActivities.filter((a) => a.type === "CALL").length;
+  const callsThisWeek = kpis.callsThisWeek;
 
   const isNewUser =
     kpis.contactsTotal === 0 && kpis.dealsOpenCount === 0;
@@ -320,7 +319,7 @@ export default function DashboardPage() {
           iconColor="#579BFC"
           label="שיחות השבוע"
           value={callsThisWeek}
-          subValue={`מתוך ${recentActivities.length} פעילויות`}
+          subValue="שיחות בשבוע האחרון"
           trend={callsThisWeek > 0 ? "up" : "neutral"}
           trendLabel={callsThisWeek > 0 ? `${callsThisWeek} שיחות` : "לא נרשמו שיחות"}
           onClick={() => navigate("/contacts")}

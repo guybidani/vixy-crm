@@ -186,14 +186,21 @@ export async function getDashboardStats(workspaceId: string) {
     }),
   ]);
 
-  // Completed tasks this week
+  // Completed tasks this week + calls this week
   const weekAgo = new Date(Date.now() - SEVEN_DAYS_MS);
-  const [tasksCompletedThisWeek, rottingDeals] = await Promise.all([
+  const [tasksCompletedThisWeek, callsThisWeek, rottingDeals] = await Promise.all([
     prisma.task.count({
       where: {
         workspaceId,
         status: "DONE",
         completedAt: { gte: weekAgo },
+      },
+    }),
+    prisma.activity.count({
+      where: {
+        workspaceId,
+        type: "CALL",
+        createdAt: { gte: weekAgo },
       },
     }),
     // Deals with no CRM activity in 14+ days (rotting/at risk)
@@ -233,6 +240,7 @@ export async function getDashboardStats(workspaceId: string) {
       tasksToday,
       tasksOverdue,
       tasksCompletedThisWeek,
+      callsThisWeek,
     },
     pipeline: dealsPipeline.map((g) => ({
       stage: g.stage,

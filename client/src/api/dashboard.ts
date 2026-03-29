@@ -11,6 +11,7 @@ export interface DashboardData {
     tasksToday: number;
     tasksOverdue: number;
     tasksCompletedThisWeek: number;
+    callsThisWeek: number;
   };
   pipeline: Array<{
     stage: string;
