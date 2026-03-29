@@ -56,6 +56,7 @@ import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useAuth } from "../hooks/useAuth";
+import { useDebounce } from "../hooks/useDebounce";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -160,17 +161,6 @@ function groupTasksByDate(tasks: Task[]): Record<DateGroup, Task[]> {
 // ─── Date filter ─────────────────────────────────────────────────────────────
 
 type DateFilter = "all" | "today" | "week" | "overdue";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState<T>(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
 
 // ─── TypeChip ────────────────────────────────────────────────────────────────
 

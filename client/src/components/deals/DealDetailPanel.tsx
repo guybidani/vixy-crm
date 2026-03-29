@@ -80,19 +80,6 @@ function Avatar({ name, size = 28 }: { name: string; size?: number }) {
   );
 }
 
-function formatRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "עכשיו";
-  if (diffMin < 60) return `לפני ${diffMin} דקות`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `לפני ${diffHr} שעות`;
-  const diffDays = Math.floor(diffHr / 24);
-  if (diffDays < 7) return `לפני ${diffDays} ימים`;
-  return date.toLocaleDateString("he-IL");
-}
-
 // ── Main Component ──────────────────────────────────────────────────────────
 
 export default function DealDetailPanel({
