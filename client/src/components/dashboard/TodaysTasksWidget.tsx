@@ -292,9 +292,14 @@ interface TaskRowProps {
 }
 
 function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
+  const navigate = useNavigate();
   const time = formatTime(task);
   const typeColor = TASK_TYPE_COLOR[task.taskType] ?? "#6161FF";
   const priorityColor = PRIORITY_COLOR[task.priority] ?? "#C4C4C4";
+
+  function handleOpenTask() {
+    navigate(`/tasks?selected=${task.id}`);
+  }
 
   return (
     <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors ${accent === "danger" ? "bg-[#E44258]/5" : ""}`}>
@@ -322,13 +327,17 @@ function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
         {TASK_TYPE_ICON[task.taskType]}
       </span>
 
-      {/* Title + contact */}
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] text-[#323338] truncate leading-tight">{task.title}</p>
+      {/* Title + contact — clickable to open task detail */}
+      <button
+        onClick={handleOpenTask}
+        className="flex-1 min-w-0 text-right"
+        title="פתח פרטי משימה"
+      >
+        <p className="text-[13px] text-[#323338] truncate leading-tight group-hover:text-[#0073EA] transition-colors">{task.title}</p>
         {task.contact && (
           <p className="text-[11px] text-[#9699A6] truncate">{task.contact.name}</p>
         )}
-      </div>
+      </button>
 
       {/* Time badge */}
       {time && (
