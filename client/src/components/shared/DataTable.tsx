@@ -150,10 +150,18 @@ export default function DataTable<T extends { id: string }>({
                   key={row.id}
                   className={cn(
                     "group border-b border-[#E6E9EF] last:border-0 transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-[#F5F6F8]",
+                    onRowClick && "cursor-pointer hover:bg-[#F5F6F8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA]",
                   )}
                   style={rowStyle?.(row)}
                   onClick={() => onRowClick?.(row)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? "button" : undefined}
+                  onKeyDown={onRowClick ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  } : undefined}
                 >
                   {columns.map((col, i) => (
                     <td
