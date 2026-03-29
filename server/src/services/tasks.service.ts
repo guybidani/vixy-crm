@@ -16,6 +16,7 @@ interface ListParams {
   limit?: number;
   search?: string;
   status?: string;
+  priority?: string;
   taskType?: string;
   taskContext?: string;
   assigneeId?: string;
@@ -43,6 +44,7 @@ export async function list(params: ListParams) {
     limit = 50,
     search,
     status,
+    priority,
     taskType,
     taskContext,
     assigneeId,
@@ -63,6 +65,7 @@ export async function list(params: ListParams) {
     where.title = { contains: search, mode: "insensitive" };
   }
   if (status) where.status = status as any;
+  if (priority) where.priority = priority as any;
   if (taskType) where.taskType = taskType as any;
   if (taskContext) where.taskContext = taskContext as any;
   if (assigneeId) where.assigneeId = assigneeId;
@@ -193,23 +196,29 @@ export async function create(
     recurrenceEndDate?: string;
   },
 ) {
-  // Verify foreign key references belong to this workspace
-  if (data.contactId) {
-    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
-    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
-  }
-  if (data.dealId) {
-    const deal = await prisma.deal.findFirst({ where: { id: data.dealId, workspaceId } });
-    if (!deal) throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
-  }
-  if (data.ticketId) {
-    const ticket = await prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId } });
-    if (!ticket) throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
-  }
-  if (data.assigneeId) {
-    const member = await prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId } });
-    if (!member) throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
-  }
+  // Verify all foreign key references in parallel — independent queries
+  const [contact, deal, ticket, assigneeMember] = await Promise.all([
+    data.contactId
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      : null,
+    data.dealId
+      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId }, select: { id: true } })
+      : null,
+    data.ticketId
+      ? prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId }, select: { id: true } })
+      : null,
+    data.assigneeId
+      ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
+  if (data.contactId && !contact)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  if (data.dealId && !deal)
+    throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
+  if (data.ticketId && !ticket)
+    throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
+  if (data.assigneeId && !assigneeMember)
+    throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
   const effectiveAssigneeId = data.assigneeId || memberId;
 
