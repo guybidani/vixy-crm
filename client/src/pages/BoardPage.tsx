@@ -295,15 +295,16 @@ export default function BoardPage() {
   const [search, setSearch] = useState("");
 
   // ── View mode — persisted per board ──
-  const [viewMode, setViewMode] = useState<"kanban" | "table">(() => {
+  const [viewMode, setViewMode] = useState<"kanban" | "table" | "calendar">(() => {
     try {
       const stored = localStorage.getItem(`board:${id}:viewMode`);
-      return (stored === "kanban" ? "kanban" : "table") as "kanban" | "table";
+      if (stored === "kanban" || stored === "calendar") return stored;
+      return "table";
     } catch {
       return "table";
     }
   });
-  const handleViewModeChange = (mode: "kanban" | "table") => {
+  const handleViewModeChange = (mode: "kanban" | "table" | "calendar") => {
     setViewMode(mode);
     try { localStorage.setItem(`board:${id}:viewMode`, mode); } catch {}
   };
@@ -1017,9 +1018,9 @@ export default function BoardPage() {
         { key: "kanban", label: "קנבאן" },
         { key: "calendar", label: "לוח שנה" },
       ]}
-      activeView={viewMode === "kanban" ? "kanban" : "table"}
+      activeView={viewMode}
       onViewChange={(key) => {
-        if (key === "table" || key === "kanban") handleViewModeChange(key);
+        if (key === "table" || key === "kanban" || key === "calendar") handleViewModeChange(key);
       }}
       actions={
         <div className="flex items-center gap-2">
@@ -1085,7 +1086,13 @@ export default function BoardPage() {
           />
         )}
 
-      {viewMode === "table" ? (
+      {viewMode === "calendar" && board ? (
+        <BoardCalendarView
+          groups={mondayGroups}
+          columns={board.columns}
+          onItemClick={(itemId) => setSelectedItemId(itemId)}
+        />
+      ) : viewMode === "table" ? (
         <MondayBoard
           groups={filtered}
           columns={mondayColumns}
@@ -1306,6 +1313,187 @@ export default function BoardPage() {
         />
       )}
     </PageShell>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Board Calendar View
+// ──────────────────────────────────────────────────────────────
+
+interface CalendarEvent {
+  id: string;
+  name: string;
+  groupColor: string;
+  date: Date;
+}
+
+function BoardCalendarView({
+  groups,
+  columns,
+  onItemClick,
+}: {
+  groups: MondayGroup<BoardRow>[];
+  columns: BoardColumn[];
+  onItemClick: (itemId: string) => void;
+}) {
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
+  // Find the first DATE column to use for calendar placement
+  const dateCol = columns.find((c) => c.type === "DATE");
+
+  // Build events from all items with a date value
+  const events: CalendarEvent[] = [];
+  for (const group of groups) {
+    for (const row of group.items) {
+      const rawDate = dateCol ? row[dateCol.key] : null;
+      if (!rawDate) continue;
+      const d = new Date(rawDate);
+      if (isNaN(d.getTime())) continue;
+      events.push({
+        id: row.id,
+        name: row.name,
+        groupColor: row._groupColor || "#0073EA",
+        date: d,
+      });
+    }
+  }
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+
+  // First day of the month's week (Sunday = 0)
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  // Build grid cells: empty leading + day cells
+  const cells: (number | null)[] = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  // Pad to full 6-row grid
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const monthLabel = currentMonth.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+  const dayNames = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
+
+  function eventsForDay(day: number): CalendarEvent[] {
+    return events.filter((e) => {
+      return e.date.getFullYear() === year &&
+        e.date.getMonth() === month &&
+        e.date.getDate() === day;
+    });
+  }
+
+  if (!dateCol) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-[#676879] gap-3">
+        <CalendarDays size={40} className="opacity-20" />
+        <p className="text-sm font-medium">תצוגת לוח שנה דורשת עמודת תאריך</p>
+        <p className="text-xs text-[#9699A6]">הוסף עמודת "תאריך" לבורד כדי לראות פריטים בלוח שנה</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.06)] overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#E6E9EF] bg-[#F5F6F8]">
+        <button
+          onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
+          className="p-1.5 hover:bg-white rounded-[4px] transition-colors text-[#676879] hover:text-[#323338]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+        <h3 className="text-[14px] font-semibold text-[#323338]">{monthLabel}</h3>
+        <button
+          onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
+          className="p-1.5 hover:bg-white rounded-[4px] transition-colors text-[#676879] hover:text-[#323338]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 border-b border-[#E6E9EF]">
+        {dayNames.map((d) => (
+          <div key={d} className="px-2 py-2 text-center text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide">
+            {d}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar cells */}
+      <div className="grid grid-cols-7">
+        {cells.map((day, idx) => {
+          const isToday =
+            day !== null &&
+            today.getDate() === day &&
+            today.getMonth() === month &&
+            today.getFullYear() === year;
+          const dayEvents = day !== null ? eventsForDay(day) : [];
+          return (
+            <div
+              key={idx}
+              className={`min-h-[90px] p-1.5 border-b border-r border-[#E6E9EF] last:border-r-0 ${
+                day === null ? "bg-[#FAFBFC]" : "bg-white hover:bg-[#F5F6F8]/50 transition-colors"
+              }`}
+            >
+              {day !== null && (
+                <>
+                  <span
+                    className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[12px] font-semibold mb-1 ${
+                      isToday
+                        ? "bg-[#0073EA] text-white"
+                        : "text-[#676879]"
+                    }`}
+                  >
+                    {day}
+                  </span>
+                  <div className="space-y-0.5">
+                    {dayEvents.slice(0, 3).map((ev) => (
+                      <button
+                        key={ev.id}
+                        onClick={() => onItemClick(ev.id)}
+                        className="w-full text-right text-[10px] font-medium px-1.5 py-0.5 rounded truncate block hover:brightness-95 transition-all"
+                        style={{
+                          backgroundColor: `${ev.groupColor}20`,
+                          color: ev.groupColor,
+                          borderLeft: `2px solid ${ev.groupColor}`,
+                        }}
+                        title={ev.name}
+                      >
+                        {ev.name}
+                      </button>
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <span className="text-[9px] text-[#9699A6] px-1">
+                        +{dayEvents.length - 3} נוספים
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="px-4 py-2 border-t border-[#E6E9EF] bg-[#FAFBFC] flex items-center gap-4 flex-wrap">
+        <span className="text-[11px] text-[#9699A6]">עמודת תאריך: {dateCol.label}</span>
+        {events.length === 0 && (
+          <span className="text-[11px] text-[#9699A6]">אין פריטים עם תאריך בחודש זה</span>
+        )}
+      </div>
+    </div>
   );
 }
 
