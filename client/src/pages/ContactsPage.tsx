@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus, ChevronRight, ChevronLeft } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -472,20 +472,74 @@ export default function ContactsPage() {
               <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {(data?.data || []).map((contact) => (
-                <ContactCRMCard
-                  key={contact.id}
-                  contact={contact}
-                  onClick={() => navigate(`/contacts/${contact.id}`)}
-                />
-              ))}
-              {(data?.data || []).length === 0 && (
-                <div className="col-span-full text-center py-20 text-[#9699A6] text-sm">
-                  לא נמצאו אנשי קשר
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {(data?.data || []).map((contact) => (
+                  <ContactCRMCard
+                    key={contact.id}
+                    contact={contact}
+                    onClick={() => navigate(`/contacts/${contact.id}`)}
+                  />
+                ))}
+                {(data?.data || []).length === 0 && (
+                  <div className="col-span-full text-center py-20 text-[#9699A6] text-sm">
+                    לא נמצאו אנשי קשר
+                  </div>
+                )}
+              </div>
+              {data?.pagination && data.pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2 border-t border-[#E6E9EF]" dir="rtl">
+                  <span className="text-[13px] text-[#676879]">
+                    מציג {((data.pagination.page - 1) * data.pagination.limit) + 1}–{Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} מתוך {data.pagination.total}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={data.pagination.page <= 1}
+                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      aria-label="עמוד קודם"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                    {Array.from({ length: Math.min(5, data.pagination.totalPages) }, (_, i) => {
+                      const totalPages = data.pagination.totalPages;
+                      const currentPage = data.pagination.page;
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`min-w-[30px] h-[30px] px-2 rounded-[4px] text-[13px] font-medium transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-[#0073EA] text-white"
+                              : "text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338]"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
+                      disabled={data.pagination.page >= data.pagination.totalPages}
+                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      aria-label="עמוד הבא"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                  </div>
                 </div>
               )}
-            </div>
+            </>
           )}
         </>
       ) : (
