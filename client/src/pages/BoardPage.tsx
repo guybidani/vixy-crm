@@ -608,6 +608,7 @@ export default function BoardPage() {
                   label: col.label,
                   width: col.width || "140px",
                   sortable: true,
+                  noPadding: true,
                   render: (row: BoardRow) => (
                     <MondayStatusCell
                       value={row[col.key] || ""}
