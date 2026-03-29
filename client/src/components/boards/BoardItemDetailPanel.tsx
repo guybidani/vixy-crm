@@ -536,6 +536,9 @@ export default function BoardItemDetailPanel({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [nameHovered, setNameHovered] = useState(false);
+  // Track which LINK field (by col.id) is in edit mode in the right panel
+  const [editingLinkColId, setEditingLinkColId] = useState<string | null>(null);
+  const [editingLinkValue, setEditingLinkValue] = useState("");
   const [activeTab, setActiveTab] = useState<"updates" | "files" | "description" | "activity">("updates");
   const [newUpdateText, setNewUpdateText] = useState("");
   const [contactSearch, setContactSearch] = useState("");
@@ -1027,28 +1030,57 @@ export default function BoardItemDetailPanel({
           )}
 
           {col.type === "LINK" && (
-            <div className="flex items-center gap-1.5">
-              {value ? (
-                <a
-                  href={value}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[13px] text-[#0073EA] hover:underline flex items-center gap-1 truncate"
-                >
-                  <ExternalLink size={11} />
-                  {value}
-                </a>
-              ) : (
+            <div className="flex items-center gap-1.5 min-w-0 w-full">
+              {editingLinkColId === col.id ? (
                 <input
+                  autoFocus
                   type="url"
-                  className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
-                  defaultValue=""
+                  className="flex-1 text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-[#0073EA] focus:bg-white transition-colors"
+                  value={editingLinkValue}
                   placeholder="https://..."
-                  onBlur={(e) => saveValue(col, e.target.value)}
+                  onChange={(e) => setEditingLinkValue(e.target.value)}
+                  onBlur={() => {
+                    saveValue(col, editingLinkValue);
+                    setEditingLinkColId(null);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") setEditingLinkColId(null);
                   }}
                 />
+              ) : value ? (
+                <>
+                  <a
+                    href={value.startsWith("http") ? value : `https://${value}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[13px] text-[#0073EA] hover:underline flex items-center gap-1 truncate flex-1 min-w-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <ExternalLink size={11} className="flex-shrink-0" />
+                    <span className="truncate">{value}</span>
+                  </a>
+                  <button
+                    onClick={() => {
+                      setEditingLinkColId(col.id);
+                      setEditingLinkValue(value);
+                    }}
+                    className="flex-shrink-0 p-1 text-[#9699A6] hover:text-[#0073EA] hover:bg-[#EDF3FB] rounded-[4px] transition-colors"
+                    title="ערוך קישור"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingLinkColId(col.id);
+                    setEditingLinkValue("");
+                  }}
+                  className="w-full text-right text-[13px] text-[#C3C6D4] bg-[#F5F6F8] hover:bg-[#ECEDF0] rounded-[4px] px-2 py-1 transition-colors"
+                >
+                  https://...
+                </button>
               )}
             </div>
           )}
