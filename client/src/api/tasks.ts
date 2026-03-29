@@ -50,6 +50,7 @@ export function listTasks(params?: {
   limit?: number;
   search?: string;
   status?: string;
+  priority?: string;
   taskType?: string;
   taskContext?: string;
   assigneeId?: string;
@@ -66,6 +67,7 @@ export function listTasks(params?: {
   if (params?.limit) searchParams.set("limit", String(params.limit));
   if (params?.search) searchParams.set("search", params.search);
   if (params?.status) searchParams.set("status", params.status);
+  if (params?.priority) searchParams.set("priority", params.priority);
   if (params?.taskType) searchParams.set("taskType", params.taskType);
   if (params?.taskContext) searchParams.set("taskContext", params.taskContext);
   if (params?.assigneeId) searchParams.set("assigneeId", params.assigneeId);

@@ -74,6 +74,7 @@ tasksRouter.get("/", async (req, res, next) => {
       limit: Math.min(Number(req.query.limit) || 50, 500),
       search: (req.query.search as string) || undefined,
       status: req.query.status as string,
+      priority: req.query.priority as string,
       taskType: req.query.taskType as string,
       taskContext: req.query.taskContext as string,
       assigneeId: myAssigneeId,
