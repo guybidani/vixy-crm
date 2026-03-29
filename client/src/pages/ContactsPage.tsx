@@ -608,7 +608,7 @@ export default function ContactsPage() {
       )}
 
       {showCreate && (
-        <CreateContactModal onClose={() => setShowCreate(false)} />
+        <CreateContactModal onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); navigate(`/contacts/${id}`); }} />
       )}
 
       <BulkActionBar
@@ -902,7 +902,7 @@ function FilterChip({
   );
 }
 
-function CreateContactModal({ onClose }: { onClose: () => void }) {
+function CreateContactModal({ onClose, onCreated }: { onClose: () => void; onCreated?: (id: string) => void }) {
   const { leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -927,10 +927,14 @@ function CreateContactModal({ onClose }: { onClose: () => void }) {
         companyId: form.companyId || undefined,
         email: form.email || undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("איש קשר נוצר בהצלחה!");
-      onClose();
+      if (onCreated) {
+        onCreated(data.id);
+      } else {
+        onClose();
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה ביצירת איש קשר");
