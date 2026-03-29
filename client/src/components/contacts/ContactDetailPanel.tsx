@@ -1460,7 +1460,7 @@ function RelatedTab({
                 <button
                   key={deal.id}
                   className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
-                  onClick={() => navigate(`/deals`)}
+                  onClick={() => navigate(`/deals?open=${deal.id}`)}
                 >
                   <div>
                     <span className="font-medium text-sm text-[#323338]">
