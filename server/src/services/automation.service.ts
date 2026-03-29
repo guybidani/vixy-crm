@@ -293,18 +293,19 @@ async function executeAction(action: any, ctx: TriggerContext) {
       const title = interpolateTemplate(config.title || "התראה חדשה", ctx.data);
       const body = interpolateTemplate(config.body || "", ctx.data);
 
-      for (const member of members) {
-        await prisma.notification.create({
-          data: {
+      if (members.length > 0) {
+        // Single bulk insert instead of N sequential creates
+        await prisma.notification.createMany({
+          data: members.map((member) => ({
             workspaceId: ctx.workspaceId,
             userId: member.userId,
-            type: "AUTOMATION",
+            type: "AUTOMATION" as const,
             title,
             body,
             entityType: ctx.entityType,
             entityId: ctx.entityId,
             metadata: { workflowId: action.workflowId },
-          },
+          })),
         });
       }
       break;
