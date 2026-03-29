@@ -613,14 +613,17 @@ export default function BoardItemDetailPanel({
 
   // ── Effects ──
 
-  // Close on Escape key
+  // Close on Escape key — but not while editing name, description, composing an update, or with more menu open
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !editingName) {
+      if (e.key !== "Escape") return;
+      const tag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
+      const isEditing = editingName || editingDescription || moreMenuOpen || tag === "textarea" || tag === "input";
+      if (!isEditing) {
         handleClose();
       }
     },
-    [editingName], // eslint-disable-line react-hooks/exhaustive-deps
+    [editingName, editingDescription, moreMenuOpen], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   useEffect(() => {
