@@ -48,14 +48,16 @@ activitiesRouter.get("/recent-contacts", async (req, res, next) => {
 
 activitiesRouter.get("/", async (req, res, next) => {
   try {
-    const activities = await activitiesService.list({
+    const result = await activitiesService.list({
       workspaceId: req.workspaceId!,
       contactId: req.query.contactId as string,
       dealId: req.query.dealId as string,
       ticketId: req.query.ticketId as string,
-      limit: Math.min(Number(req.query.limit) || 50, 100),
+      companyId: req.query.companyId as string,
+      page: Math.max(1, Number(req.query.page) || 1),
+      limit: Math.min(Number(req.query.limit) || 50, 200),
     });
-    res.json(activities);
+    res.json(result);
   } catch (err) {
     next(err);
   }
