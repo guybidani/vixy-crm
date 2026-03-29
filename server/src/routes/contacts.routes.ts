@@ -166,19 +166,9 @@ contactsRouter.get("/:id/timeline", async (req, res, next) => {
 // POST /api/v1/contacts
 contactsRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    // Get member ID for this user in this workspace
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
-
     const contact = await contactsService.create(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.body,
     );
     res.status(201).json(contact);

@@ -2,7 +2,6 @@ import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
 import * as activitiesService from "../services/activities.service";
-import { prisma } from "../db/client";
 
 export const activitiesRouter = Router();
 
@@ -26,18 +25,10 @@ const createSchema = z.object({
 
 activitiesRouter.get("/recent-contacts", async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const data = await activitiesService.getRecentContacts(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       limit,
     );
     res.json(data);
@@ -65,17 +56,9 @@ activitiesRouter.get("/", async (req, res, next) => {
 
 activitiesRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const activity = await activitiesService.create(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.body,
     );
     res.status(201).json(activity);
@@ -92,17 +75,9 @@ const updateSchema = z.object({
 
 activitiesRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const activity = await activitiesService.update(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.params.id as string,
       req.body,
     );
@@ -114,17 +89,9 @@ activitiesRouter.patch("/:id", validate(updateSchema), async (req, res, next) =>
 
 activitiesRouter.delete("/:id", async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const result = await activitiesService.remove(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.params.id as string,
     );
     res.json(result);

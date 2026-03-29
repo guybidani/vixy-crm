@@ -62,10 +62,7 @@ tasksRouter.get("/", async (req, res, next) => {
     // "myOnly" filter: resolve current member's ID
     let myAssigneeId = req.query.assigneeId as string | undefined;
     if (req.query.myOnly === "true") {
-      const member = await prisma.workspaceMember.findFirst({
-        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-      });
-      if (member) myAssigneeId = member.id;
+      myAssigneeId = req.memberId!;
     }
 
     const result = await tasksService.list({
@@ -104,13 +101,9 @@ tasksRouter.get("/board", async (req, res, next) => {
 // GET /api/v1/tasks/stats
 tasksRouter.get("/stats", async (req, res, next) => {
   try {
-    // Optionally filter by current member
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
     const result = await tasksService.getStats(
       req.workspaceId!,
-      req.query.myOnly === "true" && member ? member.id : undefined,
+      req.query.myOnly === "true" ? req.memberId! : undefined,
     );
     res.json(result);
   } catch (err) {
@@ -208,17 +201,9 @@ tasksRouter.get("/:id", async (req, res, next) => {
 
 tasksRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const task = await tasksService.create(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.body,
     );
     res.status(201).json(task);
@@ -287,12 +272,6 @@ tasksRouter.get("/:id/comments", async (req, res, next) => {
 tasksRouter.post("/:id/comments", validate(commentSchema), async (req, res, next) => {
   try {
     const taskId = req.params.id as string;
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
-    }
     const task = await prisma.task.findFirst({
       where: { id: taskId, workspaceId: req.workspaceId! },
     });
@@ -302,7 +281,7 @@ tasksRouter.post("/:id/comments", validate(commentSchema), async (req, res, next
     const comment = await prisma.taskComment.create({
       data: {
         taskId,
-        authorId: member.id,
+        authorId: req.memberId!,
         body: req.body.body,
       },
       include: {
@@ -332,19 +311,13 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
   try {
     const taskId = req.params.id as string;
     const commentId = req.params.commentId as string;
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({ error: { code: "FORBIDDEN", message: "Not a workspace member" } });
-    }
     const comment = await prisma.taskComment.findFirst({
       where: { id: commentId, taskId },
     });
     if (!comment) {
       return res.status(404).json({ error: { code: "NOT_FOUND", message: "Comment not found" } });
     }
-    if (comment.authorId !== member.id) {
+    if (comment.authorId !== req.memberId!) {
       return res.status(403).json({ error: { code: "FORBIDDEN", message: "ניתן למחוק רק תגובות שלך" } });
     }
     await prisma.taskComment.delete({ where: { id: commentId } });
