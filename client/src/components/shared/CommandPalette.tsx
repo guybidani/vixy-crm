@@ -246,7 +246,7 @@ function buildSearchGroups(
         icon: <Users size={16} />,
         iconColor: "#6161FF",
         iconBg: "#E8E8FF",
-        action: () => go(`/contacts?selected=${c.id}`),
+        action: () => go(`/contacts/${c.id}`),
       })),
     });
   }
@@ -264,7 +264,7 @@ function buildSearchGroups(
         icon: <Handshake size={16} />,
         iconColor: "#00CA72",
         iconBg: "#D6F5E8",
-        action: () => go(`/deals?selected=${d.id}`),
+        action: () => go(`/deals?open=${d.id}`),
       })),
     });
   }
@@ -280,7 +280,7 @@ function buildSearchGroups(
         icon: <Building2 size={16} />,
         iconColor: "#037F4C",
         iconBg: "#D6F5E8",
-        action: () => go(`/companies?selected=${c.id}`),
+        action: () => go(`/companies/${c.id}`),
       })),
     });
   }
@@ -296,7 +296,7 @@ function buildSearchGroups(
         icon: <Ticket size={16} />,
         iconColor: "#FDAB3D",
         iconBg: "#FEF0D8",
-        action: () => go(`/tickets?selected=${t.id}`),
+        action: () => go(`/tickets/${t.id}`),
       })),
     });
   }
