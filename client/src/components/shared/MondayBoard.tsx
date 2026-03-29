@@ -1554,6 +1554,56 @@ export default function MondayBoard<T extends { id: string }>({
                           {onDeleteItem && <td className="w-[36px]" />}
                         </tr>
                       )}
+
+                    {/* Group summary footer row */}
+                    <tr className="bg-gray-50 border-t border-gray-200">
+                      <td className="w-[6px] p-0" />
+                      <td
+                        colSpan={
+                          1 +
+                          visibleColumns.length +
+                          (onMoveItem ? 1 : 0) +
+                          (onDeleteItem ? 1 : 0)
+                        }
+                        className="px-3 py-1.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500 font-medium">
+                            {group.items.length} פריטים
+                          </span>
+                          {statusKey && statusOptions && group.items.length > 0 && (() => {
+                            const counts: Record<string, number> = {};
+                            for (const item of group.items) {
+                              const val = (item as any)[statusKey] as string;
+                              if (val) counts[val] = (counts[val] || 0) + 1;
+                            }
+                            const pills = Object.entries(counts).map(([key, count]) => ({
+                              key,
+                              count,
+                              label: statusOptions[key]?.label || key,
+                              color: statusOptions[key]?.color || "#C4C4C4",
+                            }));
+                            if (pills.length === 0) return null;
+                            return (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {pills.map((pill) => (
+                                  <span
+                                    key={pill.key}
+                                    className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                    style={{
+                                      backgroundColor: `${pill.color}1A`,
+                                      color: pill.color,
+                                    }}
+                                  >
+                                    {pill.count} {pill.label}
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
 
