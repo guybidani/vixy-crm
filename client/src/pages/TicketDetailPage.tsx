@@ -31,7 +31,8 @@ import {
   type TicketDetail,
   type TicketMessage,
 } from "../api/tickets";
-import { listActivities, createActivity, type Activity } from "../api/activities";
+import { listActivities, createActivity, updateActivity, deleteActivity, type Activity } from "../api/activities";
+import { Pencil, Trash2 } from "lucide-react";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 export default function TicketDetailPage() {
@@ -376,10 +377,32 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
   const [activityType, setActivityType] = useState<ActivityType>("NOTE");
   const [activityBody, setActivityBody] = useState("");
   const [posting, setPosting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
 
   const { data: activities = [] } = useQuery({
     queryKey: ["activities", { ticketId }],
-    queryFn: () => listActivities({ ticketId }),
+    queryFn: () => listActivities({ ticketId, limit: 100 }),
+  });
+
+  const editMut = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: string }) => updateActivity(id, { body }),
+    onSuccess: () => {
+      setEditingId(null);
+      queryClient.invalidateQueries({ queryKey: ["activities", { ticketId }] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteActivity(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["activities", { ticketId }] });
+      toast.success("נמחק");
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
   });
 
   async function handleLog() {
@@ -397,6 +420,8 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
       setPosting(false);
     }
   }
+
+  const visibleActivities = showAll ? activities : activities.slice(0, 5);
 
   return (
     <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
@@ -470,11 +495,12 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
         </p>
       ) : (
         <div className="space-y-2">
-          {activities.slice(0, 5).map((act: Activity) => {
+          {visibleActivities.map((act: Activity) => {
             const typeInfo = ACTIVITY_TYPES.find((t) => t.key === act.type);
             const Icon = typeInfo?.icon ?? StickyNote;
+            const isSystem = act.type === "STATUS_CHANGE" || act.type === "SYSTEM";
             return (
-              <div key={act.id} className="flex items-start gap-2">
+              <div key={act.id} className="flex items-start gap-2 group/act">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                   style={{ backgroundColor: (typeInfo?.color ?? "#676879") + "20" }}
@@ -482,16 +508,69 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
                   <Icon size={11} style={{ color: typeInfo?.color ?? "#676879" }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-[#323338] leading-snug line-clamp-2">
-                    {act.body || act.subject || "—"}
-                  </p>
+                  {editingId === act.id ? (
+                    <div className="space-y-1">
+                      <textarea
+                        autoFocus
+                        className="w-full text-[12px] border border-[#0073EA] rounded p-1.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                        rows={2}
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                            e.preventDefault();
+                            if (editingText.trim()) editMut.mutate({ id: act.id, body: editingText.trim() });
+                          }
+                          if (e.key === "Escape") setEditingId(null);
+                        }}
+                      />
+                      <div className="flex gap-1 text-[10px]">
+                        <button
+                          onClick={() => { if (editingText.trim()) editMut.mutate({ id: act.id, body: editingText.trim() }); }}
+                          className="px-2 py-0.5 bg-[#0073EA] text-white rounded"
+                        >שמור</button>
+                        <button onClick={() => setEditingId(null)} className="px-2 py-0.5 text-[#676879] hover:bg-[#F5F6F8] rounded">ביטול</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[12px] text-[#323338] leading-snug line-clamp-2">
+                      {act.body || act.subject || "—"}
+                    </p>
+                  )}
                   <span className="text-[10px] text-[#9699A6]">
                     {act.member?.user.name} · {new Date(act.createdAt).toLocaleDateString("he-IL")}
                   </span>
                 </div>
+                {!isSystem && editingId !== act.id && (
+                  <div className="flex gap-0.5 opacity-0 group-hover/act:opacity-100 transition-opacity flex-shrink-0">
+                    <button
+                      onClick={() => { setEditingText(act.body || ""); setEditingId(act.id); }}
+                      className="p-1 rounded text-[#9699A6] hover:text-[#0073EA] hover:bg-[#F0F7FF] transition-colors"
+                      title="ערוך"
+                    >
+                      <Pencil size={11} />
+                    </button>
+                    <button
+                      onClick={() => deleteMut.mutate(act.id)}
+                      disabled={deleteMut.isPending}
+                      className="p-1 rounded text-[#9699A6] hover:text-[#E44258] hover:bg-[#E44258]/10 transition-colors"
+                      title="מחק"
+                    >
+                      <Trash2 size={11} />
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}
+          {activities.length > 5 && (
+            <button
+              onClick={() => setShowAll((v) => !v)}
+              className="text-[11px] text-[#0073EA] hover:underline py-1 w-full text-center"
+            >
+              {showAll ? "הצג פחות" : `הצג את כל ${activities.length} הפעילויות`}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -129,15 +129,19 @@ export default function TaskDetailPanel({
     name: m.name,
   }));
 
-  // Activities for this task - use contact/deal activities as proxy
+  // Activities for this task — fetch by whatever entity is linked (contact, deal, or ticket)
+  const activityEntityId = task?.contact?.id || task?.deal?.id || task?.ticket?.id;
+  const activityParams = task?.contact?.id
+    ? { contactId: task.contact.id, limit: 20 }
+    : task?.deal?.id
+      ? { dealId: task.deal.id, limit: 20 }
+      : task?.ticket?.id
+        ? { ticketId: task.ticket.id, limit: 20 }
+        : undefined;
   const { data: activities } = useQuery({
-    queryKey: ["activities", { contactId: task?.contact?.id }],
-    queryFn: () =>
-      listActivities({
-        contactId: task?.contact?.id || undefined,
-        limit: 20,
-      }),
-    enabled: activeTab === "activity" && !!task?.contact?.id,
+    queryKey: ["activities", activityParams],
+    queryFn: () => listActivities(activityParams!),
+    enabled: activeTab === "activity" && !!activityEntityId,
   });
 
   // Comments
