@@ -547,7 +547,7 @@ export default function ContactsPage() {
               sortBy={sortBy}
               sortDir={sortDir}
               onSortChange={handleSort}
-              onRowClick={(row) => setSelectedContactId(row.id)}
+              onRowClick={(row) => navigate(`/contacts/${row.id}`)}
             />
           )}
         </>
