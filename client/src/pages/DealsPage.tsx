@@ -73,8 +73,17 @@ export default function DealsPage() {
       setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
     }
   }, []);
-  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(() => searchParams.get("open") || null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Clear the ?open=:id param once we've opened the panel
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId) {
+      setSelectedDealId(openId);
+      setSearchParams((prev) => { prev.delete("open"); return prev; }, { replace: true });
+    }
+  }, []);
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
   // Saved views filter state

@@ -65,7 +65,7 @@ function buildSections(
         icon: <Users size={15} />,
         iconColor: "#6161FF",
         iconBg: "#E8E8FF",
-        path: `/contacts?selected=${c.id}`,
+        path: `/contacts/${c.id}`,
       })),
     });
   }
@@ -82,7 +82,7 @@ function buildSections(
         icon: <Handshake size={15} />,
         iconColor: "#00CA72",
         iconBg: "#D6F5E8",
-        path: `/deals?selected=${d.id}`,
+        path: `/deals?open=${d.id}`,
       })),
     });
   }
@@ -97,7 +97,7 @@ function buildSections(
         icon: <Building2 size={15} />,
         iconColor: "#037F4C",
         iconBg: "#D6F5E8",
-        path: `/companies?selected=${c.id}`,
+        path: `/companies/${c.id}`,
       })),
     });
   }
@@ -112,7 +112,7 @@ function buildSections(
         icon: <Ticket size={15} />,
         iconColor: "#FDAB3D",
         iconBg: "#FEF0D8",
-        path: `/tickets?selected=${t.id}`,
+        path: `/tickets/${t.id}`,
       })),
     });
   }
