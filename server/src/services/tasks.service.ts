@@ -434,6 +434,9 @@ export async function update(
   if (data.recurrenceEndDate) updateData.recurrenceEndDate = new Date(data.recurrenceEndDate);
   if (data.status === "DONE" && existing.status !== "DONE") {
     updateData.completedAt = new Date();
+  } else if (data.status && data.status !== "DONE" && existing.status === "DONE") {
+    // Reactivating a previously completed task — clear the completion timestamp
+    updateData.completedAt = null;
   }
 
   const updated = await prisma.task.update({

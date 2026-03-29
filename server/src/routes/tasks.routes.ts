@@ -166,7 +166,12 @@ tasksRouter.post(
       if (data.priority) updateData.priority = data.priority;
       if (data.assigneeId) updateData.assigneeId = data.assigneeId;
       if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
-      if (data.status === "DONE") updateData.completedAt = new Date();
+      if (data.status === "DONE") {
+        updateData.completedAt = new Date();
+      } else if (data.status) {
+        // Reactivating a previously completed task — clear the completion timestamp
+        updateData.completedAt = null;
+      }
 
       const result = await prisma.task.updateMany({
         where: { id: { in: ids }, workspaceId: req.workspaceId! },
