@@ -499,7 +499,7 @@ export async function update(
     if (!company) throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
   }
 
-  const updateData: any = { ...data, lastActivityAt: new Date() };
+  const updateData: any = { ...data };
 
   // Track stage changes
   if (data.stage && data.stage !== existing.stage) {
