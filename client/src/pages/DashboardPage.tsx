@@ -376,10 +376,10 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2">
             {rottingDeals.map((deal: any) => (
-              <div
+              <button
                 key={deal.id}
                 onClick={() => navigate("/deals")}
-                className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group"
+                className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#323338] truncate">
@@ -398,7 +398,7 @@ export default function DashboardPage() {
                     {deal.daysSinceUpdate} ימים ללא פעילות
                   </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -477,9 +477,9 @@ function StatCard({
         : "#9CA3AF";
 
   return (
-    <div
+    <button
       onClick={onClick}
-      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 cursor-pointer hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 border-r-[3px] group"
+      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 cursor-pointer hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-shadow duration-200 border-r-[3px] group text-right w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
       style={{ borderRightColor: borderColor }}
     >
       <div className="flex items-start justify-between mb-3">
@@ -502,7 +502,7 @@ function StatCard({
       </p>
       <p className="text-[13px] text-[#676879] mt-0.5">{label}</p>
       <p className="text-[11px] text-[#9699A6] mt-1">{subValue}</p>
-    </div>
+    </button>
   );
 }
 

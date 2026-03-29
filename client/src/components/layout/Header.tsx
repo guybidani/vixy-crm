@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Plus, LogOut, Menu, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, Plus, LogOut, Menu, Clock, User, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../hooks/useAuth";
 import { cn } from "../../lib/utils";
@@ -17,10 +18,13 @@ interface HeaderProps {
 
 export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette, onMobileMenuToggle }: HeaderProps) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [todayTasksOpen, setTodayTasksOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
   // Badge: overdue + due today count
@@ -30,6 +34,18 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
     refetchInterval: 60_000,
   });
   const badgeCount = (taskStats?.overdueCount ?? 0) + (taskStats?.dueTodayCount ?? 0);
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [profileMenuOpen]);
 
   // Ctrl+K = GlobalSearch, Ctrl+Shift+K = QuickAdd
   useEffect(() => {
@@ -155,22 +171,51 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
 
       {/* User — hidden on mobile */}
       <div className="hidden sm:flex items-center gap-2">
-        <button
-          onClick={logout}
-          className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#D83A52]"
-          title="יציאה"
-          aria-label="יציאה מהמערכת"
-        >
-          <LogOut size={15} />
-        </button>
-        <div
-          className="w-7 h-7 bg-[#0073EA] rounded-full flex items-center justify-center cursor-pointer"
-          role="img"
-          aria-label={user?.name || "משתמש"}
-        >
-          <span className="text-white text-[11px] font-bold">
-            {user?.name?.charAt(0) || "?"}
-          </span>
+        <div className="relative" ref={profileMenuRef}>
+          <button
+            onClick={() => setProfileMenuOpen((v) => !v)}
+            className="w-7 h-7 bg-[#0073EA] rounded-full flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-[#0073EA]/30 hover:ring-offset-1 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            title={user?.name || "משתמש"}
+            aria-label="תפריט משתמש"
+            aria-expanded={profileMenuOpen}
+          >
+            <span className="text-white text-[11px] font-bold">
+              {user?.name?.charAt(0) || "?"}
+            </span>
+          </button>
+
+          {profileMenuOpen && (
+            <div className="absolute top-full mt-2 left-0 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] py-2 min-w-[200px]" dir="rtl">
+              {/* User info */}
+              <div className="px-4 py-2.5 border-b border-[#E6E9EF] mb-1">
+                <p className="text-[13px] font-semibold text-[#323338] truncate">{user?.name}</p>
+                <p className="text-[11px] text-[#9699A6] truncate">{user?.email}</p>
+              </div>
+              <button
+                onClick={() => { navigate("/settings"); setProfileMenuOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+              >
+                <Settings size={14} className="text-[#676879]" />
+                הגדרות
+              </button>
+              <button
+                onClick={() => { navigate("/settings?tab=profile"); setProfileMenuOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+              >
+                <User size={14} className="text-[#676879]" />
+                הפרופיל שלי
+              </button>
+              <div className="border-t border-[#E6E9EF] mt-1 pt-1">
+                <button
+                  onClick={() => { logout(); setProfileMenuOpen(false); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
+                >
+                  <LogOut size={14} />
+                  יציאה
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
