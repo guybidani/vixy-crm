@@ -204,31 +204,20 @@ export async function create(
     },
   });
 
-  // Fire-and-forget: update contact lead score + lastActivityAt
+  // Fire-and-forget: update contact lead score (with clamp) + lastActivityAt.
+  // Single raw SQL UPDATE applies the delta and clamps 0-100 in one round-trip,
+  // replacing the previous updateMany → findFirst → updateMany (3-query) pattern.
   if (data.contactId) {
     const delta = calculateScoreDelta(data.type);
-    prisma.contact
-      .updateMany({
-        where: { id: data.contactId, workspaceId },
-        data: {
-          ...(delta !== 0 && { leadScore: { increment: delta } }),
-          lastActivityAt: new Date(),
-        },
-      })
-      .then(async () => {
-        // Clamp leadScore to 0-100 if it went out of bounds
-        const contact = await prisma.contact.findFirst({ where: { id: data.contactId!, workspaceId } });
-        if (contact && (contact.leadScore > 100 || contact.leadScore < 0)) {
-          const clamped = Math.min(100, Math.max(0, contact.leadScore));
-          return prisma.contact.updateMany({
-            where: { id: data.contactId!, workspaceId },
-            data: { leadScore: clamped },
-          });
-        }
-      })
-      .catch(() => {
-        // Silently ignore — don't block activity creation
-      });
+    prisma.$executeRaw`
+      UPDATE "Contact"
+      SET
+        "leadScore" = GREATEST(0, LEAST(100, "leadScore" + ${delta})),
+        "lastActivityAt" = NOW()
+      WHERE id = ${data.contactId} AND "workspaceId" = ${workspaceId}
+    `.catch(() => {
+      // Silently ignore — don't block activity creation
+    });
   }
 
   // Fire-and-forget: stamp lastActivityAt on the linked deal so deal health stays current
