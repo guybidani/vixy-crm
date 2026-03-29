@@ -259,6 +259,15 @@ export async function update(
   if (data.status === "RESOLVED" && existing.status !== "RESOLVED") {
     updateData.resolvedAt = new Date();
   }
+  // Clear resolvedAt when ticket is re-opened from RESOLVED state
+  if (
+    data.status &&
+    data.status !== "RESOLVED" &&
+    data.status !== "CLOSED" &&
+    existing.status === "RESOLVED"
+  ) {
+    updateData.resolvedAt = null;
+  }
 
   const updated = await prisma.ticket.update({
     where: { id },
