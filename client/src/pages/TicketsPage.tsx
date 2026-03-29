@@ -111,10 +111,15 @@ export default function TicketsPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
+  const [accumulatedTickets, setAccumulatedTickets] = useState<Ticket[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  useEffect(() => setPage(1), [debouncedSearch, statusFilter]);
+  // Reset accumulated tickets and page when filters change
+  useEffect(() => {
+    setPage(1);
+    setAccumulatedTickets([]);
+  }, [debouncedSearch, statusFilter]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["tickets", { search: debouncedSearch, statusFilter, page }],
@@ -129,7 +134,21 @@ export default function TicketsPage() {
       }),
   });
 
-  const allRows = data?.data || [];
+  // Accumulate tickets as pages load — page 1 replaces, later pages append
+  useEffect(() => {
+    if (!data?.data) return;
+    if (page === 1) {
+      setAccumulatedTickets(data.data);
+    } else {
+      setAccumulatedTickets((prev) => {
+        const existingIds = new Set(prev.map((t) => t.id));
+        const newOnes = data.data.filter((t) => !existingIds.has(t.id));
+        return [...prev, ...newOnes];
+      });
+    }
+  }, [data, page]);
+
+  const allRows = accumulatedTickets;
 
   // Sort: urgency score desc
   const sortedRows = [...allRows].sort(
@@ -147,6 +166,9 @@ export default function TicketsPage() {
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       updateTicket(id, { status }),
     onSuccess: () => {
+      // Reset to page 1 and clear accumulation so list refreshes cleanly
+      setPage(1);
+      setAccumulatedTickets([]);
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       queryClient.invalidateQueries({ queryKey: ["ticket", selectedId] });
       toast.success("סטטוס עודכן");
@@ -203,7 +225,7 @@ export default function TicketsPage() {
 
         {/* Ticket List */}
         <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
+          {isLoading && page === 1 ? (
             <div className="flex items-center justify-center h-32 text-[#9699A6] text-sm">
               טוען...
             </div>
@@ -229,9 +251,10 @@ export default function TicketsPage() {
           {data?.pagination && data.pagination.page < data.pagination.pages && (
             <button
               onClick={() => setPage((p) => p + 1)}
-              className="w-full py-2 text-[12px] text-[#0073EA] hover:bg-[#0073EA]/5 transition-colors"
+              disabled={isLoading}
+              className="w-full py-2 text-[12px] text-[#0073EA] hover:bg-[#0073EA]/5 transition-colors disabled:opacity-50"
             >
-              טען עוד...
+              {isLoading ? "טוען..." : "טען עוד..."}
             </button>
           )}
         </div>
@@ -256,7 +279,12 @@ export default function TicketsPage() {
       {showCreate && (
         <CreateTicketModal
           onClose={() => setShowCreate(false)}
-          onCreated={(id) => { setSelectedId(id); queryClient.invalidateQueries({ queryKey: ["tickets"] }); }}
+          onCreated={(id) => {
+            setSelectedId(id);
+            setPage(1);
+            setAccumulatedTickets([]);
+            queryClient.invalidateQueries({ queryKey: ["tickets"] });
+          }}
         />
       )}
     </div>
