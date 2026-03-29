@@ -1025,7 +1025,13 @@ export default function DealDetailPanel({
                   {deal.contact?.phone && (
                     <div className="flex items-center gap-2 text-[12px] text-[#323338]">
                       <Phone size={12} className="text-[#676879] flex-shrink-0" />
-                      <span dir="ltr" className="flex-1">{deal.contact.phone}</span>
+                      <a
+                        href={getTelUrl(deal.contact.phone)}
+                        dir="ltr"
+                        className="flex-1 hover:text-[#0073EA] hover:underline transition-colors"
+                      >
+                        {deal.contact.phone}
+                      </a>
                       <a
                         href={getWhatsAppUrl(deal.contact.phone)}
                         target="_blank"
