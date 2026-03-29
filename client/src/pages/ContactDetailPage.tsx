@@ -23,6 +23,7 @@ import {
   Brain,
   Megaphone,
   Plus,
+  Pencil,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
@@ -32,7 +33,7 @@ import FollowUpCard from "../components/contacts/FollowUpCard";
 import Modal from "../components/shared/Modal";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { getContact, updateContact, deleteContact } from "../api/contacts";
-import { createActivity } from "../api/activities";
+import { createActivity, updateActivity, deleteActivity } from "../api/activities";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { getWhatsAppUrl } from "../utils/phone";
@@ -56,6 +57,10 @@ export default function ContactDetailPage() {
   const [loggingActivity, setLoggingActivity] = useState(false);
   const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  /* Activity inline-edit state */
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editingActivityBody, setEditingActivityBody] = useState("");
+
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", id],
     queryFn: () => getContact(id!),
@@ -69,6 +74,25 @@ export default function ContactDetailPage() {
       toast.success("איש קשר נמחק");
       navigate("/contacts");
     },
+  });
+
+  const updateActivityMut = useMutation({
+    mutationFn: ({ actId, body }: { actId: string; body: string }) =>
+      updateActivity(actId, { body }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", id] });
+      setEditingActivityId(null);
+    },
+    onError: () => toast.error("שגיאה בעדכון פעילות"),
+  });
+
+  const deleteActivityMut = useMutation({
+    mutationFn: (actId: string) => deleteActivity(actId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", id] });
+      toast.success("פעילות נמחקה");
+    },
+    onError: () => toast.error("שגיאה במחיקת פעילות"),
   });
 
   async function logActivity() {
@@ -583,38 +607,89 @@ export default function ContactDetailPage() {
                 <div className="space-y-4">
                   {contact.activities.map((activity: any) => {
                     const typeInfo = activityTypes[activity.type];
+                    const isEditingThis = editingActivityId === activity.id;
                     return (
-                      <div key={activity.id} className="flex gap-3 relative">
+                      <div key={activity.id} className="flex gap-3 relative group/act">
                         <div className="w-6 h-6 rounded-full bg-white border-2 border-[#E6E9EF] flex items-center justify-center flex-shrink-0 z-10">
                           <ActivityIcon type={activity.type} />
                         </div>
                         <div className="flex-1 pb-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-sm font-medium text-[#323338]">
                               {typeInfo?.label || activity.type}
                             </span>
                             <span className="text-[12px] text-[#9699A6]">
-                              {new Date(activity.createdAt).toLocaleDateString(
-                                "he-IL",
-                              )}{" "}
-                              {new Date(activity.createdAt).toLocaleTimeString(
-                                "he-IL",
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                },
-                              )}
+                              {new Date(activity.createdAt).toLocaleDateString("he-IL")}{" "}
+                              {new Date(activity.createdAt).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
                             </span>
+                            {!isEditingThis && (
+                              <span className="opacity-0 group-hover/act:opacity-100 transition-opacity flex items-center gap-1 mr-auto">
+                                <button
+                                  onClick={() => {
+                                    setEditingActivityId(activity.id);
+                                    setEditingActivityBody(activity.body || "");
+                                  }}
+                                  className="p-1 rounded hover:bg-[#E8F3FF] text-[#9699A6] hover:text-[#0073EA] transition-colors"
+                                  title="ערוך"
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                                <button
+                                  onClick={() => deleteActivityMut.mutate(activity.id)}
+                                  className="p-1 rounded hover:bg-[#FFEEF0] text-[#9699A6] hover:text-[#E44258] transition-colors"
+                                  title="מחק"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </span>
+                            )}
                           </div>
                           {activity.subject && (
                             <p className="text-sm text-[#676879] mt-0.5">
                               {activity.subject}
                             </p>
                           )}
-                          {activity.body && (
-                            <p className="text-[12px] text-[#9699A6] mt-0.5">
-                              {activity.body}
-                            </p>
+                          {isEditingThis ? (
+                            <div className="mt-1 space-y-1.5">
+                              <textarea
+                                autoFocus
+                                value={editingActivityBody}
+                                onChange={(e) => setEditingActivityBody(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                                    e.preventDefault();
+                                    updateActivityMut.mutate({ actId: activity.id, body: editingActivityBody.trim() });
+                                  }
+                                  if (e.key === "Escape") setEditingActivityId(null);
+                                }}
+                                rows={2}
+                                className="w-full px-2 py-1.5 text-[12px] bg-white border border-[#0073EA] rounded-[4px] outline-none focus:ring-1 focus:ring-[#0073EA]/20 resize-none"
+                              />
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-[#9699A6]">Ctrl+Enter לשמירה | Esc לביטול</span>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => setEditingActivityId(null)}
+                                    className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F5F6F8] rounded transition-colors"
+                                  >
+                                    ביטול
+                                  </button>
+                                  <button
+                                    onClick={() => updateActivityMut.mutate({ actId: activity.id, body: editingActivityBody.trim() })}
+                                    disabled={updateActivityMut.isPending}
+                                    className="px-2 py-0.5 text-[11px] bg-[#0073EA] text-white rounded transition-colors disabled:opacity-50"
+                                  >
+                                    שמור
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            activity.body && (
+                              <p className="text-[12px] text-[#9699A6] mt-0.5">
+                                {activity.body}
+                              </p>
+                            )
                           )}
                           {activity.member?.user?.name && (
                             <span className="text-[12px] text-[#9699A6]">
