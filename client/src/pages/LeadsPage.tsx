@@ -279,14 +279,17 @@ function LeadCard({
 
       {/* Header: Name + Score ring */}
       <div className="flex items-start justify-between mb-4 mt-1">
-        <div className="cursor-pointer flex-1 min-w-0" onClick={onClick}>
+        <button
+          className="cursor-pointer flex-1 min-w-0 text-right focus:outline-none"
+          onClick={onClick}
+        >
           <h3 className="font-bold text-[#323338] text-[15px] truncate group-hover:text-[#0073EA] transition-colors">
             {lead.fullName}
           </h3>
           {lead.position && (
             <p className="text-[12px] text-[#9699A6] mt-0.5 truncate">{lead.position}</p>
           )}
-        </div>
+        </button>
         {/* Circular score with label */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0 mr-3">
           <div className="relative w-11 h-11">

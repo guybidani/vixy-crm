@@ -970,12 +970,13 @@ export default function BoardPage() {
       }}
     />
   ) : (
-    <span
-      className="group cursor-pointer flex items-center gap-2"
+    <button
+      className="group cursor-pointer flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
       onClick={() => {
         setEditingBoardName(true);
         setBoardNameValue(board?.name || "");
       }}
+      title="לחץ לשינוי שם"
     >
       {board?.isPrivate && (
         <Lock size={14} className="text-[#6161FF] flex-shrink-0" />
@@ -985,23 +986,24 @@ export default function BoardPage() {
         size={14}
         className="text-[#9699A6] opacity-0 group-hover:opacity-100 transition-opacity"
       />
-    </span>
+    </button>
   );
 
   return (
     <PageShell
       title={
-        <span
-          className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1.5"
+        <button
+          className="cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
           onClick={() => {
             setEditingBoardName(true);
             setBoardNameValue(board?.name || "");
           }}
+          title="לחץ לשינוי שם"
         >
           {board?.isPrivate && <Lock size={14} className="text-[#6161FF]" />}
           {board?.name || "טוען..."}
           <Pencil size={13} className="text-[#9699A6] opacity-0 group-hover:opacity-100" />
-        </span>
+        </button>
       }
       emoji="📋"
       boardStyle
