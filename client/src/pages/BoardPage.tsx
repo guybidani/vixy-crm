@@ -693,7 +693,8 @@ export default function BoardPage() {
                   }
                   return (
                     <span
-                      className="text-[13px] text-[#323338] cursor-text"
+                      className="block w-full text-right text-[13px] cursor-text"
+                      style={{ color: row[col.key] != null ? "#323338" : "#C3C6D4" }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         setEditingCell({ itemId: row.id, colKey: col.key });

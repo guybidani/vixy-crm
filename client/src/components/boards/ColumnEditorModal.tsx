@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Hash } from "lucide-react";
 import { cn } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import { addBoardColumn } from "../../api/boards";
 
-const COLUMN_TYPES = [
+interface ColumnTypeEntry {
+  value: string;
+  label: string;
+  /** String char/emoji, or a ReactNode (lucide icon) */
+  icon: string | ReactNode;
+  /** True when icon is an SVG component rather than a text char */
+  isIcon?: boolean;
+}
+
+const COLUMN_TYPES: ColumnTypeEntry[] = [
   { value: "TEXT",     label: "טקסט",    icon: "T" },
-  { value: "NUMBER",   label: "מספר",    icon: "#" },
+  { value: "NUMBER",   label: "מספר",    icon: <Hash size={18} />, isIcon: true },
   { value: "DATE",     label: "תאריך",   icon: "📅" },
   { value: "STATUS",   label: "סטטוס",   icon: "●" },
   { value: "PRIORITY", label: "עדיפות",  icon: "⚑" },
@@ -16,7 +25,7 @@ const COLUMN_TYPES = [
   { value: "PHONE",    label: "טלפון",   icon: "📞" },
   { value: "LINK",     label: "קישור",   icon: "🔗" },
   { value: "PERSON",   label: "אחראי",   icon: "👤" },
-] as const;
+];
 
 const DEFAULT_COLORS = [
   "#00CA72",
@@ -145,7 +154,8 @@ export default function ColumnEditorModal({
           <div className="grid grid-cols-3 gap-2">
             {COLUMN_TYPES.map((ct) => {
               const selected = type === ct.value;
-              const isEmoji = ct.icon.length > 1; // multi-char = emoji
+              const isEmoji = typeof ct.icon === "string" && ct.icon.length > 1; // multi-char = emoji
+              const isLucide = ct.isIcon === true;
               return (
                 <button
                   key={ct.value}
@@ -167,7 +177,9 @@ export default function ColumnEditorModal({
                         ? isEmoji ? "" : "text-[#0073EA]"
                         : isEmoji ? "" : "text-[#676879]",
                       !isEmoji && selected && "bg-[#0073EA]/10",
-                      !isEmoji && !selected && "bg-[#F5F6F8]",
+                      !isEmoji && !isLucide && !selected && "bg-[#F5F6F8]",
+                      isLucide && !selected && "bg-[#F5F6F8]",
+                      isLucide && selected && "bg-[#0073EA]/10",
                     )}
                   >
                     {ct.icon}
