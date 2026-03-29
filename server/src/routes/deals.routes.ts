@@ -197,18 +197,9 @@ dealsRouter.get("/:id", async (req, res, next) => {
 // POST /api/v1/deals
 dealsRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
-
     const deal = await dealsService.create(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.body,
     );
     res.status(201).json(deal);

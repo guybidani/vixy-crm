@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { prisma } from "../db/client";
 import * as calendarService from "../services/calendar.service";
 
 export const calendarRouter = Router();
@@ -10,16 +9,7 @@ export const calendarRouter = Router();
  */
 calendarRouter.get("/auth-url", async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
-
-    const url = calendarService.getAuthUrl(req.workspaceId!, member.id);
+    const url = calendarService.getAuthUrl(req.workspaceId!, req.memberId!);
     res.json({ url });
   } catch (err) {
     next(err);
@@ -68,16 +58,7 @@ calendarRouter.get("/callback", async (req, res, next) => {
  */
 calendarRouter.post("/disconnect", async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
-
-    await calendarService.disconnect(req.workspaceId!, member.id);
+    await calendarService.disconnect(req.workspaceId!, req.memberId!);
     res.json({ success: true, message: "Google Calendar disconnected" });
   } catch (err) {
     next(err);
@@ -90,18 +71,9 @@ calendarRouter.post("/disconnect", async (req, res, next) => {
  */
 calendarRouter.get("/status", async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
-
     const status = await calendarService.getIntegrationStatus(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
     );
     res.json(status);
   } catch (err) {

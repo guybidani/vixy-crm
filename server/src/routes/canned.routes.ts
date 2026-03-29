@@ -2,7 +2,6 @@ import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
 import { requireRole } from "../middleware/auth";
-import { prisma } from "../db/client";
 import * as cannedService from "../services/canned.service";
 
 export const cannedRouter = Router();
@@ -30,19 +29,9 @@ const createSchema = z.object({
 
 cannedRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res
-        .status(403)
-        .json({
-          error: { code: "FORBIDDEN", message: "Not a workspace member" },
-        });
-    }
     const data = await cannedService.createCannedResponse(req.workspaceId!, {
       ...req.body,
-      memberId: member.id,
+      memberId: req.memberId!,
     });
     res.status(201).json(data);
   } catch (err) {
