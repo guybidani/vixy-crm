@@ -244,11 +244,11 @@ function QuickForm({
         priority: dealForm.priority,
         contactId: "",
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success("עסקה נוצרה!");
       onClose();
-      navigate("/deals");
+      navigate(`/deals?open=${data.id}`);
     },
     onError: handleMutationError,
   });

@@ -246,11 +246,11 @@ function DealForm({
         stage: form.stage,
         contactId: "",
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success("עסקה נוצרה!");
       onClose();
-      navigate("/deals");
+      navigate(`/deals?open=${data.id}`);
     },
     onError: handleMutationError,
   });
