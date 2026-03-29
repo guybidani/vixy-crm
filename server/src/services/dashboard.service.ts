@@ -196,18 +196,28 @@ export async function getDashboardStats(workspaceId: string) {
         completedAt: { gte: weekAgo },
       },
     }),
-    // Deals with no activity in 14+ days (rotting/at risk)
+    // Deals with no CRM activity in 14+ days (rotting/at risk)
+    // Use lastActivityAt (stamped when real activities like calls/notes happen),
+    // falling back to createdAt for deals that have never had an activity logged.
     prisma.deal.findMany({
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
-        updatedAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
+        OR: [
+          {
+            lastActivityAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
+          },
+          {
+            lastActivityAt: null,
+            createdAt: { lt: new Date(Date.now() - FOURTEEN_DAYS_MS) },
+          },
+        ],
       },
       include: {
         contact: { select: { id: true, firstName: true, lastName: true } },
         assignee: { include: { user: { select: { name: true } } } },
       },
-      orderBy: { updatedAt: "asc" },
+      orderBy: [{ lastActivityAt: "asc" }, { createdAt: "asc" }],
       take: 5,
     }),
   ]);
@@ -240,8 +250,9 @@ export async function getDashboardStats(workspaceId: string) {
         ? { id: d.contact.id, name: `${d.contact.firstName} ${d.contact.lastName}` }
         : null,
       owner: d.assignee?.user?.name || null,
+      // Days since the last real CRM activity (or since creation if never had one)
       daysSinceUpdate: Math.floor(
-        (Date.now() - d.updatedAt.getTime()) / (1000 * 60 * 60 * 24),
+        (Date.now() - (d.lastActivityAt ?? d.createdAt).getTime()) / (1000 * 60 * 60 * 24),
       ),
     })),
   };
