@@ -1025,6 +1025,7 @@ function TimelineTab({ contact }: { contact: any }) {
   });
 
   const hasHistory = filteredHistory.length > 0;
+  const totalHistory = historyItems.length;
 
   // Check if log button should be disabled
   const logDisabled =
@@ -1258,7 +1259,11 @@ function TimelineTab({ contact }: { contact: any }) {
       {/* ── Timeline history ───────────────────────────────────────── */}
       <div>
         {!hasHistory ? (
-          <p className="text-sm text-[#9699A6] text-center py-6">אין פעילות עדיין</p>
+          <p className="text-sm text-[#9699A6] text-center py-6">
+            {totalHistory > 0 && filter !== "ALL"
+              ? "אין פעילות מסוג זה"
+              : "אין פעילות עדיין"}
+          </p>
         ) : (
           <div className="space-y-0.5">
             {filteredHistory.map((item) => {
@@ -1535,10 +1540,79 @@ function RelatedTab({
 
       {/* Tasks */}
       <div>
-        <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
-          <CheckSquare size={16} className="text-[#00CA72]" />
-          משימות ({contact.tasks?.length || 0})
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-[#323338] text-sm flex items-center gap-2">
+            <CheckSquare size={16} className="text-[#00CA72]" />
+            משימות ({contact.tasks?.length || 0})
+          </h3>
+          {!addingTask && (
+            <button
+              onClick={() => setAddingTask(true)}
+              className="flex items-center gap-1 text-[12px] font-semibold text-[#0073EA] hover:text-[#0060C2] hover:bg-[#E8F3FF] px-2 py-1 rounded-[4px] transition-colors"
+            >
+              <Plus size={13} />
+              הוסף משימה
+            </button>
+          )}
+        </div>
+
+        {/* Inline task creation form */}
+        {addingTask && (
+          <div className="mb-3 bg-white border border-[#0073EA] rounded-xl px-3 py-2.5 shadow-[0_0_0_3px_rgba(0,115,234,0.10)]">
+            <input
+              ref={newTaskInputRef}
+              type="text"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              placeholder="כותרת משימה..."
+              className="w-full text-[13px] text-[#323338] bg-transparent outline-none placeholder:text-[#C3C6D4]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newTaskTitle.trim()) {
+                  createTaskMut.mutate({ title: newTaskTitle.trim(), dueDate: newTaskDueDate || undefined });
+                }
+                if (e.key === "Escape") {
+                  setAddingTask(false);
+                  setNewTaskTitle("");
+                  setNewTaskDueDate("");
+                }
+              }}
+            />
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F0F0F5]">
+              <input
+                type="date"
+                value={newTaskDueDate}
+                onChange={(e) => setNewTaskDueDate(e.target.value)}
+                className="text-[11px] text-[#676879] bg-transparent border-none outline-none cursor-pointer"
+                dir="ltr"
+                title="תאריך יעד"
+              />
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setAddingTask(false);
+                    setNewTaskTitle("");
+                    setNewTaskDueDate("");
+                  }}
+                  className="px-2 py-1 text-[11px] text-[#9699A6] hover:text-[#323338] rounded transition-colors"
+                >
+                  ביטול
+                </button>
+                <button
+                  onClick={() => {
+                    if (newTaskTitle.trim()) {
+                      createTaskMut.mutate({ title: newTaskTitle.trim(), dueDate: newTaskDueDate || undefined });
+                    }
+                  }}
+                  disabled={!newTaskTitle.trim() || createTaskMut.isPending}
+                  className="px-3 py-1 text-[11px] font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-[4px] transition-colors disabled:opacity-40"
+                >
+                  {createTaskMut.isPending ? "יוצר..." : "צור"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {contact.tasks && contact.tasks.length > 0 ? (
           <div className="space-y-2">
             {contact.tasks.map((task: any) => {
@@ -1589,9 +1663,12 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
-            אין משימות
-          </p>
+          !addingTask && (
+            <div className="text-center py-4 bg-[#F5F6F8]/30 rounded-xl">
+              <p className="text-sm text-[#9699A6]">אין משימות</p>
+              <p className="text-[11px] text-[#9699A6] mt-0.5 opacity-70">לחץ "הוסף משימה" למעלה</p>
+            </div>
+          )
         )}
       </div>
 
