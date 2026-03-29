@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X,
@@ -206,27 +207,33 @@ interface TaskRowProps {
   task: Task;
   isCompleting: boolean;
   onComplete: () => void;
+  onNavigate: () => void;
   overdue?: boolean;
 }
 
-function TaskRow({ task, isCompleting, onComplete, overdue }: TaskRowProps) {
+function TaskRow({ task, isCompleting, onComplete, onNavigate, overdue }: TaskRowProps) {
   const TypeIcon = TASK_TYPE_ICONS[task.taskType] || CheckSquare;
   const isDone = task.status === "DONE";
   const typeColor = TASK_TYPE_COLORS[task.taskType] || "#676879";
 
   return (
     <div
-      className={`group flex items-start gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+      className={`group flex items-start gap-3 px-3 py-2.5 rounded-xl border transition-all cursor-pointer ${
         isDone
           ? "bg-[#F8F9FB] border-transparent opacity-60"
           : overdue
           ? "bg-[#FFF5F5] border-[#FDECEF] hover:border-[#D83A52]/30 hover:shadow-sm"
           : "bg-white border-[#E6E9EF] hover:border-[#0073EA]/25 hover:shadow-sm"
       }`}
+      onClick={onNavigate}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onNavigate(); }}
+      aria-label={`פתח משימה: ${task.title}`}
     >
       {/* Checkbox */}
       <button
-        onClick={onComplete}
+        onClick={(e) => { e.stopPropagation(); onComplete(); }}
         disabled={isCompleting || isDone}
         className={`mt-0.5 flex-shrink-0 transition-colors ${
           isDone ? "text-[#00C875]" : "text-[#9699A6] hover:text-[#00C875]"
@@ -245,8 +252,8 @@ function TaskRow({ task, isCompleting, onComplete, overdue }: TaskRowProps) {
         {/* Title */}
         <p
           className={`text-[13px] font-medium leading-snug ${
-            isDone ? "line-through text-[#9699A6]" : "text-[#323338]"
-          }`}
+            isDone ? "line-through text-[#9699A6]" : "text-[#323338] group-hover:text-[#0073EA]"
+          } transition-colors`}
         >
           {task.title}
         </p>
@@ -332,8 +339,14 @@ function SectionLabel({
 
 export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+
+  function handleNavigateToTask(taskId: string) {
+    onClose();
+    navigate(`/tasks?selected=${taskId}`);
+  }
 
   const today = new Date();
   const todayLabel = formatHebrewDate(today);
@@ -522,6 +535,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
                         task={task}
                         isCompleting={completingId === task.id}
                         onComplete={() => handleComplete(task.id)}
+                        onNavigate={() => handleNavigateToTask(task.id)}
                         overdue
                       />
                     ))}
@@ -544,6 +558,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
                         task={task}
                         isCompleting={completingId === task.id}
                         onComplete={() => handleComplete(task.id)}
+                        onNavigate={() => handleNavigateToTask(task.id)}
                       />
                     ))}
                   </div>
@@ -552,7 +567,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
 
               {/* ── Completed Section (collapsible) ── */}
               {doneTasks.length > 0 && (
-                <CompletedSection tasks={doneTasks} />
+                <CompletedSection tasks={doneTasks} onNavigate={handleNavigateToTask} />
               )}
             </>
           )}
@@ -585,7 +600,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
 
 // ── Completed Section (collapsible) ────────────────────────────────────────
 
-function CompletedSection({ tasks }: { tasks: Task[] }) {
+function CompletedSection({ tasks, onNavigate }: { tasks: Task[]; onNavigate: (id: string) => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -613,6 +628,7 @@ function CompletedSection({ tasks }: { tasks: Task[] }) {
               task={task}
               isCompleting={false}
               onComplete={() => {}}
+              onNavigate={() => onNavigate(task.id)}
             />
           ))}
         </div>
