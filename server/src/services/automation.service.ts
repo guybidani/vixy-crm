@@ -187,6 +187,16 @@ export async function processTrigger(ctx: TriggerContext) {
     include: { actions: { orderBy: { order: "asc" } } },
   });
 
+  // Collect run log entries during execution, flush with a single createMany at the end
+  const runLogs: Array<{
+    workflowId: string;
+    triggeredBy: string;
+    entityType: string;
+    entityId: string;
+    status: "SUCCESS" | "FAILED";
+    error?: string;
+  }> = [];
+
   for (const workflow of workflows) {
     try {
       // Check conditions
@@ -201,33 +211,32 @@ export async function processTrigger(ctx: TriggerContext) {
         await executeAction(action, ctx);
       }
 
-      // Log success
-      await prisma.workflowRun.create({
-        data: {
-          workflowId: workflow.id,
-          triggeredBy: ctx.entityId,
-          entityType: ctx.entityType,
-          entityId: ctx.entityId,
-          status: "SUCCESS",
-        },
+      runLogs.push({
+        workflowId: workflow.id,
+        triggeredBy: ctx.entityId,
+        entityType: ctx.entityType,
+        entityId: ctx.entityId,
+        status: "SUCCESS",
       });
     } catch (err: any) {
-      // Log failure
-      await prisma.workflowRun.create({
-        data: {
-          workflowId: workflow.id,
-          triggeredBy: ctx.entityId,
-          entityType: ctx.entityType,
-          entityId: ctx.entityId,
-          status: "FAILED",
-          error: err.message,
-        },
+      runLogs.push({
+        workflowId: workflow.id,
+        triggeredBy: ctx.entityId,
+        entityType: ctx.entityType,
+        entityId: ctx.entityId,
+        status: "FAILED",
+        error: err.message,
       });
       console.error(
         `Workflow ${workflow.id} (${workflow.name}) failed:`,
         err.message,
       );
     }
+  }
+
+  // Single bulk insert for all run logs instead of N sequential creates
+  if (runLogs.length > 0) {
+    await prisma.workflowRun.createMany({ data: runLogs });
   }
 }
 
@@ -438,18 +447,21 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
     case "ADD_TAG": {
       if (config.tagName && ctx.entityType === "contact") {
-        let tag = await prisma.tag.findFirst({
-          where: { workspaceId: ctx.workspaceId, name: config.tagName },
-        });
-        if (!tag) {
-          tag = await prisma.tag.create({
-            data: {
+        // upsert tag in one round-trip instead of findFirst + conditional create
+        const tag = await prisma.tag.upsert({
+          where: {
+            workspaceId_name: {
               workspaceId: ctx.workspaceId,
               name: config.tagName,
-              color: config.tagColor || "#0073EA",
             },
-          });
-        }
+          },
+          create: {
+            workspaceId: ctx.workspaceId,
+            name: config.tagName,
+            color: config.tagColor || "#0073EA",
+          },
+          update: {},
+        });
         await prisma.tagOnContact
           .create({
             data: { contactId: ctx.entityId, tagId: tag.id },
