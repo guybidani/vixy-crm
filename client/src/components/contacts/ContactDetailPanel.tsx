@@ -2256,6 +2256,19 @@ function EditContactModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-[#323338] mb-1">
+              מקור
+            </label>
+            <input
+              type="text"
+              value={form.source}
+              onChange={(e) => setField("source", e.target.value)}
+              placeholder="למשל: פייסבוק, אתר, הפניה..."
+              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
+            />
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button
               type="button"
