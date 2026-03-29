@@ -192,6 +192,18 @@ export async function create(
       });
   }
 
+  // Fire-and-forget: stamp lastActivityAt on the linked deal so deal health stays current
+  if (data.dealId) {
+    prisma.deal
+      .updateMany({
+        where: { id: data.dealId, workspaceId },
+        data: { lastActivityAt: new Date() },
+      })
+      .catch(() => {
+        // Silently ignore — don't block activity creation
+      });
+  }
+
   return activity;
 }
 
