@@ -46,7 +46,7 @@ import MondayPersonCell, {
 import { listContacts } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
 import { getWorkspaceMembers } from "../../api/auth";
-import { createActivity } from "../../api/activities";
+import { createActivity, updateActivity, deleteActivity } from "../../api/activities";
 import { updateTask } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
@@ -105,6 +105,8 @@ export default function DealDetailPanel({
   const [newActivityText, setNewActivityText] = useState("");
   const [newActivityType, setNewActivityType] = useState<"NOTE" | "CALL" | "EMAIL" | "MEETING" | "WHATSAPP">("NOTE");
   const [postingActivity, setPostingActivity] = useState(false);
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editingActivityText, setEditingActivityText] = useState("");
   const activityEndRef = useRef<HTMLDivElement>(null);
   const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -178,6 +180,26 @@ export default function DealDetailPanel({
     },
   });
 
+  const editActivityMut = useMutation({
+    mutationFn: ({ id, body }: { id: string; body: string }) =>
+      updateActivity(id, { body }),
+    onSuccess: () => {
+      setEditingActivityId(null);
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const deleteActivityMut = useMutation({
+    mutationFn: (id: string) => deleteActivity(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+      toast.success("נמחק");
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
   // Sync notes & name state when deal loads
   useEffect(() => {
     if (deal?.notes !== undefined) setNotes(deal.notes || "");
@@ -198,11 +220,11 @@ export default function DealDetailPanel({
   // Close on Escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !editingName && !editingField) {
+      if (e.key === "Escape" && !editingName && !editingField && !editingActivityId) {
         handleClose();
       }
     },
-    [editingName, editingField], // eslint-disable-line react-hooks/exhaustive-deps
+    [editingName, editingField, editingActivityId], // eslint-disable-line react-hooks/exhaustive-deps
   );
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
@@ -491,8 +513,8 @@ export default function DealDetailPanel({
                             <Icon size={14} style={{ color: actType?.color || "#C4C4C4" }} />
                           </div>
                           {/* Bubble */}
-                          <div className="flex-1 min-w-0 pb-4">
-                            <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm">
+                          <div className="flex-1 min-w-0 pb-4 group/activity">
+                            <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm relative">
                               <div className="flex items-baseline gap-2 mb-1">
                                 <span className="text-[13px] font-semibold text-[#323338]">
                                   {actType?.label || activity.type}
@@ -502,8 +524,62 @@ export default function DealDetailPanel({
                                     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
                                   })}
                                 </span>
+                                {/* Edit/Delete actions — visible on hover */}
+                                {activity.type !== "STATUS_CHANGE" && activity.type !== "SYSTEM" && (
+                                  <div className="flex items-center gap-1 opacity-0 group-hover/activity:opacity-100 transition-opacity mr-auto">
+                                    <button
+                                      onClick={() => {
+                                        setEditingActivityId(activity.id);
+                                        setEditingActivityText(activity.body || activity.subject || "");
+                                      }}
+                                      className="p-1 rounded hover:bg-[#E6E9EF] text-[#9699A6] hover:text-[#323338] transition-colors"
+                                      title="ערוך"
+                                    >
+                                      <Pencil size={11} />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteActivityMut.mutate(activity.id)}
+                                      className="p-1 rounded hover:bg-[#FFEEF0] text-[#9699A6] hover:text-[#E44258] transition-colors"
+                                      title="מחק"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              {(activity.body || activity.subject) && (
+                              {editingActivityId === activity.id ? (
+                                <div className="space-y-2">
+                                  <textarea
+                                    className="w-full text-[13px] text-[#323338] bg-white border border-[#0073EA] rounded-lg px-3 py-2 outline-none resize-none leading-relaxed"
+                                    rows={3}
+                                    value={editingActivityText}
+                                    onChange={(e) => setEditingActivityText(e.target.value)}
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                                        e.preventDefault();
+                                        editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() });
+                                      }
+                                      if (e.key === "Escape") setEditingActivityId(null);
+                                    }}
+                                  />
+                                  <div className="flex items-center gap-2 justify-end">
+                                    <button
+                                      onClick={() => setEditingActivityId(null)}
+                                      className="px-2 py-1 text-[11px] text-[#676879] hover:text-[#323338] transition-colors"
+                                    >
+                                      ביטול
+                                    </button>
+                                    <button
+                                      onClick={() => editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() })}
+                                      disabled={editActivityMut.isPending}
+                                      className="px-3 py-1 text-[11px] font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-[4px] transition-colors disabled:opacity-50"
+                                    >
+                                      {editActivityMut.isPending ? "שומר..." : "שמור"}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (activity.body || activity.subject) && (
                                 <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
                                   {activity.body || activity.subject}
                                 </p>
