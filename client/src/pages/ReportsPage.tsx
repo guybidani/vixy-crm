@@ -22,7 +22,7 @@ import {
   Legend,
 } from "recharts";
 import PageShell, { PageCard } from "../components/layout/PageShell";
-import { getContactGrowth } from "../api/analytics";
+import { getDealGrowth } from "../api/analytics";
 import { getDealFunnel } from "../api/analytics";
 import { getTeamPerformance } from "../api/dashboard";
 import { listContacts } from "../api/contacts";
@@ -47,16 +47,9 @@ function getMonthRange() {
 
 function DealsTimeline() {
   const { from, to } = useMemo(() => getWeeklyRange(), []);
-  // Re-use contact-growth endpoint shape for deals by using getDealFunnel weekly
-  // Instead, use getContactGrowth as a proxy for now — but we'll actually use
-  // getDealFunnel for totals and contact growth for the weekly shape.
-  // Since there is no /analytics/deals-timeline endpoint, we derive from contact
-  // growth as the closest weekly cadence endpoint, labeled as deal timeline.
-  // The proper approach: use the analytics contact-growth endpoint which returns
-  // weekStart+count — this is the real weekly deals-created data shape we have.
   const q = useQuery({
     queryKey: ["reports", "deals-timeline", from, to],
-    queryFn: () => getContactGrowth(from, to),
+    queryFn: () => getDealGrowth(from, to),
   });
 
   const data = useMemo(() => {
@@ -66,7 +59,7 @@ function DealsTimeline() {
         day: "numeric",
         month: "numeric",
       }),
-      ליצירות: item.count,
+      עסקאות: item.count,
     }));
   }, [q.data]);
 
@@ -106,7 +99,7 @@ function DealsTimeline() {
             />
             <Line
               type="monotone"
-              dataKey="ליצירות"
+              dataKey="עסקאות"
               stroke="#6161FF"
               strokeWidth={2.5}
               dot={{ r: 4, fill: "#6161FF", strokeWidth: 0 }}

@@ -107,6 +107,38 @@ export async function getContactGrowth(
   }));
 }
 
+export async function getDealGrowth(
+  workspaceId: string,
+  dateFrom: Date,
+  dateTo: Date,
+) {
+  const deals = await prisma.deal.findMany({
+    where: {
+      workspaceId,
+      createdAt: { gte: dateFrom, lte: dateTo },
+    },
+    select: { createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  // Group by week (ISO week start = Monday)
+  const weekMap = new Map<string, number>();
+  for (const d of deals) {
+    const date = new Date(d.createdAt);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(date);
+    monday.setDate(diff);
+    const key = monday.toISOString().slice(0, 10);
+    weekMap.set(key, (weekMap.get(key) || 0) + 1);
+  }
+
+  return Array.from(weekMap.entries()).map(([weekStart, count]) => ({
+    weekStart,
+    count,
+  }));
+}
+
 export async function getTopPerformers(
   workspaceId: string,
   dateFrom: Date,

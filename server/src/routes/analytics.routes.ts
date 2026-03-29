@@ -57,6 +57,16 @@ analyticsRouter.get("/contact-growth", async (req, res, next) => {
   }
 });
 
+analyticsRouter.get("/deal-growth", async (req, res, next) => {
+  try {
+    const { from, to } = parseDateRange(req);
+    const data = await analyticsService.getDealGrowth(req.workspaceId!, from, to);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 analyticsRouter.get("/top-performers", async (req, res, next) => {
   try {
     const { from, to } = parseDateRange(req);
