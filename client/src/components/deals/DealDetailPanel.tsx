@@ -101,7 +101,7 @@ export default function DealDetailPanel({
   onDeleted,
 }: DealDetailPanelProps) {
   const { dealStages, priorities, activityTypes } = useWorkspaceOptions();
-  const { currentWorkspaceId } = useAuth();
+  const { currentWorkspaceId, user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"activity" | "details" | "tasks">("activity");
@@ -562,7 +562,7 @@ export default function DealDetailPanel({
                     ))}
                   </div>
                   <div className="flex gap-3 items-start">
-                    <Avatar name="אני" size={34} />
+                    <Avatar name={user?.name || "אני"} size={34} />
                     <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
                       <textarea
                         ref={activityTextareaRef}
