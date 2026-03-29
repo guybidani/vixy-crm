@@ -80,6 +80,14 @@ export default function TeamLeaderboard() {
   );
 }
 
+/** Deterministic hue-based background color from a string, matching NotificationCenter pattern */
+function avatarColor(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hues = [220, 150, 270, 30, 190, 340, 90];
+  return `hsl(${hues[Math.abs(hash) % hues.length]}, 65%, 55%)`;
+}
+
 function MemberRow({
   member,
   rank,
@@ -105,7 +113,11 @@ function MemberRow({
       </span>
 
       {/* Avatar */}
-      <div className="w-9 h-9 rounded-full bg-[#A25DDC] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+      <div
+        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+        style={{ background: avatarColor(member.memberId) }}
+        title={member.name}
+      >
         {initial}
       </div>
 
