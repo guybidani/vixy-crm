@@ -1003,16 +1003,30 @@ export default function DealDetailPanel({
                   </p>
                 </div>
                 <div className="bg-white border border-[#E6E9EF] rounded-xl p-3 space-y-2.5">
-                  <MondayPersonCell
-                    value={
-                      deal.contact
-                        ? { id: deal.contact.id, name: `${deal.contact.firstName} ${deal.contact.lastName}` }
-                        : null
-                    }
-                    options={contactOptions}
-                    onChange={(id) => updateMut.mutate({ contactId: id! })}
-                    placeholder="בחר איש קשר"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <MondayPersonCell
+                        value={
+                          deal.contact
+                            ? { id: deal.contact.id, name: `${deal.contact.firstName} ${deal.contact.lastName}` }
+                            : null
+                        }
+                        options={contactOptions}
+                        onChange={(id) => updateMut.mutate({ contactId: id! })}
+                        placeholder="בחר איש קשר"
+                      />
+                    </div>
+                    {deal.contact && (
+                      <button
+                        type="button"
+                        onClick={() => { handleClose(); navigate(`/contacts/${deal.contact!.id}`); }}
+                        className="p-1 rounded hover:bg-[#EDF3FB] transition-colors flex-shrink-0"
+                        title="פתח פרטי איש קשר"
+                      >
+                        <ArrowRight size={13} className="text-[#0073EA]" />
+                      </button>
+                    )}
+                  </div>
                   {deal.contact?.email && (
                     <a
                       href={`mailto:${deal.contact.email}`}
@@ -1062,12 +1076,26 @@ export default function DealDetailPanel({
                   </p>
                 </div>
                 <div className="bg-white border border-[#E6E9EF] rounded-xl p-3">
-                  <MondayPersonCell
-                    value={deal.company ? { id: deal.company.id, name: deal.company.name } : null}
-                    options={companyOptions}
-                    onChange={(id) => updateMut.mutate({ companyId: id })}
-                    placeholder="בחר חברה"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <MondayPersonCell
+                        value={deal.company ? { id: deal.company.id, name: deal.company.name } : null}
+                        options={companyOptions}
+                        onChange={(id) => updateMut.mutate({ companyId: id })}
+                        placeholder="בחר חברה"
+                      />
+                    </div>
+                    {deal.company && (
+                      <button
+                        type="button"
+                        onClick={() => { handleClose(); navigate(`/companies/${deal.company!.id}`); }}
+                        className="p-1 rounded hover:bg-[#EDF3FB] transition-colors flex-shrink-0"
+                        title="פתח פרטי חברה"
+                      >
+                        <ArrowRight size={13} className="text-[#0073EA]" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
