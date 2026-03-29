@@ -257,6 +257,13 @@ export default function DealDetailPanel({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Auto-scroll to bottom of activity feed when new activities arrive
+  useEffect(() => {
+    if (deal?.activities && activityEndRef.current) {
+      activityEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [deal?.activities?.length]);
+
   // Auto-focus activity textarea
   useEffect(() => {
     const timer = setTimeout(() => {
