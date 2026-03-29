@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { handleMutationError } from "../../lib/utils";
 import {
@@ -46,6 +46,18 @@ const STATUS_INFO: Record<
 export default function FollowUpCard({ contactId }: { contactId: string }) {
   const queryClient = useQueryClient();
   const [showSequencePicker, setShowSequencePicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showSequencePicker) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowSequencePicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showSequencePicker]);
 
   const { data: executions } = useQuery({
     queryKey: ["follow-up-executions", contactId],
@@ -102,7 +114,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
           stopping={stopMut.isPending}
         />
       ) : (
-        <div className="relative">
+        <div className="relative" ref={pickerRef}>
           <button
             onClick={() => setShowSequencePicker(!showSequencePicker)}
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#FF642E]/10 hover:bg-[#FF642E]/20 text-[#FF642E] rounded-[4px] transition-colors text-[13px] font-semibold"
