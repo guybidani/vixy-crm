@@ -114,7 +114,8 @@ export interface DealDetail extends Omit<
   activities: Array<{
     id: string;
     type: string;
-    description: string | null;
+    subject: string | null;
+    body: string | null;
     createdAt: string;
     member: { user: { name: string } } | null;
   }>;

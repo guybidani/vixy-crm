@@ -45,6 +45,7 @@ import MondayPersonCell, {
 import { listContacts } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
 import { getWorkspaceMembers } from "../../api/auth";
+import { createActivity } from "../../api/activities";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
@@ -112,6 +113,8 @@ export default function DealDetailPanel({
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState("");
   const [newActivityText, setNewActivityText] = useState("");
+  const [newActivityType, setNewActivityType] = useState<"NOTE" | "CALL" | "EMAIL" | "MEETING" | "WHATSAPP">("NOTE");
+  const [postingActivity, setPostingActivity] = useState(false);
   const activityEndRef = useRef<HTMLDivElement>(null);
   const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -236,12 +239,24 @@ export default function DealDetailPanel({
     }
   }
 
-  function postNote() {
+  async function postNote() {
     const text = newActivityText.trim();
-    if (!text) return;
-    // For now, we add to notes as a quick update (future: dedicated API)
-    updateMut.mutate({ notes: `${deal?.notes ? deal.notes + "\n\n" : ""}${new Date().toLocaleDateString("he-IL")}: ${text}` });
-    setNewActivityText("");
+    if (!text || postingActivity) return;
+    setPostingActivity(true);
+    try {
+      await createActivity({
+        type: newActivityType,
+        body: text,
+        dealId,
+        contactId: deal?.contact?.id || undefined,
+      });
+      setNewActivityText("");
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+    } catch {
+      toast.error("שגיאה בפרסום הפעילות");
+    } finally {
+      setPostingActivity(false);
+    }
   }
 
   if (isLoading) {
@@ -489,9 +504,9 @@ export default function DealDetailPanel({
                                   })}
                                 </span>
                               </div>
-                              {activity.description && (
+                              {(activity.body || activity.subject) && (
                                 <p className="text-[13px] text-[#323338] whitespace-pre-wrap leading-relaxed">
-                                  {activity.description}
+                                  {activity.body || activity.subject}
                                 </p>
                               )}
                               {activity.member && (
@@ -509,14 +524,44 @@ export default function DealDetailPanel({
                 </div>
 
                 {/* New activity input */}
-                <div className="flex-shrink-0 border-t border-[#E6E9EF] px-5 py-4 bg-white">
+                <div className="flex-shrink-0 border-t border-[#E6E9EF] px-5 py-3 bg-white space-y-2">
+                  {/* Activity type tabs */}
+                  <div className="flex gap-1" dir="rtl">
+                    {([
+                      { key: "NOTE", label: "הערה", icon: StickyNote, color: "#6161FF" },
+                      { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00CA72" },
+                      { key: "EMAIL", label: "מייל", icon: Mail, color: "#579BFC" },
+                      { key: "MEETING", label: "פגישה", icon: Calendar, color: "#A25DDC" },
+                      { key: "WHATSAPP", label: "ווטסאפ", icon: MessageCircle, color: "#25D366" },
+                    ] as const).map(({ key, label, icon: Icon, color }) => (
+                      <button
+                        key={key}
+                        onClick={() => setNewActivityType(key)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-[4px] text-[12px] font-medium transition-colors ${
+                          newActivityType === key
+                            ? "text-white"
+                            : "text-[#676879] hover:bg-[#F5F6F8]"
+                        }`}
+                        style={newActivityType === key ? { backgroundColor: color } : {}}
+                      >
+                        <Icon size={12} />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                   <div className="flex gap-3 items-start">
                     <Avatar name="אני" size={34} />
                     <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
                       <textarea
                         ref={activityTextareaRef}
                         className="w-full px-4 pt-3 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
-                        placeholder="כתוב עדכון..."
+                        placeholder={
+                          newActivityType === "CALL" ? "תאר את השיחה..." :
+                          newActivityType === "EMAIL" ? "סכם את המייל..." :
+                          newActivityType === "MEETING" ? "סכם את הפגישה..." :
+                          newActivityType === "WHATSAPP" ? "תאר את השיחה בווטסאפ..." :
+                          "כתוב הערה..."
+                        }
                         rows={3}
                         value={newActivityText}
                         onChange={(e) => setNewActivityText(e.target.value)}
@@ -531,10 +576,10 @@ export default function DealDetailPanel({
                         <span className="text-[11px] text-[#C3C6D4]">Ctrl+Enter לשליחה</span>
                         <button
                           onClick={postNote}
-                          disabled={!newActivityText.trim()}
+                          disabled={!newActivityText.trim() || postingActivity}
                           className="px-5 py-1.5 bg-[#0073EA] text-white text-[13px] font-semibold rounded-[6px] hover:bg-[#0060C2] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
                         >
-                          עדכן
+                          {postingActivity ? "שולח..." : "עדכן"}
                         </button>
                       </div>
                     </div>
