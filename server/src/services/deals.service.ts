@@ -301,18 +301,16 @@ export async function pipeline(workspaceId: string) {
     .reduce((sum, d) => sum + (d.value ? Number(d.value) : 0) * (d.probability / 100), 0);
 
   // Won this month = CLOSED_WON with closedAt in this month
-  const wonThisMonthDeals = await prisma.deal.findMany({
-    where: {
-      workspaceId,
-      stage: "CLOSED_WON",
-      closedAt: { gte: startOfMonth, lte: endOfMonth },
-    },
-    select: { value: true },
-  });
-  const wonThisMonth = wonThisMonthDeals.reduce(
-    (sum, d) => sum + (d.value ? Number(d.value) : 0),
-    0,
-  );
+  // Computed from the already-loaded deals array — no extra DB round-trip needed
+  const wonThisMonth = deals
+    .filter(
+      (d) =>
+        d.stage === "CLOSED_WON" &&
+        d.closedAt !== null &&
+        new Date(d.closedAt) >= startOfMonth &&
+        new Date(d.closedAt) <= endOfMonth,
+    )
+    .reduce((sum, d) => sum + (d.value ? Number(d.value) : 0), 0);
 
   // Total pipeline = all open deals
   const totalPipeline = deals
