@@ -327,9 +327,14 @@ function LeadCard({
             <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center flex-shrink-0">
               <Mail size={12} className="text-blue-500" />
             </div>
-            <span dir="ltr" className="truncate">
+            <a
+              href={`mailto:${lead.email}`}
+              dir="ltr"
+              className="truncate hover:text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
               {lead.email}
-            </span>
+            </a>
           </div>
         )}
         {lead.phone && (
@@ -337,7 +342,14 @@ function LeadCard({
             <div className="w-6 h-6 rounded-md bg-green-50 flex items-center justify-center flex-shrink-0">
               <Phone size={12} className="text-green-500" />
             </div>
-            <span dir="ltr">{lead.phone}</span>
+            <a
+              href={`tel:${lead.phone}`}
+              dir="ltr"
+              className="hover:text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {lead.phone}
+            </a>
           </div>
         )}
         {lead.company && (
