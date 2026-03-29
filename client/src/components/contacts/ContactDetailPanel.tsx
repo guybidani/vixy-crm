@@ -1449,6 +1449,38 @@ function RelatedTab({
   navigate: ReturnType<typeof useNavigate>;
 }) {
   const { dealStages, ticketStatuses, priorities } = useWorkspaceOptions();
+  const queryClient = useQueryClient();
+  const [addingTask, setAddingTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  const newTaskInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (addingTask) {
+      requestAnimationFrame(() => newTaskInputRef.current?.focus());
+    }
+  }, [addingTask]);
+
+  const createTaskMut = useMutation({
+    mutationFn: (data: { title: string; dueDate?: string }) =>
+      createTask({
+        title: data.title,
+        contactId: contact.id,
+        dueDate: data.dueDate || undefined,
+        priority: "MEDIUM",
+        taskType: "TASK",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setNewTaskTitle("");
+      setNewTaskDueDate("");
+      setAddingTask(false);
+      toast.success("משימה נוצרה");
+    },
+    onError: () => toast.error("שגיאה ביצירת משימה"),
+  });
+
   return (
     <div className="space-y-5">
       {/* Deals */}
@@ -1773,18 +1805,7 @@ function FollowUpDateField({ contact }: { contact: any }) {
       </div>
       {followUpDate ? (
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setEditing(true)}
-            className={`text-sm ${dateColorClass} hover:underline cursor-pointer`}
-          >
-            {followUpDate.toLocaleDateString("he-IL", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          </button>
-          {statusBadge}
-          {editing && (
+          {editing ? (
             <input
               type="date"
               autoFocus
@@ -1793,6 +1814,20 @@ function FollowUpDateField({ contact }: { contact: any }) {
               onBlur={() => setEditing(false)}
               className="text-xs border border-[#0073EA] rounded px-2 py-1 focus:outline-none bg-white"
             />
+          ) : (
+            <>
+              <button
+                onClick={() => setEditing(true)}
+                className={`text-sm ${dateColorClass} hover:underline cursor-pointer`}
+              >
+                {followUpDate.toLocaleDateString("he-IL", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </button>
+              {statusBadge}
+            </>
           )}
         </div>
       ) : (

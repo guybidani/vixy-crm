@@ -152,21 +152,24 @@ export async function startExecution(
     if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
   }
 
-  const sequence = await prisma.followUpSequence.findFirst({
-    where: { id: data.sequenceId, workspaceId, isActive: true },
-    include: { steps: { orderBy: { stepNumber: "asc" } } },
-  });
+  // Fetch sequence and check for duplicate execution in parallel — they don't depend on each other
+  const [sequence, existing] = await Promise.all([
+    prisma.followUpSequence.findFirst({
+      where: { id: data.sequenceId, workspaceId, isActive: true },
+      include: { steps: { orderBy: { stepNumber: "asc" } } },
+    }),
+    prisma.followUpExecution.findFirst({
+      where: {
+        sequenceId: data.sequenceId,
+        contactId: data.contactId,
+        status: "ACTIVE",
+      },
+    }),
+  ]);
+
   if (!sequence)
     throw new AppError(404, "NOT_FOUND", "Active sequence not found");
 
-  // Check for existing active execution for this contact + sequence
-  const existing = await prisma.followUpExecution.findFirst({
-    where: {
-      sequenceId: data.sequenceId,
-      contactId: data.contactId,
-      status: "ACTIVE",
-    },
-  });
   if (existing)
     throw new AppError(
       400,
