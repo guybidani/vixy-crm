@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
@@ -60,9 +61,18 @@ type TableTab = "table" | "chart";
 export default function DealsPage() {
   const { dealStages, priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [tableTab, setTableTab] = useState<TableTab>("table");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(() => searchParams.get("new") === "1");
+
+  // Clear the ?new=1 param once we've opened the modal
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreate(true);
+      setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
+    }
+  }, []);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);

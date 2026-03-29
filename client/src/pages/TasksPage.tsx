@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -817,6 +818,7 @@ export default function TasksPage() {
   const { taskStatuses, priorities } = useWorkspaceOptions();
   const { currentWorkspaceId, workspaces } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [priorityFilter, setPriorityFilter] = useState("");
@@ -824,7 +826,15 @@ export default function TasksPage() {
   const [contextFilter, setContextFilter] = useState("");
   const [sortBy, setSortBy] = useState("dueDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(() => searchParams.get("new") === "1");
+
+  // Clear the ?new=1 param once we've opened the modal
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreate(true);
+      setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
+    }
+  }, []);
   const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [searchRaw, setSearchRaw] = useState("");
   const searchQuery = useDebounce(searchRaw, 300);

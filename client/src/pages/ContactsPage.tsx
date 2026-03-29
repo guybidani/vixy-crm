@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +37,7 @@ export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "cards">("table");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
@@ -44,7 +45,15 @@ export default function ContactsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(() => searchParams.get("new") === "1");
+
+  // Clear the ?new=1 param once we've opened the modal
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreate(true);
+      setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
+    }
+  }, []);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [needsFollowUp, setNeedsFollowUp] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
