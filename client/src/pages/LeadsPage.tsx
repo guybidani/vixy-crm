@@ -249,7 +249,15 @@ export default function LeadsPage() {
         )}
       </SidePanel>
 
-      {showCreate && <CreateLeadModal onClose={() => setShowCreate(false)} />}
+      {showCreate && (
+        <CreateLeadModal
+          onClose={() => setShowCreate(false)}
+          onCreated={(id) => {
+            setShowCreate(false);
+            setSelectedContactId(id);
+          }}
+        />
+      )}
     </PageShell>
   );
 }
@@ -487,7 +495,13 @@ function PipelineCard({
   );
 }
 
-function CreateLeadModal({ onClose }: { onClose: () => void }) {
+function CreateLeadModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated?: (id: string) => void;
+}) {
   const { leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -513,11 +527,15 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
         email: form.email || undefined,
         status: "LEAD",
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("ליד נוצר בהצלחה!");
-      onClose();
+      if (onCreated) {
+        onCreated(data.id);
+      } else {
+        onClose();
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה ביצירת ליד");
