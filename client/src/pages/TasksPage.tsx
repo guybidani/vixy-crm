@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useMemo, useEffect, useRef, type MouseEvent } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -190,22 +190,31 @@ function TypeChip({ taskType }: { taskType: string }) {
 
 // ─── ContactAvatar ────────────────────────────────────────────────────────────
 
-function ContactAvatar({ name, onClick }: { name: string; onClick?: () => void }) {
+function ContactAvatar({ name, id, onClick }: { name: string; id?: string; onClick?: () => void }) {
+  const navigate = useNavigate();
   const initials = name
     .split(" ")
     .slice(0, 2)
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick();
+    } else if (id) {
+      navigate(`/contacts/${id}`);
+    }
+  };
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      onClick={handleClick}
       className="flex items-center gap-1.5 group/contact"
       title={name}
     >
       <div className="w-6 h-6 rounded-full bg-[#0073EA]/10 flex items-center justify-center flex-shrink-0">
         <span className="text-[9px] font-bold text-[#0073EA]">{initials}</span>
-</div>
+      </div>
       <span className="text-xs text-[#676879] group-hover/contact:text-[#0073EA] transition-colors hidden sm:inline truncate max-w-[90px]">
         {name}
       </span>
@@ -474,7 +483,7 @@ function TaskRow({
       <div className="flex items-center gap-2 flex-shrink-0">
         {/* Contact */}
         {task.contact && (
-          <ContactAvatar name={task.contact.name} />
+          <ContactAvatar name={task.contact.name} id={task.contact.id} />
         )}
 
         {/* Due date */}
