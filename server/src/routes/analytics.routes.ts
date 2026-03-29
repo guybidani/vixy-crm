@@ -67,6 +67,15 @@ analyticsRouter.get("/deal-growth", async (req, res, next) => {
   }
 });
 
+analyticsRouter.get("/lead-sources", async (req, res, next) => {
+  try {
+    const data = await analyticsService.getLeadSources(req.workspaceId!);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 analyticsRouter.get("/top-performers", async (req, res, next) => {
   try {
     const { from, to } = parseDateRange(req);

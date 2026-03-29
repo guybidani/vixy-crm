@@ -54,6 +54,15 @@ export function getDealGrowth(from: string, to: string) {
   return api<ContactGrowthItem[]>(`/analytics/deal-growth${qs(from, to)}`);
 }
 
+export interface LeadSourceItem {
+  source: string;
+  count: number;
+}
+
+export function getLeadSources() {
+  return api<LeadSourceItem[]>(`/analytics/lead-sources`);
+}
+
 export function getTopPerformers(from: string, to: string) {
   return api<TopPerformerItem[]>(`/analytics/top-performers${qs(from, to)}`);
 }

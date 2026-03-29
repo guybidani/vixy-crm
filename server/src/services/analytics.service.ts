@@ -139,6 +139,19 @@ export async function getDealGrowth(
   }));
 }
 
+export async function getLeadSources(workspaceId: string) {
+  const grouped = await prisma.contact.groupBy({
+    by: ["source"],
+    where: { workspaceId },
+    _count: { id: true },
+  });
+
+  return grouped.map((g) => ({
+    source: g.source || "OTHER",
+    count: g._count.id,
+  }));
+}
+
 export async function getTopPerformers(
   workspaceId: string,
   dateFrom: Date,

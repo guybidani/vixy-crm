@@ -22,10 +22,8 @@ import {
   Legend,
 } from "recharts";
 import PageShell, { PageCard } from "../components/layout/PageShell";
-import { getDealGrowth } from "../api/analytics";
-import { getDealFunnel } from "../api/analytics";
+import { getDealGrowth, getDealFunnel, getLeadSources } from "../api/analytics";
 import { getTeamPerformance } from "../api/dashboard";
-import { listContacts } from "../api/contacts";
 import { DEAL_STAGES } from "../lib/constants";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -335,23 +333,18 @@ const SOURCE_COLORS = [
 function LeadSources() {
   const q = useQuery({
     queryKey: ["reports", "lead-sources"],
-    queryFn: () => listContacts({ limit: 500 }),
+    queryFn: getLeadSources,
   });
 
   const data = useMemo(() => {
-    if (!q.data?.data) return [];
-    const counts: Record<string, number> = {};
-    for (const c of q.data.data) {
-      const src = c.source || "OTHER";
-      counts[src] = (counts[src] || 0) + 1;
-    }
-    return Object.entries(counts)
-      .map(([src, count], idx) => ({
-        name: SOURCE_LABELS[src] || src,
-        value: count,
+    if (!q.data) return [];
+    return [...q.data]
+      .sort((a, b) => b.count - a.count)
+      .map((item, idx) => ({
+        name: SOURCE_LABELS[item.source] || item.source,
+        value: item.count,
         color: SOURCE_COLORS[idx % SOURCE_COLORS.length],
-      }))
-      .sort((a, b) => b.value - a.value);
+      }));
   }, [q.data]);
 
   const total = data.reduce((s, d) => s + d.value, 0);
