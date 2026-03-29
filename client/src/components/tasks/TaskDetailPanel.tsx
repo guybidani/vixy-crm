@@ -279,7 +279,9 @@ export default function TaskDetailPanel({
             />
           ) : (
             <h2
-              className={`text-lg font-bold cursor-text hover:bg-[#F5F6F8] rounded px-1 -mx-1 transition-colors ${
+              role="button"
+              tabIndex={0}
+              className={`text-lg font-bold cursor-text hover:bg-[#F5F6F8] rounded px-1 -mx-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/40 ${
                 isDone
                   ? "line-through text-[#9699A6]"
                   : "text-[#323338]"
@@ -288,6 +290,14 @@ export default function TaskDetailPanel({
                 setTitleValue(task.title);
                 setEditingTitle(true);
               }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setTitleValue(task.title);
+                  setEditingTitle(true);
+                }
+              }}
+              aria-label={`ערוך כותרת: ${task.title}`}
             >
               {task.title}
             </h2>
@@ -402,11 +412,21 @@ export default function TaskDetailPanel({
               />
             ) : (
               <div
-                className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-[#F5F6F8] transition-colors min-h-[40px] whitespace-pre-wrap"
+                role="button"
+                tabIndex={0}
+                className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-[#F5F6F8] transition-colors min-h-[40px] whitespace-pre-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/30"
                 onClick={() => {
                   setDescriptionValue(task.description || "");
                   setEditingDescription(true);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setDescriptionValue(task.description || "");
+                    setEditingDescription(true);
+                  }
+                }}
+                aria-label="ערוך תיאור"
               >
                 {task.description || (
                   <span className="text-[#9699A6]">
@@ -555,11 +575,21 @@ export default function TaskDetailPanel({
                 />
               ) : (
                 <div
-                  className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-success/5 transition-colors min-h-[36px] border border-dashed border-success/30"
+                  role="button"
+                  tabIndex={0}
+                  className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-success/5 transition-colors min-h-[36px] border border-dashed border-success/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/30"
                   onClick={() => {
                     setOutcomeValue(task.outcomeNote || "");
                     setEditingOutcome(true);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setOutcomeValue(task.outcomeNote || "");
+                      setEditingOutcome(true);
+                    }
+                  }}
+                  aria-label="ערוך סיכום תוצאה"
                 >
                   {task.outcomeNote || (
                     <span className="text-[#9699A6]">הוסף סיכום מה התרחש...</span>
