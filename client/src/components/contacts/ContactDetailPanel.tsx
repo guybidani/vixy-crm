@@ -1871,6 +1871,15 @@ function EditContactModal({
 }) {
   const { contactStatuses } = useWorkspaceOptions();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const [form, setForm] = useState({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -1919,7 +1928,10 @@ function EditContactModal({
     setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-[#323338]">עריכת איש קשר</h2>
