@@ -175,27 +175,36 @@ export default function TicketDetailPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <User size={14} className="text-[#9699A6]" />
-                  <span
-                    className="text-sm text-[#0073EA] cursor-pointer hover:underline"
+                  <button
+                    type="button"
+                    className="text-sm text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
                     onClick={() => navigate(`/contacts/${ticket.contact!.id}`)}
                   >
                     {ticket.contact.firstName} {ticket.contact.lastName}
-                  </span>
+                  </button>
                 </div>
                 {ticket.contact.email && (
                   <div className="flex items-center gap-2">
                     <Mail size={14} className="text-[#9699A6]" />
-                    <span className="text-[12px] text-[#676879]" dir="ltr">
+                    <a
+                      href={`mailto:${ticket.contact.email}`}
+                      className="text-[12px] text-[#676879] hover:text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+                      dir="ltr"
+                    >
                       {ticket.contact.email}
-                    </span>
+                    </a>
                   </div>
                 )}
                 {ticket.contact.phone && (
                   <div className="flex items-center gap-2">
                     <Phone size={14} className="text-[#9699A6]" />
-                    <span className="text-[12px] text-[#676879]" dir="ltr">
+                    <a
+                      href={`tel:${ticket.contact.phone}`}
+                      className="text-[12px] text-[#676879] hover:text-[#0073EA] hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+                      dir="ltr"
+                    >
                       {ticket.contact.phone}
-                    </span>
+                    </a>
                   </div>
                 )}
               </div>
