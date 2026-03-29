@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDebounce } from "../hooks/useDebounce";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -58,6 +59,7 @@ export default function LeadsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
   const [showCreate, setShowCreate] = useState(false);
   const [qualifyingId, setQualifyingId] = useState<string | null>(null);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
@@ -66,11 +68,11 @@ export default function LeadsPage() {
   const [viewMode, setViewMode] = useState<"cards" | "pipeline">("cards");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["leads", { search }],
+    queryKey: ["leads", { search: debouncedSearch }],
     queryFn: () =>
       listContacts({
         status: "LEAD",
-        search: search || undefined,
+        search: debouncedSearch || undefined,
         limit: 100,
         sortBy: "leadScore",
         sortDir: "desc",

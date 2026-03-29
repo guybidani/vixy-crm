@@ -7,7 +7,9 @@ interface ListParams {
   contactId?: string;
   dealId?: string;
   ticketId?: string;
+  companyId?: string;
   limit?: number;
+  page?: number;
 }
 
 export interface RecentContactResult {
@@ -102,23 +104,60 @@ export async function getRecentContacts(
 }
 
 export async function list(params: ListParams) {
-  const { workspaceId, contactId, dealId, ticketId, limit = 50 } = params;
+  const { workspaceId, contactId, dealId, ticketId, companyId, limit = 50, page = 1 } = params;
 
   const where: any = { workspaceId };
-  if (contactId) where.contactId = contactId;
-  if (dealId) where.dealId = dealId;
-  if (ticketId) where.ticketId = ticketId;
 
-  return prisma.activity.findMany({
-    where,
-    include: {
-      member: { include: { user: { select: { name: true } } } },
-      contact: { select: { id: true, firstName: true, lastName: true } },
-      deal: { select: { id: true, title: true } },
+  // companyId expands to OR filter across all contacts/deals for that company
+  if (companyId) {
+    const [companyContactIds, companyDealIds] = await Promise.all([
+      prisma.contact
+        .findMany({ where: { workspaceId, companyId }, select: { id: true } })
+        .then((rows) => rows.map((r) => r.id)),
+      prisma.deal
+        .findMany({ where: { workspaceId, companyId }, select: { id: true } })
+        .then((rows) => rows.map((r) => r.id)),
+    ]);
+    const orClauses: any[] = [];
+    if (companyContactIds.length > 0)
+      orClauses.push({ contactId: { in: companyContactIds } });
+    if (companyDealIds.length > 0)
+      orClauses.push({ dealId: { in: companyDealIds } });
+    // If the company has no contacts or deals yet, return empty result set
+    if (orClauses.length === 0) {
+      return { data: [], pagination: { page, limit, total: 0, totalPages: 0 } };
+    }
+    where.OR = orClauses;
+  } else {
+    if (contactId) where.contactId = contactId;
+    if (dealId) where.dealId = dealId;
+    if (ticketId) where.ticketId = ticketId;
+  }
+
+  const [activities, total] = await Promise.all([
+    prisma.activity.findMany({
+      where,
+      include: {
+        member: { include: { user: { select: { name: true } } } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+        deal: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.activity.count({ where }),
+  ]);
+
+  return {
+    data: activities,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
+  };
 }
 
 export async function create(
