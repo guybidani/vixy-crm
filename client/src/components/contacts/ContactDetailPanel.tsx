@@ -197,8 +197,8 @@ export default function ContactDetailPanel({
               }}
             />
           ) : (
-            <h2
-              className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8] rounded-[4px] px-1 -mx-1 transition-colors leading-snug"
+            <button
+              className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8] rounded-[4px] px-1 -mx-1 transition-colors leading-snug text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
               onClick={() => {
                 setNameValue(`${contact.firstName} ${contact.lastName}`);
                 setEditingName(true);
@@ -206,7 +206,7 @@ export default function ContactDetailPanel({
               title="לחץ לעריכה"
             >
               {contact.firstName} {contact.lastName}
-            </h2>
+            </button>
           )}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <StatusDropdown
