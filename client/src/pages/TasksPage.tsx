@@ -1242,9 +1242,10 @@ export default function TasksPage() {
           <TaskCreateModal
             open={showCreate}
             onClose={() => setShowCreate(false)}
-            onCreated={() => {
+            onCreated={(id) => {
               queryClient.invalidateQueries({ queryKey: ["tasks"] });
               queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+              setSelectedTaskId(id);
             }}
           />
         </PageShell>

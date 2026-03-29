@@ -27,7 +27,7 @@ import { useAuth } from "../../hooks/useAuth";
 interface TaskCreateModalProps {
   open: boolean;
   onClose: () => void;
-  onCreated?: () => void;
+  onCreated?: (id: string) => void;
   initialContactId?: string;
   initialDealId?: string;
 }
@@ -366,12 +366,12 @@ export default function TaskCreateModal({
         recurrenceDay: form.isRecurring && form.recurrenceDay !== "" ? form.recurrenceDay : undefined,
         recurrenceEndDate: form.isRecurring && form.recurrenceEndDate ? new Date(form.recurrenceEndDate).toISOString() : undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (task) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
       toast.success("משימה נוצרה בהצלחה!");
-      onCreated?.();
       onClose();
+      onCreated?.(task.id);
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה ביצירת משימה");
