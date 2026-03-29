@@ -513,7 +513,7 @@ export default function DealsPage() {
         />
       )}
 
-      {showCreate && <CreateDealModal onClose={() => setShowCreate(false)} />}
+      {showCreate && <CreateDealModal onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); setSelectedDealId(id); }} />}
 
       {selectedDealId && (
         <DealDetailPanel
@@ -903,7 +903,7 @@ function DealsEmptyState({ onAdd }: { onAdd: () => void }) {
 
 /* ── Create Deal Modal ─────────────────────────────── */
 
-function CreateDealModal({ onClose }: { onClose: () => void }) {
+function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreated?: (id: string) => void }) {
   const { dealStages, priorities } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -939,11 +939,15 @@ function CreateDealModal({ onClose }: { onClose: () => void }) {
         expectedClose: form.expectedClose || undefined,
         notes: form.notes || undefined,
       }),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success("עסקה נוצרה בהצלחה!");
-      onClose();
+      if (onCreated) {
+        onCreated(data.id);
+      } else {
+        onClose();
+      }
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה ביצירת עסקה");
