@@ -383,7 +383,7 @@ export async function updateItem(
 
   const updated = await prisma.boardItem.update({
     where: { id: itemId },
-    data: { ...data, lastActivityAt: new Date() },
+    data: { ...data },
     include: {
       values: {
         include: {
@@ -540,11 +540,6 @@ export async function updateItemValues(
     }
   }
 
-  // Update lastActivityAt on the item
-  await prisma.boardItem.update({
-    where: { id: itemId },
-    data: { lastActivityAt: new Date() },
-  });
 
   return results;
 }
@@ -740,7 +735,6 @@ export async function createItemComment(
       },
     },
   });
-  await prisma.boardItem.update({ where: { id: itemId }, data: { lastActivityAt: new Date() } });
   return comment;
 }
 
@@ -933,7 +927,7 @@ export async function updateItemDescription(
 
   return prisma.boardItem.update({
     where: { id: itemId },
-    data: { description, lastActivityAt: new Date() },
+    data: { description },
   });
 }
 
