@@ -1,22 +1,25 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { AppError } from "../middleware/errorHandler";
 import { prisma } from "../db/client";
 import * as viewsService from "../services/views.service";
 
 export const viewsRouter = Router();
+
+const VALID_ENTITIES = ["contacts", "deals", "tasks", "tickets"] as const;
 
 /** Resolve the current user's workspace member ID */
 async function getMemberId(workspaceId: string, userId: string): Promise<string> {
   const member = await prisma.workspaceMember.findFirst({
     where: { workspaceId, userId },
   });
-  if (!member) throw new Error("Member not found");
+  if (!member) throw new AppError(403, "FORBIDDEN", "Not a workspace member");
   return member.id;
 }
 
 const createSchema = z.object({
-  entity: z.enum(["contacts", "deals", "tasks", "tickets"]),
+  entity: z.enum(VALID_ENTITIES),
   name: z.string().min(1, "שם תצוגה נדרש"),
   filters: z.record(z.unknown()),
   isDefault: z.boolean().optional(),
@@ -39,6 +42,11 @@ viewsRouter.get("/", async (req, res, next) => {
     if (!entity) {
       return res.status(400).json({
         error: { code: "VALIDATION_ERROR", message: "entity query param required" },
+      });
+    }
+    if (!VALID_ENTITIES.includes(entity as (typeof VALID_ENTITIES)[number])) {
+      return res.status(400).json({
+        error: { code: "VALIDATION_ERROR", message: `entity must be one of: ${VALID_ENTITIES.join(", ")}` },
       });
     }
     const memberId = await getMemberId(req.workspaceId!, req.user!.userId);
