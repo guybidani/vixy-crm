@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAutoSave } from "../../hooks/useAutoSave";
@@ -46,6 +47,7 @@ import { listContacts } from "../../api/contacts";
 import { listCompanies } from "../../api/companies";
 import { getWorkspaceMembers } from "../../api/auth";
 import { createActivity } from "../../api/activities";
+import { updateTask } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
@@ -101,6 +103,7 @@ export default function DealDetailPanel({
   const { dealStages, priorities, activityTypes } = useWorkspaceOptions();
   const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"activity" | "details" | "tasks">("activity");
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState("");
@@ -176,6 +179,15 @@ export default function DealDetailPanel({
       toast.success("עסקה נמחקה");
       onDeleted?.();
       onClose();
+    },
+  });
+
+  const taskToggleMut = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
+      updateTask(taskId, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 
@@ -645,21 +657,41 @@ export default function DealDetailPanel({
                     {deal.tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="flex items-center gap-2 py-2 px-3 rounded-xl bg-white border border-[#E6E9EF] hover:border-[#C5C7D0] transition-colors"
+                        className="flex items-center gap-2 py-2 px-3 rounded-xl bg-white border border-[#E6E9EF] hover:border-[#C5C7D0] transition-colors group/task"
                       >
-                        <CheckSquare
-                          size={15}
-                          className={task.status === "DONE" ? "text-[#00CA72]" : "text-[#C5C7D0]"}
-                        />
-                        <span
-                          className={`text-[13px] flex-1 ${
+                        {/* Toggle done checkbox */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            taskToggleMut.mutate({
+                              taskId: task.id,
+                              status: task.status === "DONE" ? "TODO" : "DONE",
+                            });
+                          }}
+                          className="flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded"
+                          title={task.status === "DONE" ? "סמן כלא בוצע" : "סמן כבוצע"}
+                        >
+                          <CheckSquare
+                            size={15}
+                            className={task.status === "DONE" ? "text-[#00CA72]" : "text-[#C5C7D0] hover:text-[#00CA72] transition-colors"}
+                          />
+                        </button>
+                        {/* Navigate to task detail */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleClose();
+                            navigate(`/tasks?selected=${task.id}`);
+                          }}
+                          className={`text-[13px] flex-1 text-right hover:text-[#0073EA] transition-colors focus:outline-none ${
                             task.status === "DONE" ? "line-through text-[#C5C7D0]" : "text-[#323338]"
                           }`}
                         >
                           {task.title}
-                        </span>
+                        </button>
                         {task.dueDate && (
-                          <span className="text-[11px] text-[#676879] flex items-center gap-0.5">
+                          <span className="text-[11px] text-[#676879] flex items-center gap-0.5 flex-shrink-0">
                             <Calendar size={11} />
                             {new Date(task.dueDate).toLocaleDateString("he-IL")}
                           </span>
