@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +23,7 @@ import {
   Brain,
   Megaphone,
   Send,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
@@ -32,6 +33,7 @@ import FollowUpCard from "../components/contacts/FollowUpCard";
 import Modal from "../components/shared/Modal";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { getContact, updateContact, deleteContact } from "../api/contacts";
+import { createActivity } from "../api/activities";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
@@ -48,6 +50,11 @@ export default function ContactDetailPage() {
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [showLogActivity, setShowLogActivity] = useState(false);
+  const [activityType, setActivityType] = useState<"NOTE" | "CALL" | "EMAIL" | "MEETING" | "WHATSAPP">("NOTE");
+  const [activityBody, setActivityBody] = useState("");
+  const [loggingActivity, setLoggingActivity] = useState(false);
+  const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", id],
@@ -63,6 +70,22 @@ export default function ContactDetailPage() {
       navigate("/contacts");
     },
   });
+
+  async function logActivity() {
+    if (!activityBody.trim() || loggingActivity || !id) return;
+    setLoggingActivity(true);
+    try {
+      await createActivity({ type: activityType, body: activityBody.trim(), contactId: id });
+      setActivityBody("");
+      setShowLogActivity(false);
+      queryClient.invalidateQueries({ queryKey: ["contact", id] });
+      toast.success("פעילות נרשמה");
+    } catch {
+      toast.error("שגיאה ברישום הפעילות");
+    } finally {
+      setLoggingActivity(false);
+    }
+  }
 
   if (isLoading) {
     return (
@@ -478,10 +501,88 @@ export default function ContactDetailPage() {
 
           {/* Activity Timeline */}
           <PageCard>
-            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
-              <Calendar size={16} className="text-[#676879]" />
-              היסטוריית פעילות
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
+                <Calendar size={16} className="text-[#676879]" />
+                היסטוריית פעילות
+              </h3>
+              <button
+                onClick={() => {
+                  setShowLogActivity((v) => !v);
+                  setTimeout(() => activityTextareaRef.current?.focus(), 50);
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                רשום פעילות
+              </button>
+            </div>
+
+            {/* Inline log form */}
+            {showLogActivity && (
+              <div className="mb-4 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
+                <div className="flex gap-1 flex-wrap">
+                  {([
+                    { key: "NOTE", label: "הערה", color: "#6161FF" },
+                    { key: "CALL", label: "שיחה", color: "#00CA72" },
+                    { key: "EMAIL", label: "מייל", color: "#579BFC" },
+                    { key: "MEETING", label: "פגישה", color: "#A25DDC" },
+                    { key: "WHATSAPP", label: "ווטסאפ", color: "#25D366" },
+                  ] as const).map(({ key, label, color }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActivityType(key)}
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-colors ${
+                        activityType === key ? "text-white" : "text-[#676879] bg-white border border-[#E6E9EF] hover:border-[#C5C7D0]"
+                      }`}
+                      style={activityType === key ? { backgroundColor: color } : {}}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  ref={activityTextareaRef}
+                  value={activityBody}
+                  onChange={(e) => setActivityBody(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      logActivity();
+                    }
+                    if (e.key === "Escape") setShowLogActivity(false);
+                  }}
+                  placeholder={
+                    activityType === "CALL" ? "תאר את השיחה..." :
+                    activityType === "EMAIL" ? "סכם את המייל..." :
+                    activityType === "MEETING" ? "סכם את הפגישה..." :
+                    activityType === "WHATSAPP" ? "תאר את שיחת הווטסאפ..." :
+                    "כתוב הערה..."
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 text-[13px] bg-white border border-[#E6E9EF] rounded-[4px] outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none"
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-[#9699A6]">Ctrl+Enter לשמירה</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setShowLogActivity(false); setActivityBody(""); }}
+                      className="px-3 py-1 text-[12px] text-[#676879] hover:bg-white rounded-[4px] transition-colors"
+                    >
+                      ביטול
+                    </button>
+                    <button
+                      onClick={logActivity}
+                      disabled={!activityBody.trim() || loggingActivity}
+                      className="px-4 py-1 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold rounded-[4px] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {loggingActivity ? "שומר..." : "שמור"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {contact.activities && contact.activities.length > 0 ? (
               <div className="relative">
                 <div className="absolute right-[11px] top-2 bottom-2 w-0.5 bg-[#E6E9EF]" />
