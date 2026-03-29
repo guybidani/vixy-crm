@@ -177,6 +177,7 @@ export default function ContactDetailPage() {
                   label="אימייל"
                   value={contact.email}
                   dir="ltr"
+                  href={`mailto:${contact.email}`}
                 />
               )}
               {contact.phone && (
@@ -185,6 +186,7 @@ export default function ContactDetailPage() {
                   label="טלפון"
                   value={contact.phone}
                   dir="ltr"
+                  href={`tel:${contact.phone}`}
                 />
               )}
               {contact.company && (
@@ -673,12 +675,14 @@ function InfoRow({
   value,
   dir,
   onClick,
+  href,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   dir?: string;
   onClick?: () => void;
+  href?: string;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -686,12 +690,20 @@ function InfoRow({
       <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
       {onClick ? (
         <button
-          className="text-sm text-[#323338] hover:text-[#0073EA] transition-colors"
+          className="text-sm text-[#323338] hover:text-[#0073EA] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
           dir={dir}
           onClick={onClick}
         >
           {value}
         </button>
+      ) : href ? (
+        <a
+          href={href}
+          className="text-sm text-[#323338] hover:text-[#0073EA] hover:underline transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+          dir={dir}
+        >
+          {value}
+        </a>
       ) : (
         <span className="text-sm text-[#323338]" dir={dir}>{value}</span>
       )}
