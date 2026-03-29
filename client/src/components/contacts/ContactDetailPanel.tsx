@@ -48,6 +48,7 @@ import { createTask, type TaskType } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { getWhatsAppUrl } from "../../utils/phone";
+import FollowUpCard from "./FollowUpCard";
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -489,6 +490,9 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
 
       {/* Follow-up date */}
       <FollowUpDateField contact={contact} />
+
+      {/* Follow-up automation */}
+      <FollowUpCard contactId={contact.id} />
 
       {/* Tags */}
       <div className="bg-[#F5F6F8] rounded-xl p-3">
