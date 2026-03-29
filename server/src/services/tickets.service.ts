@@ -329,20 +329,34 @@ export async function addMessage(
     },
   });
 
-  // Set firstResponseAt if this is the first agent response
-  if (data.senderType === "agent" && !ticket.firstResponseAt) {
-    await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { firstResponseAt: new Date() },
-    });
-  }
+  // Consolidate all ticket side-effects into a single update (avoid N+2 queries)
+  if (data.senderType === "agent") {
+    const ticketUpdates: any = {};
+    const isFirstResponse = !ticket.firstResponseAt;
+    const isNewToOpen = ticket.status === "NEW";
 
-  // Auto-set status to OPEN if it was NEW
-  if (ticket.status === "NEW" && data.senderType === "agent") {
-    await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { status: "OPEN" },
-    });
+    if (isFirstResponse) ticketUpdates.firstResponseAt = new Date();
+    if (isNewToOpen) ticketUpdates.status = "OPEN";
+
+    if (Object.keys(ticketUpdates).length > 0) {
+      await prisma.ticket.update({ where: { id: ticketId }, data: ticketUpdates });
+
+      // Fire automation trigger when ticket auto-transitions NEW → OPEN
+      if (isNewToOpen) {
+        enqueueAutomationTrigger({
+          workspaceId,
+          trigger: "TICKET_STATUS_CHANGED",
+          entityType: "ticket",
+          entityId: ticketId,
+          data: {
+            subject: ticket.subject,
+            status: "OPEN",
+            priority: ticket.priority,
+          },
+          previousData: { status: "NEW" },
+        }).catch(() => {});
+      }
+    }
   }
 
   return message;
