@@ -640,6 +640,16 @@ function TimelineTab({ contact }: { contact: any }) {
   const [editBody, setEditBody] = useState("");
   const [editSubject, setEditSubject] = useState("");
 
+  // ── Expand state for long activity bodies ─────
+  const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
+  const toggleExpand = (id: string) =>
+    setExpandedActivities((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
   // ── Mutations ─────────────────────────────────
   const logMutation = useMutation({
     mutationFn: (data: Parameters<typeof createActivity>[0]) =>
@@ -1153,11 +1163,26 @@ function TimelineTab({ contact }: { contact: any }) {
                               {activity.subject}
                             </p>
                           )}
-                          {activity.body && (
-                            <p className="text-sm text-[#676879] mt-0.5 line-clamp-3 whitespace-pre-wrap">
-                              {activity.body}
-                            </p>
-                          )}
+                          {activity.body && (() => {
+                            const isExpanded = expandedActivities.has(activity.id as string);
+                            const CHAR_LIMIT = 200;
+                            const isLong = (activity.body as string).length > CHAR_LIMIT;
+                            return (
+                              <div className="mt-0.5">
+                                <p className={`text-sm text-[#676879] whitespace-pre-wrap ${!isExpanded && isLong ? "line-clamp-3" : ""}`}>
+                                  {activity.body}
+                                </p>
+                                {isLong && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); toggleExpand(activity.id as string); }}
+                                    className="text-[11px] font-semibold text-[#0073EA] hover:text-[#0060C2] mt-0.5 transition-colors"
+                                  >
+                                    {isExpanded ? "פחות ▲" : "קרא עוד ▼"}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()}
                           {attendees && (
                             <p className="text-xs text-[#9699A6] mt-0.5">משתתפים: {attendees}</p>
                           )}
