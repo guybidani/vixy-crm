@@ -360,23 +360,23 @@ export default function CompanyDetailPage() {
                 {company.contacts.map((contact: any) => {
                   const status = contactStatuses[contact.status];
                   return (
-                    <div
+                    <button
                       key={contact.id}
-                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
+                      type="button"
+                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
                       onClick={() => navigate(`/contacts/${contact.id}`)}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-8 h-8 bg-[#E8F3FF] rounded-full flex items-center justify-center"
-                          role="img"
-                          aria-label={`${contact.firstName} ${contact.lastName}`}
+                          className="w-8 h-8 bg-[#E8F3FF] rounded-full flex items-center justify-center flex-shrink-0"
+                          aria-hidden="true"
                         >
                           <span className="text-[#0073EA] text-[12px] font-bold">
                             {contact.firstName[0]}
                           </span>
                         </div>
-                        <div>
-                          <span className="font-medium text-sm text-[#323338]">
+                        <div className="text-right">
+                          <span className="font-medium text-sm text-[#323338] block">
                             {contact.firstName} {contact.lastName}
                           </span>
                           {contact.position && (
@@ -392,7 +392,7 @@ export default function CompanyDetailPage() {
                           color={status.color}
                         />
                       )}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -414,13 +414,14 @@ export default function CompanyDetailPage() {
                 {company.deals.map((deal: any) => {
                   const stage = dealStages[deal.stage];
                   return (
-                    <div
+                    <button
                       key={deal.id}
-                      className="flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#F5F6F8] transition-colors cursor-pointer"
-                      onClick={() => navigate(`/deals/${deal.id}`)}
+                      type="button"
+                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      onClick={() => navigate(`/deals?open=${deal.id}`)}
                     >
-                      <div>
-                        <span className="font-medium text-sm text-[#323338]">
+                      <div className="text-right">
+                        <span className="font-medium text-sm text-[#323338] block">
                           {deal.title}
                         </span>
                         {deal.contact && (
@@ -440,7 +441,7 @@ export default function CompanyDetailPage() {
                           />
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
