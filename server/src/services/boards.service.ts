@@ -475,14 +475,9 @@ export async function updateItemValues(
       : [];
   const newColumnMap = new Map(newColumns.map((c) => [c.id, c]));
 
-  // Stamp lastActivityAt on the item
-  await prisma.boardItem.update({
-    where: { id: itemId },
-    data: { lastActivityAt: new Date() },
-  });
-
-  const results = await Promise.all(
-    values.map((v) =>
+  // Stamp lastActivityAt and upsert values in parallel
+  const [results] = await Promise.all([
+    Promise.all(values.map((v) =>
       prisma.boardItemValue.upsert({
         where: {
           itemId_columnId: { itemId, columnId: v.columnId },
@@ -502,8 +497,12 @@ export async function updateItemValues(
           jsonValue: v.jsonValue,
         },
       }),
-    ),
-  );
+    )),
+    prisma.boardItem.update({
+      where: { id: itemId },
+      data: { lastActivityAt: new Date() },
+    }),
+  ]);
 
   // Log activity for each changed value
   for (const v of values) {
@@ -723,30 +722,31 @@ export async function createItemComment(
   authorId: string,
   body: string,
 ) {
-  // Verify the board belongs to this workspace
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board and item in parallel — they are independent checks
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  // Verify the item belongs to this board
-  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
   if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
-  // Stamp lastActivityAt on the item
-  await prisma.boardItem.update({
-    where: { id: itemId },
-    data: { lastActivityAt: new Date() },
-  });
-
-  const comment = await prisma.boardItemComment.create({
-    data: { itemId, authorId, body },
-    include: {
-      author: {
-        include: {
-          user: { select: { id: true, name: true, avatarUrl: true } },
+  // Stamp lastActivityAt and create comment in parallel
+  const [comment] = await Promise.all([
+    prisma.boardItemComment.create({
+      data: { itemId, authorId, body },
+      include: {
+        author: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true } },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.boardItem.update({
+      where: { id: itemId },
+      data: { lastActivityAt: new Date() },
+    }),
+  ]);
   return comment;
 }
 
