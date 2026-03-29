@@ -259,22 +259,18 @@ export async function create(
   }).catch(() => {});
 
   // Notify assignee (if different from creator)
-  if (effectiveAssigneeId !== memberId) {
-    const assignee = await prisma.workspaceMember.findUnique({
-      where: { id: effectiveAssigneeId },
-    });
-    if (assignee) {
-      notificationService
-        .create({
-          workspaceId,
-          userId: assignee.userId,
-          type: "TASK_ASSIGNED",
-          title: `משימה חדשה הוקצתה אליך: "${task.title}"`,
-          entityType: "task",
-          entityId: task.id,
-        })
-        .catch(() => {});
-    }
+  // task.assignee is already fetched in the create include — no extra DB query needed
+  if (effectiveAssigneeId !== memberId && task.assignee) {
+    notificationService
+      .create({
+        workspaceId,
+        userId: task.assignee.userId,
+        type: "TASK_ASSIGNED",
+        title: `משימה חדשה הוקצתה אליך: "${task.title}"`,
+        entityType: "task",
+        entityId: task.id,
+      })
+      .catch(() => {});
   }
 
   // Sync to Google Calendar (fire-and-forget)
@@ -451,22 +447,18 @@ export async function update(
   });
 
   // Notify new assignee on reassignment
-  if (data.assigneeId && data.assigneeId !== existing.assigneeId) {
-    const newAssignee = await prisma.workspaceMember.findUnique({
-      where: { id: data.assigneeId },
-    });
-    if (newAssignee) {
-      notificationService
-        .create({
-          workspaceId,
-          userId: newAssignee.userId,
-          type: "TASK_ASSIGNED",
-          title: `משימה הוקצתה אליך: "${updated.title}"`,
-          entityType: "task",
-          entityId: id,
-        })
-        .catch(() => {});
-    }
+  // updated.assignee reflects the new assignee after the update — no extra DB query needed
+  if (data.assigneeId && data.assigneeId !== existing.assigneeId && updated.assignee) {
+    notificationService
+      .create({
+        workspaceId,
+        userId: updated.assignee.userId,
+        type: "TASK_ASSIGNED",
+        title: `משימה הוקצתה אליך: "${updated.title}"`,
+        entityType: "task",
+        entityId: id,
+      })
+      .catch(() => {});
   }
 
   if (data.status === "DONE" && existing.status !== "DONE") {
