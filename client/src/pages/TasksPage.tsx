@@ -877,11 +877,12 @@ export default function TasksPage() {
   const memberOptions = (members || []).map((m) => ({ id: m.memberId, name: m.name }));
 
   const { data, isLoading } = useQuery({
-    queryKey: ["tasks", { taskTypeFilter, contextFilter, sortBy, sortDir, myTasksOnly }],
+    queryKey: ["tasks", { taskTypeFilter, contextFilter, sortBy, sortDir, myTasksOnly, searchQuery }],
     queryFn: () =>
       listTasks({
         taskType: taskTypeFilter || undefined,
         taskContext: contextFilter || undefined,
+        search: searchQuery.trim() || undefined,
         limit: 500,
         sortBy,
         sortDir,
@@ -907,7 +908,6 @@ export default function TasksPage() {
   const tasks = useMemo(() => {
     let list = data?.data || [];
     if (priorityFilter) list = list.filter((t) => t.priority === priorityFilter);
-    if (searchQuery.trim()) list = list.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     // Date filter
     const today = new Date();
@@ -938,7 +938,7 @@ export default function TasksPage() {
     }
 
     return list;
-  }, [data, priorityFilter, searchQuery, dateFilter]);
+  }, [data, priorityFilter, dateFilter]);
 
   const groupedTasks = useMemo(() => groupTasksByDate(tasks), [tasks]);
 

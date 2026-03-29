@@ -14,6 +14,7 @@ interface ListParams {
   workspaceId: string;
   page?: number;
   limit?: number;
+  search?: string;
   status?: string;
   taskType?: string;
   taskContext?: string;
@@ -40,6 +41,7 @@ export async function list(params: ListParams) {
     workspaceId,
     page = 1,
     limit = 50,
+    search,
     status,
     taskType,
     taskContext,
@@ -57,6 +59,9 @@ export async function list(params: ListParams) {
 
   const where: Prisma.TaskWhereInput = { workspaceId };
 
+  if (search) {
+    where.title = { contains: search, mode: "insensitive" };
+  }
   if (status) where.status = status as any;
   if (taskType) where.taskType = taskType as any;
   if (taskContext) where.taskContext = taskContext as any;
