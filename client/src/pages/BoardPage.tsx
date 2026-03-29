@@ -565,18 +565,20 @@ export default function BoardPage() {
                   style={{ backgroundColor: row._groupColor }}
                 />
                 {/* Open panel icon — appears on hover, to the LEFT of the name */}
-                <PanelRightOpen
-                  size={13}
-                  className="flex-shrink-0 text-[#9699A6] opacity-0 group-hover/name:opacity-100 hover:text-[#0073EA] transition-all cursor-pointer"
+                <button
+                  className="flex-shrink-0 text-[#9699A6] opacity-0 group-hover/name:opacity-100 hover:text-[#0073EA] transition-all cursor-pointer p-0 leading-none focus:outline-none focus-visible:opacity-100 focus-visible:ring-1 focus-visible:ring-[#0073EA] rounded"
                   title="פתח פרטים"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedItemId(row.id);
                   }}
-                />
+                  aria-label="פתח פרטי פריט"
+                >
+                  <PanelRightOpen size={13} />
+                </button>
                 {/* Item name — single click opens panel, double click edits */}
-                <span
-                  className="text-[13px] font-medium text-[#323338] cursor-pointer hover:text-[#0073EA] transition-colors flex-1 truncate"
+                <button
+                  className="text-[13px] font-medium text-[#323338] cursor-pointer hover:text-[#0073EA] transition-colors flex-1 truncate text-right focus:outline-none focus-visible:ring-1 focus-visible:ring-[#0073EA] rounded"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedItemId(row.id);
@@ -586,9 +588,10 @@ export default function BoardPage() {
                     setEditingCell({ itemId: row.id, colKey: "name" });
                     setEditValue(row.name);
                   }}
+                  title="לחץ לפתיחה, לחץ פעמיים לעריכה"
                 >
                   {row.name || "—"}
-                </span>
+                </button>
               </span>
             );
           },
