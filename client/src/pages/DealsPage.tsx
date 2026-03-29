@@ -40,6 +40,7 @@ import MondayNumberCell from "../components/shared/MondayNumberCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import DealDetailPanel from "../components/deals/DealDetailPanel";
 import DealsChartView from "../components/deals/DealsChartView";
+import DealHealthBadge from "../components/deals/DealHealthBadge";
 import {
   getDealsPipeline,
   listDeals,
@@ -354,20 +355,7 @@ export default function DealsPage() {
       render: (row) => {
         const h = row.health;
         if (!h) return <span className="text-[13px] text-[#C5C7D0]">—</span>;
-        return (
-          <div className="flex items-center gap-1.5" title={`${h.score}/100`}>
-            <span
-              className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
-              style={{ backgroundColor: h.color }}
-            />
-            <span
-              className="text-[12px] font-semibold"
-              style={{ color: h.color }}
-            >
-              {h.label}
-            </span>
-          </div>
-        );
+        return <DealHealthBadge health={h} showScore />;
       },
     },
   ];
@@ -762,11 +750,7 @@ function DealCard({
           <span className="text-[10px] text-[#9699A6]">{deal.probability}%</span>
 
           {deal.health && (
-            <span
-              className="inline-block w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: deal.health.color }}
-              title={`${deal.health.label} (${deal.health.score})`}
-            />
+            <DealHealthBadge health={deal.health} showScore />
           )}
         </div>
       </div>
