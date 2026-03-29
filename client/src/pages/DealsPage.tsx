@@ -286,6 +286,19 @@ export default function DealsPage() {
       ),
     },
     {
+      key: "contact",
+      label: "איש קשר",
+      width: "160px",
+      render: (row) => (
+        <MondayPersonCell
+          value={row.contact ? { id: row.contact.id, name: row.contact.name } : null}
+          options={contactOptions}
+          onChange={(id) => inlineUpdate(row.id, { contactId: id! })}
+          placeholder="בחר איש קשר"
+        />
+      ),
+    },
+    {
       key: "company",
       label: "חברה",
       width: "160px",
