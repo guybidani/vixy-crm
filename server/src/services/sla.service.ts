@@ -69,15 +69,14 @@ export async function updateSlaPolicy(
 }
 
 export async function deleteSlaPolicy(workspaceId: string, id: string) {
-  const existing = await prisma.slaPolicy.findFirst({
-    where: { id, workspaceId },
-  });
+  // Fetch policy and ticket usage count in parallel — they are independent queries
+  const [existing, ticketCount] = await Promise.all([
+    prisma.slaPolicy.findFirst({ where: { id, workspaceId } }),
+    prisma.ticket.count({ where: { slaPolicyId: id } }),
+  ]);
+
   if (!existing) throw new AppError(404, "NOT_FOUND", "SLA policy not found");
 
-  // Check if any tickets use this policy
-  const ticketCount = await prisma.ticket.count({
-    where: { slaPolicyId: id },
-  });
   if (ticketCount > 0) {
     throw new AppError(
       400,
