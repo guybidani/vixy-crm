@@ -48,6 +48,8 @@ export interface MondayColumn<T> {
   summary?: ColumnSummary;
   /** Custom summary value extractor (defaults to row[key]) */
   summaryValue?: (row: T) => number | null;
+  /** Remove cell padding so the rendered content fills the full cell (e.g. status cells) */
+  noPadding?: boolean;
 }
 
 export interface MondayGroup<T> {
@@ -1451,7 +1453,8 @@ export default function MondayBoard<T extends { id: string }>({
                                   setCellRef(groupIdx, rowIdx, colIdx, el)
                                 }
                                 className={cn(
-                                  "px-3 py-[7px] text-[13px] text-[#323338] bg-white group-hover/row:bg-[#F5F6F8] transition-shadow",
+                                  "text-[13px] text-[#323338] bg-white group-hover/row:bg-[#F5F6F8] transition-shadow",
+                                  col.noPadding ? "p-0 overflow-hidden" : "px-3 py-[7px]",
                                   colIdx < visibleColumns.length - 1 &&
                                     "border-l border-[#E6E9EF]",
                                   isFocused &&
@@ -2095,11 +2098,9 @@ export function MondayStatusCell({
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        className="w-full h-full min-h-[32px] flex items-center justify-center px-1"
+        className="w-full h-full min-h-[36px] flex items-center justify-center bg-[#C4C4C4] text-white text-[11px] font-semibold hover:opacity-85 transition-opacity"
       >
-        <span className="w-full py-1 rounded-[4px] bg-[#C4C4C4] text-white text-[11px] font-semibold text-center block leading-tight">
-          לא הוגדר
-        </span>
+        לא הוגדר
       </button>
       {open && !editing && (
         <div className="absolute top-full left-0 z-50 bg-white rounded-[8px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1.5 min-w-[160px]">
@@ -2126,7 +2127,7 @@ export function MondayStatusCell({
           if (onChange) setOpen(!open);
         }}
         className={cn(
-          "w-full py-[6px] px-2 text-[13px] font-medium text-white text-center rounded-[2px] transition-opacity select-none",
+          "w-full h-full min-h-[36px] px-2 text-[13px] font-medium text-white text-center transition-opacity select-none flex items-center justify-center",
           onChange && "cursor-pointer hover:opacity-85",
           flashing && "animate-status-flash",
         )}
