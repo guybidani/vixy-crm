@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Clock, Phone, Mail, Video, MessageCircle } from "lucide-react";
+import { Clock, Phone, Mail, Video, MessageCircle, StickyNote } from "lucide-react";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import { getRecentContacts, type RecentContact } from "../api/history";
 
@@ -8,6 +8,7 @@ const ACTIVITY_TYPE_CONFIG: Record<
   string,
   { label: string; color: string; icon: typeof Phone }
 > = {
+  NOTE: { label: "הערה", color: "#F7C948", icon: StickyNote },
   CALL: { label: "שיחה", color: "#00CA72", icon: Phone },
   EMAIL: { label: "אימייל", color: "#579BFC", icon: Mail },
   MEETING: { label: "פגישה", color: "#A25DDC", icon: Video },
@@ -95,9 +96,14 @@ function ContactCard({ item }: { item: RecentContact }) {
             </a>
           )}
           {contact.email && (
-            <span className="truncate hidden sm:inline" dir="ltr">
+            <a
+              href={`mailto:${contact.email}`}
+              onClick={(e) => e.stopPropagation()}
+              className="truncate hidden sm:inline hover:text-[#0073EA] transition-colors"
+              dir="ltr"
+            >
               {contact.email}
-            </span>
+            </a>
           )}
         </div>
       </div>
