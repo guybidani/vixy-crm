@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, TrendingUp, Users, Trophy } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Trophy, AlertCircle } from "lucide-react";
 import PageShell, { PageCard } from "../components/layout/PageShell";
 import {
   getActivityBreakdown,
@@ -383,6 +383,11 @@ export default function AnalyticsPage() {
                 <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
               ))}
             </div>
+          ) : activityQ.isError ? (
+            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
+              <AlertCircle size={16} />
+              <span>שגיאה בטעינת נתונים</span>
+            </div>
           ) : (
             <ActivityBreakdownChart data={activityQ.data || []} />
           )}
@@ -400,6 +405,11 @@ export default function AnalyticsPage() {
                 <div key={i} className="h-8 bg-[#F5F6F8] rounded" />
               ))}
             </div>
+          ) : funnelQ.isError ? (
+            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
+              <AlertCircle size={16} />
+              <span>שגיאה בטעינת נתונים</span>
+            </div>
           ) : (
             <DealFunnelChart data={funnelQ.data || []} />
           )}
@@ -414,6 +424,11 @@ export default function AnalyticsPage() {
           {taskQ.isLoading ? (
             <div className="flex justify-center py-8">
               <div className="w-32 h-32 rounded-full bg-[#F5F6F8] animate-pulse" />
+            </div>
+          ) : taskQ.isError ? (
+            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
+              <AlertCircle size={16} />
+              <span>שגיאה בטעינת נתונים</span>
             </div>
           ) : (
             <TaskCompletionDonut data={taskQ.data || { totalCreated: 0, totalCompleted: 0, pending: 0, completionRate: 0 }} />
@@ -436,6 +451,11 @@ export default function AnalyticsPage() {
                 />
               ))}
             </div>
+          ) : growthQ.isError ? (
+            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
+              <AlertCircle size={16} />
+              <span>שגיאה בטעינת נתונים</span>
+            </div>
           ) : (
             <ContactGrowthLine data={growthQ.data || []} />
           )}
@@ -456,6 +476,11 @@ export default function AnalyticsPage() {
                   <div className="flex-1 h-6 bg-[#F5F6F8] rounded" />
                 </div>
               ))}
+            </div>
+          ) : performersQ.isError ? (
+            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
+              <AlertCircle size={16} />
+              <span>שגיאה בטעינת נתונים</span>
             </div>
           ) : (
             <TopPerformersList data={performersQ.data || []} />
