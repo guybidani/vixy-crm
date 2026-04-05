@@ -47,11 +47,13 @@ export default function ContactsPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(() => searchParams.get("new") === "1");
 
-  // Clear the ?new=1 param once we've opened the modal
+  const [prefilledCompanyId] = useState(() => searchParams.get("companyId") || "");
+
+  // Clear the ?new=1 and ?companyId params once we've opened the modal
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       setShowCreate(true);
-      setSearchParams((prev) => { prev.delete("new"); return prev; }, { replace: true });
+      setSearchParams((prev) => { prev.delete("new"); prev.delete("companyId"); return prev; }, { replace: true });
     }
   }, []);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -609,7 +611,7 @@ export default function ContactsPage() {
       )}
 
       {showCreate && (
-        <CreateContactModal onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); navigate(`/contacts/${id}`); }} />
+        <CreateContactModal defaultCompanyId={prefilledCompanyId} onClose={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); navigate(`/contacts/${id}`); }} />
       )}
 
       <BulkActionBar
@@ -903,7 +905,7 @@ function FilterChip({
   );
 }
 
-function CreateContactModal({ onClose, onCreated }: { onClose: () => void; onCreated?: (id: string) => void }) {
+function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose: () => void; onCreated?: (id: string) => void; defaultCompanyId?: string }) {
   const { leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
@@ -911,7 +913,7 @@ function CreateContactModal({ onClose, onCreated }: { onClose: () => void; onCre
     lastName: "",
     email: "",
     phone: "",
-    companyId: "",
+    companyId: defaultCompanyId || "",
     position: "",
     source: "",
   });
