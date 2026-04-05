@@ -33,6 +33,15 @@ const membershipCache = new Map<string, CachedMembership>();
 
 const MEMBERSHIP_CACHE_TTL_MS = 60_000;
 
+/**
+ * Remove a specific user's cached workspace membership.  Call this after
+ * removing a member or changing their role so the next request re-fetches
+ * from the DB instead of using stale cached permissions.
+ */
+export function invalidateMembershipCache(userId: string, workspaceId: string): void {
+  membershipCache.delete(`${userId}:${workspaceId}`);
+}
+
 // ─── Periodic cleanup of expired membership cache entries (every 5 min) ───
 setInterval(() => {
   const now = Date.now();

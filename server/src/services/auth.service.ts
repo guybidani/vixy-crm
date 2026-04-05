@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../db/client";
 import { config } from "../config";
 import { AppError } from "../middleware/errorHandler";
+import { invalidateMembershipCache } from "../middleware/auth";
 import { OAuth2Client } from "google-auth-library";
 
 const MAX_FAILED_ATTEMPTS = 5;
@@ -656,6 +657,11 @@ export async function changeMemberRole(
     where: { id: memberId },
     data: { role: newRole },
   });
+
+  // Invalidate the cached membership so the new role takes effect immediately
+  // instead of persisting the old role for up to 60 seconds.
+  invalidateMembershipCache(target.userId, workspaceId);
+
   return { memberId: updated.id, role: updated.role };
 }
 
@@ -679,6 +685,11 @@ export async function removeMember(
   if (target.id === caller.id) throw new AppError(400, "BAD_REQUEST", "Cannot remove yourself");
 
   await prisma.workspaceMember.delete({ where: { id: memberId } });
+
+  // Invalidate the cached membership so the removed user is immediately
+  // denied access instead of retaining access for up to 60 seconds.
+  invalidateMembershipCache(target.userId, workspaceId);
+
   return { ok: true };
 }
 
