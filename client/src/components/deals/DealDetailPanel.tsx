@@ -99,6 +99,7 @@ export default function DealDetailPanel({
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmStageChange, setConfirmStageChange] = useState<string | null>(null);
   const [visible, setVisible] = useState(false);
   const [nameHovered, setNameHovered] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -454,7 +455,14 @@ export default function DealDetailPanel({
           <div className="flex items-center gap-2 px-6 pb-3 flex-wrap">
             <select
               value={deal.stage}
-              onChange={(e) => updateMut.mutate({ stage: e.target.value })}
+              onChange={(e) => {
+                const newStage = e.target.value;
+                if (newStage !== deal.stage) {
+                  setConfirmStageChange(newStage);
+                  // Reset the select visually — actual change happens in confirm
+                  e.target.value = deal.stage;
+                }
+              }}
               className="text-[12px] font-semibold px-3 py-1 rounded-full border-none cursor-pointer text-white outline-none"
               style={{ backgroundColor: stageInfo?.color || "#C4C4C4" }}
             >
@@ -1228,6 +1236,22 @@ export default function DealDetailPanel({
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!confirmStageChange}
+        onConfirm={() => {
+          if (confirmStageChange) {
+            updateMut.mutate({ stage: confirmStageChange });
+          }
+          setConfirmStageChange(null);
+        }}
+        onCancel={() => setConfirmStageChange(null)}
+        title="שינוי שלב עסקה"
+        message={`האם אתה בטוח שברצונך להעביר את העסקה ל${confirmStageChange ? (dealStages[confirmStageChange]?.label || confirmStageChange) : ""}?`}
+        confirmText="העבר"
+        cancelText="ביטול"
+        variant="warning"
       />
     </>
   );
