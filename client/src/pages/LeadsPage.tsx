@@ -12,6 +12,8 @@ import {
   TrendingUp,
   Sparkles,
   Clock,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
@@ -70,7 +72,7 @@ export default function LeadsPage() {
   );
   const [viewMode, setViewMode] = useState<"cards" | "pipeline">("cards");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["leads", { search: debouncedSearch }],
     queryFn: () =>
       listContacts({
@@ -156,7 +158,22 @@ export default function LeadsPage() {
         />
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+            <AlertCircle size={28} className="text-[#E44258]" />
+          </div>
+          <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת לידים</h2>
+          <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={14} />
+            נסה שוב
+          </button>
+        </div>
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-12">
           <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
         </div>
