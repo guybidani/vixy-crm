@@ -6,6 +6,7 @@ import {
   Users,
   PieChart,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import {
   LineChart,
@@ -72,9 +73,18 @@ function DealsTimeline() {
       {q.isLoading ? (
         <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
       ) : q.isError ? (
-        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
-          <AlertCircle size={16} />
-          <span>שגיאה בטעינת נתונים</span>
+        <div className="flex flex-col items-center gap-2 justify-center py-12">
+          <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+            <AlertCircle size={16} />
+            <span>שגיאה בטעינת נתונים</span>
+          </div>
+          <button
+            onClick={() => q.refetch()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={12} />
+            נסה שוב
+          </button>
         </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
@@ -175,9 +185,18 @@ function PipelineByStage() {
       {q.isLoading ? (
         <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
       ) : q.isError ? (
-        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
-          <AlertCircle size={16} />
-          <span>שגיאה בטעינת נתונים</span>
+        <div className="flex flex-col items-center gap-2 justify-center py-12">
+          <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+            <AlertCircle size={16} />
+            <span>שגיאה בטעינת נתונים</span>
+          </div>
+          <button
+            onClick={() => q.refetch()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={12} />
+            נסה שוב
+          </button>
         </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין עסקאות לתקופה זו</p>
@@ -244,9 +263,18 @@ function TeamPerformance() {
           ))}
         </div>
       ) : q.isError ? (
-        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
-          <AlertCircle size={16} />
-          <span>שגיאה בטעינת נתונים</span>
+        <div className="flex flex-col items-center gap-2 justify-center py-12">
+          <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+            <AlertCircle size={16} />
+            <span>שגיאה בטעינת נתונים</span>
+          </div>
+          <button
+            onClick={() => q.refetch()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={12} />
+            נסה שוב
+          </button>
         </div>
       ) : sorted.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
@@ -412,9 +440,18 @@ function LeadSources() {
           <div className="w-40 h-40 rounded-full bg-[#F5F6F8] animate-pulse" />
         </div>
       ) : q.isError ? (
-        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
-          <AlertCircle size={16} />
-          <span>שגיאה בטעינת נתונים</span>
+        <div className="flex flex-col items-center gap-2 justify-center py-12">
+          <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+            <AlertCircle size={16} />
+            <span>שגיאה בטעינת נתונים</span>
+          </div>
+          <button
+            onClick={() => q.refetch()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={12} />
+            נסה שוב
+          </button>
         </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים</p>
