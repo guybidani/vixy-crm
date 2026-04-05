@@ -241,16 +241,26 @@ export default function NotificationCenter() {
     };
   }, [qc]);
 
-  // ─── Close on outside click ───
+  // ─── Close on outside click or Escape ───
   useEffect(() => {
     if (!open) return;
-    function handle(e: MouseEvent) {
+    function handleClick(e: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [open]);
 
   // ─── Data fetching ───
