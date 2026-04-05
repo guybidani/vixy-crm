@@ -5,6 +5,7 @@ import {
   TrendingUp,
   Users,
   PieChart,
+  AlertCircle,
 } from "lucide-react";
 import {
   LineChart,
@@ -70,6 +71,11 @@ function DealsTimeline() {
       </div>
       {q.isLoading ? (
         <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
+      ) : q.isError ? (
+        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
+          <AlertCircle size={16} />
+          <span>שגיאה בטעינת נתונים</span>
+        </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
       ) : (
@@ -168,6 +174,11 @@ function PipelineByStage() {
       </div>
       {q.isLoading ? (
         <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
+      ) : q.isError ? (
+        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
+          <AlertCircle size={16} />
+          <span>שגיאה בטעינת נתונים</span>
+        </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין עסקאות לתקופה זו</p>
       ) : (
@@ -231,6 +242,11 @@ function TeamPerformance() {
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
           ))}
+        </div>
+      ) : q.isError ? (
+        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
+          <AlertCircle size={16} />
+          <span>שגיאה בטעינת נתונים</span>
         </div>
       ) : sorted.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים לתקופה זו</p>
@@ -394,6 +410,11 @@ function LeadSources() {
       {q.isLoading ? (
         <div className="flex justify-center py-8">
           <div className="w-40 h-40 rounded-full bg-[#F5F6F8] animate-pulse" />
+        </div>
+      ) : q.isError ? (
+        <div className="flex items-center gap-2 justify-center py-12 text-[13px] text-[#E44258]">
+          <AlertCircle size={16} />
+          <span>שגיאה בטעינת נתונים</span>
         </div>
       ) : data.length === 0 ? (
         <p className="text-[13px] text-[#9699A6] text-center py-12">אין נתונים</p>
