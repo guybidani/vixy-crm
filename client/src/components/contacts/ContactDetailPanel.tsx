@@ -70,7 +70,7 @@ export default function ContactDetailPanel({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRelated, setShowRelated] = useState(false);
 
-  const { data: contact, isLoading } = useQuery({
+  const { data: contact, isLoading, isError, refetch } = useQuery({
     queryKey: ["contact", contactId],
     queryFn: () => getContact(contactId),
     enabled: !!contactId,
@@ -131,6 +131,24 @@ export default function ContactDetailPanel({
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+        <div className="w-12 h-12 rounded-xl bg-[#FFF0F0] flex items-center justify-center mb-3">
+          <X size={24} className="text-[#E44258]" />
+        </div>
+        <h3 className="text-sm font-bold text-[#323338] mb-1">שגיאה בטעינת איש הקשר</h3>
+        <p className="text-[12px] text-[#676879] mb-3">לא הצלחנו לטעון את הנתונים.</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-semibold rounded-[4px] transition-colors"
+        >
+          נסה שוב
+        </button>
       </div>
     );
   }
