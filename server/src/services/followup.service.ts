@@ -9,6 +9,7 @@ export async function listSequences(workspaceId: string) {
       _count: { select: { executions: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 100,
   });
 }
 
@@ -128,13 +129,15 @@ export async function deleteSequence(workspaceId: string, id: string) {
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "Sequence not found");
 
-  // Cancel active executions
-  await prisma.followUpExecution.updateMany({
-    where: { sequenceId: id, status: "ACTIVE" },
-    data: { status: "CANCELLED", completedAt: new Date() },
+  // Wrap cancel + delete in a transaction so a crash between them can't leave
+  // active executions referencing a deleted sequence.
+  return prisma.$transaction(async (tx) => {
+    await tx.followUpExecution.updateMany({
+      where: { sequenceId: id, status: "ACTIVE" },
+      data: { status: "CANCELLED", completedAt: new Date() },
+    });
+    return tx.followUpSequence.delete({ where: { id } });
   });
-
-  return prisma.followUpSequence.delete({ where: { id } });
 }
 
 export async function toggleSequence(workspaceId: string, id: string) {
@@ -237,5 +240,6 @@ export async function getContactExecutions(
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 }
