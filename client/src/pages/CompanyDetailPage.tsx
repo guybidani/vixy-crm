@@ -648,9 +648,16 @@ export default function CompanyDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-[#9699A6] text-center py-4">
-                אין אנשי קשר
-              </p>
+              <div className="text-center py-6">
+                <Users size={24} className="mx-auto text-[#C4C4C4] mb-2" />
+                <p className="text-sm text-[#9699A6] mb-2">אין אנשי קשר</p>
+                <button
+                  onClick={() => navigate(`/contacts?new=1&companyId=${company.id}`)}
+                  className="text-[12px] font-medium text-[#0073EA] hover:underline"
+                >
+                  + הוסף איש קשר ראשון
+                </button>
+              </div>
             )}
           </PageCard>
 
@@ -706,9 +713,16 @@ export default function CompanyDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-[#9699A6] text-center py-4">
-                אין עסקאות
-              </p>
+              <div className="text-center py-6">
+                <Handshake size={24} className="mx-auto text-[#C4C4C4] mb-2" />
+                <p className="text-sm text-[#9699A6] mb-2">אין עסקאות</p>
+                <button
+                  onClick={() => navigate(`/deals?new=1&companyId=${company.id}`)}
+                  className="text-[12px] font-medium text-[#0073EA] hover:underline"
+                >
+                  + הוסף עסקה ראשונה
+                </button>
+              </div>
             )}
           </PageCard>
 
