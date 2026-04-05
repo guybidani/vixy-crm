@@ -164,6 +164,7 @@ export default function DealDetailPanel({
       setEditingField(null);
       setEditingName(false);
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון העסקה"),
   });
 
   const deleteMut = useMutation({
@@ -175,6 +176,7 @@ export default function DealDetailPanel({
       onDeleted?.();
       onClose();
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה במחיקת העסקה"),
   });
 
   const taskToggleMut = useMutation({
