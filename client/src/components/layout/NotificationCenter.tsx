@@ -241,9 +241,15 @@ export default function NotificationCenter() {
     };
   }, [qc]);
 
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   // ─── Close on outside click or Escape ───
   useEffect(() => {
     if (!open) return;
+
+    // Auto-focus the close button so keyboard users land inside the panel
+    requestAnimationFrame(() => closeButtonRef.current?.focus());
+
     function handleClick(e: MouseEvent) {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -350,6 +356,7 @@ export default function NotificationCenter() {
                 </button>
               )}
               <button
+                ref={closeButtonRef}
                 onClick={() => setOpen(false)}
                 className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6]"
                 aria-label="סגור התראות"
