@@ -34,15 +34,25 @@ export async function globalSearch(
     return { contacts: [], deals: [], companies: [], tickets: [] };
   }
 
+  // Clamp limit to prevent unbounded queries — callers could pass limit=999999
+  // to pull the entire table.  Cap at 20 per entity (global search only needs
+  // a handful of results for the dropdown).
+  const safeLim = Math.min(Math.max(1, limit), 20);
+
+  // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match everything.
+  // Prisma's `contains` maps to SQL LIKE '%…%' — percent and underscore in the
+  // search term would be interpreted as wildcards without escaping.
+  const safeQuery = query.replace(/[%_]/g, "\\$&");
+
   const [contacts, deals, companies, tickets] = await Promise.all([
     prisma.contact.findMany({
       where: {
         workspaceId,
         OR: [
-          { firstName: { contains: query, mode: "insensitive" } },
-          { lastName: { contains: query, mode: "insensitive" } },
-          { email: { contains: query, mode: "insensitive" } },
-          { phone: { contains: query } },
+          { firstName: { contains: safeQuery, mode: "insensitive" } },
+          { lastName: { contains: safeQuery, mode: "insensitive" } },
+          { email: { contains: safeQuery, mode: "insensitive" } },
+          { phone: { contains: safeQuery } },
         ],
       },
       select: {
@@ -52,31 +62,31 @@ export async function globalSearch(
         email: true,
         phone: true,
       },
-      take: limit,
+      take: safeLim,
     }),
     prisma.deal.findMany({
       where: {
         workspaceId,
-        title: { contains: query, mode: "insensitive" },
+        title: { contains: safeQuery, mode: "insensitive" },
       },
       select: { id: true, title: true, value: true, stage: true },
-      take: limit,
+      take: safeLim,
     }),
     prisma.company.findMany({
       where: {
         workspaceId,
-        name: { contains: query, mode: "insensitive" },
+        name: { contains: safeQuery, mode: "insensitive" },
       },
       select: { id: true, name: true, industry: true },
-      take: limit,
+      take: safeLim,
     }),
     prisma.ticket.findMany({
       where: {
         workspaceId,
-        subject: { contains: query, mode: "insensitive" },
+        subject: { contains: safeQuery, mode: "insensitive" },
       },
       select: { id: true, subject: true, status: true },
-      take: limit,
+      take: safeLim,
     }),
   ]);
 
