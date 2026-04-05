@@ -240,22 +240,18 @@ export async function update(
     nextFollowUpDate: string | null;
   }>,
 ) {
-  const existing = await prisma.contact.findFirst({
-    where: { id, workspaceId },
-  });
+  // Fetch contact and verify companyId ownership in parallel — independent queries
+  const [existing, companyRef] = await Promise.all([
+    prisma.contact.findFirst({ where: { id, workspaceId } }),
+    data.companyId
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
   if (!existing) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
-
-  // Verify companyId belongs to this workspace (prevent cross-workspace BOLA)
-  if (data.companyId) {
-    const companyRef = await prisma.company.findFirst({
-      where: { id: data.companyId, workspaceId },
-      select: { id: true },
-    });
-    if (!companyRef)
-      throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
-  }
+  if (data.companyId && !companyRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
 
   const { nextFollowUpDate, ...restData } = data;
 
