@@ -90,6 +90,7 @@ export async function getById(workspaceId: string, id: string) {
           tags: { include: { tag: true } },
         },
         orderBy: { createdAt: "desc" },
+        take: 100,
       },
       deals: {
         include: {
@@ -97,7 +98,9 @@ export async function getById(workspaceId: string, id: string) {
           assignee: { include: { user: { select: { name: true } } } },
         },
         orderBy: { createdAt: "desc" },
+        take: 100,
       },
+      _count: { select: { contacts: true, deals: true } },
     },
   });
 
