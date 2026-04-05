@@ -327,8 +327,11 @@ function DocumentCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="bg-white border border-[#E6E9EF] rounded-xl p-4 hover:border-[#0073EA]/30 hover:shadow-sm transition-all cursor-pointer group relative"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="bg-white border border-[#E6E9EF] rounded-xl p-4 hover:border-[#0073EA]/30 hover:shadow-sm transition-all cursor-pointer group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
     >
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
@@ -367,8 +370,8 @@ function DocumentCard({
         </div>
       </div>
 
-      {/* Hover actions */}
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Hover actions — also visible on focus-within for keyboard users */}
+      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -376,6 +379,7 @@ function DocumentCard({
           }}
           className="p-1.5 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-red-500 transition-colors"
           title="מחק"
+          aria-label={`מחק ${doc.title}`}
         >
           <Trash2 size={14} />
         </button>
