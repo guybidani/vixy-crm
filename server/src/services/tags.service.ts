@@ -32,15 +32,20 @@ export async function update(
   id: string,
   data: { name?: string; color?: string },
 ) {
-  const existing = await prisma.tag.findFirst({ where: { id, workspaceId } });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Tag not found");
-
-  return prisma.tag.update({
-    where: { id },
+  // Use updateMany with workspaceId filter for defense-in-depth, then fetch
+  // the updated tag with counts.  This ensures the workspace scope is enforced
+  // at the mutation level, not just the existence check.
+  const result = await prisma.tag.updateMany({
+    where: { id, workspaceId },
     data: {
       ...(data.name !== undefined && { name: data.name.trim() }),
       ...(data.color !== undefined && { color: data.color }),
     },
+  });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Tag not found");
+
+  return prisma.tag.findUnique({
+    where: { id },
     include: {
       _count: { select: { contacts: true, deals: true } },
     },
@@ -48,10 +53,12 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.tag.findFirst({ where: { id, workspaceId } });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Tag not found");
-
-  return prisma.tag.delete({ where: { id } });
+  // Single round-trip with workspace-scoped delete (defense-in-depth).
+  // Replaces find+delete which had a TOCTOU race and enforced workspace
+  // scope only at the check level, not the mutation level.
+  const result = await prisma.tag.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Tag not found");
+  return { deleted: true };
 }
 
 export async function assignToContact(
