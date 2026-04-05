@@ -850,6 +850,16 @@ export default function TasksPage() {
   const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
   const bulkPriorityRef = useRef<HTMLDivElement>(null);
 
+  // Close sort menu on Escape key
+  useEffect(() => {
+    if (!showSortMenu) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowSortMenu(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showSortMenu]);
+
   void priorities;
 
   const toggleTaskSelection = (id: string) => {
@@ -1008,11 +1018,18 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (!showBulkPriorityMenu) return;
-    function handler(e: MouseEvent) {
+    function clickHandler(e: MouseEvent) {
       if (bulkPriorityRef.current && !bulkPriorityRef.current.contains(e.target as Node)) setShowBulkPriorityMenu(false);
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    function keyHandler(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowBulkPriorityMenu(false);
+    }
+    document.addEventListener("mousedown", clickHandler);
+    window.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("mousedown", clickHandler);
+      window.removeEventListener("keydown", keyHandler);
+    };
   }, [showBulkPriorityMenu]);
 
   const sortOptions = [
