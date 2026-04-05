@@ -98,7 +98,7 @@ export default function ContactsPage() {
 
   useEffect(
     () => setSelectedIds(new Set()),
-    [page, debouncedSearch, statusFilter],
+    [page, debouncedSearch, statusFilter, needsFollowUp],
   );
 
   const bulkDeleteMutation = useMutation({
