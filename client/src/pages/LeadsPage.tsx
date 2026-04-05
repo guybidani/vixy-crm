@@ -301,7 +301,11 @@ function LeadCard({
 
   return (
     <div
-      className="group bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border border-transparent hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[#0073EA]/20 hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="group bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border border-transparent hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:border-[#0073EA]/20 hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
     >
       {/* Score accent bar at top */}
       <div
@@ -311,9 +315,8 @@ function LeadCard({
 
       {/* Header: Name + Score ring */}
       <div className="flex items-start justify-between mb-4 mt-1">
-        <button
-          className="cursor-pointer flex-1 min-w-0 text-right focus:outline-none"
-          onClick={onClick}
+        <div
+          className="flex-1 min-w-0 text-right"
         >
           <h3 className="font-bold text-[#323338] text-[15px] truncate group-hover:text-[#0073EA] transition-colors">
             {lead.fullName}
@@ -321,7 +324,7 @@ function LeadCard({
           {lead.position && (
             <p className="text-[12px] text-[#9699A6] mt-0.5 truncate">{lead.position}</p>
           )}
-        </button>
+        </div>
         {/* Circular score with label */}
         <div className="flex flex-col items-center gap-1 flex-shrink-0 mr-3">
           <div className="relative w-11 h-11">
@@ -426,7 +429,7 @@ function LeadCard({
       {/* Actions */}
       <div className="flex gap-2.5">
         <button
-          onClick={onClick}
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
           className="flex-1 py-2.5 text-[12px] font-semibold text-[#676879] bg-[#F5F6F8] hover:bg-surface-tertiary hover:text-[#323338] rounded-[4px] transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-[#E6E9EF]"
         >
           פרטים
@@ -472,8 +475,11 @@ function PipelineCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group bg-white rounded-[4px] p-3 shadow-sm border border-transparent hover:shadow-md hover:border-[#0073EA]/20 cursor-pointer transition-all duration-150"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="group bg-white rounded-[4px] p-3 shadow-sm border border-transparent hover:shadow-md hover:border-[#0073EA]/20 cursor-pointer transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
     >
       <div className="flex items-center justify-between mb-2">
         <span className="font-semibold text-[13px] text-[#323338] truncate group-hover:text-[#0073EA] transition-colors">
