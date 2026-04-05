@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, TrendingUp, Users, Trophy, AlertCircle } from "lucide-react";
+import { BarChart3, TrendingUp, Users, Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import PageShell, { PageCard } from "../components/layout/PageShell";
 import {
   getActivityBreakdown,
@@ -398,9 +398,18 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : activityQ.isError ? (
-            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
-              <AlertCircle size={16} />
-              <span>שגיאה בטעינת נתונים</span>
+            <div className="flex flex-col items-center gap-2 justify-center py-8">
+              <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+                <AlertCircle size={16} />
+                <span>שגיאה בטעינת נתונים</span>
+              </div>
+              <button
+                onClick={() => activityQ.refetch()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={12} />
+                נסה שוב
+              </button>
             </div>
           ) : (
             <ActivityBreakdownChart data={activityQ.data || []} />
@@ -420,9 +429,18 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : funnelQ.isError ? (
-            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
-              <AlertCircle size={16} />
-              <span>שגיאה בטעינת נתונים</span>
+            <div className="flex flex-col items-center gap-2 justify-center py-8">
+              <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+                <AlertCircle size={16} />
+                <span>שגיאה בטעינת נתונים</span>
+              </div>
+              <button
+                onClick={() => funnelQ.refetch()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={12} />
+                נסה שוב
+              </button>
             </div>
           ) : (
             <DealFunnelChart data={funnelQ.data || []} />
@@ -440,9 +458,18 @@ export default function AnalyticsPage() {
               <div className="w-32 h-32 rounded-full bg-[#F5F6F8] animate-pulse" />
             </div>
           ) : taskQ.isError ? (
-            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
-              <AlertCircle size={16} />
-              <span>שגיאה בטעינת נתונים</span>
+            <div className="flex flex-col items-center gap-2 justify-center py-8">
+              <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+                <AlertCircle size={16} />
+                <span>שגיאה בטעינת נתונים</span>
+              </div>
+              <button
+                onClick={() => taskQ.refetch()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={12} />
+                נסה שוב
+              </button>
             </div>
           ) : (
             <TaskCompletionDonut data={taskQ.data || { totalCreated: 0, totalCompleted: 0, pending: 0, completionRate: 0 }} />
@@ -466,9 +493,18 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : growthQ.isError ? (
-            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
-              <AlertCircle size={16} />
-              <span>שגיאה בטעינת נתונים</span>
+            <div className="flex flex-col items-center gap-2 justify-center py-8">
+              <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+                <AlertCircle size={16} />
+                <span>שגיאה בטעינת נתונים</span>
+              </div>
+              <button
+                onClick={() => growthQ.refetch()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={12} />
+                נסה שוב
+              </button>
             </div>
           ) : (
             <ContactGrowthLine data={growthQ.data || []} />
@@ -492,9 +528,18 @@ export default function AnalyticsPage() {
               ))}
             </div>
           ) : performersQ.isError ? (
-            <div className="flex items-center gap-2 justify-center py-8 text-[13px] text-[#E44258]">
-              <AlertCircle size={16} />
-              <span>שגיאה בטעינת נתונים</span>
+            <div className="flex flex-col items-center gap-2 justify-center py-8">
+              <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
+                <AlertCircle size={16} />
+                <span>שגיאה בטעינת נתונים</span>
+              </div>
+              <button
+                onClick={() => performersQ.refetch()}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={12} />
+                נסה שוב
+              </button>
             </div>
           ) : (
             <TopPerformersList data={performersQ.data || []} />
