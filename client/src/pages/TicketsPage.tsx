@@ -176,6 +176,7 @@ export default function TicketsPage() {
       queryClient.invalidateQueries({ queryKey: ["ticket", selectedId] });
       toast.success("סטטוס עודכן");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
   });
 
   return (
@@ -431,6 +432,7 @@ function TicketDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("עדיפות עודכנה");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון עדיפות"),
   });
 
   const assignMutation = useMutation({

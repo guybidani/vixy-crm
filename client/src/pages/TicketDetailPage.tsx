@@ -57,6 +57,7 @@ export default function TicketDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("סטטוס עודכן");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
   });
 
   if (isLoading) {
