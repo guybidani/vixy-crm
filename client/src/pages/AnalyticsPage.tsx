@@ -296,6 +296,8 @@ export default function AnalyticsPage() {
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
 
+  const customRangeReady = rangeKey !== "custom" || (!!customFrom && !!customTo);
+
   const { from, to } = useMemo(
     () => getDateRange(rangeKey, customFrom, customTo),
     [rangeKey, customFrom, customTo],
@@ -304,26 +306,31 @@ export default function AnalyticsPage() {
   const activityQ = useQuery({
     queryKey: ["analytics", "activity-breakdown", from, to],
     queryFn: () => getActivityBreakdown(from, to),
+    enabled: customRangeReady,
   });
 
   const funnelQ = useQuery({
     queryKey: ["analytics", "deal-funnel", from, to],
     queryFn: () => getDealFunnel(from, to),
+    enabled: customRangeReady,
   });
 
   const taskQ = useQuery({
     queryKey: ["analytics", "task-completion", from, to],
     queryFn: () => getTaskCompletion(from, to),
+    enabled: customRangeReady,
   });
 
   const growthQ = useQuery({
     queryKey: ["analytics", "contact-growth", from, to],
     queryFn: () => getContactGrowth(from, to),
+    enabled: customRangeReady,
   });
 
   const performersQ = useQuery({
     queryKey: ["analytics", "top-performers", from, to],
     queryFn: () => getTopPerformers(from, to),
+    enabled: customRangeReady,
   });
 
   return (
@@ -352,20 +359,27 @@ export default function AnalyticsPage() {
       {/* Custom date range inputs */}
       {rangeKey === "custom" && (
         <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-[13px] text-[#676879]">מתאריך:</label>
+          <label htmlFor="analytics-from" className="text-[13px] text-[#676879]">מתאריך:</label>
           <input
+            id="analytics-from"
             type="date"
             value={customFrom}
+            max={customTo || undefined}
             onChange={(e) => setCustomFrom(e.target.value)}
             className="border border-[#E6E9EF] rounded-[4px] px-3 py-1.5 text-[13px]"
           />
-          <label className="text-[13px] text-[#676879]">עד תאריך:</label>
+          <label htmlFor="analytics-to" className="text-[13px] text-[#676879]">עד תאריך:</label>
           <input
+            id="analytics-to"
             type="date"
             value={customTo}
+            min={customFrom || undefined}
             onChange={(e) => setCustomTo(e.target.value)}
             className="border border-[#E6E9EF] rounded-[4px] px-3 py-1.5 text-[13px]"
           />
+          {!customRangeReady && (
+            <span className="text-[12px] text-[#FDAB3D] font-medium">יש לבחור שני תאריכים</span>
+          )}
         </div>
       )}
 
