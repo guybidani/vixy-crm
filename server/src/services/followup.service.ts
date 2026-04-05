@@ -82,31 +82,40 @@ export async function updateSequence(
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "Sequence not found");
 
-  // If steps are provided, delete old and recreate
+  const updateData: any = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.triggerStatuses !== undefined)
+    updateData.triggerStatuses = data.triggerStatuses as any;
+  if (data.endAction !== undefined) updateData.endAction = data.endAction;
+
+  // If steps are provided, wrap delete + recreate in a transaction to avoid
+  // partial state if the process crashes between delete and create.
   if (data.steps) {
-    await prisma.followUpStep.deleteMany({ where: { sequenceId: id } });
+    return prisma.$transaction(async (tx) => {
+      await tx.followUpStep.deleteMany({ where: { sequenceId: id } });
+      await tx.followUpStep.createMany({
+        data: data.steps!.map((s) => ({
+          sequenceId: id,
+          stepNumber: s.stepNumber,
+          delayDays: s.delayDays,
+          channel: s.channel as any,
+          messageTemplate: s.messageTemplate,
+        })),
+      });
+      return tx.followUpSequence.update({
+        where: { id },
+        data: updateData,
+        include: {
+          steps: { orderBy: { stepNumber: "asc" } },
+        },
+      });
+    });
   }
 
   return prisma.followUpSequence.update({
     where: { id },
-    data: {
-      ...(data.name !== undefined && { name: data.name }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(data.triggerStatuses !== undefined && {
-        triggerStatuses: data.triggerStatuses as any,
-      }),
-      ...(data.endAction !== undefined && { endAction: data.endAction }),
-      ...(data.steps && {
-        steps: {
-          create: data.steps.map((s) => ({
-            stepNumber: s.stepNumber,
-            delayDays: s.delayDays,
-            channel: s.channel as any,
-            messageTemplate: s.messageTemplate,
-          })),
-        },
-      }),
-    },
+    data: updateData,
     include: {
       steps: { orderBy: { stepNumber: "asc" } },
     },
