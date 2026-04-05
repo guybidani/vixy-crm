@@ -59,6 +59,20 @@ export function formatRelativeTime(dateStr: string): string {
 /** Return a Hebrew relative-time string with minute/hour/day granularity. */
 export function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
+
+  // Future dates: return a forward-looking string instead of "עכשיו"
+  if (diff < 0) {
+    const futureMins = Math.floor(Math.abs(diff) / 60000);
+    if (futureMins < 1) return "עכשיו";
+    if (futureMins < 60) return `בעוד ${futureMins} דק'`;
+    const futureHours = Math.floor(futureMins / 60);
+    if (futureHours < 24) return `בעוד ${futureHours} שע'`;
+    const futureDays = Math.floor(futureHours / 24);
+    if (futureDays === 1) return "מחר";
+    if (futureDays < 7) return `בעוד ${futureDays} ימים`;
+    return new Date(dateStr).toLocaleDateString("he-IL");
+  }
+
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "עכשיו";
   if (mins < 60) return `לפני ${mins} דק'`;
