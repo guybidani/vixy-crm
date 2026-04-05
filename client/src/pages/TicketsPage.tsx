@@ -1010,8 +1010,23 @@ function CreateTicketModal({
     onError: (err: any) => toast.error(err?.message || "שגיאה ביצירת קריאה"),
   });
 
+  // Map priority → urgencyLevel so they stay in sync
+  const PRIORITY_TO_URGENCY: Record<string, string> = {
+    URGENT: "CRITICAL",
+    HIGH: "HIGH",
+    MEDIUM: "MEDIUM",
+    LOW: "LOW",
+  };
+
   const setField = (key: string, value: string) =>
-    setForm((f) => ({ ...f, [key]: value }));
+    setForm((f) => {
+      const next = { ...f, [key]: value };
+      // Keep urgencyLevel in sync when priority changes
+      if (key === "priority" && PRIORITY_TO_URGENCY[value]) {
+        next.urgencyLevel = PRIORITY_TO_URGENCY[value];
+      }
+      return next;
+    });
 
   return (
     <Modal open={true} onClose={onClose} title="קריאה חדשה">
