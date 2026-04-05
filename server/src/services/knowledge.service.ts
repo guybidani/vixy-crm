@@ -164,9 +164,19 @@ export async function updateArticle(
   if (data.categoryId && !categoryRef)
     throw new AppError(400, "INVALID_REFERENCE", "Category not found in workspace");
 
+  // Build updateData from explicit fields instead of passing raw data object.
+  // Blind spread risks writing unexpected fields to Prisma (same pattern
+  // already fixed in deals, tickets, tasks, contacts, and companies).
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.slug !== undefined) updateData.slug = data.slug;
+  if (data.body !== undefined) updateData.body = data.body;
+  if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+  if (data.status !== undefined) updateData.status = data.status;
+
   return prisma.kbArticle.update({
     where: { id },
-    data,
+    data: updateData,
     include: {
       category: { select: { id: true, name: true } },
     },
