@@ -289,9 +289,18 @@ export async function update(
     updateData.lastActivityAt = new Date();
   }
 
-  const updated = await prisma.contact.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap between the findFirst check and the actual write), then re-fetch.
+  // Same pattern already applied to deals, tickets, and tasks services.
+  const updateResult = await prisma.contact.updateMany({
+    where: { id, workspaceId },
     data: updateData,
+  });
+  if (updateResult.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+  const updated = await prisma.contact.findFirstOrThrow({
+    where: { id, workspaceId },
     include: {
       company: { select: { id: true, name: true } },
       tags: { include: { tag: true } },
