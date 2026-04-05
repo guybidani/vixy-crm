@@ -1,5 +1,6 @@
 import { parse } from "csv-parse/sync";
 import { prisma } from "../db/client";
+import { IMPORT_MAX_ROWS } from "../lib/constants";
 
 /**
  * Parse a CSV buffer into headers + rows.
@@ -51,6 +52,14 @@ export async function importContacts(
   headers: string[],
 ): Promise<ImportResult> {
   const result: ImportResult = { imported: 0, skipped: 0, errors: [] };
+
+  // Enforce row limit to prevent OOM on huge CSV files
+  if (rows.length > IMPORT_MAX_ROWS) {
+    result.errors.push(
+      `File has ${rows.length} rows — max allowed is ${IMPORT_MAX_ROWS}. Only the first ${IMPORT_MAX_ROWS} rows will be processed.`,
+    );
+    rows = rows.slice(0, IMPORT_MAX_ROWS);
+  }
 
   // Build header-index lookup
   const headerIndex: Record<string, number> = {};
@@ -193,6 +202,14 @@ export async function importDeals(
   headers: string[],
 ): Promise<ImportResult> {
   const result: ImportResult = { imported: 0, skipped: 0, errors: [] };
+
+  // Enforce row limit to prevent OOM on huge CSV files
+  if (rows.length > IMPORT_MAX_ROWS) {
+    result.errors.push(
+      `File has ${rows.length} rows — max allowed is ${IMPORT_MAX_ROWS}. Only the first ${IMPORT_MAX_ROWS} rows will be processed.`,
+    );
+    rows = rows.slice(0, IMPORT_MAX_ROWS);
+  }
 
   const headerIndex: Record<string, number> = {};
   for (let i = 0; i < headers.length; i++) {

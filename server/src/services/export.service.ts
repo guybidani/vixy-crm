@@ -67,6 +67,12 @@ const COLUMNS: Record<ExportEntity, Array<{ key: string; label: string }>> = {
 };
 
 function escapeCsv(val: string): string {
+  // Guard against CSV formula injection: prefix dangerous first chars with a
+  // single quote so Excel/Sheets treat the cell as plain text.
+  // Characters =, +, -, @, tab, carriage-return can trigger formula evaluation.
+  if (/^[=+\-@\t\r]/.test(val)) {
+    val = `'${val}`;
+  }
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
     return `"${val.replace(/"/g, '""')}"`;
   }

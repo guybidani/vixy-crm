@@ -9,3 +9,6 @@ export const EXPORT_MAX_ROWS = 10_000;
 
 /** Board / list limits */
 export const BOARD_MAX_ITEMS = 500;
+
+/** Import limits */
+export const IMPORT_MAX_ROWS = 10_000;
