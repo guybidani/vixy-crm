@@ -31,6 +31,7 @@ import { avatarColor, timeAgo } from "../../lib/utils";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
 import StatusDropdown from "../shared/StatusDropdown";
+import { LeadHeatPicker, type LeadHeat } from "../shared/LeadHeatBadge";
 import TagSelector from "../shared/TagSelector";
 import MondayPersonCell, {
   type PersonOption,
@@ -1943,6 +1944,7 @@ function EditContactModal({
     source: contact.source || "",
     status: contact.status,
     leadScore: contact.leadScore,
+    leadHeat: (contact.leadHeat as LeadHeat | null) || null,
     companyId: contact.companyId || "",
   });
 
@@ -1961,6 +1963,7 @@ function EditContactModal({
         position: form.position || undefined,
         source: form.source || undefined,
         leadScore: Number(form.leadScore),
+        leadHeat: form.leadHeat || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
@@ -2114,6 +2117,16 @@ function EditContactModal({
                 className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#676879] mb-2">
+              חום ליד
+            </label>
+            <LeadHeatPicker
+              value={form.leadHeat}
+              onChange={(heat) => setForm((f) => ({ ...f, leadHeat: heat }))}
+            />
           </div>
 
           <div>
