@@ -264,13 +264,25 @@ export default function TicketsPage() {
       </div>
 
       {/* ── Right: Ticket Detail Panel ── */}
-      <div className="flex-1 overflow-hidden">
+      <div className={`flex-1 overflow-hidden ${selectedId ? "flex flex-col" : "hidden md:flex md:flex-col"}`}>
         {selectedId ? (
-          <TicketDetailPanel
-            ticketId={selectedId}
-            onNavigateFull={() => navigate(`/tickets/${selectedId}`)}
-            onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-          />
+          <>
+            {/* Mobile back button */}
+            <button
+              onClick={() => setSelectedId(null)}
+              className="md:hidden flex items-center gap-1.5 px-4 py-2.5 bg-white border-b border-[#E6E9EF] text-[13px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] transition-colors flex-shrink-0"
+            >
+              <ArrowRight size={14} />
+              חזרה לרשימה
+            </button>
+            <div className="flex-1 overflow-hidden">
+              <TicketDetailPanel
+                ticketId={selectedId}
+                onNavigateFull={() => navigate(`/tickets/${selectedId}`)}
+                onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+              />
+            </div>
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-[#9699A6] gap-3">
             <MessageSquare size={48} className="opacity-20" />
