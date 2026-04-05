@@ -203,7 +203,9 @@ export async function update(
     throw new AppError(404, "NOT_FOUND", "Company not found");
   }
 
-  return prisma.company.findUnique({ where: { id } });
+  // Re-fetch with workspaceId filter to avoid leaking a company from another
+  // workspace if the id somehow pointed cross-workspace (defense-in-depth).
+  return prisma.company.findFirst({ where: { id, workspaceId } });
 }
 
 export async function remove(workspaceId: string, id: string) {
