@@ -386,19 +386,21 @@ async function executeAction(action: any, ctx: TriggerContext) {
         break;
       }
 
+      // Use updateMany with workspaceId filter for defense-in-depth
+      // (prevents cross-workspace writes if entityId was ever corrupted)
       if (ctx.entityType === "contact") {
-        await prisma.contact.update({
-          where: { id: ctx.entityId },
+        await prisma.contact.updateMany({
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
           data: { [field]: value },
         });
       } else if (ctx.entityType === "deal") {
-        await prisma.deal.update({
-          where: { id: ctx.entityId },
+        await prisma.deal.updateMany({
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
           data: { [field]: value },
         });
       } else if (ctx.entityType === "ticket") {
-        await prisma.ticket.update({
-          where: { id: ctx.entityId },
+        await prisma.ticket.updateMany({
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
           data: { [field]: value },
         });
       }
@@ -407,8 +409,8 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
     case "MOVE_STAGE": {
       if (ctx.entityType === "deal" && config.stage) {
-        await prisma.deal.update({
-          where: { id: ctx.entityId },
+        await prisma.deal.updateMany({
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
           data: {
             stage: config.stage,
             stageChangedAt: new Date(),
@@ -421,8 +423,8 @@ async function executeAction(action: any, ctx: TriggerContext) {
     case "ASSIGN_OWNER": {
       if (config.assigneeId) {
         if (ctx.entityType === "deal") {
-          await prisma.deal.update({
-            where: { id: ctx.entityId },
+          await prisma.deal.updateMany({
+            where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
             data: { assigneeId: config.assigneeId },
           });
         }
