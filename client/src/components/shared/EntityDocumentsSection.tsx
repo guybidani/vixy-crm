@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "./Modal";
+import ConfirmDialog from "./ConfirmDialog";
 import {
   getEntityDocuments,
   uploadDocument,
@@ -52,6 +53,7 @@ export default function EntityDocumentsSection({
   const [showMenu, setShowMenu] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showCreateRichText, setShowCreateRichText] = useState(false);
+  const [unlinkTarget, setUnlinkTarget] = useState<{ docId: string; linkId: string; title: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const queryKey = ["entity-documents", entityType, entityId];
@@ -218,7 +220,7 @@ export default function EntityDocumentsSection({
                     : "מסמך טקסט"}
                 </p>
               </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                 {link.document.type === "FILE" && link.document.fileUrl && (
                   <a
                     href={`/uploads/${link.document.fileUrl}`}
@@ -226,19 +228,22 @@ export default function EntityDocumentsSection({
                     rel="noopener noreferrer"
                     className="p-1 rounded hover:bg-white text-[#9699A6] hover:text-[#0073EA] transition-colors"
                     title="הורדה"
+                    aria-label={`הורד ${link.document.title}`}
                   >
                     <Download size={13} />
                   </a>
                 )}
                 <button
                   onClick={() =>
-                    unlinkMut.mutate({
+                    setUnlinkTarget({
                       docId: link.document.id,
                       linkId: link.id,
+                      title: link.document.title,
                     })
                   }
                   className="p-1 rounded hover:bg-white text-[#9699A6] hover:text-red-500 transition-colors"
                   title="הסר קישור"
+                  aria-label={`הסר קישור ל-${link.document.title}`}
                 >
                   <X size={13} />
                 </button>
@@ -272,6 +277,22 @@ export default function EntityDocumentsSection({
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={!!unlinkTarget}
+        title="הסרת קישור מסמך"
+        message={`האם להסיר את הקישור ל-"${unlinkTarget?.title ?? ""}"? המסמך עצמו לא יימחק.`}
+        confirmText="הסר קישור"
+        cancelText="ביטול"
+        variant="danger"
+        onConfirm={() => {
+          if (unlinkTarget) {
+            unlinkMut.mutate({ docId: unlinkTarget.docId, linkId: unlinkTarget.linkId });
+          }
+          setUnlinkTarget(null);
+        }}
+        onCancel={() => setUnlinkTarget(null)}
+      />
     </div>
   );
 }
