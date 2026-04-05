@@ -17,6 +17,8 @@ import {
   TrendingUp,
   CheckCircle2,
   Layers,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
@@ -135,7 +137,7 @@ export default function DealsPage() {
   }
 
   // Kanban data
-  const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
+  const { data: pipelineData, isLoading: pipelineLoading, isError: pipelineError, refetch: refetchPipeline } = useQuery({
     queryKey: ["deals-pipeline"],
     queryFn: getDealsPipeline,
   });
@@ -147,7 +149,7 @@ export default function DealsPage() {
 
   useEffect(() => setSelectedIds(new Set()), [page, debouncedSearch]);
 
-  const { data: tableData, isLoading: tableLoading } = useQuery({
+  const { data: tableData, isLoading: tableLoading, isError: tableError, refetch: refetchTable } = useQuery({
     queryKey: ["deals", { search: debouncedSearch, page, stage: viewFilters.stage, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir }],
     queryFn: () =>
       listDeals({
@@ -504,23 +506,55 @@ export default function DealsPage() {
         !tableLoading ? (
         <DealsEmptyState onAdd={() => setShowCreate(true)} />
       ) : viewMode === "kanban" ? (
-        <KanbanBoard<Deal>
-          columns={kanbanColumns}
-          renderCard={(deal, isDragging) => (
-            <DealCard
-              deal={deal}
-              isDragging={isDragging}
-              onWon={(id) => setConfirmWonId(id)}
-              onLost={(id) => setLostModal({ dealId: id })}
-            />
-          )}
-          onDragEnd={handleKanbanDragEnd}
-          onCardClick={(deal) => setSelectedDealId(deal.id)}
-          loading={pipelineLoading}
-          emptyText="אין עסקאות"
-        />
+        pipelineError ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+              <AlertCircle size={28} className="text-[#E44258]" />
+            </div>
+            <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת עסקאות</h2>
+            <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+            <button
+              onClick={() => refetchPipeline()}
+              className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+            >
+              <RefreshCw size={14} />
+              נסה שוב
+            </button>
+          </div>
+        ) : (
+          <KanbanBoard<Deal>
+            columns={kanbanColumns}
+            renderCard={(deal, isDragging) => (
+              <DealCard
+                deal={deal}
+                isDragging={isDragging}
+                onWon={(id) => setConfirmWonId(id)}
+                onLost={(id) => setLostModal({ dealId: id })}
+              />
+            )}
+            onDragEnd={handleKanbanDragEnd}
+            onCardClick={(deal) => setSelectedDealId(deal.id)}
+            loading={pipelineLoading}
+            emptyText="אין עסקאות"
+          />
+        )
       ) : tableTab === "chart" ? (
         <DealsChartView />
+      ) : tableError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+            <AlertCircle size={28} className="text-[#E44258]" />
+          </div>
+          <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת עסקאות</h2>
+          <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+          <button
+            onClick={() => refetchTable()}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={14} />
+            נסה שוב
+          </button>
+        </div>
       ) : (
         <MondayBoard<Deal>
           groups={mondayGroups}
