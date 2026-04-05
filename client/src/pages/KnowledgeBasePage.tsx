@@ -294,8 +294,11 @@ function ArticleCard({
 }) {
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border-r-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all p-5 cursor-pointer group"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
+      className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] border-r-4 hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)] transition-all p-5 cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
       style={{ borderRightColor: categoryColor }}
     >
       <div className="flex items-start justify-between mb-2">
