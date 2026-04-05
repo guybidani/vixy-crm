@@ -16,7 +16,7 @@ import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 export default function DealsChartView() {
   const { dealStages, priorities } = useWorkspaceOptions();
-  const { data: pipelineData, isLoading: pipelineLoading } = useQuery({
+  const { data: pipelineData, isLoading: pipelineLoading, isError: pipelineError } = useQuery({
     queryKey: ["deals-pipeline"],
     queryFn: getDealsPipeline,
   });
@@ -34,7 +34,14 @@ export default function DealsChartView() {
     );
   }
 
-  if (!pipelineData) return null;
+  if (pipelineError || !pipelineData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <p className="text-[#E44258] font-semibold mb-1">שגיאה בטעינת נתונים</p>
+        <p className="text-[13px] text-[#9699A6]">לא ניתן לטעון את נתוני העסקאות. נסה לרענן את הדף.</p>
+      </div>
+    );
+  }
 
   // ── Data preparation ──
   const stageData = pipelineData.totals.map((t) => {
