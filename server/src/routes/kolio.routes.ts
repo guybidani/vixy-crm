@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { prisma } from "../db/client";
 import { config } from "../config";
+import { calculateScoreDelta } from "../utils/scoring.util";
 
 export const kolioWebhookRouter = Router();
 
@@ -198,6 +199,21 @@ kolioWebhookRouter.post("/", async (req, res, next) => {
         contact: { select: { id: true, firstName: true, lastName: true } },
       },
     });
+
+    // Fire-and-forget: stamp lastActivityAt + bump lead score on the matched
+    // contact, same as activities.service.create does.  Without this, Kolio
+    // webhook calls never update the contact's activity timestamp or score,
+    // causing the contact to appear stale and deal health to degrade.
+    if (contactId) {
+      const delta = calculateScoreDelta("CALL");
+      prisma.$executeRaw`
+        UPDATE "Contact"
+        SET
+          "leadScore" = GREATEST(0, LEAST(100, "leadScore" + ${delta})),
+          "lastActivityAt" = NOW()
+        WHERE id = ${contactId} AND "workspaceId" = ${workspaceId}
+      `.catch(() => {});
+    }
 
     res.status(201).json({
       received: true,
