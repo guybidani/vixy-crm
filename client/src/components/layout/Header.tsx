@@ -195,30 +195,39 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
           </button>
 
           {profileMenuOpen && (
-            <div className="absolute top-full mt-2 left-0 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] py-2 min-w-[200px]" dir="rtl">
+            <div
+              className="absolute top-full mt-2 left-0 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] py-2 min-w-[200px]"
+              dir="rtl"
+              role="menu"
+              aria-label="תפריט משתמש"
+            >
               {/* User info */}
               <div className="px-4 py-2.5 border-b border-[#E6E9EF] mb-1">
                 <p className="text-[13px] font-semibold text-[#323338] truncate">{user?.name}</p>
                 <p className="text-[11px] text-[#9699A6] truncate">{user?.email}</p>
               </div>
               <button
+                role="menuitem"
+                autoFocus
                 onClick={() => { navigate("/settings"); setProfileMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
               >
                 <Settings size={14} className="text-[#676879]" />
                 הגדרות
               </button>
               <button
+                role="menuitem"
                 onClick={() => { navigate("/settings?tab=profile"); setProfileMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
               >
                 <User size={14} className="text-[#676879]" />
                 הפרופיל שלי
               </button>
               <div className="border-t border-[#E6E9EF] mt-1 pt-1">
                 <button
+                  role="menuitem"
                   onClick={() => { logout(); setProfileMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right focus:outline-none focus-visible:bg-[#FFEEF0]"
                 >
                   <LogOut size={14} />
                   יציאה
