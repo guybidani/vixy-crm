@@ -264,10 +264,18 @@ export async function update(
     assigneeId: string;
   }>,
 ) {
-  const existing = await prisma.ticket.findFirst({
-    where: { id, workspaceId },
-  });
+  // Verify ticket existence and assignee ownership in parallel
+  const [existing, assigneeRef] = await Promise.all([
+    prisma.ticket.findFirst({
+      where: { id, workspaceId },
+    }),
+    data.assigneeId
+      ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
   if (!existing) throw new AppError(404, "NOT_FOUND", "Ticket not found");
+  if (data.assigneeId && !assigneeRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
   const updateData: any = { ...data };
   if (data.status) updateData.status = data.status;
