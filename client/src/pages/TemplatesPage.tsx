@@ -336,25 +336,28 @@ function TemplateCard({
         <span className="text-[11px] text-[#9699A6]">
           {template.usageCount} שימושים
         </span>
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(); }}
-            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA]"
+            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
             title="תצוגה מקדימה"
+            aria-label={`תצוגה מקדימה — ${template.name}`}
           >
             <Eye size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA]"
+            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
             title="עריכה"
+            aria-label={`ערוך — ${template.name}`}
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1.5 hover:bg-red-50 rounded-[4px] transition-colors text-[#9699A6] hover:text-[#E44258]"
+            className="p-1.5 hover:bg-red-50 rounded-[4px] transition-colors text-[#9699A6] hover:text-[#E44258] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E44258]"
             title="מחיקה"
+            aria-label={`מחק — ${template.name}`}
           >
             <Trash2 size={14} />
           </button>
