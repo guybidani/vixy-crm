@@ -281,11 +281,18 @@ function TaskDotMenu({
 
   useEffect(() => {
     if (!open) return;
-    function handler(e: MouseEvent) {
+    function clickHandler(e: Event) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    function keyHandler(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", clickHandler);
+    window.addEventListener("keydown", keyHandler);
+    return () => {
+      document.removeEventListener("mousedown", clickHandler);
+      window.removeEventListener("keydown", keyHandler);
+    };
   }, [open]);
 
   return (
@@ -294,12 +301,15 @@ function TaskDotMenu({
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
         className="p-1 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/row:opacity-100 transition-opacity text-[#9699A6] hover:text-[#323338]"
         title="פעולות"
+        aria-haspopup="true"
+        aria-expanded={open}
       >
         <MoreHorizontal size={14} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] z-30 py-1 min-w-[140px]">
+        <div role="menu" className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] z-30 py-1 min-w-[140px]">
           <button
+            role="menuitem"
             onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
             className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8] flex items-center gap-2 transition-colors text-[#323338]"
           >
@@ -309,6 +319,7 @@ function TaskDotMenu({
           <SnoozeDropdown taskId={task.id} onSnoozed={() => setOpen(false)} />
           <div className="border-t border-[#E6E9EF] my-1" />
           <button
+            role="menuitem"
             onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
             className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#E44258]/5 flex items-center gap-2 transition-colors text-[#E44258]"
           >
