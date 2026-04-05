@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Plus, Building2, Users, Handshake } from "lucide-react";
@@ -56,6 +56,9 @@ export default function CompaniesPage() {
   const [_selectedCompanyId, _setSelectedCompanyId] = useState<string | null>(
     null,
   );
+
+  // Reset to page 1 when search changes so the user sees the first page of results
+  useEffect(() => setPage(1), [debouncedSearch]);
 
   const inlineUpdate = useInlineUpdate(updateCompany, [
     ["companies"],
