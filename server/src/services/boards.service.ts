@@ -374,12 +374,12 @@ export async function updateItem(
   actorId?: string,
   actorName?: string,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Validate board ownership and fetch existing item in parallel
+  const [board, existing] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const existing = await prisma.boardItem.findFirst({ where: { id: itemId } });
 
   const updated = await prisma.boardItem.update({
     where: { id: itemId },
@@ -758,13 +758,15 @@ export async function editItemComment(
   userId: string,
   body: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board and fetch comment in parallel
+  const [board, comment] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItemComment.findFirst({
+      where: { id: commentId, itemId },
+      include: { author: true },
+    }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const comment = await prisma.boardItemComment.findFirst({
-    where: { id: commentId, itemId },
-    include: { author: true },
-  });
   if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
 
   // Only the comment author can edit
@@ -879,13 +881,15 @@ export async function duplicateItem(
   actorId?: string,
   actorName?: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board ownership and fetch original item in parallel
+  const [board, original] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({
+      where: { id: itemId, boardId },
+      include: { values: true },
+    }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const original = await prisma.boardItem.findFirst({
-    where: { id: itemId, boardId },
-    include: { values: true },
-  });
   if (!original) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   const newItem = await prisma.boardItem.create({
@@ -931,10 +935,12 @@ export async function updateItemDescription(
   itemId: string,
   description: string | null,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board ownership and item existence in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
   if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItem.update({
@@ -967,16 +973,14 @@ export async function createSubItem(
   parentItemId: string,
   name: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board, fetch parent, and compute max order in parallel
+  const [board, parent, maxOrder] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: parentItemId, boardId } }),
+    prisma.boardItem.aggregate({ where: { parentItemId }, _max: { order: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const parent = await prisma.boardItem.findFirst({ where: { id: parentItemId, boardId } });
   if (!parent) throw new AppError(404, "NOT_FOUND", "Parent item not found");
-
-  const maxOrder = await prisma.boardItem.aggregate({
-    where: { parentItemId },
-    _max: { order: true },
-  });
 
   return prisma.boardItem.create({
     data: {
@@ -1042,10 +1046,12 @@ export async function createItemFile(
     mimeType: string;
   },
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Validate board ownership and item existence in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const item = await prisma.boardItem.findFirst({ where: { id: itemId, boardId } });
   if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItemFile.create({
