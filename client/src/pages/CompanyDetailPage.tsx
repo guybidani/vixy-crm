@@ -312,10 +312,29 @@ export default function CompanyDetailPage() {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+          <AlertCircle size={28} className="text-[#E44258]" />
+        </div>
+        <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת החברה</h2>
+        <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+        >
+          <RefreshCw size={14} />
+          נסה שוב
+        </button>
+      </div>
+    );
+  }
+
   if (!company) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-[#676879]">חברה לא נמצאה</p>
+        <p className="text-[#676879]">ח��רה לא נמצאה</p>
       </div>
     );
   }
