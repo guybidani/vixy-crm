@@ -1247,7 +1247,7 @@ function HealthBadge({ health }: { health: DealHealth }) {
   const healthRef = useRef<HTMLDivElement>(null);
   const b = health.breakdown;
 
-  // Close health breakdown on click outside
+  // Close health breakdown on click outside or Escape key
   useEffect(() => {
     if (!showBreakdown) return;
     function handleMouseDown(e: MouseEvent) {
@@ -1255,8 +1255,17 @@ function HealthBadge({ health }: { health: DealHealth }) {
         setShowBreakdown(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowBreakdown(false);
+      }
+    }
     document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [showBreakdown]);
 
   const breakdownRows = [
