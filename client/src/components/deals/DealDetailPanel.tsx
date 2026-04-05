@@ -117,10 +117,15 @@ export default function DealDetailPanel({
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
   const newTaskInputRef = useRef<HTMLInputElement>(null);
 
-  // Animate in on mount
+  // Animate in on mount + lock body scroll
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true));
-    return () => cancelAnimationFrame(raf);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      cancelAnimationFrame(raf);
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   const { data: deal, isLoading } = useQuery({
