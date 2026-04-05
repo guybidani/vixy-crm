@@ -257,7 +257,25 @@ export async function update(
   if (data.companyId && !companyRef)
     throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
 
-  const { nextFollowUpDate, ...restData } = data;
+  // Build updateData from explicit fields instead of spreading { ...data }.
+  // Blind spread risks passing unexpected fields directly to Prisma (same
+  // pattern already fixed in deals, tickets, and tasks services).
+  const updateData: Record<string, unknown> = {};
+  if (data.firstName !== undefined) updateData.firstName = data.firstName;
+  if (data.lastName !== undefined) updateData.lastName = data.lastName;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (data.companyId !== undefined) updateData.companyId = data.companyId;
+  if (data.position !== undefined) updateData.position = data.position;
+  if (data.source !== undefined) updateData.source = data.source;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.leadScore !== undefined) updateData.leadScore = data.leadScore;
+  if (data.leadHeat !== undefined) updateData.leadHeat = data.leadHeat;
+  if (data.nextFollowUpDate !== undefined) {
+    updateData.nextFollowUpDate = data.nextFollowUpDate
+      ? new Date(data.nextFollowUpDate)
+      : null;
+  }
 
   // Only stamp lastActivityAt when a meaningful CRM event occurs, not on
   // trivial data edits (phone/email/position fixes). Status/score changes
@@ -267,17 +285,13 @@ export async function update(
     (data.leadScore !== undefined && data.leadScore !== existing.leadScore) ||
     (data.leadHeat !== undefined && data.leadHeat !== existing.leadHeat);
 
+  if (isSignificantChange) {
+    updateData.lastActivityAt = new Date();
+  }
+
   const updated = await prisma.contact.update({
     where: { id },
-    data: {
-      ...restData,
-      status: restData.status as any,
-      leadHeat: restData.leadHeat as any,
-      ...(isSignificantChange && { lastActivityAt: new Date() }),
-      ...(nextFollowUpDate !== undefined && {
-        nextFollowUpDate: nextFollowUpDate ? new Date(nextFollowUpDate) : null,
-      }),
-    },
+    data: updateData,
     include: {
       company: { select: { id: true, name: true } },
       tags: { include: { tag: true } },
