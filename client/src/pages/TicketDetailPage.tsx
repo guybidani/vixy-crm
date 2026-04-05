@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import {
   ArrowRight,
   User,
@@ -380,6 +381,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
   const [showAll, setShowAll] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data: activities = [] } = useQuery({
     queryKey: ["activities", { ticketId }],
@@ -551,7 +553,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
                       <Pencil size={11} />
                     </button>
                     <button
-                      onClick={() => deleteMut.mutate(act.id)}
+                      onClick={() => setConfirmDeleteId(act.id)}
                       disabled={deleteMut.isPending}
                       className="p-1 rounded text-[#9699A6] hover:text-[#E44258] hover:bg-[#E44258]/10 transition-colors"
                       title="מחק"
@@ -568,11 +570,25 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
               onClick={() => setShowAll((v) => !v)}
               className="text-[11px] text-[#0073EA] hover:underline py-1 w-full text-center"
             >
-              {showAll ? "הצג פחות" : `הצג את כל ${activities.length} הפעילויות`}
+              {showAll ? "הצג ��חות" : `הצג את כל ${activities.length} הפעילויות`}
             </button>
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={() => {
+          if (confirmDeleteId) deleteMut.mutate(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="מחיקת פעילות"
+        message="האם אתה בטוח שברצונך למחוק את הפעילות? לא ניתן לשחזר."
+        confirmText="מ��ק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }
