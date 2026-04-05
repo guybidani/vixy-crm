@@ -101,7 +101,7 @@ export default function DealsChartView() {
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="סה״כ עסקאות"
           value={String(totalDeals)}
@@ -129,7 +129,7 @@ export default function DealsChartView() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Revenue by Stage */}
         <div className="bg-white rounded-xl p-5 shadow-sm border border-[#E6E9EF]">
           <h3 className="text-[15px] font-bold text-[#323338] mb-4">
