@@ -321,19 +321,23 @@ export async function getMe(userId: string) {
 }
 
 export async function createWorkspace(userId: string, name: string) {
-  const slug =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
-      .replace(/^-|-$/g, "") || `ws-${Date.now()}`;
-
-  let finalSlug = slug;
-  const existing = await prisma.workspace.findUnique({ where: { slug } });
-  if (existing) {
-    finalSlug = `${slug}-${Date.now().toString(36)}`;
-  }
-
   const result = await prisma.$transaction(async (tx) => {
+    // Slug uniqueness check MUST run inside the transaction to prevent a
+    // TOCTOU race: two concurrent createWorkspace calls with the same name
+    // could both pass an outside check, then one fails with a unique
+    // constraint error. Previously the check ran outside the transaction.
+    const slug =
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
+        .replace(/^-|-$/g, "") || `ws-${Date.now()}`;
+
+    let finalSlug = slug;
+    const existing = await tx.workspace.findUnique({ where: { slug } });
+    if (existing) {
+      finalSlug = `${slug}-${Date.now().toString(36)}`;
+    }
+
     const workspace = await tx.workspace.create({
       data: {
         name,
@@ -482,20 +486,6 @@ export async function googleLogin(idToken: string) {
     isNewUser = true;
     const displayName = name || email.split("@")[0];
 
-    const slug =
-      displayName
-        .toLowerCase()
-        .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
-        .replace(/^-|-$/g, "") || `ws-${Date.now()}`;
-
-    let finalSlug = slug;
-    const existingSlug = await prisma.workspace.findUnique({
-      where: { slug },
-    });
-    if (existingSlug) {
-      finalSlug = `${slug}-${Date.now().toString(36)}`;
-    }
-
     const result = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
@@ -505,6 +495,22 @@ export async function googleLogin(idToken: string) {
           avatarUrl: picture,
         },
       });
+
+      // Slug uniqueness check MUST run inside the transaction to prevent
+      // a TOCTOU race (same fix applied to createWorkspace and register).
+      const slug =
+        displayName
+          .toLowerCase()
+          .replace(/[^a-z0-9\u0590-\u05FF]+/g, "-")
+          .replace(/^-|-$/g, "") || `ws-${Date.now()}`;
+
+      let finalSlug = slug;
+      const existingSlug = await tx.workspace.findUnique({
+        where: { slug },
+      });
+      if (existingSlug) {
+        finalSlug = `${slug}-${Date.now().toString(36)}`;
+      }
 
       const workspace = await tx.workspace.create({
         data: {
