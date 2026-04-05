@@ -80,6 +80,9 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="קיצורי מקלדת"
     >
       <div
         className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
