@@ -63,7 +63,7 @@ export default function SaveViewDialog({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
           >
             ביטול
           </button>
