@@ -557,6 +557,14 @@ export default function CompanyDetailPage() {
                 <p className="text-[12px] text-[#9699A6]">עסקאות</p>
               </div>
             </div>
+            {company.deals && company.deals.length > 0 && (
+              <div className="mt-3 p-3 bg-[#F5F6F8] rounded-[4px] text-center">
+                <p className="text-lg font-bold text-[#323338]">
+                  ₪{company.deals.reduce((sum: number, d: any) => sum + (d.value || 0), 0).toLocaleString()}
+                </p>
+                <p className="text-[12px] text-[#9699A6]">סך ערך עסקאות</p>
+              </div>
+            )}
           </PageCard>
 
           {/* Documents */}
@@ -601,7 +609,7 @@ export default function CompanyDetailPage() {
                           aria-hidden="true"
                         >
                           <span className="text-[#0073EA] text-[12px] font-bold">
-                            {contact.firstName[0]}
+                            {contact.firstName?.[0] || "?"}
                           </span>
                         </div>
                         <div className="text-right">
