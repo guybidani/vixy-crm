@@ -679,13 +679,21 @@ export async function updateWorkspace(
   });
   if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can update workspace");
 
-  const settings: Record<string, unknown> = {};
-  if (data.timezone) settings.timezone = data.timezone;
-
   const updateData: Record<string, unknown> = {};
   if (data.name) updateData.name = data.name;
   if (data.logoUrl !== undefined) updateData.logoUrl = data.logoUrl;
-  if (data.timezone) updateData.settings = settings;
+
+  // Timezone lives inside the JSON settings column.  We must merge with
+  // existing settings — overwriting the whole object would destroy snooze
+  // options, nav permissions, custom options, business hours, etc.
+  if (data.timezone) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    const existingSettings = (workspace?.settings as Record<string, unknown>) || {};
+    updateData.settings = { ...existingSettings, timezone: data.timezone };
+  }
 
   const ws = await prisma.workspace.update({
     where: { id: workspaceId },
