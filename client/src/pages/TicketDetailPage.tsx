@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
@@ -664,6 +664,19 @@ function ReplyComposer({
   const [body, setBody] = useState("");
   const [isInternal, setIsInternal] = useState(false);
   const [showCanned, setShowCanned] = useState(false);
+  const cannedRef = useRef<HTMLDivElement>(null);
+
+  // Close canned responses dropdown on click outside
+  useEffect(() => {
+    if (!showCanned) return;
+    function handleMouseDown(e: MouseEvent) {
+      if (cannedRef.current && !cannedRef.current.contains(e.target as Node)) {
+        setShowCanned(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [showCanned]);
 
   const { data: cannedResponses } = useQuery({
     queryKey: ["canned-responses"],
@@ -743,7 +756,7 @@ function ReplyComposer({
           <Eye size={12} />
           הערה פנימית
         </button>
-        <div className="mr-auto relative">
+        <div className="mr-auto relative" ref={cannedRef}>
           <button
             type="button"
             onClick={() => setShowCanned(!showCanned)}
