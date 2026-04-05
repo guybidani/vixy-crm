@@ -60,6 +60,7 @@ export default function ContactDetailPage() {
   /* Activity inline-edit state */
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [editingActivityBody, setEditingActivityBody] = useState("");
+  const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
 
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", id],
@@ -650,7 +651,7 @@ export default function ContactDetailPage() {
                                   <Pencil size={12} />
                                 </button>
                                 <button
-                                  onClick={() => deleteActivityMut.mutate(activity.id)}
+                                  onClick={() => setDeletingActivityId(activity.id)}
                                   className="p-1 rounded hover:bg-[#FFEEF0] text-[#9699A6] hover:text-[#E44258] transition-colors"
                                   title="מחק"
                                 >
@@ -740,6 +741,20 @@ export default function ContactDetailPage() {
         onCancel={() => setShowDeleteConfirm(false)}
         title="מחיקת איש קשר"
         message="האם אתה בטוח שברצונך למחוק את איש הקשר?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!deletingActivityId}
+        onConfirm={() => {
+          if (deletingActivityId) deleteActivityMut.mutate(deletingActivityId);
+          setDeletingActivityId(null);
+        }}
+        onCancel={() => setDeletingActivityId(null)}
+        title="מחיקת פעילות"
+        message="האם אתה בטוח שברצונך למחוק את הפעילות?"
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"

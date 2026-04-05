@@ -169,6 +169,7 @@ export default function CompanyDetailPage() {
   /* Activity inline-edit state */
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
   const [editingActivityBody, setEditingActivityBody] = useState("");
+  const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
 
   const { data: company, isLoading } = useQuery({
     queryKey: ["company", id],
@@ -693,7 +694,7 @@ export default function CompanyDetailPage() {
                                   <Pencil size={12} />
                                 </button>
                                 <button
-                                  onClick={() => deleteActivityMut.mutate(activity.id)}
+                                  onClick={() => setDeletingActivityId(activity.id)}
                                   className="p-1 rounded hover:bg-[#FFEEF0] text-[#9699A6] hover:text-[#E44258] transition-colors"
                                   title="מחק"
                                 >
@@ -769,6 +770,20 @@ export default function CompanyDetailPage() {
         onCancel={() => setShowDeleteConfirm(false)}
         title="מחיקת חברה"
         message="האם אתה בטוח שברצונך למחוק את החברה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!deletingActivityId}
+        onConfirm={() => {
+          if (deletingActivityId) deleteActivityMut.mutate(deletingActivityId);
+          setDeletingActivityId(null);
+        }}
+        onCancel={() => setDeletingActivityId(null)}
+        title="מחיקת פעילות"
+        message="האם אתה בטוח שברצונך למחוק את הפעילות?"
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
