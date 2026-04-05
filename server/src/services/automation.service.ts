@@ -437,12 +437,28 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
     case "MOVE_STAGE": {
       if (ctx.entityType === "deal" && config.stage) {
+        const stageData: Record<string, unknown> = {
+          stage: config.stage,
+          stageChangedAt: new Date(),
+        };
+        // Mirror the single-deal update behaviour: set closedAt + probability
+        // when moving to a terminal stage, clear closedAt when re-opening.
+        const isClosed = config.stage === "CLOSED_WON" || config.stage === "CLOSED_LOST";
+        if (isClosed) {
+          stageData.closedAt = new Date();
+          stageData.probability = config.stage === "CLOSED_WON" ? 100 : 0;
+        } else {
+          stageData.closedAt = null;
+          const stageProbability: Record<string, number> = {
+            LEAD: 10, QUALIFIED: 25, PROPOSAL: 50, NEGOTIATION: 75,
+          };
+          if (stageProbability[config.stage] !== undefined) {
+            stageData.probability = stageProbability[config.stage];
+          }
+        }
         await prisma.deal.updateMany({
           where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
-          data: {
-            stage: config.stage,
-            stageChangedAt: new Date(),
-          },
+          data: stageData,
         });
       }
       break;
