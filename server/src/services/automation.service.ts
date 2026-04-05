@@ -386,6 +386,20 @@ async function executeAction(action: any, ctx: TriggerContext) {
         break;
       }
 
+      // Validate assigneeId belongs to workspace before writing it
+      if (field === "assigneeId" && value) {
+        const memberRef = await prisma.workspaceMember.findFirst({
+          where: { id: value as string, workspaceId: ctx.workspaceId },
+          select: { id: true },
+        });
+        if (!memberRef) {
+          console.error(
+            `[Automation] CHANGE_FIELD blocked: assigneeId "${value}" not found in workspace "${ctx.workspaceId}"`,
+          );
+          break;
+        }
+      }
+
       // Use updateMany with workspaceId filter for defense-in-depth
       // (prevents cross-workspace writes if entityId was ever corrupted)
       if (ctx.entityType === "contact") {
@@ -422,8 +436,25 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
     case "ASSIGN_OWNER": {
       if (config.assigneeId) {
+        // Verify assignee belongs to this workspace before assignment
+        const assigneeMember = await prisma.workspaceMember.findFirst({
+          where: { id: config.assigneeId, workspaceId: ctx.workspaceId },
+          select: { id: true },
+        });
+        if (!assigneeMember) {
+          console.error(
+            `[Automation] ASSIGN_OWNER blocked: assigneeId "${config.assigneeId}" not found in workspace "${ctx.workspaceId}"`,
+          );
+          break;
+        }
+
         if (ctx.entityType === "deal") {
           await prisma.deal.updateMany({
+            where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
+            data: { assigneeId: config.assigneeId },
+          });
+        } else if (ctx.entityType === "ticket") {
+          await prisma.ticket.updateMany({
             where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
             data: { assigneeId: config.assigneeId },
           });
