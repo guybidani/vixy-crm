@@ -247,6 +247,10 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               autoComplete="off"
               spellCheck={false}
               aria-label="חיפוש גלובלי"
+              role="combobox"
+              aria-expanded={flatItems.length > 0}
+              aria-controls="global-search-listbox"
+              aria-activedescendant={flatItems[selectedIndex] ? `gs-option-${flatItems[selectedIndex].id}` : undefined}
             />
             {query && (
               <button
@@ -267,6 +271,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           ref={listRef}
           className="max-h-[420px] overflow-y-auto overscroll-contain"
           role="listbox"
+          id="global-search-listbox"
         >
           {/* Idle state */}
           {!query && (
@@ -314,7 +319,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             sections.map((section) => (
               <div key={section.label}>
                 {/* Section header */}
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-[#F5F6F8]/50 border-b border-[#E6E9EF]/50 sticky top-0">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-[#F5F6F8]/50 border-b border-[#E6E9EF]/50 sticky top-0" role="presentation">
                   <span className="text-[10px] font-bold text-[#9699A6] uppercase tracking-wide">
                     {section.label}
                   </span>
@@ -331,6 +336,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                   return (
                     <button
                       key={item.id}
+                      id={`gs-option-${item.id}`}
                       data-idx={idx}
                       role="option"
                       aria-selected={isSelected}
