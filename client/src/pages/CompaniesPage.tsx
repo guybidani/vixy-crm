@@ -53,9 +53,6 @@ export default function CompaniesPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(false);
-  const [_selectedCompanyId, _setSelectedCompanyId] = useState<string | null>(
-    null,
-  );
 
   // Reset to page 1 when search changes so the user sees the first page of results
   useEffect(() => setPage(1), [debouncedSearch]);
