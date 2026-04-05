@@ -69,7 +69,7 @@ export default function SavedViewsBar({
     onError: () => toast.error("שגיאה במחיקת תצוגה"),
   });
 
-  // Close context menu on outside click
+  // Close context menu on outside click or Escape
   useEffect(() => {
     if (!contextMenu) return;
     function handleClick(e: MouseEvent) {
@@ -77,8 +77,18 @@ export default function SavedViewsBar({
         setContextMenu(null);
       }
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setContextMenu(null);
+      }
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [contextMenu]);
 
   function handleContextMenu(e: React.MouseEvent, viewId: string) {
@@ -165,12 +175,21 @@ export default function SavedViewsBar({
       {contextMenu && (
         <div
           ref={contextRef}
+          role="menu"
           className="fixed z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] py-1 min-w-[140px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <button
+            role="menuitem"
+            autoFocus
             onClick={() => deleteMutation.mutate(contextMenu.viewId)}
-            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#FFEEF0] text-[#E44258] transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                deleteMutation.mutate(contextMenu.viewId);
+              }
+            }}
+            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#FFEEF0] text-[#E44258] transition-colors focus:outline-none focus-visible:bg-[#FFEEF0]"
           >
             <Trash2 size={14} />
             מחק תצוגה
