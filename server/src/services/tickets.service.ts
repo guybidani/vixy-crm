@@ -203,10 +203,20 @@ export async function create(
     assigneeId?: string;
   },
 ) {
-  // Find default SLA policy
-  const defaultSla = await prisma.slaPolicy.findFirst({
-    where: { workspaceId, isDefault: true },
-  });
+  // Verify FK references belong to this workspace in parallel (prevent BOLA)
+  const [contactRef, assigneeRef, defaultSla] = await Promise.all([
+    data.contactId
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      : null,
+    data.assigneeId
+      ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
+      : null,
+    prisma.slaPolicy.findFirst({ where: { workspaceId, isDefault: true } }),
+  ]);
+  if (data.contactId && !contactRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  if (data.assigneeId && !assigneeRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
   const ticket = await prisma.ticket.create({
     data: {
