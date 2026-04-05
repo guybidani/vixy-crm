@@ -154,9 +154,9 @@ function DroppableColumn({
     <div
       ref={setNodeRef}
       className={`flex-shrink-0 w-[280px] flex flex-col rounded-xl overflow-hidden transition-all ${
-        isOver ? "ring-2 shadow-lg" : ""
+        isOver ? "shadow-lg" : ""
       }`}
-      style={isOver ? { ringColor: color + "50" } : undefined}
+      style={isOver ? { outline: `2px solid ${color}80`, outlineOffset: "-2px" } : undefined}
     >
       {/* Monday-style column header */}
       <div
