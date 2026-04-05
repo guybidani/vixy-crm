@@ -137,7 +137,17 @@ dealsRouter.post(
       const { ids, data } = req.body;
 
       const updateData: Record<string, any> = {};
-      if (data.stage) updateData.stage = data.stage;
+      if (data.stage) {
+        updateData.stage = data.stage;
+        // Keep stageChangedAt in sync so "days in stage" and deal-health stay accurate
+        updateData.stageChangedAt = new Date();
+        // Set/clear closedAt to match single-deal update behaviour
+        if (data.stage === "CLOSED_WON" || data.stage === "CLOSED_LOST") {
+          updateData.closedAt = new Date();
+        } else {
+          updateData.closedAt = null;
+        }
+      }
       if (data.priority) updateData.priority = data.priority;
 
       if (Object.keys(updateData).length > 0) {
