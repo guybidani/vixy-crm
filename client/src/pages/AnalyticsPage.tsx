@@ -339,10 +339,12 @@ export default function AnalyticsPage() {
       emoji="📊"
       title="דוחות וניתוחים"
       actions={
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap" role="radiogroup" aria-label="טווח זמן">
           {RANGE_OPTIONS.map((opt) => (
             <button
               key={opt.key}
+              role="radio"
+              aria-checked={rangeKey === opt.key}
               onClick={() => setRangeKey(opt.key)}
               className={`px-3 py-1.5 text-[13px] rounded-[4px] transition-colors ${
                 rangeKey === opt.key

@@ -274,25 +274,27 @@ export default function DocumentsPage() {
 
             {/* Pagination */}
             {data.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-[#E6E9EF]">
+              <nav className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-[#E6E9EF]" aria-label="ניווט עמודים">
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
+                  aria-label="עמוד קודם"
                   className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
                 >
                   הקודם
                 </button>
-                <span className="text-[13px] text-[#676879]">
+                <span className="text-[13px] text-[#676879]" aria-current="page">
                   עמוד {page} מתוך {data.totalPages}
                 </span>
                 <button
                   disabled={page >= data.totalPages}
                   onClick={() => setPage((p) => p + 1)}
+                  aria-label="עמוד הבא"
                   className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
                 >
                   הבא
                 </button>
-              </div>
+              </nav>
             )}
           </>
         )}
