@@ -73,37 +73,30 @@ export async function getTaskCompletionRate(
   };
 }
 
+interface WeeklyCountRow {
+  week_start: Date;
+  count: bigint;
+}
+
 export async function getContactGrowth(
   workspaceId: string,
   dateFrom: Date,
   dateTo: Date,
 ) {
-  // Raw query to group contacts by week
-  const contacts = await prisma.contact.findMany({
-    where: {
-      workspaceId,
-      createdAt: { gte: dateFrom, lte: dateTo },
-    },
-    select: { createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
+  // Group by ISO week (Monday start) in SQL — avoids fetching all rows into memory
+  const rows = await prisma.$queryRaw<WeeklyCountRow[]>`
+    SELECT date_trunc('week', created_at)::date AS week_start, COUNT(*) AS count
+    FROM contacts
+    WHERE workspace_id = ${workspaceId}
+      AND created_at >= ${dateFrom}
+      AND created_at <= ${dateTo}
+    GROUP BY week_start
+    ORDER BY week_start ASC
+  `;
 
-  // Group by week (ISO week start = Monday)
-  const weekMap = new Map<string, number>();
-  for (const c of contacts) {
-    const d = new Date(c.createdAt);
-    // Get Monday of the week
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(d);
-    monday.setDate(diff);
-    const key = monday.toISOString().slice(0, 10);
-    weekMap.set(key, (weekMap.get(key) || 0) + 1);
-  }
-
-  return Array.from(weekMap.entries()).map(([weekStart, count]) => ({
-    weekStart,
-    count,
+  return rows.map((r) => ({
+    weekStart: r.week_start.toISOString().slice(0, 10),
+    count: Number(r.count),
   }));
 }
 
@@ -112,30 +105,20 @@ export async function getDealGrowth(
   dateFrom: Date,
   dateTo: Date,
 ) {
-  const deals = await prisma.deal.findMany({
-    where: {
-      workspaceId,
-      createdAt: { gte: dateFrom, lte: dateTo },
-    },
-    select: { createdAt: true },
-    orderBy: { createdAt: "asc" },
-  });
+  // Group by ISO week (Monday start) in SQL — avoids fetching all rows into memory
+  const rows = await prisma.$queryRaw<WeeklyCountRow[]>`
+    SELECT date_trunc('week', created_at)::date AS week_start, COUNT(*) AS count
+    FROM deals
+    WHERE workspace_id = ${workspaceId}
+      AND created_at >= ${dateFrom}
+      AND created_at <= ${dateTo}
+    GROUP BY week_start
+    ORDER BY week_start ASC
+  `;
 
-  // Group by week (ISO week start = Monday)
-  const weekMap = new Map<string, number>();
-  for (const d of deals) {
-    const date = new Date(d.createdAt);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(date);
-    monday.setDate(diff);
-    const key = monday.toISOString().slice(0, 10);
-    weekMap.set(key, (weekMap.get(key) || 0) + 1);
-  }
-
-  return Array.from(weekMap.entries()).map(([weekStart, count]) => ({
-    weekStart,
-    count,
+  return rows.map((r) => ({
+    weekStart: r.week_start.toISOString().slice(0, 10),
+    count: Number(r.count),
   }));
 }
 
