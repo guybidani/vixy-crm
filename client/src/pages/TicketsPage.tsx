@@ -124,7 +124,7 @@ export default function TicketsPage() {
     setSelectedId(null);
   }, [debouncedSearch, statusFilter]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["tickets", { search: debouncedSearch, statusFilter, page }],
     queryFn: () =>
       listTickets({
@@ -229,7 +229,18 @@ export default function TicketsPage() {
 
         {/* Ticket List */}
         <div className="flex-1 overflow-y-auto">
-          {isLoading && page === 1 ? (
+          {isError && page === 1 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-[#9699A6] text-sm gap-2">
+              <AlertCircle size={24} className="text-[#E44258] opacity-60" />
+              <span>שגיאה בטעינת קריאות</span>
+              <button
+                onClick={() => refetch()}
+                className="text-[12px] text-[#0073EA] hover:underline"
+              >
+                נסה שוב
+              </button>
+            </div>
+          ) : isLoading && page === 1 ? (
             <div className="flex items-center justify-center h-32 text-[#9699A6] text-sm">
               טוען...
             </div>
