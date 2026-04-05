@@ -99,6 +99,8 @@ export default function StatusDropdown({
         color={current.color}
         size={size}
         onClick={disabled ? undefined : () => setOpen(!open)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
       />
       {open && (
         <div

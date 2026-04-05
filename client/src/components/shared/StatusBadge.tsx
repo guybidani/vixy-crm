@@ -5,6 +5,8 @@ interface StatusBadgeProps {
   color: string;
   size?: "sm" | "md";
   onClick?: () => void;
+  "aria-haspopup"?: React.AriaAttributes["aria-haspopup"];
+  "aria-expanded"?: boolean;
 }
 
 export default function StatusBadge({
@@ -12,6 +14,8 @@ export default function StatusBadge({
   color,
   size = "sm",
   onClick,
+  "aria-haspopup": ariaHasPopup,
+  "aria-expanded": ariaExpanded,
 }: StatusBadgeProps) {
   return (
     <span
@@ -38,6 +42,8 @@ export default function StatusBadge({
                 onClick();
               }
             },
+            ...(ariaHasPopup != null ? { "aria-haspopup": ariaHasPopup } : {}),
+            ...(ariaExpanded != null ? { "aria-expanded": ariaExpanded } : {}),
           }
         : {})}
     >
