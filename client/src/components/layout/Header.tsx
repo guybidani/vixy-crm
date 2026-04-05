@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, LogOut, Menu, Clock, User, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -33,9 +33,17 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   });
   const badgeCount = (taskStats?.overdueCount ?? 0) + (taskStats?.dueTodayCount ?? 0);
 
-  // Close profile menu on outside click or Escape
+  // Close profile menu on outside click or Escape, + arrow key navigation
+  const menuItemsRef = useRef<HTMLButtonElement[]>([]);
+  const registerMenuItemRef = useCallback((el: HTMLButtonElement | null, index: number) => {
+    if (el) menuItemsRef.current[index] = el;
+  }, []);
+
   useEffect(() => {
-    if (!profileMenuOpen) return;
+    if (!profileMenuOpen) {
+      menuItemsRef.current = [];
+      return;
+    }
     function handleClick(e: MouseEvent) {
       if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
         setProfileMenuOpen(false);
@@ -43,6 +51,29 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
     }
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        e.preventDefault();
+        setProfileMenuOpen(false);
+        return;
+      }
+      const items = menuItemsRef.current.filter(Boolean);
+      if (items.length === 0) return;
+      const currentIdx = items.indexOf(document.activeElement as HTMLButtonElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
+        items[next]?.focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
+        items[prev]?.focus();
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        items[0]?.focus();
+      } else if (e.key === "End") {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
+      } else if (e.key === "Tab") {
+        // Trap Tab inside menu — close instead of leaking focus
         e.preventDefault();
         setProfileMenuOpen(false);
       }
@@ -198,8 +229,10 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                 <p className="text-[11px] text-[#9699A6] truncate">{user?.email}</p>
               </div>
               <button
+                ref={(el) => registerMenuItemRef(el, 0)}
                 role="menuitem"
                 autoFocus
+                tabIndex={0}
                 onClick={() => { navigate("/settings"); setProfileMenuOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
               >
@@ -207,7 +240,9 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                 הגדרות
               </button>
               <button
+                ref={(el) => registerMenuItemRef(el, 1)}
                 role="menuitem"
+                tabIndex={-1}
                 onClick={() => { navigate("/settings?tab=profile"); setProfileMenuOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
               >
@@ -216,7 +251,9 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
               </button>
               <div className="border-t border-[#E6E9EF] mt-1 pt-1">
                 <button
+                  ref={(el) => registerMenuItemRef(el, 2)}
                   role="menuitem"
+                  tabIndex={-1}
                   onClick={() => { logout(); setProfileMenuOpen(false); }}
                   className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right focus:outline-none focus-visible:bg-[#FFEEF0]"
                 >
