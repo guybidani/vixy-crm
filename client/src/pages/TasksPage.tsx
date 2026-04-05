@@ -29,6 +29,7 @@ import {
   Pencil,
   Trash2,
   AlarmClock,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
@@ -893,7 +894,7 @@ export default function TasksPage() {
   });
   const memberOptions = (members || []).map((m) => ({ id: m.memberId, name: m.name }));
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["tasks", { taskTypeFilter, contextFilter, priorityFilter, sortBy, sortDir, myTasksOnly, searchQuery }],
     queryFn: () =>
       listTasks({
@@ -909,7 +910,7 @@ export default function TasksPage() {
     enabled: viewMode === "table",
   });
 
-  const { data: boardData, isLoading: boardLoading } = useQuery({
+  const { data: boardData, isLoading: boardLoading, isError: boardError, refetch: refetchBoard } = useQuery({
     queryKey: ["tasks-board"],
     queryFn: getTasksBoard,
     enabled: viewMode === "kanban",
@@ -1209,6 +1210,22 @@ export default function TasksPage() {
 
           {/* Content */}
           {viewMode === "kanban" ? (
+            boardError ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+                  <AlertCircle size={28} className="text-[#E44258]" />
+                </div>
+                <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת משימות</h2>
+                <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+                <button
+                  onClick={() => refetchBoard()}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+                >
+                  <RefreshCw size={14} />
+                  נסה שוב
+                </button>
+              </div>
+            ) : (
             <KanbanBoard<Task>
               columns={kanbanColumns}
               renderCard={(task, isDragging) => <TaskKanbanCard task={task} isDragging={isDragging} />}
@@ -1217,6 +1234,22 @@ export default function TasksPage() {
               loading={boardLoading}
               emptyText="אין משימות"
             />
+            )
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+                <AlertCircle size={28} className="text-[#E44258]" />
+              </div>
+              <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת משימות</h2>
+              <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+              <button
+                onClick={() => refetch()}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+              >
+                <RefreshCw size={14} />
+                נסה שוב
+              </button>
+            </div>
           ) : isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
