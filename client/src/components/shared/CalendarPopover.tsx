@@ -245,7 +245,7 @@ export default function CalendarPopover({
       </div>
 
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 px-2 pb-2">
+      <div className="grid grid-cols-7 px-2 pb-2" role="grid" aria-label={`${MONTHS_HE[viewMonth]} ${viewYear}`}>
         {cells.map((cell, i) => {
           const isToday =
             cell.day === todayD &&
@@ -257,10 +257,15 @@ export default function CalendarPopover({
             cell.month === selectedParsed.month &&
             cell.year === selectedParsed.year;
 
+          const ariaLabel = `${cell.day} ${MONTHS_HE[cell.month]} ${cell.year}${isToday ? " (היום)" : ""}${isSelected ? " (נבחר)" : ""}`;
+
           return (
             <button
               key={i}
               onClick={() => selectDate(cell.year, cell.month, cell.day)}
+              aria-label={ariaLabel}
+              aria-current={isToday ? "date" : undefined}
+              aria-selected={isSelected || undefined}
               className={`
                 w-8 h-8 flex items-center justify-center rounded-full text-[12px] transition-all
                 ${!cell.isCurrentMonth ? "text-[#C3C6D4]" : "text-[#323338]"}
