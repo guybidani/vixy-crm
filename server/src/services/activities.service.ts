@@ -107,26 +107,14 @@ export async function list(params: ListParams) {
 
   const where: any = { workspaceId };
 
-  // companyId expands to OR filter across all contacts/deals for that company
+  // companyId expands to a relational filter — use Prisma relations instead of
+  // materializing all contact/deal IDs into the app layer (which was unbounded
+  // and could produce huge IN-clause arrays for companies with many entities).
   if (companyId) {
-    const [companyContactIds, companyDealIds] = await Promise.all([
-      prisma.contact
-        .findMany({ where: { workspaceId, companyId }, select: { id: true } })
-        .then((rows) => rows.map((r) => r.id)),
-      prisma.deal
-        .findMany({ where: { workspaceId, companyId }, select: { id: true } })
-        .then((rows) => rows.map((r) => r.id)),
-    ]);
-    const orClauses: any[] = [];
-    if (companyContactIds.length > 0)
-      orClauses.push({ contactId: { in: companyContactIds } });
-    if (companyDealIds.length > 0)
-      orClauses.push({ dealId: { in: companyDealIds } });
-    // If the company has no contacts or deals yet, return empty result set
-    if (orClauses.length === 0) {
-      return { data: [], pagination: { page, limit, total: 0, totalPages: 0 } };
-    }
-    where.OR = orClauses;
+    where.OR = [
+      { contact: { companyId } },
+      { deal: { companyId } },
+    ];
   } else {
     if (contactId) where.contactId = contactId;
     if (dealId) where.dealId = dealId;
