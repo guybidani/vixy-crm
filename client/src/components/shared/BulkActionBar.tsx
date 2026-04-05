@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { X, Trash2, Tag, ArrowRight } from "lucide-react";
 
 interface BulkActionBarProps {
@@ -20,6 +20,19 @@ export default function BulkActionBar({
   deleting,
   children,
 }: BulkActionBarProps) {
+  // Escape key clears the selection
+  useEffect(() => {
+    if (selectedCount === 0) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClear();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedCount, onClear]);
+
   if (selectedCount === 0) return null;
 
   return (
