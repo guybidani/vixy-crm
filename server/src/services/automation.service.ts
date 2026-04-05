@@ -307,7 +307,8 @@ async function executeAction(action: any, ctx: TriggerContext) {
   switch (action.type) {
     case "SEND_NOTIFICATION": {
       const targetUserIds = config.userIds || [];
-      // If no specific users, notify all workspace members
+      // If no specific users, notify all workspace members (capped at 200 to
+      // prevent runaway notification creation in very large workspaces).
       const members =
         targetUserIds.length > 0
           ? await prisma.workspaceMember.findMany({
@@ -315,9 +316,11 @@ async function executeAction(action: any, ctx: TriggerContext) {
                 workspaceId: ctx.workspaceId,
                 userId: { in: targetUserIds },
               },
+              take: 200,
             })
           : await prisma.workspaceMember.findMany({
               where: { workspaceId: ctx.workspaceId },
+              take: 200,
             });
 
       const title = interpolateTemplate(config.title || "התראה חדשה", ctx.data);
