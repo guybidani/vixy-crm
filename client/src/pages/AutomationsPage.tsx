@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import {
   Plus,
   Zap,
@@ -13,6 +14,8 @@ import {
   ChevronUp,
   X,
   Activity,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import PageShell, {
   PageCard,
@@ -555,7 +558,7 @@ export default function AutomationsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [automationToDelete, setAutomationToDelete] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["automations"],
     queryFn: () => listWorkflows(),
   });
@@ -576,6 +579,10 @@ export default function AutomationsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["automations"] });
       setDialogOpen(false);
+      toast.success("אוטומציה נוצרה בהצלחה!");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err?.message || "שגיאה ביצירת אוטומציה");
     },
   });
 
@@ -595,18 +602,34 @@ export default function AutomationsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["automations"] });
       setEditing(null);
+      toast.success("אוטומציה עודכנה בהצלחה!");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err?.message || "שגיאה בעדכון אוטומציה");
     },
   });
 
   const toggleMut = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       toggleWorkflow(id, isActive),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["automations"] }),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["automations"] });
+      toast.success(variables.isActive ? "אוטומציה הופעלה" : "אוטומציה כובתה");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err?.message || "שגיאה בשינוי סטטוס");
+    },
   });
 
   const deleteMut = useMutation({
     mutationFn: deleteWorkflow,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["automations"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["automations"] });
+      toast.success("אוטומציה נמחקה");
+    },
+    onError: (err: { message?: string }) => {
+      toast.error(err?.message || "שגיאה במחיקת אוטומציה");
+    },
   });
 
   const workflows = data?.data ?? [];
@@ -630,7 +653,22 @@ export default function AutomationsPage() {
         </button>
       }
     >
-      {isLoading ? (
+      {isError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+            <AlertCircle size={28} className="text-[#E44258]" />
+          </div>
+          <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת אוטומציות</h2>
+          <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את האוטומציות. נסו שוב.</p>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={14} />
+            נסה שוב
+          </button>
+        </div>
+      ) : isLoading ? (
         <PageCard>
           <div className="text-center py-12 text-[#9699A6] text-[13px]">
             טוען...
