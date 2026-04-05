@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -91,6 +91,19 @@ export default function EntityDocumentsSection({
     e.target.value = "";
   }
 
+  // Close documents add-menu on Escape
+  useEffect(() => {
+    if (!showMenu) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [showMenu]);
+
   return (
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
@@ -107,6 +120,9 @@ export default function EntityDocumentsSection({
           <button
             onClick={() => setShowMenu(!showMenu)}
             className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#0073EA]"
+            aria-label="הוסף מסמך"
+            aria-expanded={showMenu}
+            aria-haspopup="menu"
           >
             <Plus size={16} />
           </button>
@@ -116,8 +132,12 @@ export default function EntityDocumentsSection({
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1 w-44 z-50">
+              <div
+                className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1 w-44 z-50"
+                role="menu"
+              >
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowMenu(false);
                     fileInputRef.current?.click();
@@ -128,6 +148,7 @@ export default function EntityDocumentsSection({
                   העלה קובץ
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowMenu(false);
                     setShowCreateRichText(true);
@@ -138,6 +159,7 @@ export default function EntityDocumentsSection({
                   מסמך חדש
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowMenu(false);
                     setShowLinkModal(true);
