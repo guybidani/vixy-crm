@@ -28,8 +28,25 @@ export default function DealsChartView() {
 
   if (pipelineLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-[#676879]">טוען נתונים...</p>
+      <div className="space-y-6 animate-pulse">
+        {/* KPI skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-[#E6E9EF]">
+              <div className="h-3 w-16 bg-[#E6E9EF] rounded mb-2" />
+              <div className="h-7 w-24 bg-[#E6E9EF] rounded" />
+            </div>
+          ))}
+        </div>
+        {/* Chart skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl p-5 shadow-sm border border-[#E6E9EF]">
+              <div className="h-4 w-28 bg-[#E6E9EF] rounded mb-4" />
+              <div className="h-[260px] bg-[#F5F6F8] rounded-lg" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
