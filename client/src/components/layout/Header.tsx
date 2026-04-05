@@ -21,11 +21,9 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [todayTasksOpen, setTodayTasksOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const mobileSearchRef = useRef<HTMLInputElement>(null);
 
   // Badge: overdue + due today count
   const { data: taskStats } = useQuery({
@@ -72,13 +70,6 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [onQuickAdd, onCommandPalette]);
-
-  // Focus mobile search input when opened
-  useEffect(() => {
-    if (mobileSearchOpen && mobileSearchRef.current) {
-      mobileSearchRef.current.focus();
-    }
-  }, [mobileSearchOpen]);
 
   return (
     <>
