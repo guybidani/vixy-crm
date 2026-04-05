@@ -137,11 +137,14 @@ export async function renderAndTrack(
   if (!template)
     throw new AppError(404, "NOT_FOUND", "Template not found");
 
-  // Increment usage count
-  await prisma.cannedResponse.update({
-    where: { id },
-    data: { usageCount: { increment: 1 } },
-  });
+  // Increment usage count with workspace scope (defense-in-depth) — fire
+  // and forget so rendering is not blocked by the counter update.
+  prisma.cannedResponse
+    .updateMany({
+      where: { id, workspaceId },
+      data: { usageCount: { increment: 1 } },
+    })
+    .catch(() => {});
 
   const renderedBody = renderTemplate(template.body, variables);
   const renderedSubject = template.subject
