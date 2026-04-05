@@ -204,6 +204,7 @@ export default function CompanyDetailPage() {
       toast.success("חברה נמחקה");
       navigate("/companies");
     },
+    onError: () => toast.error("שגיאה במחיקת החברה"),
   });
 
   /* Inline update mutation */

@@ -78,6 +78,7 @@ export default function ContactDetailPage() {
       toast.success("איש קשר נמחק");
       navigate("/contacts");
     },
+    onError: () => toast.error("שגיאה במחיקת איש הקשר"),
   });
 
   const updateMut = useMutation({
