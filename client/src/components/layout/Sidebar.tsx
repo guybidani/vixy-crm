@@ -269,6 +269,19 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     }
   };
 
+  // Close mobile sidebar on Escape key
+  useEffect(() => {
+    if (!mobileOpen || !onMobileClose) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onMobileClose!();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [mobileOpen, onMobileClose]);
+
   /* User initials for avatar */
   const userInitials = user?.name
     ? user.name
