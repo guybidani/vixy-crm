@@ -120,16 +120,26 @@ export async function updateWorkflow(
     updateData.conditions = data.conditions || Prisma.JsonNull;
   if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
-  // If actions are provided, replace them all
+  // If actions are provided, replace them all inside a transaction to avoid
+  // partial state if the process crashes between delete and create.
   if (data.actions) {
-    await prisma.workflowAction.deleteMany({ where: { workflowId: id } });
-    await prisma.workflowAction.createMany({
-      data: data.actions.map((a, i) => ({
-        workflowId: id,
-        type: a.type as any,
-        config: a.config,
-        order: a.order ?? i,
-      })),
+    return prisma.$transaction(async (tx) => {
+      await tx.workflowAction.deleteMany({ where: { workflowId: id } });
+      await tx.workflowAction.createMany({
+        data: data.actions!.map((a, i) => ({
+          workflowId: id,
+          type: a.type as any,
+          config: a.config,
+          order: a.order ?? i,
+        })),
+      });
+      return tx.workflow.update({
+        where: { id },
+        data: updateData,
+        include: {
+          actions: { orderBy: { order: "asc" } },
+        },
+      });
     });
   }
 
