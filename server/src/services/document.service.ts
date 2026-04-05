@@ -141,8 +141,11 @@ export async function remove(workspaceId: string, id: string) {
 
   // Delete physical file if it's a FILE type
   if (doc.type === "FILE" && doc.fileUrl) {
-    const filePath = path.resolve(__dirname, "../../uploads", doc.fileUrl);
-    if (fs.existsSync(filePath)) {
+    const uploadsDir = path.resolve(__dirname, "../../uploads");
+    const filePath = path.resolve(uploadsDir, doc.fileUrl);
+    // Guard against path traversal — only delete if the resolved path
+    // is still inside the uploads directory (e.g. block "../../etc/passwd")
+    if (filePath.startsWith(uploadsDir + path.sep) && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
   }
