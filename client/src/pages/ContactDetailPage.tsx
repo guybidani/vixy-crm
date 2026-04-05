@@ -413,6 +413,13 @@ export default function ContactDetailPage() {
                 <Handshake size={16} className="text-[#0073EA]" />
                 עסקאות ({contact.deals?.length || 0})
               </h3>
+              <button
+                onClick={() => navigate(`/deals?new=1&contactId=${contact.id}`)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                הוסף עסקה
+              </button>
             </div>
             {contact.deals && contact.deals.length > 0 ? (
               <div className="space-y-2">
@@ -463,6 +470,13 @@ export default function ContactDetailPage() {
                 <Ticket size={16} className="text-purple-500" />
                 פניות ({contact.tickets?.length || 0})
               </h3>
+              <button
+                onClick={() => navigate(`/tickets?new=1&contactId=${contact.id}`)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                הוסף פנייה
+              </button>
             </div>
             {contact.tickets && contact.tickets.length > 0 ? (
               <div className="space-y-2">
@@ -510,6 +524,13 @@ export default function ContactDetailPage() {
                 <CheckSquare size={16} className="text-success" />
                 משימות ({contact.tasks?.length || 0})
               </h3>
+              <button
+                onClick={() => navigate(`/tasks?new=1&contactId=${contact.id}`)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                הו��ף משימה
+              </button>
             </div>
             {contact.tasks && contact.tasks.length > 0 ? (
               <div className="space-y-2">
