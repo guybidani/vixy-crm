@@ -91,6 +91,23 @@ export default function SavedViewsBar({
     };
   }, [contextMenu]);
 
+  // Adjust context menu position if it would overflow viewport
+  useEffect(() => {
+    if (!contextMenu || !contextRef.current) return;
+    const rect = contextRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let { x, y } = contextMenu;
+    if (x + rect.width > vw) x = vw - rect.width - 8;
+    if (y + rect.height > vh) y = vh - rect.height - 8;
+    if (x < 0) x = 8;
+    if (y < 0) y = 8;
+    if (x !== contextMenu.x || y !== contextMenu.y) {
+      contextRef.current.style.left = `${x}px`;
+      contextRef.current.style.top = `${y}px`;
+    }
+  }, [contextMenu]);
+
   function handleContextMenu(e: React.MouseEvent, viewId: string) {
     e.preventDefault();
     setContextMenu({ viewId, x: e.clientX, y: e.clientY });
