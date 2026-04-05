@@ -40,6 +40,7 @@ import { createActivity, updateActivity, deleteActivity } from "../api/activitie
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { getWhatsAppUrl } from "../utils/phone";
+import AiAssistantPanel from "../components/contacts/AiAssistantPanel";
 
 export default function ContactDetailPage() {
   const {
@@ -208,9 +209,9 @@ export default function ContactDetailPage() {
 
       {/* Header Card */}
       <PageCard>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center flex-shrink-0">
               <span className="text-[#0073EA] text-xl font-bold">
                 {contact.firstName?.[0] || "?"}
               </span>
@@ -279,7 +280,7 @@ export default function ContactDetailPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 self-start">
             <button
               onClick={() => setEditing(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#676879] hover:text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
@@ -406,6 +407,14 @@ export default function ContactDetailPage() {
               </p>
             )}
           </PageCard>
+
+          {/* AI Assistant (Gemma 4) */}
+          {id && (
+            <AiAssistantPanel
+              contactId={id}
+              contactName={`${contact.firstName} ${contact.lastName}`}
+            />
+          )}
 
           {/* AI Call Analysis */}
           <PageCard>

@@ -355,9 +355,9 @@ export default function CompanyDetailPage() {
 
       {/* Header Card */}
       <PageCard>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 bg-[#E8F3FF] rounded-xl flex items-center justify-center flex-shrink-0">
               <Building2 size={24} className="text-[#0073EA]" />
             </div>
             <div>
@@ -417,7 +417,7 @@ export default function CompanyDetailPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0 self-start">
             <button
               onClick={() => setShowDeleteConfirm(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#676879] hover:text-[#E44258] hover:bg-[#FFEEF0] rounded-[4px] transition-colors"
