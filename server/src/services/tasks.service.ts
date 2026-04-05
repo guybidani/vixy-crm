@@ -427,8 +427,16 @@ export async function update(
     recurrenceEndDate: string;
   }>,
 ) {
-  const existing = await prisma.task.findFirst({ where: { id, workspaceId } });
+  // Fetch task and validate assigneeId ownership in parallel
+  const [existing, assigneeRef] = await Promise.all([
+    prisma.task.findFirst({ where: { id, workspaceId } }),
+    data.assigneeId
+      ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
   if (!existing) throw new AppError(404, "NOT_FOUND", "Task not found");
+  if (data.assigneeId && !assigneeRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
   const updateData: any = { ...data };
   if (data.status) updateData.status = data.status;
