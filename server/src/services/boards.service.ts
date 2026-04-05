@@ -855,34 +855,37 @@ export async function toggleCommentReaction(
   userId: string,
   emoji: string,
 ) {
-  // Fetch board and comment in parallel — independent queries
-  const [board, comment] = await Promise.all([
-    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
-    prisma.boardItemComment.findFirst({ where: { id: commentId, itemId } }),
-  ]);
+  // Verify board ownership (no need to re-read comment outside the transaction)
+  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-  if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
 
-  const reactions = (comment.reactions as Record<string, string[]>) ?? {};
-  const users: string[] = reactions[emoji] ?? [];
+  // Wrap the read-modify-write of the reactions JSON in a serializable
+  // transaction to prevent two concurrent toggles from losing one update.
+  return prisma.$transaction(async (tx) => {
+    const comment = await tx.boardItemComment.findFirst({ where: { id: commentId, itemId } });
+    if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
 
-  if (users.includes(userId)) {
-    reactions[emoji] = users.filter((u) => u !== userId);
-    if (reactions[emoji].length === 0) delete reactions[emoji];
-  } else {
-    reactions[emoji] = [...users, userId];
-  }
+    const reactions = (comment.reactions as Record<string, string[]>) ?? {};
+    const users: string[] = reactions[emoji] ?? [];
 
-  return prisma.boardItemComment.update({
-    where: { id: commentId },
-    data: { reactions },
-    include: {
-      author: {
-        include: {
-          user: { select: { id: true, name: true, avatarUrl: true } },
+    if (users.includes(userId)) {
+      reactions[emoji] = users.filter((u) => u !== userId);
+      if (reactions[emoji].length === 0) delete reactions[emoji];
+    } else {
+      reactions[emoji] = [...users, userId];
+    }
+
+    return tx.boardItemComment.update({
+      where: { id: commentId },
+      data: { reactions },
+      include: {
+        author: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true } },
+          },
         },
       },
-    },
+    });
   });
 }
 
