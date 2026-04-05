@@ -86,12 +86,20 @@ export default function LeadsPage() {
 
   const qualifyMutation = useMutation({
     mutationFn: async (contact: Contact) => {
-      await updateContact(contact.id, { status: "QUALIFIED" });
+      // Create deal first — if this fails, contact status is unchanged
       const deal = await createDeal({
         title: `עסקה - ${contact.fullName}`,
         contactId: contact.id,
         stage: "QUALIFIED",
       });
+      // Then update contact status — if this fails, roll back the deal
+      try {
+        await updateContact(contact.id, { status: "QUALIFIED" });
+      } catch (statusErr) {
+        // Deal was created but status update failed — notify user of partial state
+        toast.error("העסקה נוצרה אך עדכון סטטוס הליד נכשל — עדכנו ידנית");
+        return deal;
+      }
       return deal;
     },
     onSuccess: (deal) => {
@@ -103,7 +111,7 @@ export default function LeadsPage() {
       setQualifyingId(null);
       navigate(`/deals?open=${deal.id}`);
     },
-    onError: (err: any) => {
+    onError: (err: { message?: string }) => {
       toast.error(err?.message || "שגיאה בהסמכת ליד");
       setQualifyingId(null);
     },
