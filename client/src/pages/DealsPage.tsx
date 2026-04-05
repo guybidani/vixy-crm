@@ -86,6 +86,7 @@ export default function DealsPage() {
     }
   }, []);
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
+  const [confirmWonId, setConfirmWonId] = useState<string | null>(null);
 
   // Saved views filter state
   const [activeView, setActiveView] = useState<SavedView | null>(null);
@@ -472,7 +473,7 @@ export default function DealsPage() {
             <DealCard
               deal={deal}
               isDragging={isDragging}
-              onWon={(id) => wonMutation.mutate(id)}
+              onWon={(id) => setConfirmWonId(id)}
               onLost={(id) => setLostModal({ dealId: id })}
             />
           )}
@@ -554,6 +555,21 @@ export default function DealsPage() {
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
+      />
+
+      {/* Won Confirmation */}
+      <ConfirmDialog
+        open={!!confirmWonId}
+        onConfirm={() => {
+          if (confirmWonId) wonMutation.mutate(confirmWonId);
+          setConfirmWonId(null);
+        }}
+        onCancel={() => setConfirmWonId(null)}
+        title="סגירת עסקה כזכייה"
+        message="האם אתה בטו�� שברצונך לסמן את העסקה כזכייה?"
+        confirmText="סגור כזכייה"
+        cancelText="ביטול"
+        variant="warning"
       />
 
       {/* Loss Reason Modal */}
