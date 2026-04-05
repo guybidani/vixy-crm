@@ -369,6 +369,9 @@ function ArticleView({
       });
       toast.success("תודה על המשוב!");
     },
+    onError: (err: { message?: string }) => {
+      toast.error(err?.message || "שגיאה בשליחת משוב");
+    },
   });
 
   return (
@@ -435,14 +438,16 @@ function ArticleView({
           </span>
           <button
             onClick={() => voteMutation.mutate(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-success hover:bg-success-light hover:text-success transition-all text-[13px]"
+            disabled={voteMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-success hover:bg-success-light hover:text-success transition-all text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ThumbsUp size={14} />
             <span>כן ({article.helpfulCount})</span>
           </button>
           <button
             onClick={() => voteMutation.mutate(false)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-[#E44258] hover:bg-red-50 hover:text-[#E44258] transition-all text-[13px]"
+            disabled={voteMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] border border-[#E6E9EF] hover:border-[#E44258] hover:bg-red-50 hover:text-[#E44258] transition-all text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ThumbsDown size={14} />
             <span>לא ({article.notHelpfulCount})</span>
