@@ -78,12 +78,14 @@ interface UrgencyPickerProps {
 
 export function UrgencyPicker({ value, onChange }: UrgencyPickerProps) {
   return (
-    <div className="flex gap-1.5 flex-wrap">
+    <div className="flex gap-1.5 flex-wrap" role="group" aria-label="רמת דחיפות">
       {(Object.entries(URGENCY_CONFIG) as [UrgencyLevel, UrgencyConfig][]).map(
         ([level, cfg]) => (
           <button
             key={level}
             onClick={() => onChange(level)}
+            aria-pressed={value === level}
+            aria-label={cfg.hebrewLabel}
             className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border-2 transition-all"
             style={
               value === level

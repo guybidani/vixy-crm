@@ -199,11 +199,13 @@ export default function TagSelector({
                     }
                   }}
                 />
-                <div className="flex gap-1 flex-wrap">
+                <div className="flex gap-1 flex-wrap" role="group" aria-label="צבע תגית">
                   {TAG_COLORS.map((c) => (
                     <button
                       key={c}
                       onClick={() => setNewTagColor(c)}
+                      aria-label={`צבע ${c}`}
+                      aria-pressed={newTagColor === c}
                       className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${
                         newTagColor === c
                           ? "border-[#323338]"

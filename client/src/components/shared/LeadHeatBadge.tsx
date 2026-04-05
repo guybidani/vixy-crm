@@ -96,11 +96,13 @@ interface LeadHeatPickerProps {
 
 export function LeadHeatPicker({ value, onChange }: LeadHeatPickerProps) {
   return (
-    <div className="flex gap-1.5 flex-wrap">
+    <div className="flex gap-1.5 flex-wrap" role="group" aria-label="חום ליד">
       {(Object.entries(HEAT_CONFIG) as [LeadHeat, LeadHeatConfig][]).map(([heat, cfg]) => (
         <button
           key={heat}
           onClick={() => onChange(value === heat ? null : heat)}
+          aria-pressed={value === heat}
+          aria-label={cfg.hebrewLabel}
           className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border-2 transition-all"
           style={
             value === heat
