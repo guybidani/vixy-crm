@@ -48,6 +48,8 @@ export default function TicketDetailPage() {
     enabled: !!id,
   });
 
+  const [confirmStatus, setConfirmStatus] = useState<{ status: string; message: string } | null>(null);
+
   const statusMutation = useMutation({
     mutationFn: (status: string) => updateTicket(id!, { status }),
     onSuccess: () => {
@@ -105,7 +107,7 @@ export default function TicketDetailPage() {
         <div className="flex gap-2">
           {ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
             <button
-              onClick={() => statusMutation.mutate("RESOLVED")}
+              onClick={() => setConfirmStatus({ status: "RESOLVED", message: "האם אתה בטוח שברצונך לסמן את הפנייה כנפתרה?" })}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-success hover:bg-success/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
             >
               <CheckCircle2 size={14} />
@@ -114,7 +116,7 @@ export default function TicketDetailPage() {
           )}
           {ticket.status === "RESOLVED" && (
             <button
-              onClick={() => statusMutation.mutate("CLOSED")}
+              onClick={() => setConfirmStatus({ status: "CLOSED", message: "האם אתה בטוח שברצונך לסגור את הפנייה?" })}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#676879] hover:bg-[#323338] text-white text-[12px] font-semibold rounded-[4px] transition-colors"
             >
               סגור פנייה
@@ -122,7 +124,7 @@ export default function TicketDetailPage() {
           )}
           {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
             <button
-              onClick={() => statusMutation.mutate("OPEN")}
+              onClick={() => setConfirmStatus({ status: "OPEN", message: "האם אתה בטוח שברצונך לפתוח מחדש את הפנייה?" })}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-warning hover:bg-warning/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
             >
               פתח מחדש
@@ -359,6 +361,20 @@ export default function TicketDetailPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmStatus}
+        onConfirm={() => {
+          if (confirmStatus) statusMutation.mutate(confirmStatus.status);
+          setConfirmStatus(null);
+        }}
+        onCancel={() => setConfirmStatus(null)}
+        title="שינוי סטטוס פנייה"
+        message={confirmStatus?.message ?? ""}
+        confirmText="אישור"
+        cancelText="ביטול"
+        variant="warning"
+      />
     </div>
   );
 }
