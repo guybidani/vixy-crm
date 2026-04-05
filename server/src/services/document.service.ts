@@ -122,12 +122,16 @@ export async function update(
   id: string,
   data: { title?: string; content?: string },
 ) {
-  const doc = await prisma.document.findFirst({ where: { id, workspaceId } });
-  if (!doc) return null;
-
-  return prisma.document.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth — workspace scope
+  // is enforced at the mutation level, not just the existence check.
+  const result = await prisma.document.updateMany({
+    where: { id, workspaceId },
     data,
+  });
+  if (result.count === 0) return null;
+
+  return prisma.document.findUnique({
+    where: { id },
     include: {
       createdBy: { include: { user: { select: { name: true } } } },
       links: true,
@@ -150,7 +154,9 @@ export async function remove(workspaceId: string, id: string) {
     }
   }
 
-  await prisma.document.delete({ where: { id } });
+  // Use deleteMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the delete level, not just the find level above.
+  await prisma.document.deleteMany({ where: { id, workspaceId } });
   return { deleted: true };
 }
 
