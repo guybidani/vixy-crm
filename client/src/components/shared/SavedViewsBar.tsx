@@ -9,6 +9,7 @@ import {
   type SavedView,
 } from "../../api/views";
 import SaveViewDialog from "./SaveViewDialog";
+import ConfirmDialog from "./ConfirmDialog";
 
 interface SavedViewsBarProps {
   entity: string;
@@ -27,6 +28,7 @@ export default function SavedViewsBar({
 }: SavedViewsBarProps) {
   const queryClient = useQueryClient();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     viewId: string;
     x: number;
@@ -58,12 +60,13 @@ export default function SavedViewsBar({
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteView(id),
-    onSuccess: () => {
+    onSuccess: (_data, deletedId) => {
       queryClient.invalidateQueries({ queryKey: ["saved-views", entity] });
       toast.success("תצוגה נמחקה");
-      if (contextMenu && contextMenu.viewId === activeViewId) {
+      if (deletedId === activeViewId) {
         onSelectView(null);
       }
+      setConfirmDeleteId(null);
       setContextMenu(null);
     },
     onError: () => toast.error("שגיאה במחיקת תצוגה"),
@@ -199,11 +202,15 @@ export default function SavedViewsBar({
           <button
             role="menuitem"
             autoFocus
-            onClick={() => deleteMutation.mutate(contextMenu.viewId)}
+            onClick={() => {
+              setConfirmDeleteId(contextMenu.viewId);
+              setContextMenu(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                deleteMutation.mutate(contextMenu.viewId);
+                setConfirmDeleteId(contextMenu.viewId);
+                setContextMenu(null);
               }
             }}
             className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#FFEEF0] text-[#E44258] transition-colors focus:outline-none focus-visible:bg-[#FFEEF0]"
@@ -222,6 +229,19 @@ export default function SavedViewsBar({
           createMutation.mutate({ name, isDefault })
         }
         saving={createMutation.isPending}
+      />
+
+      {/* Delete confirmation */}
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        onConfirm={() => {
+          if (confirmDeleteId) deleteMutation.mutate(confirmDeleteId);
+        }}
+        onCancel={() => setConfirmDeleteId(null)}
+        title="מחיקת תצוגה"
+        message="האם למחוק את התצוגה השמורה? לא ניתן לבטל פעולה זו."
+        confirmText="מחק"
+        variant="danger"
       />
     </>
   );
