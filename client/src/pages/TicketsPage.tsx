@@ -562,9 +562,14 @@ function TicketDetailPanel({
         {/* Top: ticket header */}
         <div className="px-5 py-3 border-b border-[#E6E9EF] bg-white flex items-start gap-3 flex-shrink-0">
           <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-bold text-[#323338] truncate">
+            <button
+              type="button"
+              onClick={onNavigateFull}
+              className="text-[15px] font-bold text-[#323338] truncate hover:text-[#0073EA] transition-colors text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm max-w-full"
+              title="פתח בעמוד מלא"
+            >
               {ticket.subject}
-            </h2>
+            </button>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               {/* Status dropdown */}
               <StatusDropdown
