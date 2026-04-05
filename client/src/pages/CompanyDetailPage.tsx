@@ -20,6 +20,8 @@ import {
   Bot,
   StickyNote,
   Pencil,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
@@ -209,7 +211,7 @@ export default function CompanyDetailPage() {
   const [editingActivityBody, setEditingActivityBody] = useState("");
   const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
 
-  const { data: company, isLoading } = useQuery({
+  const { data: company, isLoading, isError, refetch } = useQuery({
     queryKey: ["company", id],
     queryFn: () => getCompany(id!),
     enabled: !!id,
@@ -335,7 +337,7 @@ export default function CompanyDetailPage() {
   if (!company) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-[#676879]">ח��רה לא נמצאה</p>
+        <p className="text-[#676879]">חברה לא נמצאה</p>
       </div>
     );
   }
