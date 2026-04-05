@@ -547,10 +547,19 @@ export default function CompanyDetailPage() {
 
           {/* Deals */}
           <PageCard>
-            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
-              <Handshake size={16} className="text-success" />
-              עסקאות ({company.deals?.length || 0})
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
+                <Handshake size={16} className="text-success" />
+                עסקאות ({company.deals?.length || 0})
+              </h3>
+              <button
+                onClick={() => navigate(`/deals?new=1&companyId=${company.id}`)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                הוסף עסקה
+              </button>
+            </div>
             {company.deals && company.deals.length > 0 ? (
               <div className="space-y-2">
                 {company.deals.map((deal: any) => {
