@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw, Mail, Phone } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -334,6 +334,20 @@ function CompanyCard({
         <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879] inline-block mb-2">
           {company.industry}
         </span>
+      )}
+
+      {/* Contact info */}
+      {company.email && (
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <Mail size={10} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-[11px] text-[#676879] truncate" dir="ltr">{company.email}</span>
+        </div>
+      )}
+      {company.phone && (
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <Phone size={10} className="text-[#9699A6] flex-shrink-0" />
+          <span className="text-[11px] text-[#676879] truncate" dir="ltr">{company.phone}</span>
+        </div>
       )}
 
       {/* Bottom row: contacts + deals count */}
