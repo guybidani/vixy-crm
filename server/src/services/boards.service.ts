@@ -430,10 +430,13 @@ export async function deleteItem(
   boardId: string,
   itemId: string,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and item belongs to board in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItem.delete({ where: { id: itemId } });
 }
@@ -1034,8 +1037,13 @@ export async function deleteSubItem(
   boardId: string,
   subItemId: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and sub-item belongs to board in parallel
+  const [board, subItem] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: subItemId, boardId, parentItemId: { not: null } } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!subItem) throw new AppError(404, "NOT_FOUND", "Sub-item not found");
 
   return prisma.boardItem.delete({ where: { id: subItemId } });
 }
@@ -1088,8 +1096,15 @@ export async function deleteItemFile(
   boardId: string,
   fileId: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and file belongs to a board item in parallel
+  const [board, file] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItemFile.findFirst({
+      where: { id: fileId, item: { boardId } },
+    }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!file) throw new AppError(404, "NOT_FOUND", "File not found");
 
   return prisma.boardItemFile.delete({ where: { id: fileId } });
 }
