@@ -71,9 +71,19 @@ export default function MondayTextCell({
         e.stopPropagation();
         setEditing(true);
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          setEditing(true);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       dir={dir}
-      className="w-full cursor-text truncate text-[13px] text-[#323338] hover:text-[#0073EA] transition-colors"
+      className="w-full cursor-text truncate text-[13px] text-[#323338] hover:text-[#0073EA] focus:text-[#0073EA] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/30 rounded"
       title={value || undefined}
+      aria-label="ערוך טקסט"
     >
       {value || (
         <span className="text-[#C3C6D4] hover:text-[#0073EA]/60 transition-colors text-[12px] italic">

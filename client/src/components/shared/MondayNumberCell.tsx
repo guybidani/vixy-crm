@@ -93,8 +93,18 @@ export default function MondayNumberCell({
         e.stopPropagation();
         setEditing(true);
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          setEditing(true);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       dir="ltr"
-      className="cursor-text text-[13px] text-[#323338] hover:text-[#0073EA] transition-colors"
+      className="cursor-text text-[13px] text-[#323338] hover:text-[#0073EA] focus:text-[#0073EA] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/30 rounded"
+      aria-label="ערוך ערך מספרי"
     >
       {value !== null && value !== undefined ? (
         formatDisplay()
