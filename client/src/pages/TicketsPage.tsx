@@ -391,7 +391,7 @@ function TicketDetailPanel({
   onNavigateFull: () => void;
   onStatusChange: (id: string, status: string) => void;
 }) {
-  const { ticketStatuses, priorities } = useWorkspaceOptions();
+  const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -658,8 +658,8 @@ function TicketDetailPanel({
                 </span>
               </MetaRow>
               <MetaRow label="ערוץ">
-                <span className="text-[11px] text-[#676879] capitalize">
-                  {ticket.channel}
+                <span className="text-[11px] text-[#676879]">
+                  {ticketChannels[ticket.channel]?.label || ticket.channel}
                 </span>
               </MetaRow>
               {/* Assignee */}
