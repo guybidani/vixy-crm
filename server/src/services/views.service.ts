@@ -21,11 +21,26 @@ export async function create(
     sortDir?: string;
   },
 ) {
-  // If setting as default, unset other defaults for this entity
+  // Wrap unset-old + create-new in a transaction so a crash between the two
+  // never leaves the entity with zero default views.
   if (data.isDefault) {
-    await prisma.savedView.updateMany({
-      where: { workspaceId, memberId, entity: data.entity, isDefault: true },
-      data: { isDefault: false },
+    return prisma.$transaction(async (tx) => {
+      await tx.savedView.updateMany({
+        where: { workspaceId, memberId, entity: data.entity, isDefault: true },
+        data: { isDefault: false },
+      });
+      return tx.savedView.create({
+        data: {
+          workspaceId,
+          memberId,
+          entity: data.entity,
+          name: data.name.trim(),
+          filters: data.filters as Prisma.InputJsonValue,
+          isDefault: true,
+          sortBy: data.sortBy,
+          sortDir: data.sortDir,
+        },
+      });
     });
   }
 
@@ -36,7 +51,7 @@ export async function create(
       entity: data.entity,
       name: data.name.trim(),
       filters: data.filters as Prisma.InputJsonValue,
-      isDefault: data.isDefault ?? false,
+      isDefault: false,
       sortBy: data.sortBy,
       sortDir: data.sortDir,
     },
@@ -60,23 +75,31 @@ export async function update(
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "View not found");
 
-  // If setting as default, unset other defaults for this entity
+  const updatePayload: Prisma.SavedViewUpdateInput = {
+    ...(data.name !== undefined && { name: data.name.trim() }),
+    ...(data.filters !== undefined && { filters: data.filters as Prisma.InputJsonValue }),
+    ...(data.isDefault !== undefined && { isDefault: data.isDefault }),
+    ...(data.sortBy !== undefined && { sortBy: data.sortBy }),
+    ...(data.sortDir !== undefined && { sortDir: data.sortDir }),
+  };
+
+  // Wrap unset-old + set-new in a transaction to prevent partial default state
   if (data.isDefault) {
-    await prisma.savedView.updateMany({
-      where: { workspaceId, memberId, entity: existing.entity, isDefault: true, id: { not: id } },
-      data: { isDefault: false },
+    return prisma.$transaction(async (tx) => {
+      await tx.savedView.updateMany({
+        where: { workspaceId, memberId, entity: existing.entity, isDefault: true, id: { not: id } },
+        data: { isDefault: false },
+      });
+      return tx.savedView.update({
+        where: { id },
+        data: updatePayload,
+      });
     });
   }
 
   return prisma.savedView.update({
     where: { id },
-    data: {
-      ...(data.name !== undefined && { name: data.name.trim() }),
-      ...(data.filters !== undefined && { filters: data.filters as Prisma.InputJsonValue }),
-      ...(data.isDefault !== undefined && { isDefault: data.isDefault }),
-      ...(data.sortBy !== undefined && { sortBy: data.sortBy }),
-      ...(data.sortDir !== undefined && { sortDir: data.sortDir }),
-    },
+    data: updatePayload,
   });
 }
 
@@ -95,14 +118,15 @@ export async function setDefault(workspaceId: string, memberId: string, id: stri
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "View not found");
 
-  // Unset other defaults for this entity
-  await prisma.savedView.updateMany({
-    where: { workspaceId, memberId, entity: existing.entity, isDefault: true },
-    data: { isDefault: false },
-  });
-
-  return prisma.savedView.update({
-    where: { id },
-    data: { isDefault: true },
+  // Wrap unset-old + set-new in a transaction to prevent partial default state
+  return prisma.$transaction(async (tx) => {
+    await tx.savedView.updateMany({
+      where: { workspaceId, memberId, entity: existing.entity, isDefault: true },
+      data: { isDefault: false },
+    });
+    return tx.savedView.update({
+      where: { id },
+      data: { isDefault: true },
+    });
   });
 }
