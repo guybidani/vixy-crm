@@ -726,9 +726,13 @@ export async function getItemComments(
   boardId: string,
   itemId: string,
 ) {
-  // Verify the board belongs to this workspace
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and item belongs to board in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId }, select: { id: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItemComment.findMany({
     where: { itemId },
@@ -740,6 +744,7 @@ export async function getItemComments(
       },
     },
     orderBy: { createdAt: "asc" },
+    take: 200,
   });
 }
 
@@ -897,8 +902,13 @@ export async function getItemActivities(
   boardId: string,
   itemId: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and item belongs to board in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId }, select: { id: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItemActivity.findMany({
     where: { itemId },
@@ -1063,12 +1073,18 @@ export async function getItemFiles(
   boardId: string,
   itemId: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and item belongs to board in parallel
+  const [board, item] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: itemId, boardId }, select: { id: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!item) throw new AppError(404, "NOT_FOUND", "Board item not found");
 
   return prisma.boardItemFile.findMany({
     where: { itemId },
     orderBy: { createdAt: "asc" },
+    take: 200,
   });
 }
 
