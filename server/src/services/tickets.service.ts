@@ -373,15 +373,20 @@ export async function addMessage(
 }
 
 export async function getMessages(workspaceId: string, ticketId: string) {
-  const ticket = await prisma.ticket.findFirst({
-    where: { id: ticketId, workspaceId },
-  });
+  // Verify ticket ownership and fetch messages in parallel
+  const [ticket, messages] = await Promise.all([
+    prisma.ticket.findFirst({
+      where: { id: ticketId, workspaceId },
+      select: { id: true },
+    }),
+    prisma.ticketMessage.findMany({
+      where: { ticketId },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
   if (!ticket) throw new AppError(404, "NOT_FOUND", "Ticket not found");
 
-  return prisma.ticketMessage.findMany({
-    where: { ticketId },
-    orderBy: { createdAt: "asc" },
-  });
+  return messages;
 }
 
 export async function board(workspaceId: string) {
