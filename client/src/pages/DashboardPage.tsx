@@ -260,19 +260,19 @@ export default function DashboardPage() {
         {/* Quick actions */}
         <div className="flex items-center gap-2 flex-shrink-0">
           <QuickActionButton
-            label="+ ליד חדש"
+            label="ליד חדש"
             color="#6161FF"
             bg="#E8E8FF"
             onClick={() => navigate("/contacts?new=1")}
           />
           <QuickActionButton
-            label="+ עסקה חדשה"
+            label="עסקה חדשה"
             color="#00CA72"
             bg="#D6F5E8"
             onClick={() => navigate("/deals?new=1")}
           />
           <QuickActionButton
-            label="+ משימה"
+            label="משימה"
             color="#FDAB3D"
             bg="#FEF0D8"
             onClick={() => navigate("/tasks?new=1")}
