@@ -368,36 +368,40 @@ export async function addMessage(
   if (data.senderType === "agent") {
     const isNewToOpen = ticket.status === "NEW";
 
-    // Set firstResponseAt only if it hasn't been set yet (atomic CAS)
-    if (!ticket.firstResponseAt) {
-      await prisma.ticket.updateMany({
-        where: { id: ticketId, workspaceId, firstResponseAt: null },
-        data: { firstResponseAt: new Date() },
-      });
-    }
+    // Both CAS updates are independent — run in parallel to halve latency.
+    // Each uses a WHERE condition on the current state so concurrent calls
+    // are safe (only one will match and mutate).
+    const [, statusResult] = await Promise.all([
+      // Set firstResponseAt only if it hasn't been set yet (atomic CAS)
+      !ticket.firstResponseAt
+        ? prisma.ticket.updateMany({
+            where: { id: ticketId, workspaceId, firstResponseAt: null },
+            data: { firstResponseAt: new Date() },
+          })
+        : null,
+      // Transition NEW → OPEN only if ticket is still NEW (atomic CAS)
+      isNewToOpen
+        ? prisma.ticket.updateMany({
+            where: { id: ticketId, workspaceId, status: "NEW" },
+            data: { status: "OPEN" },
+          })
+        : null,
+    ]);
 
-    // Transition NEW → OPEN only if ticket is still NEW (atomic CAS)
-    if (isNewToOpen) {
-      const result = await prisma.ticket.updateMany({
-        where: { id: ticketId, workspaceId, status: "NEW" },
-        data: { status: "OPEN" },
-      });
-
-      // Only fire automation if we actually changed the status (count > 0)
-      if (result.count > 0) {
-        enqueueAutomationTrigger({
-          workspaceId,
-          trigger: "TICKET_STATUS_CHANGED",
-          entityType: "ticket",
-          entityId: ticketId,
-          data: {
-            subject: ticket.subject,
-            status: "OPEN",
-            priority: ticket.priority,
-          },
-          previousData: { status: "NEW" },
-        }).catch(() => {});
-      }
+    // Only fire automation if we actually changed the status (count > 0)
+    if (statusResult && statusResult.count > 0) {
+      enqueueAutomationTrigger({
+        workspaceId,
+        trigger: "TICKET_STATUS_CHANGED",
+        entityType: "ticket",
+        entityId: ticketId,
+        data: {
+          subject: ticket.subject,
+          status: "OPEN",
+          priority: ticket.priority,
+        },
+        previousData: { status: "NEW" },
+      }).catch(() => {});
     }
   }
 
