@@ -287,6 +287,21 @@ export default function DealsPage() {
       ),
     },
     {
+      key: "value",
+      label: "שווי",
+      width: "120px",
+      sortable: true,
+      summary: "sum",
+      render: (row) => (
+        <MondayNumberCell
+          value={row.value}
+          onChange={(val) => inlineUpdate(row.id, { value: val })}
+          prefix="₪"
+          min={0}
+        />
+      ),
+    },
+    {
       key: "contact",
       label: "איש קשר",
       width: "160px",
