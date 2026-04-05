@@ -985,8 +985,16 @@ function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.title.trim()) {
+      toast.error("יש להזין שם עסקה");
+      return;
+    }
     if (!form.contactId) {
       toast.error("יש לבחור איש קשר");
+      return;
+    }
+    if (form.value && Number(form.value) < 0) {
+      toast.error("סכום לא יכול להיות שלילי");
       return;
     }
     mutation.mutate();
@@ -1018,6 +1026,7 @@ function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </label>
             <input
               type="number"
+              min={0}
               value={form.value}
               onChange={(e) => setField("value", e.target.value)}
               className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
@@ -1121,8 +1130,8 @@ function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </button>
           <button
             type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={mutation.isPending || !form.title.trim() || !form.contactId}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "יוצר..." : "צור עסקה"}
           </button>
