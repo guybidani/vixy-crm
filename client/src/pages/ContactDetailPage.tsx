@@ -76,6 +76,15 @@ export default function ContactDetailPage() {
     },
   });
 
+  const updateMut = useMutation({
+    mutationFn: (data: Record<string, any>) => updateContact(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact", id] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
   const updateActivityMut = useMutation({
     mutationFn: ({ actId, body }: { actId: string; body: string }) =>
       updateActivity(actId, { body }),
@@ -195,46 +204,52 @@ export default function ContactDetailPage() {
           <PageCard>
             <h3 className="font-bold text-[#323338] mb-3">פרטי קשר</h3>
             <div className="space-y-3">
-              {contact.email && (
-                <InfoRow
-                  icon={<Mail size={14} />}
-                  label="אימייל"
-                  value={contact.email}
-                  dir="ltr"
-                  href={`mailto:${contact.email}`}
-                />
-              )}
-              {contact.phone && (
-                <InfoRow
-                  icon={<Phone size={14} />}
-                  label="טלפון"
-                  value={contact.phone}
-                  dir="ltr"
-                  href={`tel:${contact.phone}`}
-                />
-              )}
-              {contact.company && (
+              <EditableInfoRow
+                icon={<Mail size={14} />}
+                label="אימייל"
+                value={contact.email || ""}
+                placeholder="הוסף אימייל"
+                dir="ltr"
+                href={contact.email ? `mailto:${contact.email}` : undefined}
+                onSave={(val) => updateMut.mutate({ email: val || undefined })}
+              />
+              <EditableInfoRow
+                icon={<Phone size={14} />}
+                label="טלפון"
+                value={contact.phone || ""}
+                placeholder="הוסף טלפון"
+                dir="ltr"
+                href={contact.phone ? `tel:${contact.phone}` : undefined}
+                onSave={(val) => updateMut.mutate({ phone: val || undefined })}
+              />
+              {contact.company ? (
                 <InfoRow
                   icon={<Building2 size={14} />}
                   label="חברה"
                   value={contact.company.name}
                   onClick={() => navigate(`/companies/${contact.company!.id}`)}
                 />
-              )}
-              {contact.position && (
+              ) : (
                 <InfoRow
-                  icon={<Briefcase size={14} />}
-                  label="תפקיד"
-                  value={contact.position}
+                  icon={<Building2 size={14} />}
+                  label="חברה"
+                  value=""
                 />
               )}
-              {contact.source && (
-                <InfoRow
-                  icon={<MessageCircle size={14} />}
-                  label="מקור"
-                  value={contact.source}
-                />
-              )}
+              <EditableInfoRow
+                icon={<Briefcase size={14} />}
+                label="תפקיד"
+                value={contact.position || ""}
+                placeholder="הוסף תפקיד"
+                onSave={(val) => updateMut.mutate({ position: val || undefined })}
+              />
+              <EditableInfoRow
+                icon={<MessageCircle size={14} />}
+                label="מקור"
+                value={contact.source || ""}
+                placeholder="הוסף מקור"
+                onSave={(val) => updateMut.mutate({ source: val || undefined })}
+              />
               <InfoRow
                 icon={<Calendar size={14} />}
                 label="נוצר"
@@ -770,6 +785,98 @@ function InfoRow({
         </a>
       ) : (
         <span className="text-sm text-[#323338]" dir={dir}>{value}</span>
+      )}
+    </div>
+  );
+}
+
+function EditableInfoRow({
+  icon,
+  label,
+  value,
+  placeholder,
+  dir,
+  href,
+  onSave,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  placeholder?: string;
+  dir?: string;
+  href?: string;
+  onSave: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState(value);
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[#9699A6]">{icon}</span>
+        <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
+        <input
+          autoFocus
+          className="flex-1 text-sm text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
+          value={editVal}
+          dir={dir}
+          onChange={(e) => setEditVal(e.target.value)}
+          onBlur={() => {
+            if (editVal !== value) onSave(editVal);
+            setEditing(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            if (e.key === "Escape") {
+              setEditVal(value);
+              setEditing(false);
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 group/row">
+      <span className="text-[#9699A6]">{icon}</span>
+      <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
+      {value ? (
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {href ? (
+            <a
+              href={href}
+              className="text-sm text-[#323338] hover:text-[#0073EA] hover:underline transition-colors truncate"
+              dir={dir}
+            >
+              {value}
+            </a>
+          ) : (
+            <span className="text-sm text-[#323338] truncate" dir={dir}>
+              {value}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setEditVal(value);
+              setEditing(true);
+            }}
+            className="opacity-0 group-hover/row:opacity-100 p-0.5 text-[#9699A6] hover:text-[#0073EA] transition-all"
+            title="ערוך"
+          >
+            <Edit2 size={11} />
+          </button>
+        </div>
+      ) : (
+        <span
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1"
+          onClick={() => {
+            setEditVal("");
+            setEditing(true);
+          }}
+        >
+          {placeholder || "\u2014"}
+        </span>
       )}
     </div>
   );
