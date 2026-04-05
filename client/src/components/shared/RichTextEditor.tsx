@@ -96,7 +96,7 @@ export default function RichTextEditor({
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E6E9EF] bg-[#F5F6F8]/30 flex-wrap">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E6E9EF] bg-[#F5F6F8]/30 flex-wrap" role="toolbar" aria-label="עיצוב טקסט">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
