@@ -166,6 +166,7 @@ export default function ContactsPage() {
         setSortBy(key);
         setSortDir("asc");
       }
+      setPage(1);
     },
     [sortBy],
   );
