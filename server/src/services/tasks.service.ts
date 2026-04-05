@@ -376,6 +376,7 @@ export async function createNextRecurrence(taskId: string, workspaceId: string) 
       description: task.description,
       priority: task.priority,
       taskType: task.taskType,
+      taskContext: task.taskContext,
       assigneeId: task.assigneeId,
       createdById: task.createdById,
       contactId: task.contactId,
