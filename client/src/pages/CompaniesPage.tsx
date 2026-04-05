@@ -8,6 +8,7 @@ import PageShell from "../components/layout/PageShell";
 import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
 import MondayTextCell from "../components/shared/MondayTextCell";
+import StatusDropdown from "../components/shared/StatusDropdown";
 // import SidePanel from "../components/shared/SidePanel";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
@@ -174,6 +175,18 @@ export default function CompaniesPage() {
           onChange={(val) => inlineUpdate(row.id, { phone: val })}
           placeholder="טלפון"
           dir="ltr"
+        />
+      ),
+    },
+    {
+      key: "status",
+      label: "סטטוס",
+      sortable: true,
+      render: (row: Company) => (
+        <StatusDropdown
+          value={row.status}
+          options={companyStatuses}
+          onChange={(status) => statusMutation.mutate({ id: row.id, status })}
         />
       ),
     },
