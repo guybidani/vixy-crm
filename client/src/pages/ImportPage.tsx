@@ -94,6 +94,18 @@ export default function ImportPage() {
   const fields =
     importType === "contacts" ? CONTACT_FIELDS : DEAL_FIELDS;
 
+  const mappedValues = Object.values(mapping).filter(Boolean);
+  const hasRequiredMapping =
+    importType === "contacts"
+      ? mappedValues.some(
+          (v) => v === "firstName" || v === "email" || v === "phone",
+        )
+      : mappedValues.length > 0;
+  const showMappingError =
+    importType === "contacts" &&
+    mappedValues.length > 0 &&
+    !hasRequiredMapping;
+
   const handleFile = useCallback(
     async (f: File) => {
       setFile(f);
@@ -376,6 +388,13 @@ export default function ImportPage() {
             </div>
           </div>
 
+          {/* Validation error */}
+          {showMappingError && (
+            <p className="text-[#FB275D] text-[13px]">
+              חובה למפות לפחות שם, אימייל או טלפון
+            </p>
+          )}
+
           {/* Actions */}
           <div className="flex items-center gap-3 justify-between">
             <button
@@ -386,10 +405,7 @@ export default function ImportPage() {
             </button>
             <button
               onClick={handleImport}
-              disabled={
-                loading ||
-                !Object.values(mapping).some((v) => v)
-              }
+              disabled={loading || !hasRequiredMapping}
               className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] text-[13px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {loading && (
