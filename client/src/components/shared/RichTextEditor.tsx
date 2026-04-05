@@ -230,6 +230,8 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       className={cn(
         "p-1.5 rounded transition-colors",
         active
