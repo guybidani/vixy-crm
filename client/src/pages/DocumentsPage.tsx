@@ -137,6 +137,8 @@ export default function DocumentsPage() {
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
+            aria-haspopup="true"
+            aria-expanded={showMenu}
             className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
           >
             <Plus size={15} strokeWidth={2.5} />
@@ -148,8 +150,9 @@ export default function DocumentsPage() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] py-1 w-48 z-50">
+              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] py-1 w-48 z-50" role="menu" aria-label="יצירת מסמך חדש">
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowMenu(false);
                     fileInputRef.current?.click();
@@ -160,6 +163,7 @@ export default function DocumentsPage() {
                   העלה קובץ
                 </button>
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setShowMenu(false);
                     setShowCreate("rich-text");
