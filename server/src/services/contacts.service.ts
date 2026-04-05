@@ -331,6 +331,15 @@ export async function remove(workspaceId: string, id: string) {
 }
 
 export async function getTimeline(workspaceId: string, contactId: string) {
+  // Verify contact belongs to workspace (return 404 instead of silent empty results)
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, workspaceId },
+    select: { id: true },
+  });
+  if (!contact) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
   const [activities, deals, tickets] = await Promise.all([
     prisma.activity.findMany({
       where: { workspaceId, contactId },
@@ -343,10 +352,12 @@ export async function getTimeline(workspaceId: string, contactId: string) {
     prisma.deal.findMany({
       where: { workspaceId, contactId },
       orderBy: { createdAt: "desc" },
+      take: 50,
     }),
     prisma.ticket.findMany({
       where: { workspaceId, contactId },
       orderBy: { createdAt: "desc" },
+      take: 50,
     }),
   ]);
 
