@@ -703,9 +703,7 @@ export default function ContactDetailPage() {
                             </div>
                           ) : (
                             activity.body && (
-                              <p className="text-[12px] text-[#9699A6] mt-0.5">
-                                {activity.body}
-                              </p>
+                              <ActivityBodyText body={activity.body} />
                             )
                           )}
                           {activity.member?.user?.name && (
@@ -893,6 +891,26 @@ function EditableInfoRow({
         >
           {placeholder || "\u2014"}
         </span>
+      )}
+    </div>
+  );
+}
+
+function ActivityBodyText({ body }: { body: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = body.length > 200;
+  return (
+    <div className="mt-0.5">
+      <p className={`text-[12px] text-[#9699A6] whitespace-pre-wrap ${!expanded && isLong ? "line-clamp-3" : ""}`}>
+        {body}
+      </p>
+      {isLong && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="text-[11px] text-[#0073EA] hover:underline mt-0.5"
+        >
+          {expanded ? "פחות \u25B2" : "קרא עוד \u25BC"}
+        </button>
       )}
     </div>
   );
