@@ -19,7 +19,11 @@ export async function listArticles(params: {
   page?: number;
   limit?: number;
 }) {
-  const { workspaceId, categoryId, status, search, page = 1, limit = 50 } = params;
+  const { workspaceId, categoryId, status, search, page: rawPage = 1, limit: rawLimit = 50 } = params;
+  // Clamp page/limit to valid positive ranges — negative page causes negative
+  // skip (Prisma error), and limit<=0 silently returns empty results.
+  const page = Math.max(1, rawPage);
+  const limit = Math.min(Math.max(1, rawLimit), 100);
 
   const where: any = { workspaceId };
   if (categoryId) where.categoryId = categoryId;
@@ -170,11 +174,14 @@ export async function updateArticle(
 }
 
 export async function deleteArticle(workspaceId: string, id: string) {
-  const existing = await prisma.kbArticle.findFirst({
+  // Use deleteMany with workspaceId filter in a single round-trip instead of
+  // find + delete (two round-trips). This also provides defense-in-depth — the
+  // workspace scope is enforced at the delete level, not just the check.
+  const result = await prisma.kbArticle.deleteMany({
     where: { id, workspaceId },
   });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Article not found");
-  return prisma.kbArticle.delete({ where: { id } });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Article not found");
+  return { deleted: true };
 }
 
 export async function voteArticle(
