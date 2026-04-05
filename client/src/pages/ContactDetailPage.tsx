@@ -322,20 +322,11 @@ export default function ContactDetailPage() {
                 href={contact.phone ? `tel:${contact.phone}` : undefined}
                 onSave={(val) => updateMut.mutate({ phone: val || undefined })}
               />
-              {contact.company ? (
-                <InfoRow
-                  icon={<Building2 size={14} />}
-                  label="חברה"
-                  value={contact.company.name}
-                  onClick={() => navigate(`/companies/${contact.company!.id}`)}
-                />
-              ) : (
-                <InfoRow
-                  icon={<Building2 size={14} />}
-                  label="חברה"
-                  value=""
-                />
-              )}
+              <CompanyInfoRow
+                company={contact.company}
+                onNavigate={() => contact.company && navigate(`/companies/${contact.company.id}`)}
+                onChange={(companyId) => updateMut.mutate({ companyId: companyId || null })}
+              />
               <EditableInfoRow
                 icon={<Briefcase size={14} />}
                 label="תפקיד"
@@ -877,6 +868,109 @@ export default function ContactDetailPage() {
         cancelText="ביטול"
         variant="danger"
       />
+    </div>
+  );
+}
+
+function CompanyInfoRow({
+  company,
+  onNavigate,
+  onChange,
+}: {
+  company: { id: string; name: string } | null;
+  onNavigate: () => void;
+  onChange: (companyId: string | null) => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies", { limit: 200 }],
+    queryFn: () => listCompanies({ limit: 200 }),
+    enabled: picking,
+  });
+
+  useEffect(() => {
+    if (!picking) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setPicking(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPicking(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [picking]);
+
+  return (
+    <div className="flex items-center gap-2 group/row" ref={ref}>
+      <span className="text-[#9699A6]"><Building2 size={14} /></span>
+      <span className="text-[12px] text-[#9699A6] w-14">חברה</span>
+      <div className="flex items-center gap-1.5 flex-1 min-w-0 relative">
+        {company ? (
+          <button
+            className="text-sm text-[#323338] hover:text-[#0073EA] transition-colors truncate focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
+            onClick={onNavigate}
+          >
+            {company.name}
+          </button>
+        ) : (
+          <span
+            role="button"
+            tabIndex={0}
+            className="text-sm text-[#9699A6] cursor-pointer hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            onClick={() => setPicking(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setPicking(true);
+              }
+            }}
+          >
+            הוסף חברה
+          </span>
+        )}
+        <button
+          onClick={() => setPicking((v) => !v)}
+          className="opacity-0 group-hover/row:opacity-100 p-0.5 text-[#9699A6] hover:text-[#0073EA] transition-all flex-shrink-0"
+          title="שנה חברה"
+        >
+          <Pencil size={11} />
+        </button>
+        {picking && (
+          <div className="absolute top-full right-0 mt-1 bg-white rounded-[4px] shadow-lg border border-[#E6E9EF] z-20 max-h-48 overflow-y-auto min-w-[200px]">
+            <button
+              onClick={() => {
+                onChange(null);
+                setPicking(false);
+              }}
+              className="w-full text-right px-3 py-2 text-sm text-[#9699A6] hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF]"
+            >
+              ללא חברה
+            </button>
+            {(companiesData?.data || []).map((c) => (
+              <button
+                key={c.id}
+                onClick={() => {
+                  onChange(c.id);
+                  setPicking(false);
+                }}
+                className={`w-full text-right px-3 py-2 text-sm hover:bg-[#F5F6F8] transition-colors ${
+                  company?.id === c.id ? "text-[#0073EA] font-semibold" : "text-[#323338]"
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
