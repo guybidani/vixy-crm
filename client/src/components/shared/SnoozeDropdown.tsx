@@ -46,15 +46,18 @@ export default function SnoozeDropdown({
     };
   }, [open]);
 
+  const snoozeLabel = useRef("");
+
   const snoozeMut = useMutation({
     mutationFn: (until: string) =>
       updateTask(taskId, { snoozedUntil: until }),
-    onSuccess: (_data, _vars) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-today-widget"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
       queryClient.invalidateQueries({ queryKey: ["task", taskId] });
       setOpen(false);
+      toast.success(`המשימה נדחתה - ${snoozeLabel.current}`);
       onSnoozed?.();
     },
     onError: () => {
@@ -67,7 +70,7 @@ export default function SnoozeDropdown({
 
   const handleSnooze = (option: (typeof options)[number]) => {
     const until = resolveSnoozeDate(option).toISOString();
-    toast.success(`המשימה נדחתה - ${option.label}`);
+    snoozeLabel.current = option.label;
     snoozeMut.mutate(until);
   };
 
