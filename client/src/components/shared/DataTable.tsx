@@ -63,6 +63,7 @@ export default function DataTable<T extends { id: string }>({
               value={search || ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
+              aria-label={searchPlaceholder}
               className="pr-8 pl-3 py-[6px] text-[13px] border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#C3C6D4] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 w-[220px] bg-white"
             />
           </div>
@@ -162,7 +163,6 @@ export default function DataTable<T extends { id: string }>({
                   style={rowStyle?.(row)}
                   onClick={() => onRowClick?.(row)}
                   tabIndex={onRowClick ? 0 : undefined}
-                  role={onRowClick ? "button" : undefined}
                   onKeyDown={onRowClick ? (e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
