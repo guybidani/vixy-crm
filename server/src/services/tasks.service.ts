@@ -442,17 +442,28 @@ export async function update(
   if (data.assigneeId && !assigneeRef)
     throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
-  const updateData: any = { ...data };
-  if (data.status) updateData.status = data.status;
-  if (data.priority) updateData.priority = data.priority;
-  if (data.taskType) updateData.taskType = data.taskType;
-  if (data.taskContext) updateData.taskContext = data.taskContext;
-  if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
-  if (data.dueTime === null) updateData.dueTime = null;
-  if (data.snoozedUntil) updateData.snoozedUntil = new Date(data.snoozedUntil);
-  if (data.snoozedUntil === null) updateData.snoozedUntil = null;
-  if (data.callResult === null) updateData.callResult = null;
-  if (data.recurrenceEndDate) updateData.recurrenceEndDate = new Date(data.recurrenceEndDate);
+  // Build updateData from explicit fields instead of spreading { ...data }.
+  // Blind spread passes raw string values (dueDate, snoozedUntil, etc.) directly
+  // to Prisma, relying on auto-coercion. Explicit mapping ensures proper Date
+  // conversion and makes it clear which columns are written.
+  const updateData: any = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.priority !== undefined) updateData.priority = data.priority;
+  if (data.taskType !== undefined) updateData.taskType = data.taskType;
+  if (data.taskContext !== undefined) updateData.taskContext = data.taskContext;
+  if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId;
+  if (data.outcomeNote !== undefined) updateData.outcomeNote = data.outcomeNote;
+  if (data.isRecurring !== undefined) updateData.isRecurring = data.isRecurring;
+  if (data.recurrenceType !== undefined) updateData.recurrenceType = data.recurrenceType;
+  if (data.recurrenceDay !== undefined) updateData.recurrenceDay = data.recurrenceDay;
+  if (data.reminderMinutes !== undefined) updateData.reminderMinutes = data.reminderMinutes;
+  if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+  if (data.dueTime !== undefined) updateData.dueTime = data.dueTime;
+  if (data.snoozedUntil !== undefined) updateData.snoozedUntil = data.snoozedUntil ? new Date(data.snoozedUntil) : null;
+  if (data.callResult !== undefined) updateData.callResult = data.callResult;
+  if (data.recurrenceEndDate !== undefined) updateData.recurrenceEndDate = data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : null;
   if (data.status === "DONE" && existing.status !== "DONE") {
     updateData.completedAt = new Date();
   } else if (data.status && data.status !== "DONE" && existing.status === "DONE") {

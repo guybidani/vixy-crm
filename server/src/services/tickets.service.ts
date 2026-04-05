@@ -282,9 +282,16 @@ export async function update(
   if (data.assigneeId && !assigneeRef)
     throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
-  const updateData: any = { ...data };
-  if (data.status) updateData.status = data.status;
-  if (data.priority) updateData.priority = data.priority;
+  // Build updateData from explicit fields instead of spreading { ...data }.
+  // Blind spread can pass unexpected fields to Prisma and makes it harder
+  // to reason about which columns are being written.
+  const updateData: any = {};
+  if (data.subject !== undefined) updateData.subject = data.subject;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.priority !== undefined) updateData.priority = data.priority;
+  if (data.urgencyLevel !== undefined) updateData.urgencyLevel = data.urgencyLevel;
+  if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId;
 
   // Set resolvedAt when status changes to RESOLVED
   if (data.status === "RESOLVED" && existing.status !== "RESOLVED") {
