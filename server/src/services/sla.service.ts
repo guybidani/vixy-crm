@@ -89,10 +89,12 @@ export async function updateSlaPolicy(
 }
 
 export async function deleteSlaPolicy(workspaceId: string, id: string) {
-  // Fetch policy and ticket usage count in parallel — they are independent queries
+  // Fetch policy and ticket usage count in parallel — they are independent queries.
+  // Scope ticket count to workspace so we don't leak cross-workspace data into
+  // the error message.
   const [existing, ticketCount] = await Promise.all([
     prisma.slaPolicy.findFirst({ where: { id, workspaceId } }),
-    prisma.ticket.count({ where: { slaPolicyId: id } }),
+    prisma.ticket.count({ where: { workspaceId, slaPolicyId: id } }),
   ]);
 
   if (!existing) throw new AppError(404, "NOT_FOUND", "SLA policy not found");
@@ -105,5 +107,9 @@ export async function deleteSlaPolicy(workspaceId: string, id: string) {
     );
   }
 
-  return prisma.slaPolicy.delete({ where: { id } });
+  // Use deleteMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the delete level, not just the existence check above.
+  const result = await prisma.slaPolicy.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "SLA policy not found");
+  return { deleted: true };
 }
