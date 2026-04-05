@@ -295,9 +295,21 @@ export default function DealDetailPanel({
   function saveField(field: string) {
     const val = editValues[field];
     if (field === "value") {
-      updateMut.mutate({ value: Number(val) });
+      const num = Number(val);
+      if (isNaN(num) || num < 0) {
+        toast.error("סכום לא תקין");
+        setEditingField(null);
+        return;
+      }
+      updateMut.mutate({ value: num });
     } else if (field === "probability") {
-      updateMut.mutate({ probability: Number(val) });
+      const num = Number(val);
+      if (isNaN(num) || num < 0 || num > 100) {
+        toast.error("סיכוי חייב להיות בין 0 ל-100");
+        setEditingField(null);
+        return;
+      }
+      updateMut.mutate({ probability: num });
     } else if (field === "expectedClose") {
       updateMut.mutate({ expectedClose: val });
     }
@@ -917,6 +929,7 @@ export default function DealDetailPanel({
                       <input
                         autoFocus
                         type="number"
+                        min={0}
                         value={editValues.value}
                         onChange={(e) => setEditValues({ ...editValues, value: e.target.value })}
                         onBlur={() => saveField("value")}
