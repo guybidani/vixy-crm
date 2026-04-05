@@ -36,15 +36,20 @@ export default function BulkActionBar({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#323338] text-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] px-5 py-3 flex items-center gap-4">
-      <span className="text-sm font-semibold">{selectedCount} נבחרו</span>
+    <div
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#323338] text-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.3)] px-5 py-3 flex items-center gap-4"
+      role="toolbar"
+      aria-label={`פעולות על ${selectedCount} פריטים נבחרים`}
+    >
+      <span className="text-sm font-semibold" aria-live="polite">{selectedCount} נבחרו</span>
 
-      <div className="w-px h-5 bg-white/20" />
+      <div className="w-px h-5 bg-white/20" aria-hidden="true" />
 
       {onAddTag && (
         <button
           onClick={onAddTag}
           className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
+          aria-label="הוסף תגית לפריטים נבחרים"
         >
           <Tag size={14} />
           הוסף תגית
@@ -55,6 +60,7 @@ export default function BulkActionBar({
         <button
           onClick={onChangeStatus}
           className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
+          aria-label="שנה סטטוס לפריטים נבחרים"
         >
           <ArrowRight size={14} />
           שנה סטטוס
@@ -67,7 +73,9 @@ export default function BulkActionBar({
         <button
           onClick={onDelete}
           disabled={deleting}
+          aria-busy={deleting}
           className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-red-500/20 text-red-300 rounded-[4px] transition-colors disabled:opacity-50"
+          aria-label="מחק פריטים נבחרים"
         >
           <Trash2 size={14} />
           מחק
