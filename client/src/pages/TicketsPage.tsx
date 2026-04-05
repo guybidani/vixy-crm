@@ -20,6 +20,7 @@ import {
   User,
   AlertCircle,
   ArrowRight,
+  Maximize2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "../components/shared/Modal";
@@ -606,6 +607,14 @@ function TicketDetailPanel({
           </div>
           {/* Quick actions */}
           <div className="flex gap-1.5 flex-shrink-0">
+            <button
+              onClick={onNavigateFull}
+              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] hover:text-[#323338] transition-colors"
+              aria-label="פתח בעמוד מלא"
+              title="פתח בעמוד מלא"
+            >
+              <Maximize2 size={14} />
+            </button>
             {ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
               <button
                 onClick={() => setConfirmStatusChange({ status: "RESOLVED", message: "האם אתה בטוח שברצונך לסמן את הקריאה כנפתרה?" })}
