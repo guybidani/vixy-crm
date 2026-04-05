@@ -515,6 +515,14 @@ export async function update(
     if (data.stage === "CLOSED_WON" || data.stage === "CLOSED_LOST") {
       updateData.closedAt = new Date();
     }
+    // Clear closedAt when re-opening a previously closed deal
+    if (
+      data.stage !== "CLOSED_WON" &&
+      data.stage !== "CLOSED_LOST" &&
+      (existing.stage === "CLOSED_WON" || existing.stage === "CLOSED_LOST")
+    ) {
+      updateData.closedAt = null;
+    }
   }
 
   if (data.expectedClose) {
