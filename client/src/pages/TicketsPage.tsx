@@ -211,10 +211,11 @@ export default function TicketsPage() {
             />
           </div>
           {/* Status Tabs */}
-          <div className="flex gap-1 flex-wrap">
+          <div className="flex gap-1 flex-wrap" role="group" aria-label="סינון לפי סטטוס">
             {STATUS_TABS.map((tab) => (
               <button
                 key={tab.key}
+                aria-pressed={statusFilter === tab.key}
                 onClick={() => { setStatusFilter(tab.key); setPage(1); }}
                 className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium transition-all ${
                   statusFilter === tab.key
