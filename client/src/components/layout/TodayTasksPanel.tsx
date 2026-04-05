@@ -149,7 +149,7 @@ function QuickAddForm({ onClose, onCreated }: QuickAddFormProps) {
 
       <div className="flex items-center gap-2">
         {/* Task type selector */}
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="group" aria-label="סוג משימה">
           {(["TASK", "CALL", "EMAIL", "MEETING", "WHATSAPP"] as const).map((t) => {
             const Icon = TASK_TYPE_ICONS[t] || CheckSquare;
             const active = taskType === t;
@@ -159,6 +159,8 @@ function QuickAddForm({ onClose, onCreated }: QuickAddFormProps) {
                 type="button"
                 onClick={() => setTaskType(t)}
                 title={TASK_TYPE_LABELS[t]}
+                aria-label={TASK_TYPE_LABELS[t]}
+                aria-pressed={active}
                 className={`p-1.5 rounded-md transition-all ${
                   active
                     ? "bg-[#0073EA] text-white"
