@@ -159,9 +159,13 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
     if (el) el.scrollIntoView({ block: "nearest" });
   }, [selectedIndex]);
 
-  // Global keyboard: Escape
+  // Global keyboard: Escape + body scroll lock
   useEffect(() => {
     if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -169,7 +173,10 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
       }
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open, onClose]);
 
   const handleNavigate = useCallback(
