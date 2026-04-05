@@ -95,14 +95,39 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 px-4 pb-3 border-b border-[#E6E9EF]">
+        <div
+          className="flex gap-1 px-4 pb-3 border-b border-[#E6E9EF]"
+          role="tablist"
+          aria-label="סוג פריט להוספה"
+        >
           {TABS.map((t) => (
             <button
               key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              aria-controls={`quick-add-panel-${t.key}`}
+              id={`quick-add-tab-${t.key}`}
               onClick={() => {
                 setTab(t.key);
                 setTimeout(() => firstInputRef.current?.focus(), 60);
               }}
+              onKeyDown={(e) => {
+                const idx = TABS.findIndex((x) => x.key === t.key);
+                let next: number | null = null;
+                if (e.key === "ArrowLeft") next = (idx + 1) % TABS.length;
+                else if (e.key === "ArrowRight") next = (idx - 1 + TABS.length) % TABS.length;
+                else if (e.key === "Home") next = 0;
+                else if (e.key === "End") next = TABS.length - 1;
+                if (next !== null) {
+                  e.preventDefault();
+                  setTab(TABS[next].key);
+                  const btn = (e.currentTarget.parentElement as HTMLElement)?.querySelector<HTMLElement>(
+                    `[id="quick-add-tab-${TABS[next].key}"]`,
+                  );
+                  btn?.focus();
+                }
+              }}
+              tabIndex={tab === t.key ? 0 : -1}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-medium transition-all ${
                 tab === t.key
                   ? "text-white"
@@ -130,7 +155,12 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
         </div>
 
         {/* Forms */}
-        <div className="px-4 pt-1 pb-3">
+        <div
+          className="px-4 pt-1 pb-3"
+          role="tabpanel"
+          id={`quick-add-panel-${tab}`}
+          aria-labelledby={`quick-add-tab-${tab}`}
+        >
           {tab === "contact" && (
             <ContactForm firstInputRef={firstInputRef} onClose={onClose} />
           )}
