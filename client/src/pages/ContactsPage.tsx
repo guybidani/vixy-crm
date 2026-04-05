@@ -699,14 +699,24 @@ function ContactCard({
         </div>
       )}
 
+      {/* Phone */}
+      {contact.phone && (
+        <div className="flex items-center gap-1.5 mb-1">
+          <Phone size={11} className="text-[#9699A6]" />
+          <span dir="ltr" className="text-xs text-[#9699A6] truncate">
+            {contact.phone}
+          </span>
+        </div>
+      )}
+
       {/* Email */}
       {contact.email && (
-        <p
-          dir="ltr"
-          className="text-xs text-[#9699A6] truncate mb-1 text-right"
-        >
-          {contact.email}
-        </p>
+        <div className="flex items-center gap-1.5 mb-1">
+          <Mail size={11} className="text-[#9699A6]" />
+          <span dir="ltr" className="text-xs text-[#9699A6] truncate">
+            {contact.email}
+          </span>
+        </div>
       )}
 
       {/* Bottom: Lead score + tags */}
