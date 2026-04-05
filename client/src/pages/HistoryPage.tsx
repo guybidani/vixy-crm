@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Clock, Phone, Mail, Video, MessageCircle, StickyNote } from "lucide-react";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import { getRecentContacts, type RecentContact } from "../api/history";
+import { avatarColor } from "../lib/utils";
 
 const ACTIVITY_TYPE_CONFIG: Record<
   string,
@@ -51,7 +52,10 @@ function ContactCard({ item }: { item: RecentContact }) {
       className="w-full bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-md transition-all duration-200 p-4 flex items-center gap-4 text-right group hover:translate-y-[-1px]"
     >
       {/* Avatar */}
-      <div className="w-11 h-11 rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0">
+      <div
+        className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: avatarColor(contact.id) }}
+      >
         <span className="text-white font-bold text-sm">
           {getInitials(contact.firstName, contact.lastName)}
         </span>
