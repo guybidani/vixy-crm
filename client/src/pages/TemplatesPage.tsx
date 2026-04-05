@@ -591,8 +591,8 @@ function TemplateFormModal({
           </button>
           <button
             type="submit"
-            disabled={isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={isPending || !name.trim() || !body.trim()}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending
               ? "שומר..."
