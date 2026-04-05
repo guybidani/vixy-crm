@@ -85,6 +85,8 @@ export default function SnoozeDropdown({
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-[4px] border border-[#E6E9EF] text-[#676879] hover:border-warning hover:text-warning hover:bg-warning/5 transition-all"
           title="דחה משימה"
           aria-label="דחה משימה"
+          aria-haspopup="menu"
+          aria-expanded={open}
         >
           <AlarmClockOff size={13} />
           דחה משימה
@@ -98,24 +100,31 @@ export default function SnoozeDropdown({
           className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#F5F6F8] transition-all"
           title="דחה משימה"
           aria-label="דחה משימה"
+          aria-haspopup="menu"
+          aria-expanded={open}
         >
           <AlarmClockOff size={12} className="text-[#676879]" />
         </button>
       )}
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-30 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#E6E9EF] py-1 min-w-[160px]">
+        <div
+          className="absolute left-0 top-full mt-1 z-30 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#E6E9EF] py-1 min-w-[160px]"
+          role="menu"
+          aria-label="אפשרויות דחייה"
+        >
           <div className="px-3 py-1.5 text-[10px] font-bold text-[#9699A6] uppercase border-b border-[#E6E9EF]">
             דחה משימה
           </div>
           {options.map((opt) => (
             <button
               key={opt.label}
+              role="menuitem"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSnooze(opt);
               }}
-              className="w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
+              className="w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2 focus:outline-none focus-visible:bg-[#F5F6F8]"
             >
               <Clock
                 size={11}
