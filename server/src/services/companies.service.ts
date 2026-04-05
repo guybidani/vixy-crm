@@ -82,57 +82,57 @@ export async function list(params: ListParams) {
 }
 
 export async function getById(workspaceId: string, id: string) {
-  const company = await prisma.company.findFirst({
-    where: { id, workspaceId },
-    include: {
-      contacts: {
-        include: {
-          tags: { include: { tag: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 100,
+  // Run all four queries in parallel — eliminates the sequential waterfall where
+  // activities had to wait for contacts+deals to finish before building the IN clause.
+  // The activities query now uses a relational filter (contact.companyId / deal.companyId)
+  // instead of materializing IDs in the application layer.
+  const [company, contacts, deals, activities] = await Promise.all([
+    prisma.company.findFirst({
+      where: { id, workspaceId },
+      include: {
+        _count: { select: { contacts: true, deals: true } },
       },
-      deals: {
-        include: {
-          contact: { select: { firstName: true, lastName: true } },
-          assignee: { include: { user: { select: { name: true } } } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 100,
+    }),
+    prisma.contact.findMany({
+      where: { workspaceId, companyId: id },
+      include: {
+        tags: { include: { tag: true } },
       },
-      _count: { select: { contacts: true, deals: true } },
-    },
-  });
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.deal.findMany({
+      where: { workspaceId, companyId: id },
+      include: {
+        contact: { select: { firstName: true, lastName: true } },
+        assignee: { include: { user: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }),
+    prisma.activity.findMany({
+      where: {
+        workspaceId,
+        OR: [
+          { contact: { companyId: id } },
+          { deal: { companyId: id } },
+        ],
+      },
+      include: {
+        member: { include: { user: { select: { name: true } } } },
+        contact: { select: { id: true, firstName: true, lastName: true } },
+        deal: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
+  ]);
 
   if (!company) {
     throw new AppError(404, "NOT_FOUND", "Company not found");
   }
 
-  // Fetch recent activities from all contacts and deals belonging to this company
-  const contactIds = company.contacts.map((c) => c.id);
-  const dealIds = company.deals.map((d) => d.id);
-
-  const activities =
-    contactIds.length > 0 || dealIds.length > 0
-      ? await prisma.activity.findMany({
-          where: {
-            workspaceId,
-            OR: [
-              ...(contactIds.length > 0 ? [{ contactId: { in: contactIds } }] : []),
-              ...(dealIds.length > 0 ? [{ dealId: { in: dealIds } }] : []),
-            ],
-          },
-          include: {
-            member: { include: { user: { select: { name: true } } } },
-            contact: { select: { id: true, firstName: true, lastName: true } },
-            deal: { select: { id: true, title: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 30,
-        })
-      : [];
-
-  return { ...company, activities };
+  return { ...company, contacts, deals, activities };
 }
 
 export async function create(
