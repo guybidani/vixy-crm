@@ -42,11 +42,17 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
   const [tab, setTab] = useState<TabType>("contact");
   const firstInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset + focus when opened
+  // Reset + focus when opened, and lock body scroll
   useEffect(() => {
     if (open) {
       setTab("contact");
       setTimeout(() => firstInputRef.current?.focus(), 80);
+
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
     }
   }, [open]);
 
