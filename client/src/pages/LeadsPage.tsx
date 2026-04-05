@@ -28,32 +28,35 @@ import { createDeal } from "../api/deals";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
-// Score-based colors
-function scoreColor(score: number) {
-  if (score >= 70) return "#00CA72";
-  if (score >= 40) return "#FDAB3D";
-  return "#C4C4C4";
-}
-
-function scoreLabel(score: number) {
-  if (score >= 70) return "חם";
-  if (score >= 40) return "פושר";
-  return "קר";
-}
-
-function scoreBgClass(score: number) {
-  if (score >= 70) return "bg-green-50 text-green-700";
-  if (score >= 40) return "bg-amber-50 text-amber-700";
-  return "bg-gray-50 text-gray-500";
-}
-
-// Pipeline stages for board view
+// Pipeline stages for board view — thresholds are the single source of truth
 const PIPELINE_STAGES = [
   { key: "cold", label: "קר", color: "#C4C4C4", minScore: 0, maxScore: 29 },
   { key: "warm", label: "פושר", color: "#FDAB3D", minScore: 30, maxScore: 59 },
   { key: "hot", label: "חם", color: "#FF642E", minScore: 60, maxScore: 79 },
   { key: "ready", label: "מוכן להסמכה", color: "#00CA72", minScore: 80, maxScore: 100 },
 ];
+
+// Score-based colors — aligned with pipeline stage thresholds
+function scoreColor(score: number) {
+  if (score >= 80) return "#00CA72";
+  if (score >= 60) return "#FF642E";
+  if (score >= 30) return "#FDAB3D";
+  return "#C4C4C4";
+}
+
+function scoreLabel(score: number) {
+  if (score >= 80) return "מוכן";
+  if (score >= 60) return "חם";
+  if (score >= 30) return "פושר";
+  return "קר";
+}
+
+function scoreBgClass(score: number) {
+  if (score >= 80) return "bg-green-50 text-green-700";
+  if (score >= 60) return "bg-orange-50 text-orange-700";
+  if (score >= 30) return "bg-amber-50 text-amber-700";
+  return "bg-gray-50 text-gray-500";
+}
 
 export default function LeadsPage() {
   const queryClient = useQueryClient();
