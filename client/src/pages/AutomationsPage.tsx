@@ -669,11 +669,20 @@ export default function AutomationsPage() {
           </button>
         </div>
       ) : isLoading ? (
-        <PageCard>
-          <div className="text-center py-12 text-[#9699A6] text-[13px]">
-            טוען...
-          </div>
-        </PageCard>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <PageCard key={i} className="!p-0 overflow-hidden">
+              <div className="flex items-center gap-4 px-5 py-4 animate-pulse">
+                <div className="w-7 h-5 bg-[#F5F6F8] rounded" />
+                <div className="w-10 h-10 rounded-xl bg-[#F5F6F8]" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-[#F5F6F8] rounded w-1/3" />
+                  <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
+                </div>
+              </div>
+            </PageCard>
+          ))}
+        </div>
       ) : workflows.length === 0 ? (
         <PageCard>
           <EmptyState
