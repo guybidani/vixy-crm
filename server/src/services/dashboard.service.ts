@@ -36,32 +36,44 @@ export async function getTeamPerformance(
 ): Promise<TeamMemberPerformance[]> {
   const weekStart = getThisWeekSunday();
 
+  // Use LEFT JOINs with conditional aggregation instead of 5 correlated
+  // subqueries per member.  The previous pattern executed O(5 * N) sub-SELECTs
+  // where N = workspace members.  This single-pass approach scans each table
+  // once and aggregates per-member in the same query.
   const rows = await prisma.$queryRaw<TeamPerformanceRow[]>`
     SELECT
       wm.id AS member_id,
       u.name,
-      COALESCE((
-        SELECT COUNT(*) FROM activities a
-        WHERE a.workspace_id = wm.workspace_id AND a.member_id = wm.id AND a.created_at >= ${weekStart}
-      ), 0) AS activities_count,
-      COALESCE((
-        SELECT COUNT(*) FROM activities a
-        WHERE a.workspace_id = wm.workspace_id AND a.member_id = wm.id AND a.type = 'CALL' AND a.created_at >= ${weekStart}
-      ), 0) AS calls_count,
-      COALESCE((
-        SELECT COUNT(*) FROM deals d
-        WHERE d.workspace_id = wm.workspace_id AND d.assignee_id = wm.id AND d.stage = 'CLOSED_WON' AND d.stage_changed_at >= ${weekStart}
-      ), 0) AS deals_won,
-      COALESCE((
-        SELECT SUM(d.value) FROM deals d
-        WHERE d.workspace_id = wm.workspace_id AND d.assignee_id = wm.id AND d.stage = 'CLOSED_WON' AND d.stage_changed_at >= ${weekStart}
-      ), 0) AS deals_won_value,
-      COALESCE((
-        SELECT COUNT(*) FROM tasks t
-        WHERE t.workspace_id = wm.workspace_id AND t.assignee_id = wm.id AND t.status = 'DONE' AND t.completed_at >= ${weekStart}
-      ), 0) AS tasks_completed
+      COALESCE(a_stats.activities_count, 0) AS activities_count,
+      COALESCE(a_stats.calls_count, 0) AS calls_count,
+      COALESCE(d_stats.deals_won, 0) AS deals_won,
+      COALESCE(d_stats.deals_won_value, 0) AS deals_won_value,
+      COALESCE(t_stats.tasks_completed, 0) AS tasks_completed
     FROM workspace_members wm
     JOIN users u ON u.id = wm.user_id
+    LEFT JOIN (
+      SELECT a.member_id,
+             COUNT(*) AS activities_count,
+             COUNT(*) FILTER (WHERE a.type = 'CALL') AS calls_count
+      FROM activities a
+      WHERE a.workspace_id = ${workspaceId} AND a.created_at >= ${weekStart}
+      GROUP BY a.member_id
+    ) a_stats ON a_stats.member_id = wm.id
+    LEFT JOIN (
+      SELECT d.assignee_id,
+             COUNT(*) AS deals_won,
+             SUM(d.value) AS deals_won_value
+      FROM deals d
+      WHERE d.workspace_id = ${workspaceId} AND d.stage = 'CLOSED_WON' AND d.stage_changed_at >= ${weekStart}
+      GROUP BY d.assignee_id
+    ) d_stats ON d_stats.assignee_id = wm.id
+    LEFT JOIN (
+      SELECT t.assignee_id,
+             COUNT(*) AS tasks_completed
+      FROM tasks t
+      WHERE t.workspace_id = ${workspaceId} AND t.status = 'DONE' AND t.completed_at >= ${weekStart}
+      GROUP BY t.assignee_id
+    ) t_stats ON t_stats.assignee_id = wm.id
     WHERE wm.workspace_id = ${workspaceId}
     ORDER BY activities_count DESC
   `;
