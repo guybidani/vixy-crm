@@ -52,6 +52,8 @@ export default function ContactDetailPage() {
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameVal, setNameVal] = useState("");
   const [showLogActivity, setShowLogActivity] = useState(false);
   const [activityType, setActivityType] = useState<"NOTE" | "CALL" | "EMAIL" | "MEETING" | "WHATSAPP">("NOTE");
   const [activityBody, setActivityBody] = useState("");
@@ -161,9 +163,42 @@ export default function ContactDetailPage() {
               </span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#323338]">
-                {contact.firstName} {contact.lastName}
-              </h1>
+              {editingName ? (
+                <input
+                  autoFocus
+                  value={nameVal}
+                  onChange={(e) => setNameVal(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = nameVal.trim();
+                    if (trimmed && trimmed !== `${contact.firstName} ${contact.lastName}`) {
+                      const parts = trimmed.split(" ");
+                      updateMut.mutate({
+                        firstName: parts[0] || "",
+                        lastName: parts.slice(1).join(" ") || "",
+                      });
+                    }
+                    setEditingName(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    if (e.key === "Escape") {
+                      setNameVal(`${contact.firstName} ${contact.lastName}`);
+                      setEditingName(false);
+                    }
+                  }}
+                  className="text-xl font-bold text-[#323338] bg-white border border-[#0073EA] rounded-[4px] px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#0073EA]/20"
+                />
+              ) : (
+                <h1
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
+                  onClick={() => {
+                    setNameVal(`${contact.firstName} ${contact.lastName}`);
+                    setEditingName(true);
+                  }}
+                >
+                  {contact.firstName} {contact.lastName}
+                </h1>
+              )}
               <div className="flex items-center gap-3 mt-1">
                 <StatusDropdown
                   value={contact.status}
