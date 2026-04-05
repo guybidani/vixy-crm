@@ -1065,7 +1065,7 @@ function CreateTicketModal({
 
   return (
     <Modal open={true} onClose={onClose} title="קריאה חדשה">
-      <form onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }} className="space-y-4 p-6">
+      <form onSubmit={(e) => { e.preventDefault(); if (!form.subject.trim()) { toast.error("יש להזין נושא"); return; } mutation.mutate(); }} className="space-y-4 p-6">
         <div>
           <label className="block text-[13px] font-medium text-[#323338] mb-1">נושא *</label>
           <input
@@ -1134,8 +1134,8 @@ function CreateTicketModal({
           </button>
           <button
             type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={mutation.isPending || !form.subject.trim()}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "יוצר..." : "צור קריאה"}
           </button>
