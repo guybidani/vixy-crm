@@ -90,6 +90,8 @@ export default function ContactDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", id] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
     },
     onError: () => toast.error("שגיאה בעדכון"),
   });

@@ -236,6 +236,7 @@ export default function CompanyDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["company", id] });
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
     },
     onError: () => toast.error("שגיאה בעדכון"),
   });
