@@ -187,8 +187,29 @@ export default function LeadsPage() {
           </button>
         </div>
       ) : isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 animate-pulse"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-[#F5F6F8] rounded w-2/3" />
+                  <div className="h-3 bg-[#F5F6F8] rounded w-1/3" />
+                </div>
+                <div className="w-11 h-11 rounded-full bg-[#F5F6F8] mr-3" />
+              </div>
+              <div className="space-y-2 mb-4">
+                <div className="h-3 bg-[#F5F6F8] rounded w-3/4" />
+                <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
+              </div>
+              <div className="flex gap-2.5 pt-3 border-t border-[#E6E9EF]">
+                <div className="flex-1 h-9 bg-[#F5F6F8] rounded-[4px]" />
+                <div className="flex-1 h-9 bg-[#F5F6F8] rounded-[4px]" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : leads.length === 0 ? (
         <EmptyState
