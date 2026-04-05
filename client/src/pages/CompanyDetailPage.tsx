@@ -399,6 +399,13 @@ export default function CompanyDetailPage() {
                 placeholder="הוסף גודל"
                 onSave={(val) => updateMut.mutate({ size: val })}
               />
+              <div className="flex items-center gap-2">
+                <span className="text-[#9699A6]"><Calendar size={14} /></span>
+                <span className="text-[12px] text-[#9699A6] w-14">נוצר</span>
+                <span className="text-sm text-[#323338]">
+                  {new Date(company.createdAt).toLocaleDateString("he-IL")}
+                </span>
+              </div>
             </div>
           </PageCard>
 
