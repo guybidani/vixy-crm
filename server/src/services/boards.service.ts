@@ -145,21 +145,24 @@ export async function update(
     automations: any;
   }>,
 ) {
-  const existing = await prisma.board.findFirst({ where: { id, workspaceId } });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  return prisma.board.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the mutation level, not just an existence check (prevents TOCTOU).
+  const result = await prisma.board.updateMany({
+    where: { id, workspaceId },
     data,
   });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Board not found");
+
+  return prisma.board.findUnique({ where: { id } });
 }
 
 // ── Delete board ───────────────────────────────────────────────────
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.board.findFirst({ where: { id, workspaceId } });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  return prisma.board.delete({ where: { id } });
+  // Use deleteMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the delete level, not just an existence check (prevents TOCTOU).
+  const result = await prisma.board.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Board not found");
+  return { deleted: true };
 }
 
 // ══════════════════════════════════════════════════════════════════
