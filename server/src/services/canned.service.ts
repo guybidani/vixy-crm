@@ -35,12 +35,19 @@ export async function updateCannedResponse(
   id: string,
   data: Partial<{ name: string; body: string; category: string }>,
 ) {
+  // Build updateData from explicit fields instead of passing raw data object.
+  // Blind spread risks writing unexpected fields to Prisma.
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.body !== undefined) updateData.body = data.body;
+  if (data.category !== undefined) updateData.category = data.category;
+
   // Use updateMany with workspaceId for defense-in-depth — workspace scope
   // enforced at the mutation level, not just an existence check (prevents
   // TOCTOU race and cross-workspace writes).
   const result = await prisma.cannedResponse.updateMany({
     where: { id, workspaceId },
-    data,
+    data: updateData,
   });
   if (result.count === 0)
     throw new AppError(404, "NOT_FOUND", "Canned response not found");
