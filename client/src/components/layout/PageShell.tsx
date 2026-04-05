@@ -87,12 +87,13 @@ export default function PageShell({
                   {view.label}
                 </button>
               ))}
-              <button
-                aria-label="הוסף תצוגה"
-                className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+              <span
+                aria-hidden="true"
+                className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#C3C6D4] select-none"
+                title="בקרוב"
               >
                 <span>+</span>
-              </button>
+              </span>
             </div>
           )}
         </div>
