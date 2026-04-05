@@ -61,7 +61,7 @@ export async function getRecentContacts(
   // Steps 2 & 3: Fetch contact details and last activities in parallel
   const [contacts, lastActivities] = await Promise.all([
     prisma.contact.findMany({
-      where: { id: { in: contactIds } },
+      where: { id: { in: contactIds }, workspaceId },
       select: { id: true, firstName: true, lastName: true, phone: true, email: true },
     }),
     prisma.activity.findMany({
