@@ -208,14 +208,17 @@ export default function CalendarPopover({
       <div className="flex items-center justify-between px-3 py-1">
         <div className="flex items-center gap-1">
           <button
-            onClick={() => {
-              // Month dropdown - just show the name, click cycles
-            }}
-            className="text-[13px] font-medium text-[#323338] hover:text-[#0073EA]"
+            onClick={nextMonth}
+            className="text-[13px] font-medium text-[#323338] hover:text-[#0073EA] transition-colors"
+            title="חודש הבא"
           >
             {MONTHS_HE[viewMonth]}
           </button>
-          <button className="text-[13px] font-medium text-[#323338] hover:text-[#0073EA]">
+          <button
+            onClick={() => setViewYear((y) => y + 1)}
+            className="text-[13px] font-medium text-[#323338] hover:text-[#0073EA] transition-colors"
+            title="שנה הבאה"
+          >
             {viewYear}
           </button>
         </div>
