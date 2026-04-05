@@ -171,13 +171,17 @@ export async function toggleWorkflow(
   id: string,
   isActive: boolean,
 ) {
-  const existing = await prisma.workflow.findFirst({
+  // Use updateMany with workspaceId for defense-in-depth, then fetch the
+  // updated workflow with actions.  Prevents TOCTOU race and ensures
+  // workspace scope at the mutation level.
+  const result = await prisma.workflow.updateMany({
     where: { id, workspaceId },
-  });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Workflow not found");
-  return prisma.workflow.update({
-    where: { id },
     data: { isActive },
+  });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Workflow not found");
+
+  return prisma.workflow.findUnique({
+    where: { id },
     include: { actions: { orderBy: { order: "asc" } } },
   });
 }
