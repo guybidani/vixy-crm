@@ -154,11 +154,16 @@ export async function updateWorkflow(
 }
 
 export async function deleteWorkflow(workspaceId: string, id: string) {
-  const existing = await prisma.workflow.findFirst({
+  // Use deleteMany with workspaceId filter in a single round-trip instead of
+  // find + delete (two round-trips with TOCTOU race). This also provides
+  // defense-in-depth — the workspace scope is enforced at the delete level.
+  const result = await prisma.workflow.deleteMany({
     where: { id, workspaceId },
   });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Workflow not found");
-  return prisma.workflow.delete({ where: { id } });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Workflow not found");
+  }
+  return { deleted: true };
 }
 
 export async function toggleWorkflow(
