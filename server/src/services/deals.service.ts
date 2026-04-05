@@ -564,23 +564,24 @@ export async function update(
           })
         )?.id;
       if (taskOwnerId) {
-        Promise.all(
-          templates.map((tpl) =>
-            prisma.task.create({
-              data: {
-                workspaceId,
-                title: tpl.title,
-                taskType: tpl.taskType as any,
-                dueDate: addDays(now, tpl.delayDays),
-                dueTime: "09:00",
-                contactId: existing.contactId,
-                dealId: id,
-                assigneeId: taskOwnerId,
-                createdById: taskOwnerId,
-              },
-            }),
-          ),
-        ).catch(() => {});
+        // Bulk-create all stage tasks in a single round-trip instead of N
+        // individual creates.  This is both faster and atomic — if one row
+        // fails the whole batch is rolled back, preventing partial state.
+        prisma.task
+          .createMany({
+            data: templates.map((tpl) => ({
+              workspaceId,
+              title: tpl.title,
+              taskType: tpl.taskType as any,
+              dueDate: addDays(now, tpl.delayDays),
+              dueTime: "09:00",
+              contactId: existing.contactId,
+              dealId: id,
+              assigneeId: taskOwnerId,
+              createdById: taskOwnerId,
+            })),
+          })
+          .catch(() => {});
       }
     }
 
