@@ -80,6 +80,15 @@ export async function createCategory(
   workspaceId: string,
   data: { name: string; slug: string; order?: number; parentId?: string },
 ) {
+  // Verify parentId belongs to this workspace (prevent cross-workspace BOLA)
+  if (data.parentId) {
+    const parent = await prisma.kbCategory.findFirst({
+      where: { id: data.parentId, workspaceId },
+      select: { id: true },
+    });
+    if (!parent) throw new AppError(400, "INVALID_REFERENCE", "Parent category not found in workspace");
+  }
+
   return prisma.kbCategory.create({
     data: {
       workspaceId,
@@ -102,6 +111,15 @@ export async function createArticle(
     status?: string;
   },
 ) {
+  // Verify categoryId belongs to this workspace (prevent cross-workspace BOLA)
+  if (data.categoryId) {
+    const category = await prisma.kbCategory.findFirst({
+      where: { id: data.categoryId, workspaceId },
+      select: { id: true },
+    });
+    if (!category) throw new AppError(400, "INVALID_REFERENCE", "Category not found in workspace");
+  }
+
   return prisma.kbArticle.create({
     data: {
       workspaceId,
@@ -129,10 +147,18 @@ export async function updateArticle(
     status: string;
   }>,
 ) {
-  const existing = await prisma.kbArticle.findFirst({
-    where: { id, workspaceId },
-  });
+  // Verify article exists and categoryId belongs to workspace in parallel
+  const [existing, categoryRef] = await Promise.all([
+    prisma.kbArticle.findFirst({
+      where: { id, workspaceId },
+    }),
+    data.categoryId
+      ? prisma.kbCategory.findFirst({ where: { id: data.categoryId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
   if (!existing) throw new AppError(404, "NOT_FOUND", "Article not found");
+  if (data.categoryId && !categoryRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Category not found in workspace");
 
   return prisma.kbArticle.update({
     where: { id },
