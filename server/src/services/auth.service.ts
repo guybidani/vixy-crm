@@ -217,18 +217,21 @@ export async function login(email: string, password: string) {
 export async function refreshTokens(rawToken: string) {
   const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
 
-  // Find and delete the used token in one operation (single-use rotation)
-  const stored = await prisma.refreshToken.findUnique({
-    where: { tokenHash },
-    include: { user: true },
-  });
-
-  if (!stored) {
+  // Atomically delete-and-return the token inside a transaction so two
+  // concurrent requests with the same refresh token cannot both succeed
+  // (prevents refresh-token replay attacks via TOCTOU race).
+  let stored: Awaited<ReturnType<typeof prisma.refreshToken.delete>> & {
+    user: Awaited<ReturnType<typeof prisma.user.findUnique>>;
+  };
+  try {
+    stored = await prisma.refreshToken.delete({
+      where: { tokenHash },
+      include: { user: true },
+    });
+  } catch {
+    // delete throws if the record doesn't exist (P2025) — treat as invalid token
     throw new AppError(401, "INVALID_REFRESH_TOKEN", "Invalid refresh token");
   }
-
-  // Always delete the used token (single-use)
-  await prisma.refreshToken.delete({ where: { id: stored.id } });
 
   if (stored.expiresAt < new Date()) {
     throw new AppError(401, "REFRESH_TOKEN_EXPIRED", "Refresh token expired");
