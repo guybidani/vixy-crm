@@ -569,7 +569,16 @@ function TicketDetailPanel({
               <StatusDropdown
                 value={ticket.status}
                 options={ticketStatuses}
-                onChange={(s) => onStatusChange(ticketId, s)}
+                onChange={(s) => {
+                  if (s === "RESOLVED" || s === "CLOSED") {
+                    const msg = s === "RESOLVED"
+                      ? "האם אתה בטוח שברצונך לסמן את הקר��אה כנפתרה?"
+                      : "האם אתה בטוח שברצונך לסגור את הקריאה?";
+                    setConfirmStatusChange({ status: s, message: msg });
+                  } else {
+                    onStatusChange(ticketId, s);
+                  }
+                }}
               />
               {/* Priority dropdown */}
               <StatusDropdown
