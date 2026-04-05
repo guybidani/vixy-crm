@@ -768,6 +768,7 @@ export default function AutomationsPage() {
                       }}
                       className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
                       title="ערוך"
+                      aria-label={`ערוך — ${w.name}`}
                     >
                       <Pencil size={14} />
                     </button>
@@ -775,12 +776,15 @@ export default function AutomationsPage() {
                       onClick={() => setAutomationToDelete(w.id)}
                       className="p-2 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-[#E44258] transition-colors"
                       title="מחק"
+                      aria-label={`מחק — ${w.name}`}
                     >
                       <Trash2 size={14} />
                     </button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : w.id)}
                       className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
+                      aria-expanded={isExpanded}
+                      aria-label={isExpanded ? "סגור פרטים" : "הצג פרטים"}
                     >
                       {isExpanded ? (
                         <ChevronUp size={14} />
