@@ -37,6 +37,7 @@ function EditableInfoRow({
   value,
   placeholder,
   dir,
+  href,
   onSave,
 }: {
   icon: React.ReactNode;
@@ -44,6 +45,7 @@ function EditableInfoRow({
   value: string;
   placeholder?: string;
   dir?: string;
+  href?: string;
   onSave: (value: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -80,28 +82,51 @@ function EditableInfoRow({
     <div className="flex items-center gap-2 group/row">
       <span className="text-[#9699A6]">{icon}</span>
       <span className="text-[12px] text-[#9699A6] w-14">{label}</span>
-      <span
-        className={`text-sm flex-1 min-w-0 ${
-          value ? "text-[#323338]" : "text-[#9699A6]"
-        } cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors`}
-        dir={dir}
-        onClick={() => {
-          setEditVal(value);
-          setEditing(true);
-        }}
-      >
-        {value || placeholder || "\u2014"}
-      </span>
-      {!value && (
-        <button
+      {value ? (
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {href ? (
+            <a
+              href={href}
+              target={href.startsWith("http") ? "_blank" : undefined}
+              rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="text-sm text-[#323338] hover:text-[#0073EA] hover:underline transition-colors truncate"
+              dir={dir}
+            >
+              {value}
+            </a>
+          ) : (
+            <span
+              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
+              dir={dir}
+              onClick={() => {
+                setEditVal(value);
+                setEditing(true);
+              }}
+            >
+              {value}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setEditVal(value);
+              setEditing(true);
+            }}
+            className="opacity-0 group-hover/row:opacity-100 p-0.5 text-[#9699A6] hover:text-[#0073EA] transition-all flex-shrink-0"
+            title="ערוך"
+          >
+            <Pencil size={11} />
+          </button>
+        </div>
+      ) : (
+        <span
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1"
           onClick={() => {
             setEditVal("");
             setEditing(true);
           }}
-          className="opacity-0 group-hover/row:opacity-100 text-[#0073EA] text-[10px] transition-opacity"
         >
-          +
-        </button>
+          {placeholder || "\u2014"}
+        </span>
       )}
     </div>
   );
@@ -318,6 +343,7 @@ export default function CompanyDetailPage() {
                 value={company.email || ""}
                 placeholder="הוסף אימייל"
                 dir="ltr"
+                href={company.email ? `mailto:${company.email}` : undefined}
                 onSave={(val) => updateMut.mutate({ email: val })}
               />
               <EditableInfoRow
@@ -326,12 +352,14 @@ export default function CompanyDetailPage() {
                 value={company.phone || ""}
                 placeholder="הוסף טלפון"
                 dir="ltr"
+                href={company.phone ? `tel:${company.phone}` : undefined}
                 onSave={(val) => updateMut.mutate({ phone: val })}
               />
               <EditableInfoRow
                 icon={<Globe size={14} />}
                 label="אתר"
                 value={company.website || ""}
+                href={company.website ? (company.website.startsWith("http") ? company.website : `https://${company.website}`) : undefined}
                 placeholder="הוסף אתר"
                 dir="ltr"
                 onSave={(val) => updateMut.mutate({ website: val })}
