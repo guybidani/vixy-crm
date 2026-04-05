@@ -137,7 +137,7 @@ export function createDeal(data: {
   value?: number;
   stage?: string;
   priority?: string;
-  contactId: string;
+  contactId?: string;
   companyId?: string;
   expectedClose?: string;
   notes?: string;

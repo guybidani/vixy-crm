@@ -250,7 +250,6 @@ function DealForm({
         title: form.title.trim(),
         value: form.value ? parseFloat(form.value) : undefined,
         stage: form.stage,
-        contactId: "",
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });

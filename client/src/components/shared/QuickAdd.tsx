@@ -245,7 +245,6 @@ function QuickForm({
         value: dealForm.value ? parseFloat(dealForm.value) : undefined,
         stage: dealForm.stage,
         priority: dealForm.priority,
-        contactId: "",
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
