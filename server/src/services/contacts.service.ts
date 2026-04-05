@@ -320,14 +320,16 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.contact.findFirst({
+  // Use deleteMany with workspaceId filter in a single round-trip instead of
+  // find + delete (two round-trips). This also provides defense-in-depth — the
+  // workspace scope is enforced at the delete level, not just the check.
+  const result = await prisma.contact.deleteMany({
     where: { id, workspaceId },
   });
-  if (!existing) {
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
-
-  return prisma.contact.delete({ where: { id } });
+  return { deleted: true };
 }
 
 export async function getTimeline(workspaceId: string, contactId: string) {

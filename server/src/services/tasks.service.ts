@@ -580,9 +580,10 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.task.findFirst({ where: { id, workspaceId } });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Task not found");
-  return prisma.task.delete({ where: { id } });
+  // Single round-trip with workspace-scoped delete (defense-in-depth)
+  const result = await prisma.task.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
+  return { deleted: true };
 }
 
 export async function board(workspaceId: string) {

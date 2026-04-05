@@ -624,12 +624,14 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.deal.findFirst({
+  // Use deleteMany with workspaceId filter in a single round-trip instead of
+  // find + delete (two round-trips). This also provides defense-in-depth — the
+  // workspace scope is enforced at the delete level, not just the check.
+  const result = await prisma.deal.deleteMany({
     where: { id, workspaceId },
   });
-  if (!existing) {
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
   }
-
-  return prisma.deal.delete({ where: { id } });
+  return { deleted: true };
 }

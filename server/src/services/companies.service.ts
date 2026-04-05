@@ -181,14 +181,12 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const existing = await prisma.company.findFirst({
-    where: { id, workspaceId },
-  });
-  if (!existing) {
+  // Single round-trip with workspace-scoped delete (defense-in-depth)
+  const result = await prisma.company.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Company not found");
   }
-
-  return prisma.company.delete({ where: { id } });
+  return { deleted: true };
 }
 
 export async function board(workspaceId: string) {
