@@ -431,7 +431,7 @@ function DocumentDetailPanel({
   });
 
   return (
-    <SidePanel open={true} title={doc.title} onClose={onClose} width="lg">
+    <SidePanel open={true} title={title} onClose={onClose} width="lg">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
@@ -451,7 +451,7 @@ function DocumentDetailPanel({
                 className="w-full px-2 py-1 border border-[#E6E9EF] rounded-[4px] text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30"
               />
             ) : (
-              <h2 className="font-bold text-[#323338]">{doc.title}</h2>
+              <h2 className="font-bold text-[#323338]">{title}</h2>
             )}
             <p className="text-[12px] text-[#9699A6] mt-0.5">
               נוצר ב-{new Date(doc.createdAt).toLocaleDateString("he-IL")} ·{" "}
@@ -493,7 +493,7 @@ function DocumentDetailPanel({
               <div
                 className="prose prose-sm max-w-none text-[#323338] [direction:rtl] border border-[#E6E9EF] rounded-xl p-4"
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeHtml(doc.content || ""),
+                  __html: sanitizeHtml(content),
                 }}
               />
             )}
