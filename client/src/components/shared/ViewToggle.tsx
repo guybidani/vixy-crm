@@ -17,12 +17,13 @@ export default function ViewToggle({ viewMode, onChange, showCards = false }: Vi
   ];
 
   return (
-    <div className="flex items-center border border-[#D0D4E4] rounded-[4px] overflow-hidden">
+    <div className="flex items-center border border-[#D0D4E4] rounded-[4px] overflow-hidden" role="group" aria-label="תצוגה">
       {buttons.map(({ key, Icon, label }) => (
         <button
           key={key}
           onClick={() => onChange(key)}
           aria-label={label}
+          aria-pressed={viewMode === key}
           className={cn(
             "p-[6px] transition-colors",
             viewMode === key
