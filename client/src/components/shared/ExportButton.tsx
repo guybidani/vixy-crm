@@ -27,12 +27,13 @@ export default function ExportButton({ entity, filters }: ExportButtonProps) {
     <button
       onClick={handleExport}
       disabled={loading}
-      className="flex items-center gap-1.5 px-3 py-[7px] text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] border border-[#D0D4E4] rounded-[4px] transition-all disabled:opacity-50"
+      aria-busy={loading}
+      className="flex items-center gap-1.5 px-3 py-[7px] text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] border border-[#D0D4E4] rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       title="ייצוא ל-CSV"
-      aria-label="ייצוא ל-CSV"
+      aria-label={loading ? "מייצא..." : "ייצוא ל-CSV"}
     >
-      <Download size={15} className={loading ? "animate-bounce" : ""} />
-      <span className="hidden sm:inline">ייצוא</span>
+      <Download size={15} className={loading ? "animate-spin" : ""} />
+      <span className="hidden sm:inline">{loading ? "מייצא..." : "ייצוא"}</span>
     </button>
   );
 }
