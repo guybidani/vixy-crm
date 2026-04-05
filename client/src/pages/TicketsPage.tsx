@@ -37,7 +37,7 @@ import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useAuth } from "../hooks/useAuth";
-import { timeAgo } from "../lib/utils";
+import { timeAgo, avatarColor } from "../lib/utils";
 
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   email: <Mail size={12} />,
@@ -338,7 +338,8 @@ function TicketListItem({
         {ticket.contact && (
           <div className="flex items-center gap-1 mb-1.5">
             <div
-              className="w-4 h-4 rounded-full bg-[#6161FF] flex items-center justify-center flex-shrink-0"
+              className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: avatarColor(ticket.contact.name) }}
             >
               <span className="text-white text-[8px] font-bold">
                 {ticket.contact.name[0]}
@@ -596,7 +597,10 @@ function TicketDetailPanel({
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-6 h-6 rounded-full bg-[#0073EA] flex items-center justify-center flex-shrink-0">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: avatarColor(`${ticket.contact.firstName} ${ticket.contact.lastName}`) }}
+                  >
                     <span className="text-white text-[9px] font-bold">
                       {ticket.contact.firstName[0]}
                     </span>
