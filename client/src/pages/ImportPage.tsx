@@ -349,11 +349,20 @@ export default function ImportPage() {
                       }
                       className="flex-1 text-[13px] border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 bg-white text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
                     >
-                      {fields.map((f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                        </option>
-                      ))}
+                      {fields.map((f) => {
+                        const usedByOther = f.value && Object.entries(mapping).some(
+                          ([h, v]) => v === f.value && h !== header,
+                        );
+                        return (
+                          <option
+                            key={f.value}
+                            value={f.value}
+                            disabled={!!usedByOther}
+                          >
+                            {f.label}{usedByOther ? " (כבר בשימוש)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
                 ))}
