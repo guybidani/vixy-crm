@@ -110,6 +110,7 @@ export default function DealDetailPanel({
   const [editingActivityText, setEditingActivityText] = useState("");
   const activityEndRef = useRef<HTMLDivElement>(null);
   const activityTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [deletingActivityId, setDeletingActivityId] = useState<string | null>(null);
   const [addingTask, setAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
@@ -578,7 +579,7 @@ export default function DealDetailPanel({
                                       <Pencil size={11} />
                                     </button>
                                     <button
-                                      onClick={() => deleteActivityMut.mutate(activity.id)}
+                                      onClick={() => setDeletingActivityId(activity.id)}
                                       className="p-1 rounded hover:bg-[#FFEEF0] text-[#9699A6] hover:text-[#E44258] transition-colors"
                                       title="מחק"
                                     >
@@ -1177,6 +1178,22 @@ export default function DealDetailPanel({
         onCancel={() => setShowDeleteConfirm(false)}
         title="מחיקת עסקה"
         message="האם אתה בטוח שברצונך למחוק את העסקה?"
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!deletingActivityId}
+        onConfirm={() => {
+          if (deletingActivityId) {
+            deleteActivityMut.mutate(deletingActivityId);
+          }
+          setDeletingActivityId(null);
+        }}
+        onCancel={() => setDeletingActivityId(null)}
+        title="מחיקת פעילות"
+        message="האם אתה בטוח שברצונך למחוק את הפעילות? לא ניתן לשחזר."
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
