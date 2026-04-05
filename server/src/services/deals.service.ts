@@ -509,7 +509,27 @@ export async function update(
   if (data.assigneeId && !assigneeRef)
     throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
-  const updateData: any = { ...data };
+  // Build updateData from known fields explicitly instead of blindly
+  // spreading { ...data }. The previous approach passed raw string values
+  // (e.g. expectedClose as "2026-04-10") directly to Prisma, relying on
+  // auto-coercion. This broke when expectedClose was an empty string and
+  // made it impossible to set fields to null (e.g. clearing expectedClose).
+  const updateData: any = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.value !== undefined) updateData.value = data.value;
+  if (data.priority !== undefined) updateData.priority = data.priority;
+  if (data.contactId !== undefined) updateData.contactId = data.contactId;
+  if (data.companyId !== undefined) updateData.companyId = data.companyId;
+  if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId;
+  if (data.probability !== undefined) updateData.probability = data.probability;
+  if (data.notes !== undefined) updateData.notes = data.notes;
+  if (data.lostReason !== undefined) updateData.lostReason = data.lostReason;
+  if (data.bantData !== undefined) updateData.bantData = data.bantData;
+  if (data.expectedClose !== undefined) {
+    updateData.expectedClose = data.expectedClose
+      ? new Date(data.expectedClose)
+      : null;
+  }
 
   // Track stage changes
   if (data.stage && data.stage !== existing.stage) {
@@ -532,10 +552,8 @@ export async function update(
     ) {
       updateData.closedAt = null;
     }
-  }
-
-  if (data.expectedClose) {
-    updateData.expectedClose = new Date(data.expectedClose);
+  } else if (data.stage !== undefined) {
+    updateData.stage = data.stage;
   }
 
   const updated = await prisma.deal.update({
