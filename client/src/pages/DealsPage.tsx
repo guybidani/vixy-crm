@@ -281,6 +281,14 @@ export default function DealsPage() {
           value={row.stage}
           options={dealStages}
           onChange={(stage) => {
+            if (stage === "CLOSED_WON") {
+              setConfirmWonId(row.id);
+              return;
+            }
+            if (stage === "CLOSED_LOST") {
+              setLostModal({ dealId: row.id });
+              return;
+            }
             inlineUpdate(row.id, { stage });
             toast.success(`עסקה הועברה ל${dealStages[stage]?.label}`);
           }}
