@@ -42,6 +42,11 @@ export default class ErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
+  private handleGoHome = () => {
+    this.setState({ hasError: false });
+    window.location.href = "/dashboard";
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
@@ -52,6 +57,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div
           className="flex flex-col items-center justify-center min-h-[50vh] gap-4 p-8"
           dir="rtl"
+          role="alert"
         >
           <div className="w-16 h-16 bg-[#FFEEF0] rounded-xl flex items-center justify-center">
             <span className="text-red-500 text-2xl font-bold">!</span>
@@ -61,15 +67,23 @@ export default class ErrorBoundary extends Component<Props, State> {
               משהו השתבש
             </h2>
             <p className="text-sm text-[#676879]">
-              אירעה שגיאה בלתי צפויה. נסה לרענן את הדף.
+              אירעה שגיאה בלתי צפויה. נסה לרענן את הדף או לחזור לדף הבית.
             </p>
           </div>
-          <button
-            onClick={this.handleReset}
-            className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-sm"
-          >
-            רענן דף
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={this.handleGoHome}
+              className="px-6 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#323338] font-semibold rounded-[4px] transition-colors text-sm border border-[#D0D4E4]"
+            >
+              דף הבית
+            </button>
+            <button
+              onClick={this.handleReset}
+              className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-sm"
+            >
+              רענן דף
+            </button>
+          </div>
         </div>
       );
     }
