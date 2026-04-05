@@ -282,6 +282,7 @@ export default function DocumentsPage() {
       {/* Document Detail Panel */}
       {selectedDoc && (
         <DocumentDetailPanel
+          key={selectedDoc.id}
           doc={selectedDoc}
           onClose={() => setSelectedDoc(null)}
           onDelete={() => setDocToDelete(selectedDoc.id)}
