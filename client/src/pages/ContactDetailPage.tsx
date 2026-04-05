@@ -1017,7 +1017,23 @@ function EditableInfoRow({
               {value}
             </a>
           ) : (
-            <span className="text-sm text-[#323338] truncate" dir={dir}>
+            <span
+              role="button"
+              tabIndex={0}
+              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+              dir={dir}
+              onClick={() => {
+                setEditVal(value);
+                setEditing(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setEditVal(value);
+                  setEditing(true);
+                }
+              }}
+            >
               {value}
             </span>
           )}
@@ -1026,7 +1042,7 @@ function EditableInfoRow({
               setEditVal(value);
               setEditing(true);
             }}
-            className="opacity-0 group-hover/row:opacity-100 p-0.5 text-[#9699A6] hover:text-[#0073EA] transition-all"
+            className="opacity-0 group-hover/row:opacity-100 p-0.5 text-[#9699A6] hover:text-[#0073EA] transition-all flex-shrink-0"
             title="ערוך"
           >
             <Edit2 size={11} />
