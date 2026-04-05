@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   User,
   AlertCircle,
+  ArrowRight,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "../components/shared/Modal";
@@ -180,7 +181,7 @@ export default function TicketsPage() {
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
       {/* ── Left: Ticket List ── */}
-      <div className="w-[340px] flex-shrink-0 flex flex-col border-l border-[#E6E9EF] bg-white">
+      <div className={`w-full md:w-[340px] flex-shrink-0 flex flex-col border-l border-[#E6E9EF] bg-white ${selectedId ? "hidden md:flex" : "flex"}`}>
         {/* Header */}
         <div className="px-4 pt-4 pb-2 border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-3">
@@ -421,12 +422,13 @@ function TicketDetailPanel({
   });
 
   const assignMutation = useMutation({
-    mutationFn: (assigneeId: string) => updateTicket(ticketId, { assigneeId }),
-    onSuccess: () => {
+    mutationFn: (assigneeId: string) => updateTicket(ticketId, { assigneeId: assigneeId || undefined }),
+    onSuccess: (_data, assigneeId) => {
       queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
-      toast.success("נציג שויך");
+      toast.success(assigneeId ? "נציג שויך" : "שיוך נציג הוסר");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בשיוך נציג"),
   });
 
   useEffect(() => {
@@ -670,7 +672,7 @@ function TicketDetailPanel({
                   value={ticket.assignee?.id || ""}
                   onChange={(e) => {
                     const val = e.target.value;
-                    if (val) assignMutation.mutate(val);
+                    assignMutation.mutate(val);
                   }}
                   className="text-[11px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[100px]"
                 >
