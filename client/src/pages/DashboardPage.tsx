@@ -13,12 +13,14 @@ import {
   Calendar,
   TrendingUp,
   AlertTriangle,
+  AlertCircle,
   Plus,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
   LayoutGrid,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { getDashboard } from "../api/dashboard";
@@ -186,14 +188,14 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
     refetchInterval: 60000,
     refetchIntervalInBackground: false,
   });
 
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <div>
         {/* Loading header */}
@@ -209,6 +211,25 @@ export default function DashboardPage() {
             />
           ))}
         </div>
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+          <AlertCircle size={28} className="text-[#E44258]" />
+        </div>
+        <h2 className="text-lg font-bold text-[#323338] mb-1">שגיאה בטעינת הדשבורד</h2>
+        <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+        >
+          <RefreshCw size={14} />
+          נסה שוב
+        </button>
       </div>
     );
   }
