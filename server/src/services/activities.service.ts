@@ -58,27 +58,26 @@ export async function getRecentContacts(
     .map((g) => g.contactId)
     .filter((id): id is string => id !== null);
 
-  // Step 2: Fetch contact details
-  const contacts = await prisma.contact.findMany({
-    where: { id: { in: contactIds } },
-    select: { id: true, firstName: true, lastName: true, phone: true, email: true },
-  });
+  // Steps 2 & 3: Fetch contact details and last activities in parallel
+  const [contacts, lastActivities] = await Promise.all([
+    prisma.contact.findMany({
+      where: { id: { in: contactIds } },
+      select: { id: true, firstName: true, lastName: true, phone: true, email: true },
+    }),
+    prisma.activity.findMany({
+      where: {
+        workspaceId,
+        memberId,
+        type: { in: ["CALL", "EMAIL", "MEETING", "WHATSAPP"] },
+        contactId: { in: contactIds },
+      },
+      orderBy: { createdAt: "desc" },
+      distinct: ["contactId"],
+      select: { contactId: true, type: true, subject: true, createdAt: true },
+    }),
+  ]);
 
   const contactMap = new Map(contacts.map((c) => [c.id, c]));
-
-  // Step 3: Fetch the most recent activity per contact to get type & subject
-  const lastActivities = await prisma.activity.findMany({
-    where: {
-      workspaceId,
-      memberId,
-      type: { in: ["CALL", "EMAIL", "MEETING", "WHATSAPP"] },
-      contactId: { in: contactIds },
-    },
-    orderBy: { createdAt: "desc" },
-    distinct: ["contactId"],
-    select: { contactId: true, type: true, subject: true, createdAt: true },
-  });
-
   const lastActivityMap = new Map(
     lastActivities.map((a) => [a.contactId, a]),
   );
