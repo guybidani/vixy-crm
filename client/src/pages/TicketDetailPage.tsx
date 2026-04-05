@@ -115,7 +115,7 @@ export default function TicketDetailPage() {
           {ticket.status === "RESOLVED" && (
             <button
               onClick={() => statusMutation.mutate("CLOSED")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-text-tertiary hover:bg-text-secondary text-white text-[12px] font-semibold rounded-[4px] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#676879] hover:bg-[#323338] text-white text-[12px] font-semibold rounded-[4px] transition-colors"
             >
               סגור פנייה
             </button>
