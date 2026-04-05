@@ -75,4 +75,12 @@ export const config = {
       process.env.GOOGLE_OAUTH_REDIRECT_URI ||
       "http://localhost:3001/api/v1/calendar/callback",
   },
+  ai: {
+    enabled: process.env.AI_ENABLED === "true",
+    provider: process.env.AI_PROVIDER || "google",
+    ollamaBaseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434/v1",
+    ollamaModel: process.env.OLLAMA_MODEL || "gemma4:27b",
+    googleApiKey: process.env.GOOGLE_AI_API_KEY || "",
+    googleModel: process.env.GOOGLE_AI_MODEL || "gemma-4-27b-it",
+  },
 } as const;
