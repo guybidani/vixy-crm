@@ -58,9 +58,28 @@ export default function TagSelector({
         setShowCreate(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        if (showCreate) {
+          // First Escape closes the create form, second closes the dropdown
+          setShowCreate(false);
+          setNewTagName("");
+        } else {
+          setOpen(false);
+          setSearch("");
+        }
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, showCreate]);
 
   const currentTagIds = new Set(currentTags.map((t) => t.id));
 
