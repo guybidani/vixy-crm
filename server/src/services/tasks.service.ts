@@ -645,20 +645,20 @@ export async function checkOverdueTasks(workspaceId: string) {
     },
   });
 
-  // Create notifications for each overdue task assignee
-  for (const task of overdueTasks) {
-    if (task.assignee) {
-      await notificationService
-        .create({
-          workspaceId,
-          userId: task.assignee.userId,
-          type: "TASK_DUE",
-          title: `המשימה "${task.title}" באיחור!`,
-          entityType: "task",
-          entityId: task.id,
-        })
-        .catch(() => {});
-    }
+  // Bulk-create notifications instead of sequential awaits in a loop
+  const notificationData = overdueTasks
+    .filter((task) => task.assignee)
+    .map((task) => ({
+      workspaceId,
+      userId: task.assignee!.userId,
+      type: "TASK_DUE" as const,
+      title: `המשימה "${task.title}" באיחור!`,
+      entityType: "task",
+      entityId: task.id,
+    }));
+
+  if (notificationData.length > 0) {
+    await prisma.notification.createMany({ data: notificationData }).catch(() => {});
   }
 
   return overdueTasks;
