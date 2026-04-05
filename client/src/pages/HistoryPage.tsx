@@ -25,13 +25,17 @@ function getRelativeTime(dateStr: string): string {
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffMin < 1) return "עכשיו";
+  if (diffMin === 1) return "לפני דקה";
   if (diffMin < 60) return `לפני ${diffMin} דקות`;
   if (diffHours === 1) return "לפני שעה";
   if (diffHours < 24) return `לפני ${diffHours} שעות`;
   if (diffDays === 1) return "אתמול";
   if (diffDays < 7) return `לפני ${diffDays} ימים`;
-  if (diffDays < 30) return `לפני ${Math.floor(diffDays / 7)} שבועות`;
-  return `לפני ${Math.floor(diffDays / 30)} חודשים`;
+  const weeks = Math.floor(diffDays / 7);
+  if (diffDays < 30) return weeks === 1 ? "לפני שבוע" : `לפני ${weeks} שבועות`;
+  const months = Math.floor(diffDays / 30);
+  if (months === 1) return "לפני חודש";
+  return `לפני ${months} חודשים`;
 }
 
 function getInitials(firstName: string, lastName: string): string {
