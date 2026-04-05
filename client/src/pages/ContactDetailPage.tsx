@@ -1024,10 +1024,19 @@ function EditableInfoRow({
         </div>
       ) : (
         <span
-          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1"
+          role="button"
+          tabIndex={0}
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
           onClick={() => {
             setEditVal("");
             setEditing(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setEditVal("");
+              setEditing(true);
+            }
           }}
         >
           {placeholder || "\u2014"}

@@ -96,11 +96,20 @@ function EditableInfoRow({
             </a>
           ) : (
             <span
-              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
+              role="button"
+              tabIndex={0}
+              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
               dir={dir}
               onClick={() => {
                 setEditVal(value);
                 setEditing(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setEditVal(value);
+                  setEditing(true);
+                }
               }}
             >
               {value}
@@ -119,10 +128,19 @@ function EditableInfoRow({
         </div>
       ) : (
         <span
-          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1"
+          role="button"
+          tabIndex={0}
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
           onClick={() => {
             setEditVal("");
             setEditing(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setEditVal("");
+              setEditing(true);
+            }
           }}
         >
           {placeholder || "\u2014"}
@@ -463,10 +481,20 @@ export default function CompanyDetailPage() {
               />
             ) : (
               <div
-                className="text-sm text-[#323338] whitespace-pre-wrap cursor-text hover:bg-[#F5F6F8]/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px]"
+                role="button"
+                tabIndex={0}
+                aria-label="לחץ לעריכת הערות"
+                className="text-sm text-[#323338] whitespace-pre-wrap cursor-text hover:bg-[#F5F6F8]/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                 onClick={() => {
                   setNotesVal(company.notes || "");
                   setEditingNotes(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setNotesVal(company.notes || "");
+                    setEditingNotes(true);
+                  }
                 }}
               >
                 {company.notes || (

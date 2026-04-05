@@ -1753,13 +1753,15 @@ function EditableInfoRow({
       <span className="text-[#9699A6]">{icon}</span>
       <span className="text-xs text-[#9699A6] w-14">{label}</span>
       <span
+        role={!readOnly || onClick ? "button" : undefined}
+        tabIndex={!readOnly || onClick ? 0 : undefined}
         className={`text-sm flex-1 min-w-0 ${
           value
             ? onClick
               ? "text-[#0073EA] cursor-pointer hover:underline"
               : "text-[#323338]"
             : "text-[#9699A6]"
-        } ${!readOnly ? "cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors" : ""}`}
+        } ${!readOnly ? "cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]" : ""}`}
         dir={dir}
         onClick={() => {
           if (onClick) {
@@ -1767,6 +1769,17 @@ function EditableInfoRow({
           } else if (!readOnly) {
             setEditVal(value);
             setEditing(true);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            if (onClick) {
+              onClick();
+            } else if (!readOnly) {
+              setEditVal(value);
+              setEditing(true);
+            }
           }
         }}
       >
