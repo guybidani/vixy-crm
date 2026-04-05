@@ -167,17 +167,17 @@ export async function update(
     notes: string;
   }>,
 ) {
-  const existing = await prisma.company.findFirst({
+  // Use updateMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the mutation level, not just an existence check.
+  const result = await prisma.company.updateMany({
     where: { id, workspaceId },
+    data,
   });
-  if (!existing) {
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Company not found");
   }
 
-  return prisma.company.update({
-    where: { id },
-    data,
-  });
+  return prisma.company.findUnique({ where: { id } });
 }
 
 export async function remove(workspaceId: string, id: string) {
