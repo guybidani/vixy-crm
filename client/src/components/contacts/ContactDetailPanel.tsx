@@ -1965,6 +1965,7 @@ function EditContactModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contact.id] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("איש קשר עודכן!");
       onClose();
     },
