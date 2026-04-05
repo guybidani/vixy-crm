@@ -24,6 +24,7 @@ import {
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
+import StatusDropdown from "../components/shared/StatusDropdown";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
 import { getCompany, updateCompany, deleteCompany, type Company } from "../api/companies";
 import { createActivity, updateActivity, deleteActivity } from "../api/activities";
@@ -118,7 +119,7 @@ const ACTIVITY_ICONS: Record<string, any> = {
 
 /* ── Main page ────────────────────────────────────────────────── */
 export default function CompanyDetailPage() {
-  const { contactStatuses, dealStages, activityTypes } = useWorkspaceOptions();
+  const { contactStatuses, companyStatuses, dealStages, activityTypes } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -282,6 +283,12 @@ export default function CompanyDetailPage() {
                 </h1>
               )}
               <div className="flex items-center gap-4 mt-1 text-sm text-[#676879]">
+                <StatusDropdown
+                  value={company.status}
+                  options={companyStatuses}
+                  onChange={(status) => updateMut.mutate({ status: status as Company["status"] })}
+                  size="md"
+                />
                 {company.industry && <span>{company.industry}</span>}
                 {company.size && <span>{company.size} עובדים</span>}
               </div>
