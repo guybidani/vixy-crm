@@ -16,12 +16,12 @@ import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 export default function DealsChartView() {
   const { dealStages, priorities } = useWorkspaceOptions();
-  const { data: pipelineData, isLoading: pipelineLoading, isError: pipelineError } = useQuery({
+  const { data: pipelineData, isLoading: pipelineLoading, isError: pipelineError, refetch: refetchPipeline } = useQuery({
     queryKey: ["deals-pipeline"],
     queryFn: getDealsPipeline,
   });
 
-  const { data: allDeals } = useQuery({
+  const { data: allDeals, isError: allDealsError, refetch: refetchDeals } = useQuery({
     queryKey: ["deals", { limit: 500 }],
     queryFn: () => listDeals({ limit: 500 }),
   });
@@ -55,7 +55,13 @@ export default function DealsChartView() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <p className="text-[#E44258] font-semibold mb-1">שגיאה בטעינת נתונים</p>
-        <p className="text-[13px] text-[#9699A6]">לא ניתן לטעון את נתוני העסקאות. נסה לרענן את הדף.</p>
+        <p className="text-[13px] text-[#9699A6] mb-3">לא ניתן לטעון את נתוני העסקאות.</p>
+        <button
+          onClick={() => { refetchPipeline(); refetchDeals(); }}
+          className="text-[13px] text-[#0073EA] hover:underline font-medium"
+        >
+          נסה שוב
+        </button>
       </div>
     );
   }
@@ -263,6 +269,17 @@ export default function DealsChartView() {
           <h3 className="text-[15px] font-bold text-[#323338] mb-4">
             התפלגות עדיפויות
           </h3>
+          {allDealsError ? (
+            <div className="flex flex-col items-center justify-center h-[200px] text-[#9699A6] text-sm gap-2">
+              <p className="text-[#E44258] text-[13px] font-medium">שגיאה בטעינת נתונים</p>
+              <button
+                onClick={() => refetchDeals()}
+                className="text-[12px] text-[#0073EA] hover:underline"
+              >
+                נסה שוב
+              </button>
+            </div>
+          ) : (
           <div className="flex items-center">
             <ResponsiveContainer width="50%" height={200}>
               <PieChart>
@@ -306,6 +323,7 @@ export default function DealsChartView() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
