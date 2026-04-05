@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useDebounce } from "../hooks/useDebounce";
 import { sanitizeHtml } from "../lib/sanitize";
 import {
   Plus,
@@ -56,6 +57,7 @@ export default function KnowledgeBasePage() {
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [showCreateArticle, setShowCreateArticle] = useState(false);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search);
 
   const { data: categories } = useQuery({
     queryKey: ["kb-categories"],
@@ -63,11 +65,11 @@ export default function KnowledgeBasePage() {
   });
 
   const { data: articles, isLoading } = useQuery({
-    queryKey: ["kb-articles", { categoryId: selectedCategory, search }],
+    queryKey: ["kb-articles", { categoryId: selectedCategory, search: debouncedSearch }],
     queryFn: () =>
       listArticles({
         categoryId: selectedCategory || undefined,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
       }),
   });
 
