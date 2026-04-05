@@ -532,8 +532,8 @@ function ArticleEditor({
           </select>
           <button
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
-            className="px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md disabled:opacity-50"
+            disabled={mutation.isPending || !title.trim() || !body.trim()}
+            className="px-4 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "שומר..." : "שמור"}
           </button>
@@ -646,8 +646,8 @@ function CreateCategoryModal({ onClose }: { onClose: () => void }) {
           </button>
           <button
             type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={mutation.isPending || !name.trim()}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "יוצר..." : "צור"}
           </button>
@@ -774,8 +774,8 @@ function CreateArticleModal({
           </button>
           <button
             type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={mutation.isPending || !form.title.trim() || !form.body.trim()}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "יוצר..." : "צור מאמר"}
           </button>
