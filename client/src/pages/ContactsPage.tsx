@@ -399,7 +399,7 @@ export default function ContactsPage() {
       title="אנשי קשר"
       emoji="👥"
       boardStyle
-      subtitle={data?.pagination.total ? `${data.pagination.total} אנשי קשר` : undefined}
+      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s: any, t: any) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} אנשי קשר`}
       views={[
         { key: "table", label: "טבלה" },
         { key: "kanban", label: "קנבאן" },
