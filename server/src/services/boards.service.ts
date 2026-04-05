@@ -510,19 +510,31 @@ export async function updateItemValues(
     }),
   ]);
 
-  // Log activity for each changed value
+  // Batch-log activities for changed values — single createMany instead of N
+  // sequential creates, reducing round-trips from O(N) to 1.
+  const getDisplayValue = (val: (typeof existingValues)[number] | undefined) => {
+    if (!val) return undefined;
+    if (val.textValue != null) return val.textValue;
+    if (val.numberValue != null) return String(val.numberValue);
+    if (val.dateValue != null) return val.dateValue.toISOString();
+    if (val.jsonValue != null) return JSON.stringify(val.jsonValue);
+    return undefined;
+  };
+
+  const activityRows: Array<{
+    itemId: string;
+    actorId?: string;
+    actorName?: string;
+    type: string;
+    columnKey?: string;
+    columnLabel?: string;
+    oldValue?: string;
+    newValue?: string;
+  }> = [];
+
   for (const v of values) {
     const existing = existingMap.get(v.columnId);
     const col = existing?.column ?? newColumnMap.get(v.columnId);
-
-    const getDisplayValue = (val: typeof existing | undefined) => {
-      if (!val) return undefined;
-      if (val.textValue != null) return val.textValue;
-      if (val.numberValue != null) return String(val.numberValue);
-      if (val.dateValue != null) return val.dateValue.toISOString();
-      if (val.jsonValue != null) return JSON.stringify(val.jsonValue);
-      return undefined;
-    };
 
     const newDisplay =
       v.textValue != null
@@ -538,7 +550,7 @@ export async function updateItemValues(
     const oldDisplay = getDisplayValue(existing);
 
     if (oldDisplay !== newDisplay) {
-      await createBoardItemActivity({
+      activityRows.push({
         itemId,
         actorId,
         actorName,
@@ -549,6 +561,10 @@ export async function updateItemValues(
         newValue: newDisplay,
       });
     }
+  }
+
+  if (activityRows.length > 0) {
+    await prisma.boardItemActivity.createMany({ data: activityRows });
   }
 
 
