@@ -28,6 +28,7 @@ import {
 import toast from "react-hot-toast";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
+import StatusDropdown from "../components/shared/StatusDropdown";
 import LeadHeatBadge, { LeadHeatPicker, heatFromScore, type LeadHeat } from "../components/shared/LeadHeatBadge";
 import FollowUpCard from "../components/contacts/FollowUpCard";
 import Modal from "../components/shared/Modal";
@@ -164,12 +165,12 @@ export default function ContactDetailPage() {
                 {contact.firstName} {contact.lastName}
               </h1>
               <div className="flex items-center gap-3 mt-1">
-                {statusInfo && (
-                  <StatusBadge
-                    label={statusInfo.label}
-                    color={statusInfo.color}
-                  />
-                )}
+                <StatusDropdown
+                  value={contact.status}
+                  options={contactStatuses}
+                  onChange={(status) => updateMut.mutate({ status })}
+                  size="md"
+                />
                 <LeadHeatBadge
                   heat={contact.leadHeat || heatFromScore(contact.leadScore)}
                   size="md"
