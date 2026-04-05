@@ -38,8 +38,10 @@ function getRelativeTime(dateStr: string): string {
   return `לפני ${months} חודשים`;
 }
 
-function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+function getInitials(firstName: string | null | undefined, lastName: string | null | undefined): string {
+  const f = firstName?.charAt(0) || "";
+  const l = lastName?.charAt(0) || "";
+  return (f + l || "?").toUpperCase();
 }
 
 function ContactCard({ item }: { item: RecentContact }) {
@@ -47,7 +49,7 @@ function ContactCard({ item }: { item: RecentContact }) {
   const { contact, lastActivity, activityCount } = item;
   const config = ACTIVITY_TYPE_CONFIG[lastActivity.type];
   const TypeIcon = config?.icon || Phone;
-  const fullName = `${contact.firstName} ${contact.lastName}`;
+  const fullName = `${contact.firstName || ""} ${contact.lastName || ""}`.trim() || "ללא שם";
 
   return (
     <button
