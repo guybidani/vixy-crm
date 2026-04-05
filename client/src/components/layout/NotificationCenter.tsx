@@ -286,11 +286,13 @@ export default function NotificationCenter() {
   const markReadMut = useMutation({
     mutationFn: markNotificationRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onError: () => toast.error("שגיאה בסימון התראה כנקראה"),
   });
 
   const markAllMut = useMutation({
     mutationFn: markAllNotificationsRead,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+    onError: () => toast.error("שגיאה בסימון כל ההתראות כנקראו"),
   });
 
   const unreadCount = countData?.count ?? 0;
