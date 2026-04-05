@@ -457,10 +457,19 @@ export default function CompanyDetailPage() {
         <div className="col-span-2 space-y-4">
           {/* Contacts */}
           <PageCard>
-            <h3 className="font-bold text-[#323338] mb-3 flex items-center gap-2">
-              <Users size={16} className="text-[#0073EA]" />
-              אנשי קשר ({company.contacts?.length || 0})
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-[#323338] flex items-center gap-2">
+                <Users size={16} className="text-[#0073EA]" />
+                אנשי קשר ({company.contacts?.length || 0})
+              </h3>
+              <button
+                onClick={() => navigate(`/contacts?new=1&companyId=${company.id}`)}
+                className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
+              >
+                <Plus size={13} />
+                הוסף איש קשר
+              </button>
+            </div>
             {company.contacts && company.contacts.length > 0 ? (
               <div className="space-y-2">
                 {company.contacts.map((contact: any) => {
