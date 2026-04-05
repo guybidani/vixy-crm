@@ -219,6 +219,7 @@ export default function CompanyDetailPage() {
     mutationFn: () => deleteCompany(id!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("חברה נמחקה");
       navigate("/companies");
     },

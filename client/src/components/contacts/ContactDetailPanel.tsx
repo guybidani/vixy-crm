@@ -104,6 +104,7 @@ export default function ContactDetailPanel({
     mutationFn: () => deleteContact(contactId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("איש קשר נמחק");
       onClose();
     },

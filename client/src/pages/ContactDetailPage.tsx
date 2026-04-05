@@ -77,6 +77,7 @@ export default function ContactDetailPage() {
     mutationFn: () => deleteContact(id!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("איש קשר נמחק");
       navigate("/contacts");
     },
