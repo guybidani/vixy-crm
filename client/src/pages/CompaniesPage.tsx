@@ -417,6 +417,7 @@ function CreateCompanyModal({
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("חברה נוצרה בהצלחה!");
       if (onCreated) {
         onCreated(data.id);

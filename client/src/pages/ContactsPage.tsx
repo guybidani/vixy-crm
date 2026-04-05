@@ -971,6 +971,8 @@ function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose:
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
       toast.success("איש קשר נוצר בהצלחה!");
       if (onCreated) {
         onCreated(data.id);
