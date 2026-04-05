@@ -159,6 +159,7 @@ function ProductBtn({
     <button
       onClick={onClick}
       title={label}
+      aria-pressed={active}
       className={cn(
         "relative group flex flex-col items-center justify-center w-10 h-10 rounded-[6px] transition-all duration-150",
         active
@@ -522,7 +523,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         )}
 
         {/* ── Product Rail (always visible, 48px) ── */}
-        <div className="w-12 flex flex-col items-center py-2 gap-1 flex-shrink-0">
+        <div className="w-12 flex flex-col items-center py-2 gap-1 flex-shrink-0" role="group" aria-label="בחירת מוצר">
           {/* Logo icon */}
           <div className="w-8 h-8 mb-1 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
             <span className="text-white font-bold text-sm">V</span>
