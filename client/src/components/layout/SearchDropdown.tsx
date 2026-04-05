@@ -12,6 +12,23 @@ import {
 import { useDebounce } from "../../hooks/useDebounce";
 import { globalSearch, type SearchResults } from "../../api/search";
 
+const STAGE_LABELS: Record<string, string> = {
+  LEAD: "ליד",
+  QUALIFIED: "מאומת",
+  PROPOSAL: "הצעה",
+  NEGOTIATION: "משא ומתן",
+  CLOSED_WON: "נסגר בהצלחה",
+  CLOSED_LOST: "נסגר באי-הצלחה",
+};
+
+const TICKET_STATUS_LABELS: Record<string, string> = {
+  NEW: "חדש",
+  OPEN: "פתוח",
+  PENDING: "ממתין",
+  RESOLVED: "טופל",
+  CLOSED: "סגור",
+};
+
 interface SearchDropdownProps {
   query: string;
   onClose: () => void;
@@ -87,7 +104,7 @@ export default function SearchDropdown({
       items: data?.deals || [],
       getTitle: (item) => item.title,
       getSubtitle: (item) =>
-        item.value ? `₪${item.value.toLocaleString()}` : item.stage,
+        item.value ? `₪${item.value.toLocaleString()}` : (STAGE_LABELS[item.stage] || item.stage),
       getPath: (item) => `/deals?selected=${item.id}`,
     },
     {
@@ -105,7 +122,7 @@ export default function SearchDropdown({
       icon: Ticket,
       items: data?.tickets || [],
       getTitle: (item) => item.subject,
-      getSubtitle: (item) => item.status,
+      getSubtitle: (item) => TICKET_STATUS_LABELS[item.status] || item.status,
       getPath: (item) => `/tickets?selected=${item.id}`,
     },
   ];
