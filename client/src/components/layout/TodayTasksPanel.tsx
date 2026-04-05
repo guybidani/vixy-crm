@@ -622,6 +622,7 @@ function CompletedSection({ tasks, onNavigate }: { tasks: Task[]; onNavigate: (i
     <div>
       <button
         onClick={() => setOpen((p) => !p)}
+        aria-expanded={open}
         className="flex items-center gap-2 w-full group mb-2"
       >
         <div className="h-px flex-1 bg-[#00C875]/20" />
