@@ -85,9 +85,10 @@ export default function ContactDetailPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      toast.success("סטטוס עודכן");
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      toast.success("סטטוס עוד��ן");
     },
-    onError: () => toast.error("שגיאה בעדכון סטטוס"),
+    onError: () => toast.error("שגיאה בעדכו�� סטטוס"),
   });
 
   const nameMutation = useMutation({
@@ -96,6 +97,7 @@ export default function ContactDetailPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("שם עודכן");
     },
     onError: () => toast.error("שגיאה בעדכון שם"),
@@ -106,6 +108,8 @@ export default function ContactDetailPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("איש קשר נמחק");
       onClose();
     },
