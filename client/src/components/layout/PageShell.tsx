@@ -87,7 +87,10 @@ export default function PageShell({
                   {view.label}
                 </button>
               ))}
-              <button className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors">
+              <button
+                aria-label="הוסף תצוגה"
+                className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+              >
                 <span>+</span>
               </button>
             </div>
@@ -176,6 +179,7 @@ export function BoardSection({
     <div>
       <button
         onClick={() => setCollapsed((v) => !v)}
+        aria-expanded={!collapsed}
         className="flex items-center gap-1.5 text-[13px] font-semibold text-[#323338] mb-2 hover:opacity-70 transition-opacity"
       >
         <ChevronDown
