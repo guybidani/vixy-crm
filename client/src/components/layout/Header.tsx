@@ -35,7 +35,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
   });
   const badgeCount = (taskStats?.overdueCount ?? 0) + (taskStats?.dueTodayCount ?? 0);
 
-  // Close profile menu on outside click
+  // Close profile menu on outside click or Escape
   useEffect(() => {
     if (!profileMenuOpen) return;
     function handleClick(e: MouseEvent) {
@@ -43,8 +43,18 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
         setProfileMenuOpen(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setProfileMenuOpen(false);
+      }
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [profileMenuOpen]);
 
   // Ctrl+K = GlobalSearch, Ctrl+Shift+K = QuickAdd
