@@ -457,11 +457,11 @@ export default function AnalyticsPage() {
           </div>
           {growthQ.isLoading ? (
             <div className="animate-pulse flex items-end gap-1 justify-center" style={{ height: 120 }}>
-              {[1, 2, 3, 4, 5].map((i) => (
+              {[60, 85, 40, 95, 55].map((h, i) => (
                 <div
                   key={i}
                   className="flex-1 max-w-12 bg-[#F5F6F8] rounded-t"
-                  style={{ height: 20 + Math.random() * 80 }}
+                  style={{ height: h }}
                 />
               ))}
             </div>

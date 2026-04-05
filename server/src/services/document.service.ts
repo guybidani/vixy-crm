@@ -13,11 +13,16 @@ interface ListParams {
 
 export async function list({
   workspaceId,
-  page = 1,
-  limit = 25,
+  page: rawPage = 1,
+  limit: rawLimit = 25,
   type,
   search,
 }: ListParams) {
+  // Clamp page/limit to valid positive ranges — negative page causes negative
+  // skip (Prisma error), and unbounded limit could pull the entire table.
+  const page = Math.max(1, rawPage);
+  const limit = Math.min(Math.max(1, rawLimit), 100);
+
   const where: any = { workspaceId };
   if (type) where.type = type;
   if (search) {
