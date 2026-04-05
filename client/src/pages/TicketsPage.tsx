@@ -376,7 +376,7 @@ function TicketListItem({
             </span>
           </div>
         )}
-        {/* Bottom row: status chip + SLA */}
+        {/* Bottom row: status chip + channel + SLA */}
         <div className="flex items-center gap-1.5">
           {statusInfo && (
             <span
@@ -392,6 +392,14 @@ function TicketListItem({
           >
             {priorities[ticket.priority]?.label || ticket.priority}
           </span>
+          {CHANNEL_ICONS[ticket.channel] && (
+            <span
+              className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879]"
+              title={ticketChannels[ticket.channel]?.label || ticket.channel}
+            >
+              {CHANNEL_ICONS[ticket.channel]}
+            </span>
+          )}
           {ticket.messageCount > 0 && (
             <span className="flex items-center gap-0.5 text-[10px] text-[#9699A6]">
               <MessageSquare size={10} />
