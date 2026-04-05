@@ -58,8 +58,21 @@ function Kbd({ children }: { children: string }) {
 export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
+
+    // Lock body scroll
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // Auto-focus the close button so keyboard users start inside the dialog
+    requestAnimationFrame(() => {
+      const close = dialogRef.current?.querySelector<HTMLElement>("button[aria-label]");
+      close?.focus();
+    });
+
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -68,7 +81,10 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
       }
     }
     window.addEventListener("keydown", handleKey, { capture: true });
-    return () => window.removeEventListener("keydown", handleKey, { capture: true });
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKey, { capture: true });
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -85,6 +101,7 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
       aria-label="קיצורי מקלדת"
     >
       <div
+        ref={dialogRef}
         className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
         dir="rtl"
       >
