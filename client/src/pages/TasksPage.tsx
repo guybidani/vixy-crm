@@ -863,6 +863,12 @@ export default function TasksPage() {
 
   const clearSelection = () => setSelectedTaskIds(new Set());
 
+  // Clear bulk-selection when any filter changes so users can't act on hidden tasks
+  useEffect(
+    () => setSelectedTaskIds(new Set()),
+    [dateFilter, priorityFilter, taskTypeFilter, contextFilter, myTasksOnly, searchQuery],
+  );
+
   const currentMemberId = useMemo(
     () => workspaces.find((w) => w.id === currentWorkspaceId)?.memberId ?? null,
     [workspaces, currentWorkspaceId],
