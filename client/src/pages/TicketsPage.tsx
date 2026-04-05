@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useDebounce } from "../hooks/useDebounce";
 import {
   Plus,
@@ -396,6 +397,7 @@ function TicketDetailPanel({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [confirmStatusChange, setConfirmStatusChange] = useState<{ status: string; message: string } | null>(null);
 
   const { data: ticket, isLoading } = useQuery({
     queryKey: ["ticket", ticketId],
@@ -504,7 +506,7 @@ function TicketDetailPanel({
           <div className="flex gap-1.5 flex-shrink-0">
             {ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
               <button
-                onClick={() => onStatusChange(ticketId, "RESOLVED")}
+                onClick={() => setConfirmStatusChange({ status: "RESOLVED", message: "האם אתה בטוח שברצונך לסמן את הקריאה כנפתרה?" })}
                 className="flex items-center gap-1 px-2.5 py-1.5 bg-success hover:bg-success/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
               >
                 <CheckCircle2 size={13} />
@@ -513,7 +515,7 @@ function TicketDetailPanel({
             )}
             {(ticket.status === "RESOLVED" || ticket.status === "CLOSED") && (
               <button
-                onClick={() => onStatusChange(ticketId, "OPEN")}
+                onClick={() => setConfirmStatusChange({ status: "OPEN", message: "האם אתה בטוח שברצונך לפתוח מחדש את הקריאה?" })}
                 className="flex items-center gap-1 px-2.5 py-1.5 bg-warning hover:bg-warning/90 text-white text-[12px] font-semibold rounded-[4px] transition-colors"
               >
                 פתח מחדש
@@ -749,6 +751,20 @@ function TicketDetailPanel({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmStatusChange}
+        onConfirm={() => {
+          if (confirmStatusChange) onStatusChange(ticketId, confirmStatusChange.status);
+          setConfirmStatusChange(null);
+        }}
+        onCancel={() => setConfirmStatusChange(null)}
+        title="שינוי סטטוס קריאה"
+        message={confirmStatusChange?.message ?? ""}
+        confirmText="אישור"
+        cancelText="ביטול"
+        variant="warning"
+      />
     </div>
   );
 }
