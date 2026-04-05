@@ -219,7 +219,9 @@ export async function getEntityDocuments(
   entityType: "contact" | "deal" | "company" | "ticket",
   entityId: string,
 ) {
-  const where: any = {};
+  const where: any = {
+    document: { workspaceId },
+  };
   where[`${entityType}Id`] = entityId;
 
   const links = await prisma.documentLink.findMany({
@@ -232,8 +234,8 @@ export async function getEntityDocuments(
       },
     },
     orderBy: { createdAt: "desc" },
+    take: 50,
   });
 
-  // Filter to workspace-owned documents
-  return links.filter((l) => l.document.workspaceId === workspaceId);
+  return links;
 }
