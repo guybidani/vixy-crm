@@ -192,6 +192,7 @@ export default function SearchDropdown({
       ref={ref}
       className="absolute top-full right-0 left-0 mt-1 bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] max-h-[400px] overflow-y-auto z-50"
       role="listbox"
+      aria-activedescendant={flatItems[selectedIndex] ? `search-option-${flatItems[selectedIndex].id}` : undefined}
     >
       {isLoading && (
         <div className="flex items-center justify-center py-8">
@@ -212,7 +213,7 @@ export default function SearchDropdown({
           (section) =>
             section.items.length > 0 && (
               <div key={section.key}>
-                <div className="flex items-center gap-2 px-3 py-2 bg-[#F5F6F8] border-b border-[#E6E9EF]">
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#F5F6F8] border-b border-[#E6E9EF]" role="presentation">
                   <section.icon size={14} className="text-[#9699A6]" />
                   <span className="text-[11px] font-bold text-[#9699A6] uppercase">
                     {section.label}
@@ -225,6 +226,7 @@ export default function SearchDropdown({
                   return (
                     <button
                       key={item.id}
+                      id={`search-option-${item.id}`}
                       data-search-idx={idx}
                       role="option"
                       aria-selected={isSelected}
