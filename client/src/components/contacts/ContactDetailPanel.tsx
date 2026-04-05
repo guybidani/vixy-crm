@@ -86,6 +86,7 @@ export default function ContactDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("סטטוס עודכן");
     },
+    onError: () => toast.error("שגיאה בעדכון סטטוס"),
   });
 
   const nameMutation = useMutation({
@@ -96,6 +97,7 @@ export default function ContactDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("שם עודכן");
     },
+    onError: () => toast.error("שגיאה בעדכון שם"),
   });
 
   const deleteMutation = useMutation({
@@ -105,6 +107,7 @@ export default function ContactDetailPanel({
       toast.success("איש קשר נמחק");
       onClose();
     },
+    onError: () => toast.error("שגיאה במחיקת איש הקשר"),
   });
 
   const quickLogMutation = useMutation({
