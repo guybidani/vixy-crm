@@ -35,10 +35,14 @@ import {
 import { listActivities, createActivity, updateActivity, deleteActivity, type Activity } from "../api/activities";
 import { Pencil, Trash2 } from "lucide-react";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useAuth } from "../hooks/useAuth";
+import { getWorkspaceMembers } from "../api/auth";
+import StatusDropdown from "../components/shared/StatusDropdown";
 
 export default function TicketDetailPage() {
   const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
+  const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -46,6 +50,12 @@ export default function TicketDetailPage() {
     queryKey: ["ticket", id],
     queryFn: () => getTicket(id!),
     enabled: !!id,
+  });
+
+  const { data: members } = useQuery({
+    queryKey: ["members", currentWorkspaceId],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId,
   });
 
   const [confirmStatus, setConfirmStatus] = useState<{ status: string; message: string } | null>(null);
@@ -58,6 +68,26 @@ export default function TicketDetailPage() {
       toast.success("סטטוס עודכן");
     },
     onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
+  });
+
+  const priorityMutation = useMutation({
+    mutationFn: (priority: string) => updateTicket(id!, { priority }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", id] });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      toast.success("עדיפות עודכנה");
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון עדיפות"),
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: (assigneeId: string) => updateTicket(id!, { assigneeId: assigneeId || undefined }),
+    onSuccess: (_data, assigneeId) => {
+      queryClient.invalidateQueries({ queryKey: ["ticket", id] });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      toast.success(assigneeId ? "נציג שויך" : "שיוך נציג הוסר");
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בשיוך נציג"),
   });
 
   if (isLoading) {
@@ -250,9 +280,10 @@ export default function TicketDetailPage() {
                 />
               </DetailRow>
               <DetailRow label="עדיפות">
-                <StatusBadge
-                  label={priorityInfo.label}
-                  color={priorityInfo.color}
+                <StatusDropdown
+                  value={ticket.priority}
+                  options={priorities}
+                  onChange={(p) => priorityMutation.mutate(p)}
                 />
               </DetailRow>
               {ticket.urgencyComputed && (
@@ -278,9 +309,18 @@ export default function TicketDetailPage() {
                 </span>
               </DetailRow>
               <DetailRow label="נציג">
-                <span className="text-sm text-[#676879]">
-                  {ticket.assignee?.user.name || "לא שויך"}
-                </span>
+                <select
+                  value={ticket.assignee?.id || ""}
+                  onChange={(e) => assignMutation.mutate(e.target.value)}
+                  className="text-[12px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[130px]"
+                >
+                  <option value="">לא שויך</option>
+                  {(members || []).map((m) => (
+                    <option key={m.memberId} value={m.memberId}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
               </DetailRow>
               {ticket.firstResponseAt && (
                 <DetailRow label="תגובה ראשונה">

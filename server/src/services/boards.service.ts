@@ -214,14 +214,12 @@ export async function updateColumn(
     options: any;
   }>,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and column belongs to board in parallel
+  const [board, col] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardColumn.findFirst({ where: { id: columnId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const col = await prisma.boardColumn.findFirst({
-    where: { id: columnId, boardId },
-  });
   if (!col) throw new AppError(404, "NOT_FOUND", "Column not found");
 
   return prisma.boardColumn.update({
@@ -286,10 +284,13 @@ export async function updateGroup(
     collapsed: boolean;
   }>,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and group belongs to board in parallel
+  const [board, group] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardGroup.findFirst({ where: { id: groupId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!group) throw new AppError(404, "NOT_FOUND", "Group not found");
 
   return prisma.boardGroup.update({
     where: { id: groupId },
@@ -1042,8 +1043,13 @@ export async function updateSubItem(
   subItemId: string,
   data: Partial<{ name: string; done: boolean }>,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Verify board ownership and sub-item belongs to board in parallel
+  const [board, subItem] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.findFirst({ where: { id: subItemId, boardId, parentItemId: { not: null } } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
+  if (!subItem) throw new AppError(404, "NOT_FOUND", "Sub-item not found");
 
   return prisma.boardItem.update({ where: { id: subItemId }, data });
 }
