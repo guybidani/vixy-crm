@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "./Modal";
 
 interface SaveViewDialogProps {
@@ -16,6 +16,14 @@ export default function SaveViewDialog({
 }: SaveViewDialogProps) {
   const [name, setName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
+
+  // Reset form when dialog opens so stale values from previous use don't persist
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setIsDefault(false);
+    }
+  }, [open]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
