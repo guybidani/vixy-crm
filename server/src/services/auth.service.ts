@@ -387,14 +387,18 @@ export async function inviteMember(
   email: string,
   role: "ADMIN" | "AGENT",
 ) {
-  // Verify inviter is owner or admin
-  const inviterMembership = await prisma.workspaceMember.findFirst({
-    where: {
-      workspaceId,
-      userId: inviterUserId,
-      role: { in: ["OWNER", "ADMIN"] },
-    },
-  });
+  // Run inviter auth check and user lookup in parallel — independent queries
+  const [inviterMembership, user] = await Promise.all([
+    prisma.workspaceMember.findFirst({
+      where: {
+        workspaceId,
+        userId: inviterUserId,
+        role: { in: ["OWNER", "ADMIN"] },
+      },
+    }),
+    prisma.user.findUnique({ where: { email } }),
+  ]);
+
   if (!inviterMembership) {
     throw new AppError(
       403,
@@ -402,9 +406,6 @@ export async function inviteMember(
       "Only owners and admins can invite members",
     );
   }
-
-  // Find or note the user
-  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
     throw new AppError(
       404,
@@ -629,15 +630,16 @@ export async function changeMemberRole(
   memberId: string,
   newRole: "ADMIN" | "AGENT",
 ) {
-  // Caller must be OWNER or ADMIN
-  const caller = await prisma.workspaceMember.findFirst({
-    where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
-  });
+  // Fetch caller permission and target member in parallel — independent queries
+  const [caller, target] = await Promise.all([
+    prisma.workspaceMember.findFirst({
+      where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
+    }),
+    prisma.workspaceMember.findFirst({
+      where: { id: memberId, workspaceId },
+    }),
+  ]);
   if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can change roles");
-
-  const target = await prisma.workspaceMember.findFirst({
-    where: { id: memberId, workspaceId },
-  });
   if (!target) throw new AppError(404, "NOT_FOUND", "Member not found");
   if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "Cannot change owner role");
   // ADMIN cannot demote/promote another ADMIN (only OWNER can)
@@ -656,14 +658,16 @@ export async function removeMember(
   callerUserId: string,
   memberId: string,
 ) {
-  const caller = await prisma.workspaceMember.findFirst({
-    where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
-  });
+  // Fetch caller permission and target member in parallel — independent queries
+  const [caller, target] = await Promise.all([
+    prisma.workspaceMember.findFirst({
+      where: { workspaceId, userId: callerUserId, role: { in: ["OWNER", "ADMIN"] } },
+    }),
+    prisma.workspaceMember.findFirst({
+      where: { id: memberId, workspaceId },
+    }),
+  ]);
   if (!caller) throw new AppError(403, "FORBIDDEN", "Only owners and admins can remove members");
-
-  const target = await prisma.workspaceMember.findFirst({
-    where: { id: memberId, workspaceId },
-  });
   if (!target) throw new AppError(404, "NOT_FOUND", "Member not found");
   if (target.role === "OWNER") throw new AppError(403, "FORBIDDEN", "Cannot remove workspace owner");
   if (target.id === caller.id) throw new AppError(400, "BAD_REQUEST", "Cannot remove yourself");
