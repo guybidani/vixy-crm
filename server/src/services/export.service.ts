@@ -97,15 +97,21 @@ export async function exportCsv(
   const header = cols.map((c) => escapeCsv(c.label)).join(",");
   let rows: string[] = [];
 
+  // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
+  // everything.  Prisma's `contains` maps to SQL LIKE '%…%' — percent and
+  // underscore in the search term would be interpreted as wildcards without
+  // escaping.  Same fix already applied to globalSearch.
+  const safeSearch = filters?.search?.replace(/[%_]/g, "\\$&");
+
   switch (entity) {
     case "contacts": {
       const where: Prisma.ContactWhereInput = { workspaceId };
       if (filters?.status) where.status = filters.status as any;
-      if (filters?.search) {
+      if (safeSearch) {
         where.OR = [
-          { firstName: { contains: filters.search, mode: "insensitive" } },
-          { lastName: { contains: filters.search, mode: "insensitive" } },
-          { email: { contains: filters.search, mode: "insensitive" } },
+          { firstName: { contains: safeSearch, mode: "insensitive" } },
+          { lastName: { contains: safeSearch, mode: "insensitive" } },
+          { email: { contains: safeSearch, mode: "insensitive" } },
         ];
       }
       const data = await prisma.contact.findMany({
@@ -140,8 +146,8 @@ export async function exportCsv(
     case "deals": {
       const where: Prisma.DealWhereInput = { workspaceId };
       if (filters?.status) where.stage = filters.status as any;
-      if (filters?.search) {
-        where.title = { contains: filters.search, mode: "insensitive" };
+      if (safeSearch) {
+        where.title = { contains: safeSearch, mode: "insensitive" };
       }
       const data = await prisma.deal.findMany({
         where,
@@ -175,8 +181,8 @@ export async function exportCsv(
     case "companies": {
       const where: Prisma.CompanyWhereInput = { workspaceId };
       if (filters?.status) where.status = filters.status as any;
-      if (filters?.search) {
-        where.name = { contains: filters.search, mode: "insensitive" };
+      if (safeSearch) {
+        where.name = { contains: safeSearch, mode: "insensitive" };
       }
       const data = await prisma.company.findMany({
         where,
@@ -242,8 +248,8 @@ export async function exportCsv(
     case "tickets": {
       const where: Prisma.TicketWhereInput = { workspaceId };
       if (filters?.status) where.status = filters.status as any;
-      if (filters?.search) {
-        where.subject = { contains: filters.search, mode: "insensitive" };
+      if (safeSearch) {
+        where.subject = { contains: safeSearch, mode: "insensitive" };
       }
       const data = await prisma.ticket.findMany({
         where,
