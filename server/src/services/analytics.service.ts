@@ -151,10 +151,10 @@ export async function getTopPerformers(
     take: 5,
   });
 
-  // Fetch member names
+  // Fetch member names (scoped to workspace for defense-in-depth)
   const memberIds = grouped.map((g) => g.memberId);
   const members = await prisma.workspaceMember.findMany({
-    where: { id: { in: memberIds } },
+    where: { id: { in: memberIds }, workspaceId },
     include: { user: { select: { name: true, avatarUrl: true } } },
   });
 

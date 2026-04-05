@@ -145,11 +145,19 @@ export async function update(
     automations: any;
   }>,
 ) {
-  // Use updateMany with workspaceId for defense-in-depth — workspace scope
-  // enforced at the mutation level, not just an existence check (prevents TOCTOU).
+  // Build updateData from explicit fields instead of spreading { ...data }.
+  // Blind spread risks passing unexpected fields to Prisma.
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.icon !== undefined) updateData.icon = data.icon;
+  if (data.color !== undefined) updateData.color = data.color;
+  if (data.isPrivate !== undefined) updateData.isPrivate = data.isPrivate;
+  if (data.automations !== undefined) updateData.automations = data.automations;
+
   const result = await prisma.board.updateMany({
     where: { id, workspaceId },
-    data,
+    data: updateData,
   });
   if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Board not found");
 
