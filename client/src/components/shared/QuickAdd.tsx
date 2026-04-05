@@ -95,6 +95,9 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
     <div
       className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-[15vh]"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="הוספה מהירה"
     >
       <div
         className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full max-w-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
@@ -331,6 +334,7 @@ function QuickForm({
           type="button"
           onClick={onClose}
           className="mr-auto p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+          aria-label="סגור"
         >
           <X size={16} className="text-[#9699A6]" />
         </button>
