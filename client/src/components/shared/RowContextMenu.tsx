@@ -28,6 +28,20 @@ export default function RowContextMenu({
   onClose,
 }: RowContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [focusedIndex, setFocusedIndex] = useState(0);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Auto-focus first item on mount
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      buttonRefs.current[0]?.focus();
+    });
+  }, []);
+
+  // Sync focus with focusedIndex
+  useEffect(() => {
+    buttonRefs.current[focusedIndex]?.focus();
+  }, [focusedIndex]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -35,16 +49,41 @@ export default function RowContextMenu({
         onClose();
       }
     }
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    switch (e.key) {
+      case "Escape":
+        e.preventDefault();
+        onClose();
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
+        break;
+      case "Home":
+        e.preventDefault();
+        setFocusedIndex(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setFocusedIndex(items.length - 1);
+        break;
+      case "Tab":
+        // Prevent Tab from leaving the menu — close instead
+        e.preventDefault();
+        onClose();
+        break;
+    }
+  }
 
   // Adjust position if menu would overflow viewport
   const [adjustedPos, setAdjustedPos] = useState({ x, y });
@@ -65,6 +104,9 @@ export default function RowContextMenu({
   return (
     <div
       ref={ref}
+      role="menu"
+      aria-label="תפריט הקשר"
+      onKeyDown={handleKeyDown}
       className="fixed z-[100] bg-white rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.2)] border border-[#E6E9EF] py-1 min-w-[200px] animate-in fade-in zoom-in-95 duration-100"
       style={{ left: adjustedPos.x, top: adjustedPos.y }}
     >
@@ -72,11 +114,15 @@ export default function RowContextMenu({
         <div key={i}>
           {item.divider && <div className="h-px bg-[#E6E9EF] my-1" />}
           <button
+            ref={(el) => { buttonRefs.current[i] = el; }}
+            role="menuitem"
+            tabIndex={focusedIndex === i ? 0 : -1}
             onClick={() => {
               item.onClick();
               onClose();
             }}
-            className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-right transition-colors ${
+            onMouseEnter={() => setFocusedIndex(i)}
+            className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA] ${
               item.danger
                 ? "text-[#FB275D] hover:bg-[#FFF0F0]"
                 : "text-[#323338] hover:bg-[#F5F6F8]"
