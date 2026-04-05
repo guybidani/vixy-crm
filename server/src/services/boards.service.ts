@@ -233,12 +233,12 @@ export async function deleteColumn(
   boardId: string,
   columnId: string,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and column belongs to board in parallel
+  const [board, col] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardColumn.findFirst({ where: { id: columnId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const col = await prisma.boardColumn.findFirst({ where: { id: columnId, boardId } });
   if (!col) throw new AppError(404, "NOT_FOUND", "Column not found");
 
   return prisma.boardColumn.delete({ where: { id: columnId } });
@@ -303,12 +303,12 @@ export async function deleteGroup(
   boardId: string,
   groupId: string,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and group belongs to board in parallel
+  const [board, group] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardGroup.findFirst({ where: { id: groupId, boardId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const group = await prisma.boardGroup.findFirst({ where: { id: groupId, boardId } });
   if (!group) throw new AppError(404, "NOT_FOUND", "Group not found");
 
   return prisma.boardGroup.delete({ where: { id: groupId } });
