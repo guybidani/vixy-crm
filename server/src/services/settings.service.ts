@@ -32,25 +32,27 @@ export async function updateSnoozeOptions(
   workspaceId: string,
   snoozeOptions: SnoozeOption[],
 ): Promise<SnoozeOption[]> {
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: { settings: true },
-  });
-  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+  // Wrap read-modify-write in a transaction to prevent concurrent updates
+  // from overwriting each other's settings changes.
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
 
-  const existingSettings = (workspace.settings as Record<string, any>) || {};
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
 
-  const newSettings = {
-    ...existingSettings,
-    snoozeOptions: snoozeOptions as unknown as Record<string, any>[],
-  };
+    const newSettings = {
+      ...existingSettings,
+      snoozeOptions: snoozeOptions as unknown as Record<string, any>[],
+    };
 
-  const updated = await prisma.workspace.update({
-    where: { id: workspaceId },
-    data: {
-      settings: newSettings,
-    },
-    select: { settings: true },
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: { settings: newSettings },
+      select: { settings: true },
+    });
   });
 
   return (updated.settings as Record<string, any>).snoozeOptions || DEFAULT_SNOOZE_OPTIONS;
@@ -155,23 +157,27 @@ export async function updateNavPermissions(
   workspaceId: string,
   navPermissions: Record<string, string[]>,
 ) {
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: { settings: true },
-  });
-  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+  // Wrap read-modify-write in a transaction to prevent concurrent updates
+  // from overwriting each other's settings changes.
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
 
-  const existingSettings = (workspace.settings as Record<string, any>) || {};
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
 
-  const updated = await prisma.workspace.update({
-    where: { id: workspaceId },
-    data: {
-      settings: {
-        ...existingSettings,
-        navPermissions,
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        settings: {
+          ...existingSettings,
+          navPermissions,
+        },
       },
-    },
-    select: { settings: true },
+      select: { settings: true },
+    });
   });
 
   return { navPermissions: ((updated.settings as Record<string, any>).navPermissions || {}) as Record<string, string[]> };
@@ -194,23 +200,27 @@ export async function updateWorkspaceOptions(
     }
   }
 
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: { settings: true },
-  });
-  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+  // Wrap read-modify-write in a transaction to prevent concurrent updates
+  // from overwriting each other's settings changes.
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
 
-  const existingSettings = (workspace.settings as Record<string, any>) || {};
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
 
-  const updated = await prisma.workspace.update({
-    where: { id: workspaceId },
-    data: {
-      settings: {
-        ...existingSettings,
-        customOptions,
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        settings: {
+          ...existingSettings,
+          customOptions,
+        },
       },
-    },
-    select: { settings: true },
+      select: { settings: true },
+    });
   });
 
   return (updated.settings as Record<string, any>).customOptions || {};
