@@ -370,7 +370,7 @@ export default function ContactDetailPage() {
         </div>
 
         {/* Main Content - 2 columns */}
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           {/* Deals */}
           <PageCard>
             <div className="flex items-center justify-between mb-3">

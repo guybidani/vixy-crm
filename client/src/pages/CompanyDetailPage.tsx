@@ -474,7 +474,7 @@ export default function CompanyDetailPage() {
         </div>
 
         {/* Main Content */}
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           {/* Contacts */}
           <PageCard>
             <div className="flex items-center justify-between mb-3">
