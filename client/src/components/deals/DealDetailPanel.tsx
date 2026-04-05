@@ -992,6 +992,22 @@ export default function DealDetailPanel({
                       {deal.daysInStage} ימים
                     </span>
                   </FieldRow>
+
+                  {/* Created at */}
+                  <FieldRow icon={<Calendar size={14} />} label="נוצר">
+                    <span className="text-[13px] text-[#676879]">
+                      {new Date(deal.createdAt).toLocaleDateString("he-IL")}
+                    </span>
+                  </FieldRow>
+
+                  {/* Closed at */}
+                  {deal.closedAt && (
+                    <FieldRow icon={<Check size={14} />} label="נסגר">
+                      <span className="text-[13px] text-[#676879]">
+                        {new Date(deal.closedAt).toLocaleDateString("he-IL")}
+                      </span>
+                    </FieldRow>
+                  )}
                 </div>
               </div>
 
