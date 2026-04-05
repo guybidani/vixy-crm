@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -206,9 +206,9 @@ export default function ContactDetailPage() {
                   onChange={(status) => updateMut.mutate({ status })}
                   size="md"
                 />
-                <LeadHeatBadge
+                <InlineHeatPicker
                   heat={contact.leadHeat || heatFromScore(contact.leadScore)}
-                  size="md"
+                  onChange={(heat) => updateMut.mutate({ leadHeat: heat })}
                 />
                 <span className="text-[12px] text-[#9699A6]">
                   {contact.leadScore}/100
@@ -793,6 +793,51 @@ export default function ContactDetailPage() {
         cancelText="ביטול"
         variant="danger"
       />
+    </div>
+  );
+}
+
+function InlineHeatPicker({
+  heat,
+  onChange,
+}: {
+  heat: LeadHeat;
+  onChange: (heat: LeadHeat) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="cursor-pointer"
+        title="שנה חום ליד"
+      >
+        <LeadHeatBadge heat={heat} size="md" />
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 right-0 bg-white rounded-lg shadow-lg border border-[#E6E9EF] p-2 z-20 min-w-[180px]">
+          <LeadHeatPicker
+            value={heat}
+            onChange={(h) => {
+              if (h) onChange(h);
+              setOpen(false);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
