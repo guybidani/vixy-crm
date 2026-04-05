@@ -101,11 +101,13 @@ export default function TagSelector({
   const assignMutation = useMutation({
     mutationFn: (tagId: string) => assignTag(tagId, entityType, entityId),
     onSuccess: invalidateAll,
+    onError: () => toast.error("שגיאה בהוספת תגית"),
   });
 
   const unassignMutation = useMutation({
     mutationFn: (tagId: string) => unassignTag(tagId, entityType, entityId),
     onSuccess: invalidateAll,
+    onError: () => toast.error("שגיאה בהסרת תגית"),
   });
 
   const createMutation = useMutation({
