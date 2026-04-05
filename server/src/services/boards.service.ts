@@ -180,15 +180,12 @@ export async function addColumn(
     options?: any;
   },
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and compute max order in parallel
+  const [board, maxOrder] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardColumn.aggregate({ where: { boardId }, _max: { order: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const maxOrder = await prisma.boardColumn.aggregate({
-    where: { boardId },
-    _max: { order: true },
-  });
 
   return prisma.boardColumn.create({
     data: {
@@ -253,15 +250,12 @@ export async function addGroup(
   boardId: string,
   data: { name: string; color?: string },
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and compute max order in parallel
+  const [board, maxOrder] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardGroup.aggregate({ where: { boardId }, _max: { order: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const maxOrder = await prisma.boardGroup.aggregate({
-    where: { boardId },
-    _max: { order: true },
-  });
 
   return prisma.boardGroup.create({
     data: {
@@ -339,15 +333,12 @@ export async function addItem(
   actorId?: string,
   actorName?: string,
 ) {
-  const board = await prisma.board.findFirst({
-    where: { id: boardId, workspaceId },
-  });
+  // Verify board ownership and compute max order in parallel
+  const [board, maxOrder] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItem.aggregate({ where: { groupId }, _max: { order: true } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const maxOrder = await prisma.boardItem.aggregate({
-    where: { groupId },
-    _max: { order: true },
-  });
 
   const item = await prisma.boardItem.create({
     data: {
