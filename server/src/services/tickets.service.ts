@@ -307,9 +307,17 @@ export async function update(
     updateData.resolvedAt = null;
   }
 
-  const updated = await prisma.ticket.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap between the findFirst check and the actual write), then re-fetch.
+  const updateResult = await prisma.ticket.updateMany({
+    where: { id, workspaceId },
     data: updateData,
+  });
+  if (updateResult.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Ticket not found");
+  }
+  const updated = await prisma.ticket.findFirstOrThrow({
+    where: { id, workspaceId },
     include: {
       contact: { select: { id: true, firstName: true, lastName: true } },
       assignee: { include: { user: { select: { name: true } } } },

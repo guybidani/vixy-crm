@@ -191,27 +191,52 @@ export async function list(params: ListParams) {
 
 export async function pipeline(workspaceId: string) {
   const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS);
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const deals = await prisma.deal.findMany({
-    where: { workspaceId },
-    include: {
-      contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
-      company: { select: { id: true, name: true } },
-      assignee: { include: { user: { select: { name: true } } } },
-      tags: { include: { tag: true } },
-      tasks: {
-        where: { status: { not: "DONE" } },
-        orderBy: { dueDate: "asc" },
-        take: 1,
-      },
-      activities: {
-        where: { createdAt: { gte: thirtyDaysAgo } },
-        select: { id: true },
-      },
+  const dealInclude = {
+    contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
+    company: { select: { id: true, name: true } },
+    assignee: { include: { user: { select: { name: true } } } },
+    tags: { include: { tag: true } },
+    tasks: {
+      where: { status: { not: "DONE" as const } },
+      orderBy: { dueDate: "asc" as const },
+      take: 1,
     },
-    orderBy: { createdAt: "asc" },
-    take: 500,
-  });
+    activities: {
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { id: true },
+    },
+  };
+
+  // Fetch open deals and recent closed deals in parallel.  The previous
+  // single query used orderBy: createdAt ASC with take: 500 — in workspaces
+  // with 500+ old closed deals, newer open deals were silently dropped from
+  // the pipeline view because the cap was consumed by old closed records.
+  const [openDeals, closedDeals] = await Promise.all([
+    prisma.deal.findMany({
+      where: {
+        workspaceId,
+        stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+      },
+      include: dealInclude,
+      orderBy: { createdAt: "asc" },
+      take: 500,
+    }),
+    prisma.deal.findMany({
+      where: {
+        workspaceId,
+        stage: { in: ["CLOSED_WON", "CLOSED_LOST"] },
+        closedAt: { gte: startOfMonth },
+      },
+      include: dealInclude,
+      orderBy: { closedAt: "desc" },
+      take: 100,
+    }),
+  ]);
+
+  const deals = [...openDeals, ...closedDeals];
 
   const stages = [
     "LEAD",
@@ -556,9 +581,18 @@ export async function update(
     updateData.stage = data.stage;
   }
 
-  const updated = await prisma.deal.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap where the deal could be reassigned between the findFirst check and the
+  // actual write), then re-fetch with includes.
+  const updateResult = await prisma.deal.updateMany({
+    where: { id, workspaceId },
     data: updateData,
+  });
+  if (updateResult.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Deal not found");
+  }
+  const updated = await prisma.deal.findFirstOrThrow({
+    where: { id, workspaceId },
     include: {
       contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
       company: { select: { id: true, name: true } },

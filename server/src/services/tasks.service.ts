@@ -472,9 +472,17 @@ export async function update(
     updateData.completedAt = null;
   }
 
-  const updated = await prisma.task.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap between the findFirst check and the actual write), then re-fetch.
+  const updateResult = await prisma.task.updateMany({
+    where: { id, workspaceId },
     data: updateData,
+  });
+  if (updateResult.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Task not found");
+  }
+  const updated = await prisma.task.findFirstOrThrow({
+    where: { id, workspaceId },
     include: {
       assignee: { include: { user: { select: { name: true } } } },
       contact: { select: { id: true, firstName: true, lastName: true } },
