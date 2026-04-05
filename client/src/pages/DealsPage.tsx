@@ -333,7 +333,7 @@ export default function DealsPage() {
         <MondayPersonCell
           value={row.contact ? { id: row.contact.id, name: row.contact.name } : null}
           options={contactOptions}
-          onChange={(id) => inlineUpdate(row.id, { contactId: id! })}
+          onChange={(id) => inlineUpdate(row.id, { contactId: id || undefined })}
           placeholder="בחר איש קשר"
         />
       ),

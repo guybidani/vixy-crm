@@ -51,6 +51,7 @@ import { createActivity, updateActivity, deleteActivity } from "../../api/activi
 import { updateTask, createTask } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
+import AiDealScore from "./AiDealScore";
 
 interface DealDetailPanelProps {
   dealId: string;
@@ -1138,7 +1139,7 @@ export default function DealDetailPanel({
                             : null
                         }
                         options={contactOptions}
-                        onChange={(id) => updateMut.mutate({ contactId: id! })}
+                        onChange={(id) => updateMut.mutate({ contactId: id || undefined })}
                         placeholder="בחר איש קשר"
                       />
                     </div>
@@ -1241,7 +1242,7 @@ export default function DealDetailPanel({
                         : null
                     }
                     options={memberOptions}
-                    onChange={(id) => updateMut.mutate({ assigneeId: id! })}
+                    onChange={(id) => updateMut.mutate({ assigneeId: id || undefined })}
                     placeholder="בחר אחראי"
                   />
                 </div>
