@@ -2,7 +2,6 @@ import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
 import * as ticketsService from "../services/tickets.service";
-import { prisma } from "../db/client";
 
 export const ticketsRouter = Router();
 
@@ -92,17 +91,9 @@ ticketsRouter.get("/:id/messages", async (req, res, next) => {
 // POST /api/v1/tickets
 ticketsRouter.post("/", validate(createSchema), async (req, res, next) => {
   try {
-    const member = await prisma.workspaceMember.findFirst({
-      where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-    });
-    if (!member) {
-      return res.status(403).json({
-        error: { code: "FORBIDDEN", message: "Not a workspace member" },
-      });
-    }
     const ticket = await ticketsService.create(
       req.workspaceId!,
-      member.id,
+      req.memberId!,
       req.body,
     );
     res.status(201).json(ticket);
@@ -131,21 +122,13 @@ ticketsRouter.post(
   validate(messageSchema),
   async (req, res, next) => {
     try {
-      const member = await prisma.workspaceMember.findFirst({
-        where: { workspaceId: req.workspaceId!, userId: req.user!.userId },
-      });
-      if (!member) {
-        return res.status(403).json({
-          error: { code: "FORBIDDEN", message: "Not a workspace member" },
-        });
-      }
       const message = await ticketsService.addMessage(
         req.workspaceId!,
         req.params.id as string,
         {
           body: req.body.body,
           senderType: "agent",
-          senderId: member.id,
+          senderId: req.memberId!,
           isInternal: req.body.isInternal,
         },
       );
