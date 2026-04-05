@@ -938,6 +938,7 @@ function ReplyComposer({
           placeholder={
             isInternal ? "הערה פנימית (לא נראית ללקוח)..." : "כתוב תגובה..."
           }
+          aria-label={isInternal ? "הערה פנימית" : "תגובה ללקוח"}
           className={`flex-1 px-3 py-2 border rounded-[4px] text-sm focus:outline-none focus:ring-2 resize-none ${
             isInternal
               ? "border-yellow-200 bg-yellow-50/50 focus:ring-warning/30 focus:border-warning"
@@ -949,6 +950,7 @@ function ReplyComposer({
         <button
           type="submit"
           disabled={!body.trim() || mutation.isPending}
+          aria-label={isInternal ? "שלח הערה פנימית" : "שלח תגובה"}
           className={`px-4 self-end rounded-[4px] text-white font-semibold text-[13px] transition-colors disabled:opacity-50 ${
             isInternal
               ? "bg-warning hover:bg-warning/90"
