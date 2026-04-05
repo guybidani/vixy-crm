@@ -127,8 +127,38 @@ export default function ContactDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-[#676879]">טוען...</p>
+      <div className="space-y-4">
+        <div className="h-5 w-36 bg-[#E6E9EF] rounded animate-pulse" />
+        <div className="bg-white rounded-2xl border border-[#E6E9EF] p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-[#E6E9EF] rounded-xl animate-pulse" />
+            <div className="space-y-2 flex-1">
+              <div className="h-6 w-48 bg-[#E6E9EF] rounded animate-pulse" />
+              <div className="h-4 w-32 bg-[#E6E9EF] rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-[#E6E9EF] p-6 space-y-3">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-4 bg-[#E6E9EF] rounded animate-pulse" style={{ width: `${65 + i * 5}%` }} />
+              ))}
+            </div>
+          </div>
+          <div className="lg:col-span-2 space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-[#E6E9EF] p-6">
+                <div className="h-5 w-32 bg-[#E6E9EF] rounded animate-pulse mb-3" />
+                <div className="space-y-2">
+                  {[...Array(2)].map((_, j) => (
+                    <div key={j} className="h-12 bg-[#F5F6F8] rounded animate-pulse" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
