@@ -369,7 +369,7 @@ export default function DashboardPage() {
         <TeamLeaderboard />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+      <div className="mb-6">
         <CalendarWidget />
       </div>
 

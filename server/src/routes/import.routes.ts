@@ -22,11 +22,15 @@ importRouter.post(
         });
       }
 
-      const buffer = fs.readFileSync(req.file.path);
-      const { headers, rows } = importService.parseCSV(buffer);
+      let buffer: Buffer;
+      try {
+        buffer = fs.readFileSync(req.file.path);
+      } finally {
+        // Always clean up temp file — even if readFileSync throws (unlikely)
+        fs.unlink(req.file.path, () => {});
+      }
 
-      // Clean up temp file
-      fs.unlinkSync(req.file.path);
+      const { headers, rows } = importService.parseCSV(buffer);
 
       if (headers.length === 0) {
         return res.status(400).json({
@@ -61,8 +65,12 @@ importRouter.post(
         });
       }
 
-      const buffer = fs.readFileSync(req.file.path);
-      fs.unlinkSync(req.file.path);
+      let buffer: Buffer;
+      try {
+        buffer = fs.readFileSync(req.file.path);
+      } finally {
+        fs.unlink(req.file.path, () => {});
+      }
 
       const { headers, rows } = importService.parseCSV(buffer);
       if (headers.length === 0) {
@@ -115,8 +123,12 @@ importRouter.post(
         });
       }
 
-      const buffer = fs.readFileSync(req.file.path);
-      fs.unlinkSync(req.file.path);
+      let buffer: Buffer;
+      try {
+        buffer = fs.readFileSync(req.file.path);
+      } finally {
+        fs.unlink(req.file.path, () => {});
+      }
 
       const { headers, rows } = importService.parseCSV(buffer);
       if (headers.length === 0) {
