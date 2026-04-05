@@ -118,6 +118,7 @@ export default function CompaniesPage() {
         setSortBy(key);
         setSortDir("asc");
       }
+      setPage(1);
     },
     [sortBy],
   );
