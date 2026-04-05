@@ -37,7 +37,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 
 export default function TicketDetailPage() {
-  const { ticketStatuses, priorities } = useWorkspaceOptions();
+  const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -256,7 +256,7 @@ export default function TicketDetailPage() {
               )}
               <DetailRow label="ערוץ">
                 <span className="text-sm text-[#676879]">
-                  {ticket.channel}
+                  {ticketChannels[ticket.channel]?.label || ticket.channel}
                 </span>
               </DetailRow>
               <DetailRow label="נציג">
