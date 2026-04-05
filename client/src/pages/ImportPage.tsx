@@ -224,9 +224,11 @@ export default function ImportPage() {
       {step === 1 && (
         <div className="space-y-6">
           {/* Type selector */}
-          <div className="flex gap-3">
+          <div className="flex gap-3" role="radiogroup" aria-label="סוג ייבוא">
             <button
-              onClick={() => setImportType("contacts")}
+              onClick={() => { setImportType("contacts"); setFile(null); setPreview(null); setMapping({}); setError(null); }}
+              role="radio"
+              aria-checked={importType === "contacts"}
               className={`px-4 py-2 rounded-[4px] text-[13px] font-medium transition-colors ${
                 importType === "contacts"
                   ? "bg-[#0073EA] text-white"
@@ -236,7 +238,9 @@ export default function ImportPage() {
               אנשי קשר
             </button>
             <button
-              onClick={() => setImportType("deals")}
+              onClick={() => { setImportType("deals"); setFile(null); setPreview(null); setMapping({}); setError(null); }}
+              role="radio"
+              aria-checked={importType === "deals"}
               className={`px-4 py-2 rounded-[4px] text-[13px] font-medium transition-colors ${
                 importType === "deals"
                   ? "bg-[#0073EA] text-white"
@@ -249,6 +253,9 @@ export default function ImportPage() {
 
           {/* Drop zone */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label="גרור קובץ לכאן או לחץ לבחירה"
             onDragOver={(e) => {
               e.preventDefault();
               setDragOver(true);
@@ -256,7 +263,13 @@ export default function ImportPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-colors ${
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2 ${
               dragOver
                 ? "border-[#0073EA] bg-[#0073EA]/5"
                 : "border-[#E6E9EF] bg-white hover:border-[#0073EA]/50 hover:bg-[#F5F6F8]"
