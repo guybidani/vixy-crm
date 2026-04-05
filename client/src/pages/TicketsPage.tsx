@@ -115,10 +115,11 @@ export default function TicketsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
-  // Reset accumulated tickets and page when filters change
+  // Reset accumulated tickets, page, and selection when filters change
   useEffect(() => {
     setPage(1);
     setAccumulatedTickets([]);
+    setSelectedId(null);
   }, [debouncedSearch, statusFilter]);
 
   const { data, isLoading } = useQuery({
