@@ -19,11 +19,24 @@ export async function createSlaPolicy(
     isDefault?: boolean;
   },
 ) {
-  // If marking as default, unset other defaults
+  // Wrap unset-old + create-new in a transaction to prevent a crash from
+  // leaving the workspace with zero default SLA policies.
   if (data.isDefault) {
-    await prisma.slaPolicy.updateMany({
-      where: { workspaceId, isDefault: true },
-      data: { isDefault: false },
+    return prisma.$transaction(async (tx) => {
+      await tx.slaPolicy.updateMany({
+        where: { workspaceId, isDefault: true },
+        data: { isDefault: false },
+      });
+      return tx.slaPolicy.create({
+        data: {
+          workspaceId,
+          name: data.name,
+          firstResponseMinutes: data.firstResponseMinutes,
+          resolutionMinutes: data.resolutionMinutes,
+          businessHoursOnly: data.businessHoursOnly ?? true,
+          isDefault: true,
+        },
+      });
     });
   }
 
@@ -34,7 +47,7 @@ export async function createSlaPolicy(
       firstResponseMinutes: data.firstResponseMinutes,
       resolutionMinutes: data.resolutionMinutes,
       businessHoursOnly: data.businessHoursOnly ?? true,
-      isDefault: data.isDefault ?? false,
+      isDefault: false,
     },
   });
 }
@@ -55,10 +68,17 @@ export async function updateSlaPolicy(
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "SLA policy not found");
 
+  // Wrap unset-old + set-new in a transaction to prevent partial default state
   if (data.isDefault) {
-    await prisma.slaPolicy.updateMany({
-      where: { workspaceId, isDefault: true, id: { not: id } },
-      data: { isDefault: false },
+    return prisma.$transaction(async (tx) => {
+      await tx.slaPolicy.updateMany({
+        where: { workspaceId, isDefault: true, id: { not: id } },
+        data: { isDefault: false },
+      });
+      return tx.slaPolicy.update({
+        where: { id },
+        data,
+      });
     });
   }
 
