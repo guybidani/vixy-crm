@@ -188,10 +188,12 @@ export default function DealDetailPanel({
   const taskToggleMut = useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: string }) =>
       updateTask(taskId, { status }),
-    onSuccess: () => {
+    onSuccess: (_data, { status }) => {
       queryClient.invalidateQueries({ queryKey: ["deal", dealId] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success(status === "DONE" ? "משימה הושלמה" : "משימה סומנה כפתוחה");
     },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון משימה"),
   });
 
   const createTaskMut = useMutation({

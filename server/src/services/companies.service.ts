@@ -179,13 +179,25 @@ export async function update(
     industry: string;
     size: string;
     notes: string;
+    status: string;
   }>,
 ) {
-  // Use updateMany with workspaceId for defense-in-depth — workspace scope
-  // enforced at the mutation level, not just an existence check.
+  // Build updateData from explicit fields instead of spreading { ...data }.
+  // Blind spread risks passing unexpected fields to Prisma.
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.website !== undefined) updateData.website = data.website;
+  if (data.phone !== undefined) updateData.phone = data.phone;
+  if (data.email !== undefined) updateData.email = data.email;
+  if (data.address !== undefined) updateData.address = data.address;
+  if (data.industry !== undefined) updateData.industry = data.industry;
+  if (data.size !== undefined) updateData.size = data.size;
+  if (data.notes !== undefined) updateData.notes = data.notes;
+  if (data.status !== undefined) updateData.status = data.status;
+
   const result = await prisma.company.updateMany({
     where: { id, workspaceId },
-    data,
+    data: updateData,
   });
   if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Company not found");
