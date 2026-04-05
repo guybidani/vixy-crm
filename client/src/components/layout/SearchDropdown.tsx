@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,6 +17,14 @@ interface SearchDropdownProps {
   onClose: () => void;
 }
 
+interface FlatItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  path: string;
+  sectionKey: string;
+}
+
 export default function SearchDropdown({
   query,
   onClose,
@@ -24,6 +32,7 @@ export default function SearchDropdown({
   const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounce(query, 300);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const { data, isLoading } = useQuery({
     queryKey: ["global-search", debouncedQuery],
@@ -39,14 +48,6 @@ export default function SearchDropdown({
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
   const hasResults =
@@ -109,10 +110,71 @@ export default function SearchDropdown({
     },
   ];
 
+  // Flatten all items for keyboard navigation
+  const flatItems: FlatItem[] = useMemo(() => {
+    const items: FlatItem[] = [];
+    for (const section of sections) {
+      for (const item of section.items) {
+        items.push({
+          id: item.id,
+          title: section.getTitle(item),
+          subtitle: section.getSubtitle(item),
+          path: section.getPath(item),
+          sectionKey: section.key,
+        });
+      }
+    }
+    return items;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  // Reset selection when results change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [flatItems]);
+
+  // Scroll selected item into view
+  useEffect(() => {
+    if (!ref.current) return;
+    const el = ref.current.querySelector(`[data-search-idx="${selectedIndex}"]`);
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [selectedIndex]);
+
+  // Keyboard navigation: ArrowDown, ArrowUp, Enter, Escape
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      switch (e.key) {
+        case "Escape":
+          onClose();
+          break;
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((i) => (i < flatItems.length - 1 ? i + 1 : 0));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((i) => (i > 0 ? i - 1 : flatItems.length - 1));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (flatItems[selectedIndex]) {
+            navigateTo(flatItems[selectedIndex].path);
+          }
+          break;
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, flatItems, selectedIndex]);
+
+  let flatIdx = -1;
+
   return (
     <div
       ref={ref}
       className="absolute top-full right-0 left-0 mt-1 bg-white rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] border border-[#E6E9EF] max-h-[400px] overflow-y-auto z-50"
+      role="listbox"
     >
       {isLoading && (
         <div className="flex items-center justify-center py-8">
@@ -139,22 +201,40 @@ export default function SearchDropdown({
                     {section.label}
                   </span>
                 </div>
-                {section.items.map((item: any) => (
-                  <button
-                    key={item.id}
-                    onClick={() => navigateTo(section.getPath(item))}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#F5F6F8] text-right transition-colors"
-                  >
-                    <span className="text-[13px] text-[#323338] font-medium truncate">
-                      {section.getTitle(item)}
-                    </span>
-                    {section.getSubtitle(item) && (
-                      <span className="text-[11px] text-[#9699A6] truncate mr-auto">
-                        {section.getSubtitle(item)}
+                {section.items.map((item: any) => {
+                  flatIdx++;
+                  const idx = flatIdx;
+                  const isSelected = idx === selectedIndex;
+                  return (
+                    <button
+                      key={item.id}
+                      data-search-idx={idx}
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => navigateTo(section.getPath(item))}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors ${
+                        isSelected
+                          ? "bg-[#0073EA]/5"
+                          : "hover:bg-[#F5F6F8]"
+                      }`}
+                    >
+                      <span className="text-[13px] text-[#323338] font-medium truncate">
+                        {section.getTitle(item)}
                       </span>
-                    )}
-                  </button>
-                ))}
+                      {section.getSubtitle(item) && (
+                        <span className="text-[11px] text-[#9699A6] truncate mr-auto">
+                          {section.getSubtitle(item)}
+                        </span>
+                      )}
+                      {isSelected && (
+                        <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
+                          Enter
+                        </kbd>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             ),
         )}
