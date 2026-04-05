@@ -222,6 +222,8 @@ export default function CompanyDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("חברה נמחקה");
       navigate("/companies");
     },

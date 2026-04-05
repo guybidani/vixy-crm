@@ -79,6 +79,8 @@ export default function ContactDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("איש קשר נמחק");
       navigate("/contacts");
     },
