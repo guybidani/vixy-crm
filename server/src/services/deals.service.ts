@@ -485,7 +485,7 @@ export async function update(
   triggeredByMemberId?: string,
 ) {
   // Fetch deal + FK references in parallel — all independent queries
-  const [existing, contactRef, companyRef] = await Promise.all([
+  const [existing, contactRef, companyRef, assigneeRef] = await Promise.all([
     prisma.deal.findFirst({ where: { id, workspaceId } }),
     data.contactId
       ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
@@ -493,12 +493,17 @@ export async function update(
     data.companyId
       ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
       : null,
+    data.assigneeId
+      ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
+      : null,
   ]);
   if (!existing) throw new AppError(404, "NOT_FOUND", "Deal not found");
   if (data.contactId && !contactRef)
     throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
   if (data.companyId && !companyRef)
     throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
+  if (data.assigneeId && !assigneeRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Assignee not found in workspace");
 
   const updateData: any = { ...data };
 
