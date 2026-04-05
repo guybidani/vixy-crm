@@ -1,6 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface SidePanelProps {
   open: boolean;
@@ -17,20 +20,84 @@ export default function SidePanel({
   width = "lg",
   children,
 }: SidePanelProps) {
-  // Close on Escape
+  const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+
+  // Focus-trap + Escape handler
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Don't close if user is editing an input/textarea/contenteditable
+        const active = document.activeElement;
+        if (
+          active &&
+          (active.tagName === "INPUT" ||
+            active.tagName === "TEXTAREA" ||
+            (active as HTMLElement).isContentEditable)
+        ) {
+          // Let the input handle Escape first (e.g. cancel edit).
+          // Only close the panel if Escape is pressed again when not editing.
+          return;
+        }
+        onClose();
+        return;
+      }
+
+      if (e.key !== "Tab" || !panelRef.current) return;
+
+      const focusable = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    },
+    [onClose],
+  );
+
+  // Scroll lock + keyboard + focus management
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    if (open) {
-      window.addEventListener("keydown", onKey);
-      document.body.style.overflow = "hidden";
-      return () => {
-        window.removeEventListener("keydown", onKey);
-        document.body.style.overflow = "";
-      };
-    }
-  }, [open, onClose]);
+    if (!open) return;
+
+    triggerRef.current = document.activeElement as HTMLElement | null;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    // Auto-focus the close button or first focusable element
+    requestAnimationFrame(() => {
+      if (panelRef.current) {
+        const first =
+          panelRef.current.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+        if (first) {
+          first.focus();
+        } else {
+          panelRef.current.focus();
+        }
+      }
+    });
+
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", handleKeyDown);
+      triggerRef.current?.focus();
+    };
+  }, [open, handleKeyDown]);
 
   if (!open) return null;
 
@@ -56,8 +123,10 @@ export default function SidePanel({
 
       {/* Panel - slides from left in RTL */}
       <div
+        ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "relative w-full bg-white shadow-modal overflow-y-auto animate-in slide-in-from-left duration-200",
+          "relative w-full bg-white shadow-modal overflow-y-auto animate-in slide-in-from-left duration-200 outline-none",
           widthClass,
         )}
       >
