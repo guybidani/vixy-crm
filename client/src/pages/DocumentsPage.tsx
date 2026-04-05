@@ -198,13 +198,16 @@ export default function DocumentsPage() {
                 setPage(1);
               }}
               placeholder="חיפוש מסמכים..."
+              aria-label="חיפוש מסמכים"
               className="w-full pr-9 pl-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
             />
           </div>
-          <div className="flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] p-0.5">
+          <div className="flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] p-0.5" role="tablist" aria-label="סוג מסמך">
             {TYPE_FILTERS.map((f) => (
               <button
                 key={f.value}
+                role="tab"
+                aria-selected={typeFilter === f.value}
                 onClick={() => {
                   setTypeFilter(f.value);
                   setPage(1);

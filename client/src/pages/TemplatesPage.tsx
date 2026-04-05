@@ -140,6 +140,7 @@ export default function TemplatesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="חיפוש תבניות..."
+            aria-label="חיפוש תבניות"
             className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
           />
         </div>
@@ -147,6 +148,7 @@ export default function TemplatesPage() {
         <select
           value={filterCategory}
           onChange={(e) => setFilterCategory(e.target.value)}
+          aria-label="סינון לפי קטגוריה"
           className="px-3 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
         >
           <option value="">כל הקטגוריות</option>
@@ -160,6 +162,7 @@ export default function TemplatesPage() {
         <select
           value={filterChannel}
           onChange={(e) => setFilterChannel(e.target.value)}
+          aria-label="סינון לפי ערוץ"
           className="px-3 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
         >
           <option value="">כל הערוצים</option>
