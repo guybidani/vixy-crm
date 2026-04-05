@@ -847,6 +847,7 @@ export default function TasksPage() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
   const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
   const bulkPriorityRef = useRef<HTMLDivElement>(null);
 
@@ -984,6 +985,7 @@ export default function TasksPage() {
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
       toast.success("משימה נמחקה");
     },
+    onError: () => toast.error("שגיאה במחיקת משימה"),
   });
 
   const bulkDeleteMutation = useMutation({
@@ -1248,7 +1250,7 @@ export default function TasksPage() {
                       const newStatus = task.status === "DONE" ? "TODO" : "DONE";
                       toggleMutation.mutate({ id: task.id, status: newStatus });
                     }}
-                    onDelete={(id) => deleteMutation.mutate(id)}
+                    onDelete={(id) => setTaskToDelete(id)}
                     onEdit={(task) => setSelectedTaskId(task.id)}
                     inlineUpdate={inlineUpdate}
                     memberOptions={memberOptions}
@@ -1343,6 +1345,20 @@ export default function TasksPage() {
         onCancel={() => setShowBulkDeleteConfirm(false)}
         title="מחיקת משימות"
         message={`האם אתה בטוח שברצונך למחוק ${selectedTaskIds.size} משימות?`}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!taskToDelete}
+        onConfirm={() => {
+          if (taskToDelete) deleteMutation.mutate(taskToDelete);
+          setTaskToDelete(null);
+        }}
+        onCancel={() => setTaskToDelete(null)}
+        title="מחיקת משימה"
+        message="האם אתה בטוח שברצונך למחוק משימה זו?"
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
