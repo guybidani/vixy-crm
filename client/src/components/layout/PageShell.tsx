@@ -71,10 +71,12 @@ export default function PageShell({
 
           {/* View tabs */}
           {views && views.length > 0 && (
-            <div className="flex items-center gap-0 -mb-px">
+            <div className="flex items-center gap-0 -mb-px" role="tablist" aria-label="תצוגות">
               {views.map((view) => (
                 <button
                   key={view.key}
+                  role="tab"
+                  aria-selected={activeView === view.key}
                   onClick={() => onViewChange?.(view.key)}
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap",
