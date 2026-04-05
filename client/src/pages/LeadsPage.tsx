@@ -73,14 +73,16 @@ export default function LeadsPage() {
     null,
   );
   const [viewMode, setViewMode] = useState<"cards" | "pipeline">("cards");
+  const [page, setPage] = useState(1);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["leads", { search: debouncedSearch }],
+    queryKey: ["leads", { search: debouncedSearch, page }],
     queryFn: () =>
       listContacts({
         status: "LEAD",
         search: debouncedSearch || undefined,
-        limit: 100,
+        page,
+        limit: 50,
         sortBy: "leadScore",
         sortDir: "desc",
       }),
@@ -162,7 +164,7 @@ export default function LeadsPage() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="חיפוש לידים..."
           className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
         />
