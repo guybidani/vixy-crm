@@ -161,13 +161,7 @@ interface LinkParams {
 }
 
 export async function linkToEntity(workspaceId: string, params: LinkParams) {
-  // Verify document belongs to workspace
-  const doc = await prisma.document.findFirst({
-    where: { id: params.documentId, workspaceId },
-  });
-  if (!doc) return null;
-
-  // Verify the entity belongs to the workspace
+  // Verify document and target entity belong to workspace in parallel — independent queries
   const entityModelMap: Record<string, any> = {
     contact: prisma.contact,
     deal: prisma.deal,
@@ -175,10 +169,18 @@ export async function linkToEntity(workspaceId: string, params: LinkParams) {
     ticket: prisma.ticket,
   };
   const model = entityModelMap[params.entityType];
-  if (model) {
-    const entity = await model.findFirst({ where: { id: params.entityId, workspaceId } });
-    if (!entity) throw new AppError(400, "INVALID_REFERENCE", `${params.entityType} not found in workspace`);
-  }
+
+  const [doc, entity] = await Promise.all([
+    prisma.document.findFirst({
+      where: { id: params.documentId, workspaceId },
+      select: { id: true },
+    }),
+    model
+      ? model.findFirst({ where: { id: params.entityId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
+  if (!doc) return null;
+  if (model && !entity) throw new AppError(400, "INVALID_REFERENCE", `${params.entityType} not found in workspace`);
 
   const linkData: any = { documentId: params.documentId };
   linkData[`${params.entityType}Id`] = params.entityId;
