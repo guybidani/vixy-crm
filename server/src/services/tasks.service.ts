@@ -658,6 +658,9 @@ export async function checkOverdueTasks(workspaceId: string) {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
+  // Cap at 500 to prevent unbounded result sets for workspaces with many
+  // overdue tasks. Notifications are created in bulk via createMany so a
+  // single batch of 500 is already generous for a periodic check.
   const overdueTasks = await prisma.task.findMany({
     where: {
       workspaceId,
@@ -667,6 +670,8 @@ export async function checkOverdueTasks(workspaceId: string) {
     include: {
       assignee: { select: { id: true, userId: true } },
     },
+    orderBy: { dueDate: "asc" },
+    take: 500,
   });
 
   // Bulk-create notifications instead of sequential awaits in a loop
