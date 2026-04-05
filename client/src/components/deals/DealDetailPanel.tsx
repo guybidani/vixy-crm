@@ -1228,7 +1228,20 @@ function FieldRow({
 
 function HealthBadge({ health }: { health: DealHealth }) {
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const healthRef = useRef<HTMLDivElement>(null);
   const b = health.breakdown;
+
+  // Close health breakdown on click outside
+  useEffect(() => {
+    if (!showBreakdown) return;
+    function handleMouseDown(e: MouseEvent) {
+      if (healthRef.current && !healthRef.current.contains(e.target as Node)) {
+        setShowBreakdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [showBreakdown]);
 
   const breakdownRows = [
     { label: "פעילות אחרונה", detail: b.activityRecency.label, score: b.activityRecency.score, max: 30 },
@@ -1239,7 +1252,7 @@ function HealthBadge({ health }: { health: DealHealth }) {
   ];
 
   return (
-    <div className="relative">
+    <div className="relative" ref={healthRef}>
       <button
         type="button"
         onClick={() => setShowBreakdown((v) => !v)}
