@@ -173,19 +173,24 @@ export async function create(
     metadata?: any;
   },
 ) {
-  // Verify foreign key references belong to this workspace
-  if (data.contactId) {
-    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
-    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
-  }
-  if (data.dealId) {
-    const deal = await prisma.deal.findFirst({ where: { id: data.dealId, workspaceId } });
-    if (!deal) throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
-  }
-  if (data.ticketId) {
-    const ticket = await prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId } });
-    if (!ticket) throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
-  }
+  // Verify foreign key references belong to this workspace — parallel queries
+  const [contactRef, dealRef, ticketRef] = await Promise.all([
+    data.contactId
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      : null,
+    data.dealId
+      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId }, select: { id: true } })
+      : null,
+    data.ticketId
+      ? prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId }, select: { id: true } })
+      : null,
+  ]);
+  if (data.contactId && !contactRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
+  if (data.dealId && !dealRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Deal not found in workspace");
+  if (data.ticketId && !ticketRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Ticket not found in workspace");
 
   const activity = await prisma.activity.create({
     data: {
