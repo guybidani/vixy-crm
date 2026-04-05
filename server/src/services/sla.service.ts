@@ -69,6 +69,15 @@ export async function updateSlaPolicy(
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "SLA policy not found");
 
+  // Build updateData from explicit fields instead of passing raw data object.
+  // Blind spread risks writing unexpected fields to Prisma.
+  const updateData: Record<string, unknown> = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.firstResponseMinutes !== undefined) updateData.firstResponseMinutes = data.firstResponseMinutes;
+  if (data.resolutionMinutes !== undefined) updateData.resolutionMinutes = data.resolutionMinutes;
+  if (data.businessHoursOnly !== undefined) updateData.businessHoursOnly = data.businessHoursOnly;
+  if (data.isDefault !== undefined) updateData.isDefault = data.isDefault;
+
   // Wrap unset-old + set-new in a transaction to prevent partial default state
   if (data.isDefault) {
     return prisma.$transaction(async (tx) => {
@@ -78,14 +87,14 @@ export async function updateSlaPolicy(
       });
       return tx.slaPolicy.update({
         where: { id },
-        data,
+        data: updateData,
       });
     });
   }
 
   return prisma.slaPolicy.update({
     where: { id },
-    data,
+    data: updateData,
   });
 }
 
