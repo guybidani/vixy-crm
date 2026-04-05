@@ -788,7 +788,7 @@ function ReplyComposer({
   const [showCanned, setShowCanned] = useState(false);
   const cannedRef = useRef<HTMLDivElement>(null);
 
-  // Close canned responses dropdown on click outside
+  // Close canned responses dropdown on click outside or Escape key
   useEffect(() => {
     if (!showCanned) return;
     function handleMouseDown(e: MouseEvent) {
@@ -796,8 +796,17 @@ function ReplyComposer({
         setShowCanned(false);
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setShowCanned(false);
+      }
+    }
     document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [showCanned]);
 
   const { data: cannedResponses } = useQuery({
