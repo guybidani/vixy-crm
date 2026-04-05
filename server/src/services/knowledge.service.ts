@@ -39,19 +39,21 @@ export async function listArticles(params: {
 }
 
 export async function getArticle(workspaceId: string, id: string) {
-  const article = await prisma.kbArticle.findFirst({
+  // Verify article belongs to workspace first (cheap check, no join)
+  const exists = await prisma.kbArticle.findFirst({
     where: { id, workspaceId },
+    select: { id: true },
+  });
+  if (!exists) throw new AppError(404, "NOT_FOUND", "Article not found");
+
+  // Atomically increment viewCount and return the updated article in one query
+  // — avoids the previous pattern where stale data was returned before the increment
+  const article = await prisma.kbArticle.update({
+    where: { id },
+    data: { viewCount: { increment: 1 } },
     include: {
       category: { select: { id: true, name: true } },
     },
-  });
-
-  if (!article) throw new AppError(404, "NOT_FOUND", "Article not found");
-
-  // Increment view count
-  await prisma.kbArticle.update({
-    where: { id },
-    data: { viewCount: { increment: 1 } },
   });
 
   return article;
