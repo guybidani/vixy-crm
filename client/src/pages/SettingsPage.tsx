@@ -114,13 +114,20 @@ export default function SettingsPage() {
   return (
     <PageShell title="הגדרות" subtitle="ניהול מערכת" emoji="⚙️" boardStyle>
       {/* Monday-style underlined tab bar */}
-      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] px-2 mb-4">
-        <div className="flex gap-0 overflow-x-auto border-b border-[#E6E9EF]">
+      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] px-2 mb-4 relative">
+        <div
+          role="tablist"
+          aria-label="הגדרות"
+          className="flex gap-0 overflow-x-auto border-b border-[#E6E9EF] scrollbar-thin scrollbar-thumb-[#E6E9EF] scrollbar-track-transparent"
+        >
           {TABS.map((t) => {
             const isActive = tab === t.key;
             return (
               <button
                 key={t.key}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`settings-panel-${t.key}`}
                 onClick={() => setTab(t.key)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap ${
                   isActive
@@ -134,6 +141,8 @@ export default function SettingsPage() {
             );
           })}
         </div>
+        {/* Fade hint for horizontal scroll on mobile */}
+        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent pointer-events-none md:hidden" />
       </div>
 
       {tab === "general" && <GeneralTab />}
