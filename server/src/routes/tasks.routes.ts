@@ -259,6 +259,7 @@ tasksRouter.get("/:id/comments", async (req, res, next) => {
     const comments = await prisma.taskComment.findMany({
       where: { taskId },
       orderBy: { createdAt: "asc" },
+      take: 200,
       include: {
         author: {
           include: {
@@ -325,6 +326,16 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
   try {
     const taskId = req.params.id as string;
     const commentId = req.params.commentId as string;
+    // Verify the task belongs to this workspace first (prevent cross-workspace BOLA).
+    // Previously only taskId+commentId were checked — an attacker with a valid
+    // memberId in two workspaces could delete comments on tasks from the other.
+    const task = await prisma.task.findFirst({
+      where: { id: taskId, workspaceId: req.workspaceId! },
+      select: { id: true },
+    });
+    if (!task) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Task not found" } });
+    }
     const comment = await prisma.taskComment.findFirst({
       where: { id: commentId, taskId },
     });
@@ -332,7 +343,7 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
       return res.status(404).json({ error: { code: "NOT_FOUND", message: "Comment not found" } });
     }
     if (comment.authorId !== req.memberId!) {
-      return res.status(403).json({ error: { code: "FORBIDDEN", message: "ניתן למחוק רק תגובות שלך" } });
+      return res.status(403).json({ error: { code: "FORBIDDEN", message: "ניתן למחוק רק תגובות ש��ך" } });
     }
     await prisma.taskComment.delete({ where: { id: commentId } });
     res.json({ success: true });
