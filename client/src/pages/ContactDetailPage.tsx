@@ -221,10 +221,20 @@ export default function ContactDetailPage() {
                 />
               ) : (
                 <h1
-                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
+                  tabIndex={0}
+                  role="button"
+                  aria-label="לחץ לעריכת שם"
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                   onClick={() => {
                     setNameVal(`${contact.firstName} ${contact.lastName}`);
                     setEditingName(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setNameVal(`${contact.firstName} ${contact.lastName}`);
+                      setEditingName(true);
+                    }
                   }}
                 >
                   {contact.firstName} {contact.lastName}

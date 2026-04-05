@@ -364,10 +364,20 @@ export default function CompanyDetailPage() {
                 />
               ) : (
                 <h1
-                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors"
+                  tabIndex={0}
+                  role="button"
+                  aria-label="לחץ לעריכת שם חברה"
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                   onClick={() => {
                     setNameVal(company.name);
                     setEditingName(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setNameVal(company.name);
+                      setEditingName(true);
+                    }
                   }}
                 >
                   {company.name}
