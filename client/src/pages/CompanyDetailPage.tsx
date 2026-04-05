@@ -603,7 +603,7 @@ export default function CompanyDetailPage() {
                       className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
                       onClick={() => navigate(`/contacts/${contact.id}`)}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
                           className="w-8 h-8 bg-[#E8F3FF] rounded-full flex items-center justify-center flex-shrink-0"
                           aria-hidden="true"
@@ -612,15 +612,29 @@ export default function CompanyDetailPage() {
                             {contact.firstName?.[0] || "?"}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <span className="font-medium text-sm text-[#323338] block">
+                        <div className="text-right min-w-0 flex-1">
+                          <span className="font-medium text-sm text-[#323338] block truncate">
                             {contact.firstName} {contact.lastName}
                           </span>
                           {contact.position && (
-                            <span className="text-[12px] text-[#9699A6] block">
+                            <span className="text-[12px] text-[#9699A6] block truncate">
                               {contact.position}
                             </span>
                           )}
+                          <div className="flex items-center gap-3 mt-0.5">
+                            {contact.email && (
+                              <span className="text-[11px] text-[#9699A6] flex items-center gap-1 truncate" dir="ltr">
+                                <Mail size={10} className="flex-shrink-0" />
+                                {contact.email}
+                              </span>
+                            )}
+                            {contact.phone && (
+                              <span className="text-[11px] text-[#9699A6] flex items-center gap-1" dir="ltr">
+                                <Phone size={10} className="flex-shrink-0" />
+                                {contact.phone}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       {status && (
