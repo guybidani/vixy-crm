@@ -103,7 +103,11 @@ export async function getRecentContacts(
 }
 
 export async function list(params: ListParams) {
-  const { workspaceId, contactId, dealId, ticketId, companyId, limit = 50, page = 1 } = params;
+  const { workspaceId, contactId, dealId, ticketId, companyId, limit: rawLimit = 50, page: rawPage = 1 } = params;
+  // Clamp page/limit to valid positive ranges — negative page causes negative
+  // skip (Prisma error), and limit<=0 silently returns empty results.
+  const page = Math.max(1, rawPage);
+  const limit = Math.min(Math.max(1, rawLimit), 100);
 
   const where: any = { workspaceId };
 

@@ -29,8 +29,8 @@ const SORTABLE_FIELDS = [
 export async function list(params: ListParams) {
   const {
     workspaceId,
-    page = 1,
-    limit = 50,
+    page: rawPage = 1,
+    limit: rawLimit = 50,
     search,
     status,
     priority,
@@ -39,6 +39,10 @@ export async function list(params: ListParams) {
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
   } = params;
+  // Clamp page/limit to valid positive ranges — negative page causes negative
+  // skip (Prisma error), and limit<=0 silently returns empty results.
+  const page = Math.max(1, rawPage);
+  const limit = Math.min(Math.max(1, rawLimit), 100);
   const sortBy = SORTABLE_FIELDS.includes(rawSortBy as any)
     ? rawSortBy
     : "createdAt";
