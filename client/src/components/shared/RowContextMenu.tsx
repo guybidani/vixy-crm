@@ -3,7 +3,6 @@ import {
   ExternalLink,
   Copy,
   Trash2,
-  Plus,
 } from "lucide-react";
 
 export interface ContextMenuItem {
@@ -147,15 +146,11 @@ export function buildRowContextItems<T extends { id: string }>({
   onOpen,
   onDuplicate,
   onDelete,
-  groups: _groups,
-  onMoveToGroup: _onMoveToGroup,
 }: {
   row: T;
   onOpen?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
-  groups?: Array<{ key: string; label: string }>;
-  onMoveToGroup?: (groupKey: string) => void;
 }): ContextMenuItem[] {
   const items: ContextMenuItem[] = [];
 
@@ -178,7 +173,7 @@ export function buildRowContextItems<T extends { id: string }>({
   if (onDuplicate) {
     items.push({
       label: "שכפל",
-      icon: <Plus size={14} />,
+      icon: <Copy size={14} />,
       onClick: onDuplicate,
       divider: true,
     });
