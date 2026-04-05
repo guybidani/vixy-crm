@@ -189,12 +189,15 @@ export default function RichTextEditor({
             if (editor.isActive("link")) {
               editor.chain().focus().unsetLink().run();
             } else {
-              const url = prompt("הזן כתובת URL:");
-              if (url) {
-                // Only allow http(s) and mailto protocols
-                const safeUrl = /^(https?:\/\/|mailto:)/i.test(url)
-                  ? url
-                  : `https://${url}`;
+              const raw = prompt("הזן כתובת URL:");
+              if (raw) {
+                const trimmed = raw.trim();
+                // Block dangerous protocols
+                if (/^(javascript|data|vbscript|blob):/i.test(trimmed)) return;
+                // Allow safe protocols as-is; otherwise auto-prefix https://
+                const safeUrl = /^(https?:\/\/|mailto:|\/)/i.test(trimmed)
+                  ? trimmed
+                  : `https://${trimmed}`;
                 editor.chain().focus().setLink({ href: safeUrl }).run();
               }
             }
