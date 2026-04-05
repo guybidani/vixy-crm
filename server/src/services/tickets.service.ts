@@ -388,12 +388,18 @@ export async function getMessages(
 ) {
   const { page = 1, limit = 200 } = opts;
 
-  // Verify ticket ownership and fetch messages in parallel
-  const [ticket, messages, total] = await Promise.all([
-    prisma.ticket.findFirst({
-      where: { id: ticketId, workspaceId },
-      select: { id: true },
-    }),
+  // Verify ticket belongs to this workspace BEFORE fetching messages.
+  // Previously the ownership check ran in parallel with the message query,
+  // meaning message data was fetched even for cross-workspace ticket IDs
+  // (a BOLA exposure — the 404 was thrown but the DB round-trip already ran).
+  const ticket = await prisma.ticket.findFirst({
+    where: { id: ticketId, workspaceId },
+    select: { id: true },
+  });
+  if (!ticket) throw new AppError(404, "NOT_FOUND", "Ticket not found");
+
+  // Now safe to fetch messages — ticket ownership is confirmed
+  const [messages, total] = await Promise.all([
     prisma.ticketMessage.findMany({
       where: { ticketId },
       orderBy: { createdAt: "asc" },
@@ -402,7 +408,6 @@ export async function getMessages(
     }),
     prisma.ticketMessage.count({ where: { ticketId } }),
   ]);
-  if (!ticket) throw new AppError(404, "NOT_FOUND", "Ticket not found");
 
   return {
     data: messages,
