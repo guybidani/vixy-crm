@@ -78,11 +78,15 @@ ticketsRouter.get("/:id", async (req, res, next) => {
 // GET /api/v1/tickets/:id/messages
 ticketsRouter.get("/:id/messages", async (req, res, next) => {
   try {
-    const messages = await ticketsService.getMessages(
+    const result = await ticketsService.getMessages(
       req.workspaceId!,
       req.params.id,
+      {
+        page: req.query.page ? Number(req.query.page) : undefined,
+        limit: req.query.limit ? Number(req.query.limit) : undefined,
+      },
     );
-    res.json(messages);
+    res.json(result);
   } catch (err) {
     next(err);
   }

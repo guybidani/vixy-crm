@@ -158,6 +158,7 @@ export async function getById(workspaceId: string, id: string) {
       slaPolicy: true,
       messages: {
         orderBy: { createdAt: "asc" },
+        take: 200,
       },
       activities: {
         include: {
@@ -380,9 +381,15 @@ export async function addMessage(
   return message;
 }
 
-export async function getMessages(workspaceId: string, ticketId: string) {
+export async function getMessages(
+  workspaceId: string,
+  ticketId: string,
+  opts: { page?: number; limit?: number } = {},
+) {
+  const { page = 1, limit = 200 } = opts;
+
   // Verify ticket ownership and fetch messages in parallel
-  const [ticket, messages] = await Promise.all([
+  const [ticket, messages, total] = await Promise.all([
     prisma.ticket.findFirst({
       where: { id: ticketId, workspaceId },
       select: { id: true },
@@ -390,11 +397,17 @@ export async function getMessages(workspaceId: string, ticketId: string) {
     prisma.ticketMessage.findMany({
       where: { ticketId },
       orderBy: { createdAt: "asc" },
+      skip: (page - 1) * limit,
+      take: limit,
     }),
+    prisma.ticketMessage.count({ where: { ticketId } }),
   ]);
   if (!ticket) throw new AppError(404, "NOT_FOUND", "Ticket not found");
 
-  return messages;
+  return {
+    data: messages,
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
 }
 
 export async function board(workspaceId: string) {
