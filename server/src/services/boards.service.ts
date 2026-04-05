@@ -237,6 +237,9 @@ export async function deleteColumn(
   });
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
 
+  const col = await prisma.boardColumn.findFirst({ where: { id: columnId, boardId } });
+  if (!col) throw new AppError(404, "NOT_FOUND", "Column not found");
+
   return prisma.boardColumn.delete({ where: { id: columnId } });
 }
 
@@ -830,10 +833,12 @@ export async function toggleCommentReaction(
   userId: string,
   emoji: string,
 ) {
-  const board = await prisma.board.findFirst({ where: { id: boardId, workspaceId } });
+  // Fetch board and comment in parallel — independent queries
+  const [board, comment] = await Promise.all([
+    prisma.board.findFirst({ where: { id: boardId, workspaceId } }),
+    prisma.boardItemComment.findFirst({ where: { id: commentId, itemId } }),
+  ]);
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
-
-  const comment = await prisma.boardItemComment.findFirst({ where: { id: commentId, itemId } });
   if (!comment) throw new AppError(404, "NOT_FOUND", "Comment not found");
 
   const reactions = (comment.reactions as Record<string, string[]>) ?? {};
