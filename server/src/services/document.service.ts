@@ -207,15 +207,18 @@ export async function unlinkFromEntity(
   documentId: string,
   linkId: string,
 ) {
-  // Verify document belongs to workspace
-  const doc = await prisma.document.findFirst({
-    where: { id: documentId, workspaceId },
-  });
+  // Verify document ownership and link existence in parallel — independent queries
+  const [doc, link] = await Promise.all([
+    prisma.document.findFirst({
+      where: { id: documentId, workspaceId },
+      select: { id: true },
+    }),
+    prisma.documentLink.findFirst({
+      where: { id: linkId, documentId },
+      select: { id: true },
+    }),
+  ]);
   if (!doc) return null;
-
-  const link = await prisma.documentLink.findFirst({
-    where: { id: linkId, documentId },
-  });
   if (!link) return null;
 
   await prisma.documentLink.delete({ where: { id: linkId } });

@@ -62,6 +62,7 @@ export async function createForWorkspace(
 ) {
   const members = await prisma.workspaceMember.findMany({
     where: { workspaceId },
+    select: { userId: true },
   });
 
   return prisma.notification.createMany({
@@ -83,7 +84,11 @@ export async function list(
   userId: string,
   opts: { limit?: number; offset?: number; unreadOnly?: boolean } = {},
 ) {
-  const { limit = 50, offset = 0, unreadOnly = false } = opts;
+  const { limit: rawLimit = 50, offset: rawOffset = 0, unreadOnly = false } = opts;
+  // Clamp limit/offset to valid positive ranges — negative offset causes Prisma
+  // error, and unbounded limit could pull the entire notification history.
+  const limit = Math.min(Math.max(1, rawLimit), 100);
+  const offset = Math.max(0, rawOffset);
 
   const where: any = { workspaceId, userId };
   if (unreadOnly) where.isRead = false;
