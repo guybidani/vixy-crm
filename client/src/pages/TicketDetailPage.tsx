@@ -91,7 +91,57 @@ export default function TicketDetailPage() {
   });
 
   if (isLoading) {
-    return <div className="text-center text-[#9699A6] py-12">טוען...</div>;
+    return (
+      <div className="space-y-4 animate-pulse">
+        {/* Header skeleton */}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-[#E6E9EF] rounded-[4px]" />
+          <div className="flex-1">
+            <div className="h-6 w-64 bg-[#E6E9EF] rounded mb-2" />
+            <div className="flex items-center gap-3">
+              <div className="h-5 w-16 bg-[#E6E9EF] rounded-full" />
+              <div className="h-5 w-16 bg-[#E6E9EF] rounded-full" />
+              <div className="h-4 w-24 bg-[#E6E9EF] rounded" />
+            </div>
+          </div>
+        </div>
+        {/* Body skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <div className="h-4 w-12 bg-[#E6E9EF] rounded mb-3" />
+              <div className="space-y-2">
+                <div className="h-3 w-full bg-[#F5F6F8] rounded" />
+                <div className="h-3 w-4/5 bg-[#F5F6F8] rounded" />
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <div className="h-4 w-20 bg-[#E6E9EF] rounded mb-3" />
+              <div className="space-y-3">
+                {[1, 2].map((i) => (
+                  <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                    <div className="w-3/5 h-14 bg-[#F5F6F8] rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-white rounded-xl shadow-sm p-4">
+              <div className="h-4 w-16 bg-[#E6E9EF] rounded mb-3" />
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="h-3 w-14 bg-[#E6E9EF] rounded" />
+                    <div className="h-3 w-20 bg-[#E6E9EF] rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
