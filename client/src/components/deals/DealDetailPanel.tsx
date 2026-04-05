@@ -591,7 +591,7 @@ export default function DealDetailPanel({
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl">
+          <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl" role="tablist">
             {(
               [
                 { key: "activity", label: "פעילות" },
@@ -601,6 +601,8 @@ export default function DealDetailPanel({
             ).map((tab) => (
               <button
                 key={tab.key}
+                role="tab"
+                aria-selected={activeTab === tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === tab.key
