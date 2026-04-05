@@ -243,9 +243,13 @@ export default function NotificationCenter() {
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  // ─── Close on outside click or Escape ───
+  // ─── Close on outside click or Escape + scroll lock ───
   useEffect(() => {
     if (!open) return;
+
+    // Lock body scroll so mobile users can't scroll behind the panel
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     // Auto-focus the close button so keyboard users land inside the panel
     requestAnimationFrame(() => closeButtonRef.current?.focus());
@@ -264,6 +268,7 @@ export default function NotificationCenter() {
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKey);
     return () => {
+      document.body.style.overflow = prevOverflow;
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKey);
     };
