@@ -1,6 +1,19 @@
 import { Resend } from "resend";
 import { config } from "../config";
 
+/**
+ * Escape user-supplied strings before embedding in HTML to prevent XSS.
+ * Covers the five characters that can break out of HTML text / attribute context.
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 let resend: Resend | null = null;
 
 function getClient(): Resend | null {
@@ -71,8 +84,8 @@ export async function sendNotificationEmail(
       <h2 style="margin:0;color:#fff;font-size:18px;">Vixy CRM</h2>
     </div>
     <div style="padding:24px;text-align:right;">
-      <h3 style="margin:0 0 8px;font-size:16px;color:#18181b;">${notification.title}</h3>
-      ${notification.body ? `<p style="margin:0;color:#52525b;font-size:14px;white-space:pre-line;">${notification.body}</p>` : ""}
+      <h3 style="margin:0 0 8px;font-size:16px;color:#18181b;">${escapeHtml(notification.title)}</h3>
+      ${notification.body ? `<p style="margin:0;color:#52525b;font-size:14px;white-space:pre-line;">${escapeHtml(notification.body)}</p>` : ""}
       ${ctaHtml}
     </div>
     <div style="padding:12px 24px;background:#fafafa;border-top:1px solid #e4e4e7;text-align:center;">
@@ -82,6 +95,7 @@ export async function sendNotificationEmail(
 </body>
 </html>`;
 
+  // Subject is plain-text, not HTML — no need to escape, but strip any control chars
   await sendEmail(userEmail, notification.title, html);
 }
 
@@ -107,7 +121,7 @@ export async function sendDigestEmail(
   );
 
   const nextTaskHtml = data.nextTaskTitle
-    ? `<p style="margin:16px 0 0;color:#52525b;font-size:14px;">המשימה הבאה: <strong>${data.nextTaskTitle}</strong></p>`
+    ? `<p style="margin:16px 0 0;color:#52525b;font-size:14px;">המשימה הבאה: <strong>${escapeHtml(data.nextTaskTitle)}</strong></p>`
     : "";
 
   const subject = `סיכום יומי: ${data.todayTasks} משימות להיום, ${data.overdueTasks} באיחור`;
