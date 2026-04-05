@@ -71,13 +71,15 @@ knowledgeRouter.post(
 // GET /api/v1/kb/articles
 knowledgeRouter.get("/articles", async (req, res, next) => {
   try {
-    const articles = await knowledgeService.listArticles({
+    const result = await knowledgeService.listArticles({
       workspaceId: req.workspaceId!,
       categoryId: req.query.categoryId as string,
       status: req.query.status as string,
       search: req.query.search as string,
+      page: req.query.page ? Number(req.query.page) : undefined,
+      limit: req.query.limit ? Number(req.query.limit) : undefined,
     });
-    res.json(articles);
+    res.json(result);
   } catch (err) {
     next(err);
   }

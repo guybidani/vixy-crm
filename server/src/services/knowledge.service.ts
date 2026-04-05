@@ -16,8 +16,10 @@ export async function listArticles(params: {
   categoryId?: string;
   status?: string;
   search?: string;
+  page?: number;
+  limit?: number;
 }) {
-  const { workspaceId, categoryId, status, search } = params;
+  const { workspaceId, categoryId, status, search, page = 1, limit = 50 } = params;
 
   const where: any = { workspaceId };
   if (categoryId) where.categoryId = categoryId;
@@ -29,13 +31,28 @@ export async function listArticles(params: {
     ];
   }
 
-  return prisma.kbArticle.findMany({
-    where,
-    include: {
-      category: { select: { id: true, name: true } },
+  const [data, total] = await Promise.all([
+    prisma.kbArticle.findMany({
+      where,
+      include: {
+        category: { select: { id: true, name: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.kbArticle.count({ where }),
+  ]);
+
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
-    orderBy: { updatedAt: "desc" },
-  });
+  };
 }
 
 export async function getArticle(workspaceId: string, id: string) {
