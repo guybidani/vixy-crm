@@ -38,6 +38,7 @@ export async function listTemplates(
         include: { user: { select: { name: true } } },
       },
     },
+    take: 200,
   });
 }
 
@@ -83,15 +84,19 @@ export async function updateTemplate(
   id: string,
   data: UpdateTemplateInput,
 ) {
-  const existing = await prisma.cannedResponse.findFirst({
+  // Use updateMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the mutation level, not just the existence check. Prevents
+  // TOCTOU race where another request could change the record between
+  // findFirst and update.
+  const result = await prisma.cannedResponse.updateMany({
     where: { id, workspaceId },
+    data,
   });
-  if (!existing)
+  if (result.count === 0)
     throw new AppError(404, "NOT_FOUND", "Template not found");
 
-  return prisma.cannedResponse.update({
+  return prisma.cannedResponse.findUnique({
     where: { id },
-    data,
     include: {
       createdBy: {
         include: { user: { select: { name: true } } },
@@ -101,13 +106,15 @@ export async function updateTemplate(
 }
 
 export async function deleteTemplate(workspaceId: string, id: string) {
-  const existing = await prisma.cannedResponse.findFirst({
+  // Use deleteMany with workspaceId for defense-in-depth — workspace scope
+  // enforced at the delete level, not just an existence check. Prevents
+  // TOCTOU race and cross-workspace deletes.
+  const result = await prisma.cannedResponse.deleteMany({
     where: { id, workspaceId },
   });
-  if (!existing)
+  if (result.count === 0)
     throw new AppError(404, "NOT_FOUND", "Template not found");
-
-  return prisma.cannedResponse.delete({ where: { id } });
+  return { deleted: true };
 }
 
 export function renderTemplate(
