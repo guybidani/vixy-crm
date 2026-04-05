@@ -257,11 +257,11 @@ export default function DealDetailPanel({
   // Close on Escape
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !editingName && !editingField && !editingActivityId && !addingTask) {
+      if (e.key === "Escape" && !editingName && !editingField && !editingActivityId && !addingTask && !showDeleteConfirm && !confirmStageChange && !editingNotes && !deletingActivityId) {
         handleClose();
       }
     },
-    [editingName, editingField, editingActivityId, addingTask], // eslint-disable-line react-hooks/exhaustive-deps
+    [editingName, editingField, editingActivityId, addingTask, showDeleteConfirm, confirmStageChange, editingNotes, deletingActivityId], // eslint-disable-line react-hooks/exhaustive-deps
   );
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
