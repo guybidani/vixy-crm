@@ -83,7 +83,7 @@ ticketsRouter.get("/:id/messages", async (req, res, next) => {
       req.params.id,
       {
         page: req.query.page ? Number(req.query.page) : undefined,
-        limit: req.query.limit ? Number(req.query.limit) : undefined,
+        limit: req.query.limit ? Math.min(Number(req.query.limit) || 200, 200) : undefined,
       },
     );
     res.json(result);
