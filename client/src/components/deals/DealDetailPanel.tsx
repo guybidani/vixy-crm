@@ -1031,6 +1031,15 @@ export default function DealDetailPanel({
                       </span>
                     </FieldRow>
                   )}
+
+                  {/* Lost reason */}
+                  {deal.stage === "CLOSED_LOST" && deal.lostReason && (
+                    <FieldRow icon={<Shield size={14} />} label="סיבת הפסד">
+                      <span className="text-[13px] text-[#E44258] font-medium">
+                        {deal.lostReason}
+                      </span>
+                    </FieldRow>
+                  )}
                 </div>
               </div>
 
