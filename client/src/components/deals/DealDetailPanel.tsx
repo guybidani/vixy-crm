@@ -699,7 +699,9 @@ export default function DealDetailPanel({
                                     onKeyDown={(e) => {
                                       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                                         e.preventDefault();
-                                        editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() });
+                                        if (editingActivityText.trim()) {
+                                          editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() });
+                                        }
                                       }
                                       if (e.key === "Escape") setEditingActivityId(null);
                                     }}
@@ -712,8 +714,12 @@ export default function DealDetailPanel({
                                       ביטול
                                     </button>
                                     <button
-                                      onClick={() => editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() })}
-                                      disabled={editActivityMut.isPending}
+                                      onClick={() => {
+                                        if (editingActivityText.trim()) {
+                                          editActivityMut.mutate({ id: activity.id, body: editingActivityText.trim() });
+                                        }
+                                      }}
+                                      disabled={!editingActivityText.trim() || editActivityMut.isPending}
                                       className="px-3 py-1 text-[11px] font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-[4px] transition-colors disabled:opacity-50"
                                     >
                                       {editActivityMut.isPending ? "שומר..." : "שמור"}
