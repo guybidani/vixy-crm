@@ -174,6 +174,16 @@ export async function create(
     nextFollowUpDate?: string | null;
   },
 ) {
+  // Verify companyId belongs to this workspace (prevent cross-workspace BOLA)
+  if (data.companyId) {
+    const companyRef = await prisma.company.findFirst({
+      where: { id: data.companyId, workspaceId },
+      select: { id: true },
+    });
+    if (!companyRef)
+      throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
+  }
+
   const contact = await prisma.contact.create({
     data: {
       workspaceId,
@@ -234,6 +244,16 @@ export async function update(
   });
   if (!existing) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
+  // Verify companyId belongs to this workspace (prevent cross-workspace BOLA)
+  if (data.companyId) {
+    const companyRef = await prisma.company.findFirst({
+      where: { id: data.companyId, workspaceId },
+      select: { id: true },
+    });
+    if (!companyRef)
+      throw new AppError(400, "INVALID_REFERENCE", "Company not found in workspace");
   }
 
   const { nextFollowUpDate, ...restData } = data;
