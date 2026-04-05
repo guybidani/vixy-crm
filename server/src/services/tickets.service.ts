@@ -359,20 +359,32 @@ export async function addMessage(
     },
   });
 
-  // Consolidate all ticket side-effects into a single update (avoid N+2 queries)
+  // Use conditional updateMany to atomically set firstResponseAt and status
+  // only when the conditions still hold.  This prevents a race condition where
+  // two concurrent agent messages both read ticket.firstResponseAt === null
+  // and both try to set it — the second would silently overwrite the first's
+  // timestamp.  updateMany with a WHERE clause on the current state acts as a
+  // compare-and-swap, making the operation idempotent.
   if (data.senderType === "agent") {
-    const ticketUpdates: any = {};
-    const isFirstResponse = !ticket.firstResponseAt;
     const isNewToOpen = ticket.status === "NEW";
 
-    if (isFirstResponse) ticketUpdates.firstResponseAt = new Date();
-    if (isNewToOpen) ticketUpdates.status = "OPEN";
+    // Set firstResponseAt only if it hasn't been set yet (atomic CAS)
+    if (!ticket.firstResponseAt) {
+      await prisma.ticket.updateMany({
+        where: { id: ticketId, workspaceId, firstResponseAt: null },
+        data: { firstResponseAt: new Date() },
+      });
+    }
 
-    if (Object.keys(ticketUpdates).length > 0) {
-      await prisma.ticket.update({ where: { id: ticketId }, data: ticketUpdates });
+    // Transition NEW → OPEN only if ticket is still NEW (atomic CAS)
+    if (isNewToOpen) {
+      const result = await prisma.ticket.updateMany({
+        where: { id: ticketId, workspaceId, status: "NEW" },
+        data: { status: "OPEN" },
+      });
 
-      // Fire automation trigger when ticket auto-transitions NEW → OPEN
-      if (isNewToOpen) {
+      // Only fire automation if we actually changed the status (count > 0)
+      if (result.count > 0) {
         enqueueAutomationTrigger({
           workspaceId,
           trigger: "TICKET_STATUS_CHANGED",
