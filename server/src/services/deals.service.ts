@@ -585,18 +585,23 @@ export async function update(
     }
 
     // 2. Log STATUS_CHANGE activity
-    prisma.activity
-      .create({
-        data: {
-          workspaceId,
-          type: "STATUS_CHANGE",
-          subject: `שלב עסקה שונה: ${oldStage} → ${newStage}`,
-          contactId: existing.contactId,
-          dealId: id,
-          memberId: existing.assigneeId,
-        },
-      })
-      .catch(() => {});
+    // memberId is required on activity — use deal assignee, then the user
+    // who triggered the update, skipping if neither is available.
+    const activityMemberId = existing.assigneeId ?? triggeredByMemberId;
+    if (activityMemberId) {
+      prisma.activity
+        .create({
+          data: {
+            workspaceId,
+            type: "STATUS_CHANGE",
+            subject: `שלב עסקה שונה: ${oldStage} → ${newStage}`,
+            contactId: existing.contactId,
+            dealId: id,
+            memberId: activityMemberId,
+          },
+        })
+        .catch(() => {});
+    }
 
     // 3. Fire automation trigger
     enqueueAutomationTrigger({
