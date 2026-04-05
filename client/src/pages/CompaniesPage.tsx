@@ -211,7 +211,7 @@ export default function CompaniesPage() {
       boardStyle
       emoji="🏢"
       title="חברות"
-      subtitle={`${data?.pagination.total || 0} חברות`}
+      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s, t) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} חברות`}
       views={[
         { key: "table", label: "טבלה" },
         { key: "kanban", label: "לוח" },
