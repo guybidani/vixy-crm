@@ -158,14 +158,14 @@ export async function startExecution(
   workspaceId: string,
   data: { sequenceId: string; contactId: string },
 ) {
-  // Verify contactId belongs to this workspace
-  if (data.contactId) {
-    const contact = await prisma.contact.findFirst({ where: { id: data.contactId, workspaceId } });
-    if (!contact) throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
-  }
-
-  // Fetch sequence and check for duplicate execution in parallel — they don't depend on each other
-  const [sequence, existing] = await Promise.all([
+  // Run all three validation queries in parallel — they are independent.
+  // Previously contactId was validated sequentially before the other two,
+  // adding an extra round-trip.
+  const [contactRef, sequence, existing] = await Promise.all([
+    prisma.contact.findFirst({
+      where: { id: data.contactId, workspaceId },
+      select: { id: true },
+    }),
     prisma.followUpSequence.findFirst({
       where: { id: data.sequenceId, workspaceId, isActive: true },
       include: { steps: { orderBy: { stepNumber: "asc" } } },
@@ -178,6 +178,9 @@ export async function startExecution(
       },
     }),
   ]);
+
+  if (!contactRef)
+    throw new AppError(400, "INVALID_REFERENCE", "Contact not found in workspace");
 
   if (!sequence)
     throw new AppError(404, "NOT_FOUND", "Active sequence not found");
