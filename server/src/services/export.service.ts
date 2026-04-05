@@ -209,8 +209,8 @@ export async function exportCsv(
     case "tasks": {
       const where: Prisma.TaskWhereInput = { workspaceId };
       if (filters?.status) where.status = filters.status as any;
-      if (filters?.search) {
-        where.title = { contains: filters.search, mode: "insensitive" };
+      if (safeSearch) {
+        where.title = { contains: safeSearch, mode: "insensitive" };
       }
       const data = await prisma.task.findMany({
         where,
