@@ -666,7 +666,10 @@ function TicketDetailPanel({
               <MetaRow label="נציג">
                 <select
                   value={ticket.assignee?.id || ""}
-                  onChange={(e) => assignMutation.mutate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val) assignMutation.mutate(val);
+                  }}
                   className="text-[11px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[100px]"
                 >
                   <option value="">לא שויך</option>
