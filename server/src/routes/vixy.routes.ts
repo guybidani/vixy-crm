@@ -141,6 +141,7 @@ vixyRouter.get("/campaigns", async (req, res, next) => {
     const links = await prisma.vixyCampaignLink.findMany({
       where,
       orderBy: { syncedAt: "desc" },
+      take: 200,
     });
     res.json(links);
   } catch (err) {

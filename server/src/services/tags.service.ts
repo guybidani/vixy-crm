@@ -8,6 +8,7 @@ export async function list(workspaceId: string) {
     include: {
       _count: { select: { contacts: true, deals: true } },
     },
+    take: 500,
   });
 }
 

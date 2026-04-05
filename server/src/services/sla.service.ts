@@ -6,6 +6,7 @@ export async function listSlaPolicies(workspaceId: string) {
     where: { workspaceId },
     include: { _count: { select: { tickets: true } } },
     orderBy: { createdAt: "asc" },
+    take: 100,
   });
 }
 
