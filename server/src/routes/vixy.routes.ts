@@ -92,6 +92,26 @@ vixyRouter.post(
   validate(linkSchema),
   async (req, res, next) => {
     try {
+      // Validate FK references belong to this workspace (prevent BOLA)
+      const [contactRef, dealRef] = await Promise.all([
+        req.body.contactId
+          ? prisma.contact.findFirst({ where: { id: req.body.contactId, workspaceId: req.workspaceId! }, select: { id: true } })
+          : null,
+        req.body.dealId
+          ? prisma.deal.findFirst({ where: { id: req.body.dealId, workspaceId: req.workspaceId! }, select: { id: true } })
+          : null,
+      ]);
+      if (req.body.contactId && !contactRef) {
+        return res.status(400).json({
+          error: { code: "INVALID_REFERENCE", message: "Contact not found in workspace" },
+        });
+      }
+      if (req.body.dealId && !dealRef) {
+        return res.status(400).json({
+          error: { code: "INVALID_REFERENCE", message: "Deal not found in workspace" },
+        });
+      }
+
       const link = await prisma.vixyCampaignLink.create({
         data: {
           workspaceId: req.workspaceId!,
