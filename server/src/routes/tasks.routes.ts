@@ -155,6 +155,20 @@ tasksRouter.post(
   async (req, res, next) => {
     try {
       const { ids, data } = req.body;
+
+      // Validate assigneeId belongs to this workspace (prevent BOLA)
+      if (data.assigneeId) {
+        const assignee = await prisma.workspaceMember.findFirst({
+          where: { id: data.assigneeId, workspaceId: req.workspaceId! },
+          select: { id: true },
+        });
+        if (!assignee) {
+          return res.status(400).json({
+            error: { code: "INVALID_REFERENCE", message: "Assignee not found in workspace" },
+          });
+        }
+      }
+
       const updateData: Record<string, unknown> = {};
       if (data.status) updateData.status = data.status;
       if (data.priority) updateData.priority = data.priority;
