@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
+import { BOARD_MAX_ITEMS } from "../lib/constants";
 
 const SORTABLE_FIELDS = [
   "name",
@@ -194,6 +195,7 @@ export async function board(workspaceId: string) {
       _count: { select: { contacts: true, deals: true } },
     },
     orderBy: { createdAt: "asc" },
+    take: BOARD_MAX_ITEMS,
   });
 
   const statuses = ["PROSPECT", "ACTIVE", "INACTIVE", "CHURNED"];
