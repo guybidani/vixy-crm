@@ -541,8 +541,10 @@ function interpolateTemplate(
 export async function getWorkflowRuns(
   workspaceId: string,
   workflowId: string,
-  limit = 50,
+  rawLimit = 50,
 ) {
+  const limit = Math.min(Math.max(1, rawLimit), 200);
+
   const workflow = await prisma.workflow.findFirst({
     where: { id: workflowId, workspaceId },
   });

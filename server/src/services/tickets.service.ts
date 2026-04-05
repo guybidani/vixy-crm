@@ -397,7 +397,10 @@ export async function getMessages(
   ticketId: string,
   opts: { page?: number; limit?: number } = {},
 ) {
-  const { page = 1, limit = 200 } = opts;
+  // Clamp page/limit to valid positive ranges — negative page causes negative
+  // skip (Prisma error), and unbounded limit could pull all messages.
+  const page = Math.max(1, opts.page ?? 1);
+  const limit = Math.min(Math.max(1, opts.limit ?? 200), 200);
 
   // Verify ticket belongs to this workspace BEFORE fetching messages.
   // Previously the ownership check ran in parallel with the message query,
