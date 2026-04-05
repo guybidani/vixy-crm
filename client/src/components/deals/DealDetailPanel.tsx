@@ -347,8 +347,78 @@ export default function DealDetailPanel({
     return (
       <>
         <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} />
-        <div className="fixed top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl z-50 flex items-center justify-center">
-          <p className="text-[#676879]">טוען...</p>
+        <div className="fixed top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl z-50 flex flex-col animate-pulse">
+          {/* Top bar skeleton */}
+          <div className="border-b border-[#E6E9EF] px-6 py-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
+                <div className="h-3 w-3 bg-[#E6E9EF] rounded" />
+                <div className="h-3 w-20 bg-[#E6E9EF] rounded" />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-[#E6E9EF] rounded" />
+                <div className="w-7 h-7 bg-[#E6E9EF] rounded" />
+              </div>
+            </div>
+            <div className="h-7 w-64 bg-[#E6E9EF] rounded" />
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-20 bg-[#E6E9EF] rounded-full" />
+              <div className="h-6 w-16 bg-[#E6E9EF] rounded-full" />
+              <div className="h-6 w-24 bg-[#E6E9EF] rounded-full" />
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-20 bg-[#E6E9EF] rounded-md" />
+              <div className="h-8 w-28 bg-[#E6E9EF] rounded-md" />
+            </div>
+            <div className="flex gap-2 border-t border-[#E6E9EF] pt-3">
+              <div className="h-4 w-14 bg-[#E6E9EF] rounded" />
+              <div className="h-4 w-14 bg-[#E6E9EF] rounded" />
+              <div className="h-4 w-14 bg-[#E6E9EF] rounded" />
+            </div>
+          </div>
+          {/* Body skeleton */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Activity column skeleton */}
+            <div className="flex-1 px-5 py-4 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="w-[34px] h-[34px] bg-[#E6E9EF] rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="bg-[#F5F6F8] rounded-xl p-4 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-12 bg-[#E6E9EF] rounded" />
+                        <div className="h-2.5 w-20 bg-[#E6E9EF] rounded" />
+                      </div>
+                      <div className="h-3 w-full bg-[#E6E9EF] rounded" />
+                      <div className="h-3 w-3/4 bg-[#E6E9EF] rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Sidebar skeleton */}
+            <div className="w-[292px] flex-shrink-0 bg-[#FAFBFC] border-r border-[#E6E9EF] p-4 space-y-5">
+              <div>
+                <div className="h-2.5 w-16 bg-[#E6E9EF] rounded mb-3" />
+                <div className="bg-white rounded-xl border border-[#E6E9EF] p-3 space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="h-3 w-14 bg-[#E6E9EF] rounded" />
+                      <div className="h-3 w-20 bg-[#E6E9EF] rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="h-2.5 w-16 bg-[#E6E9EF] rounded mb-3" />
+                <div className="bg-white rounded-xl border border-[#E6E9EF] p-3 space-y-2">
+                  <div className="h-8 w-full bg-[#E6E9EF] rounded" />
+                  <div className="h-3 w-32 bg-[#E6E9EF] rounded" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </>
     );
