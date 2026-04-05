@@ -241,8 +241,23 @@ export default function TicketsPage() {
               </button>
             </div>
           ) : isLoading && page === 1 ? (
-            <div className="flex items-center justify-center h-32 text-[#9699A6] text-sm">
-              טוען...
+            <div className="space-y-0 animate-pulse">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="px-3 py-3 border-b border-[#E6E9EF] border-r-[3px] border-r-[#E6E9EF]">
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="h-3.5 w-36 bg-[#E6E9EF] rounded" />
+                    <div className="h-2.5 w-10 bg-[#E6E9EF] rounded" />
+                  </div>
+                  <div className="flex items-center gap-1 mb-2">
+                    <div className="w-4 h-4 bg-[#E6E9EF] rounded-full" />
+                    <div className="h-2.5 w-20 bg-[#E6E9EF] rounded" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-4 w-14 bg-[#E6E9EF] rounded-full" />
+                    <div className="h-4 w-12 bg-[#E6E9EF] rounded-full" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : sortedRows.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-[#9699A6] text-sm gap-2">
@@ -472,8 +487,36 @@ function TicketDetailPanel({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full text-[#9699A6] text-sm">
-        טוען...
+      <div className="flex h-full overflow-hidden animate-pulse">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#E6E9EF] bg-white flex-shrink-0">
+            <div className="h-5 w-48 bg-[#E6E9EF] rounded mb-2" />
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-16 bg-[#E6E9EF] rounded-full" />
+              <div className="h-5 w-16 bg-[#E6E9EF] rounded-full" />
+            </div>
+          </div>
+          <div className="flex-1 px-4 py-3 space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
+                <div className="w-3/5 rounded-xl bg-[#F5F6F8] h-16" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="w-[220px] flex-shrink-0 border-r border-[#E6E9EF] bg-white p-3 space-y-4">
+          <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
+          <div className="h-10 w-full bg-[#F5F6F8] rounded-lg" />
+          <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
+          <div className="space-y-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="h-2.5 w-12 bg-[#E6E9EF] rounded" />
+                <div className="h-2.5 w-16 bg-[#E6E9EF] rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

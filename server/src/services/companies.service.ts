@@ -153,7 +153,17 @@ export async function create(
   },
 ) {
   return prisma.company.create({
-    data: { workspaceId, ...data },
+    data: {
+      workspaceId,
+      name: data.name,
+      website: data.website,
+      phone: data.phone,
+      email: data.email || undefined,
+      address: data.address,
+      industry: data.industry,
+      size: data.size,
+      notes: data.notes,
+    },
   });
 }
 
