@@ -222,6 +222,20 @@ export default function DealsPage() {
     fromColumn: string,
     toColumn: string,
   ) {
+    // Require confirmation before closing a deal via drag-and-drop
+    if (toColumn === "CLOSED_WON") {
+      setConfirmWonId(itemId);
+      return;
+    }
+    if (toColumn === "CLOSED_LOST") {
+      setLostModal({ dealId: itemId });
+      return;
+    }
+
+    applyKanbanMove(itemId, fromColumn, toColumn);
+  }
+
+  function applyKanbanMove(itemId: string, fromColumn: string, toColumn: string) {
     queryClient.setQueryData(
       ["deals-pipeline"],
       (old: PipelineResponse | undefined) => {
