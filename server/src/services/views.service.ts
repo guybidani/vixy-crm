@@ -97,19 +97,29 @@ export async function update(
     });
   }
 
-  return prisma.savedView.update({
-    where: { id },
-    data: updatePayload,
+  // Use updateMany with workspace+member scope for defense-in-depth (prevents
+  // a TOCTOU gap between the findFirst check and the actual write).
+  const result = await prisma.savedView.updateMany({
+    where: { id, workspaceId, memberId },
+    data: updatePayload as any,
   });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "View not found");
+  }
+  return prisma.savedView.findFirstOrThrow({ where: { id, workspaceId, memberId } });
 }
 
 export async function remove(workspaceId: string, memberId: string, id: string) {
-  const existing = await prisma.savedView.findFirst({
+  // Use deleteMany with workspace+member scope in a single round-trip instead
+  // of findFirst + delete (TOCTOU race). Defense-in-depth: scope enforced at
+  // the delete level, not just the check.
+  const result = await prisma.savedView.deleteMany({
     where: { id, workspaceId, memberId },
   });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "View not found");
-
-  return prisma.savedView.delete({ where: { id } });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "View not found");
+  }
+  return { deleted: true };
 }
 
 export async function setDefault(workspaceId: string, memberId: string, id: string) {
