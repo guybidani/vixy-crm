@@ -34,12 +34,17 @@ export function avatarColor(name: string): string {
 export function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  // Compare calendar days, not raw milliseconds, to avoid off-by-one errors
+  // when the date is less than 24h in the future/past.
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round(
+    (startOfToday.getTime() - startOfDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
   if (diffDays < 0) {
     const futureDays = Math.abs(diffDays);
-    if (futureDays === 0) return "היום";
     if (futureDays === 1) return "מחר";
     return `בעוד ${futureDays} ימים`;
   }
