@@ -1097,8 +1097,8 @@ function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose:
           </button>
           <button
             type="submit"
-            disabled={mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50"
+            disabled={mutation.isPending || !form.firstName.trim() || !form.lastName.trim()}
+            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-colors text-[13px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? "יוצר..." : "צור איש קשר"}
           </button>
