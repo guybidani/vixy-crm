@@ -343,6 +343,18 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
+  // Close on Escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
   function handleNavigateToTask(taskId: string) {
     onClose();
     navigate(`/tasks?selected=${taskId}`);
@@ -423,6 +435,9 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
       {/* Panel */}
       <div
         dir="rtl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="המשימות שלי היום"
         className="fixed top-0 right-0 h-full w-[440px] max-w-full bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-250"
       >
         {/* ── Header ── */}
