@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Clock, Phone, Mail, Video, MessageCircle, StickyNote } from "lucide-react";
+import { Clock, Phone, Mail, Video, MessageCircle, StickyNote, AlertCircle, RefreshCw } from "lucide-react";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import { getRecentContacts, type RecentContact } from "../api/history";
 import { avatarColor } from "../lib/utils";
@@ -126,7 +126,7 @@ function ContactCard({ item }: { item: RecentContact }) {
 }
 
 export default function HistoryPage() {
-  const { data: recentContacts = [], isLoading } = useQuery({
+  const { data: recentContacts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["recent-contacts"],
     queryFn: getRecentContacts,
     refetchInterval: 30000, // Auto-refresh every 30 seconds
@@ -139,7 +139,22 @@ export default function HistoryPage() {
       title="היסטוריה"
       subtitle="10 אנשי הקשר האחרונים שדיברת איתם"
     >
-      {isLoading ? (
+      {isError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+            <AlertCircle size={28} className="text-[#E44258]" />
+          </div>
+          <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת היסטוריה</h2>
+          <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={14} />
+            נסה שוב
+          </button>
+        </div>
+      ) : isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div
