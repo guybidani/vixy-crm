@@ -54,16 +54,18 @@ export default function MondayDateCell({
         {value ? (
           <>
             <span>{formatDate(value)}</span>
-            <span
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(null);
                 setOpen(false);
               }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 text-[#C3C6D4] hover:text-[#FB275D] transition-all cursor-pointer"
+              className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-0.5 text-[#C3C6D4] hover:text-[#FB275D] focus:text-[#FB275D] transition-all"
+              aria-label="נקה תאריך"
             >
               <X size={12} />
-            </span>
+            </button>
           </>
         ) : (
           <span className="text-[#C3C6D4]">—</span>
