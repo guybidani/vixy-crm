@@ -126,6 +126,7 @@ export async function getById(workspaceId: string, id: string) {
           assignee: { include: { user: { select: { name: true } } } },
         },
         orderBy: { createdAt: "desc" },
+        take: 20,
       },
       tickets: {
         orderBy: { createdAt: "desc" },
