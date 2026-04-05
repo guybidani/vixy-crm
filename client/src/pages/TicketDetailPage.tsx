@@ -42,7 +42,7 @@ export default function TicketDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: ticket, isLoading } = useQuery({
+  const { data: ticket, isLoading, isError, refetch } = useQuery({
     queryKey: ["ticket", id],
     queryFn: () => getTicket(id!),
     enabled: !!id,
@@ -62,6 +62,21 @@ export default function TicketDetailPage() {
 
   if (isLoading) {
     return <div className="text-center text-[#9699A6] py-12">טוען...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
+        <p className="text-[#E44258] font-semibold">שגיאה בטעינת הפנייה</p>
+        <p className="text-[13px] text-[#9699A6]">לא ניתן לטעון את פרטי הפנייה. נסה לרענן.</p>
+        <button
+          onClick={() => refetch()}
+          className="mt-2 text-[13px] text-[#0073EA] hover:underline"
+        >
+          נסה שוב
+        </button>
+      </div>
+    );
   }
 
   if (!ticket) {
