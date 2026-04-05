@@ -4,6 +4,7 @@ import {
   Copy,
   Trash2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export interface ContextMenuItem {
   label: string;
@@ -166,7 +167,12 @@ export function buildRowContextItems<T extends { id: string }>({
     label: "העתק קישור",
     icon: <Copy size={14} />,
     onClick: () => {
-      navigator.clipboard.writeText(window.location.href + "?id=" + row.id);
+      const url = new URL(window.location.href);
+      url.searchParams.set("id", row.id);
+      navigator.clipboard.writeText(url.toString()).then(
+        () => toast.success("הקישור הועתק"),
+        () => toast.error("שגיאה בהעתקת הקישור"),
+      );
     },
   });
 
