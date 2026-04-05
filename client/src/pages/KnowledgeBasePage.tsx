@@ -157,7 +157,7 @@ export default function KnowledgeBasePage() {
         />
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Categories sidebar */}
         <div className="col-span-1 bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-3 space-y-1 self-start">
           <button
@@ -222,7 +222,7 @@ export default function KnowledgeBasePage() {
         </div>
 
         {/* Articles list */}
-        <div className="col-span-3">
+        <div className="col-span-1 md:col-span-3">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
