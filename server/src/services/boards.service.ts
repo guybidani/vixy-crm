@@ -304,6 +304,9 @@ export async function deleteGroup(
   });
   if (!board) throw new AppError(404, "NOT_FOUND", "Board not found");
 
+  const group = await prisma.boardGroup.findFirst({ where: { id: groupId, boardId } });
+  if (!group) throw new AppError(404, "NOT_FOUND", "Group not found");
+
   return prisma.boardGroup.delete({ where: { id: groupId } });
 }
 

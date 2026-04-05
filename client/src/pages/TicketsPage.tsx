@@ -424,7 +424,7 @@ function TicketDetailPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [confirmStatusChange, setConfirmStatusChange] = useState<{ status: string; message: string } | null>(null);
 
-  const { data: ticket, isLoading } = useQuery({
+  const { data: ticket, isLoading, isError, refetch } = useQuery({
     queryKey: ["ticket", ticketId],
     queryFn: () => getTicket(ticketId),
     enabled: !!ticketId,
@@ -466,6 +466,21 @@ function TicketDetailPanel({
     return (
       <div className="flex items-center justify-center h-full text-[#9699A6] text-sm">
         טוען...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-[#9699A6] gap-2">
+        <AlertCircle size={24} className="text-[#E44258] opacity-60" />
+        <span className="text-sm">שגיאה בטעינת הקריאה</span>
+        <button
+          onClick={() => refetch()}
+          className="text-[12px] text-[#0073EA] hover:underline"
+        >
+          נסה שוב
+        </button>
       </div>
     );
   }
