@@ -203,17 +203,17 @@ export async function syncTaskToCalendar(
   memberId: string,
 ): Promise<string | null> {
   try {
-    const integration = await prisma.calendarIntegration.findUnique({
-      where: { memberId },
-    });
+    // Fetch integration and task in parallel — independent queries
+    const [integration, task] = await Promise.all([
+      prisma.calendarIntegration.findUnique({ where: { memberId } }),
+      prisma.task.findFirst({
+        where: { id: taskId, workspaceId },
+        include: {
+          assignee: { include: { user: { select: { email: true } } } },
+        },
+      }),
+    ]);
     if (!integration || !integration.isActive) return null;
-
-    const task = await prisma.task.findFirst({
-      where: { id: taskId, workspaceId },
-      include: {
-        assignee: { include: { user: { select: { email: true } } } },
-      },
-    });
     if (!task) return null;
 
     const accessToken = await getAccessToken(integration);
@@ -258,15 +258,17 @@ export async function syncTaskToCalendar(
 
     const event = (await createRes.json()) as { id: string };
 
-    await prisma.task.update({
-      where: { id: taskId },
-      data: { googleCalendarEventId: event.id },
-    });
-
-    await prisma.calendarIntegration.update({
-      where: { id: integration.id },
-      data: { lastSyncedAt: new Date() },
-    });
+    // Persist event ID and last-sync timestamp in parallel — independent writes
+    await Promise.all([
+      prisma.task.update({
+        where: { id: taskId },
+        data: { googleCalendarEventId: event.id },
+      }),
+      prisma.calendarIntegration.update({
+        where: { id: integration.id },
+        data: { lastSyncedAt: new Date() },
+      }),
+    ]);
 
     return event.id;
   } catch (err) {
