@@ -419,9 +419,13 @@ export default function CommandPalette({
     [flatItems, selectedIndex, onClose],
   );
 
-  // Global Escape listener
+  // Global Escape listener + body scroll lock
   useEffect(() => {
     if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -430,7 +434,10 @@ export default function CommandPalette({
       }
     }
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKey);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
