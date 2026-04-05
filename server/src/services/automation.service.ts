@@ -24,6 +24,7 @@ export async function listWorkflows(params: ListWorkflowsParams) {
       _count: { select: { runs: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return workflows.map((w) => ({
@@ -195,6 +196,7 @@ export async function processTrigger(ctx: TriggerContext) {
       isActive: true,
     },
     include: { actions: { orderBy: { order: "asc" } } },
+    take: 50,
   });
 
   // Collect run log entries during execution, flush with a single createMany at the end
