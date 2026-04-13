@@ -450,9 +450,18 @@ export default function MondayBoard<T extends { id: string }>({
 
   const handleBoardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      // Don't handle if an input/textarea is focused (user is editing)
       const tag = (e.target as HTMLElement).tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const isEditing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+      // Escape while editing: blur the input to cancel editing
+      if (isEditing && e.key === "Escape") {
+        e.preventDefault();
+        (e.target as HTMLElement).blur();
+        return;
+      }
+
+      // Don't handle other keys if user is editing
+      if (isEditing) return;
 
       const expandedGroups = groupedData.filter(
         (g) => !collapsedGroups[g.key] && g.items.length > 0,
@@ -468,8 +477,53 @@ export default function MondayBoard<T extends { id: string }>({
           (x) => !collapsedGroups[x.group.key] && x.group.items.length > 0,
         );
 
+      // Skip if inside contenteditable element
+      if ((e.target as HTMLElement).isContentEditable) return;
+
+      // ── Escape: clear selection & focused cell ──
       if (e.key === "Escape") {
         setFocusedCell(null);
+        if (selectedIds && selectedIds.size > 0 && onSelectionChange) {
+          onSelectionChange(new Set());
+        }
+        return;
+      }
+
+      // ── Ctrl+A: select all items in current view ──
+      if (e.key === "a" && (e.ctrlKey || e.metaKey) && onSelectionChange) {
+        e.preventDefault();
+        const allIds = new Set<string>();
+        for (const g of groupedData) {
+          for (const item of g.items) {
+            allIds.add(item.id);
+          }
+        }
+        onSelectionChange(allIds);
+        return;
+      }
+
+      // ── Delete / Backspace: delete selected items ──
+      if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        selectedIds &&
+        selectedIds.size > 0 &&
+        onDeleteItem
+      ) {
+        e.preventDefault();
+        const itemsToDelete: T[] = [];
+        for (const g of groupedData) {
+          for (const item of g.items) {
+            if (selectedIds.has(item.id)) {
+              itemsToDelete.push(item);
+            }
+          }
+        }
+        for (const item of itemsToDelete) {
+          onDeleteItem(item);
+        }
+        if (onSelectionChange) {
+          onSelectionChange(new Set());
+        }
         return;
       }
 
@@ -579,24 +633,71 @@ export default function MondayBoard<T extends { id: string }>({
         }
         case "Enter": {
           e.preventDefault();
-          // On any focused row: open detail panel via onRowClick
+          // Try to start editing the focused cell first
+          const enterKey = cellKey(groupIdx, rowIdx, colIdx);
+          const enterCellEl = cellRefs.current.get(enterKey);
+          if (enterCellEl) {
+            const clickable = enterCellEl.querySelector<HTMLElement>(
+              "button, input, [tabindex], [role='button']",
+            );
+            if (clickable) {
+              clickable.click();
+              clickable.focus();
+              break;
+            }
+          }
+          // Fallback: open detail panel via onRowClick
           const currentRow = expandedMap[currentExpandedIdx]?.group.items[rowIdx];
           if (currentRow && onRowClick) {
             onRowClick(currentRow);
-          } else {
-            // Fallback: simulate click on the focused cell
-            const key = cellKey(groupIdx, rowIdx, colIdx);
-            const cellEl = cellRefs.current.get(key);
-            if (cellEl) {
-              const clickable = cellEl.querySelector<HTMLElement>(
-                "button, input, [tabindex], [role='button']",
-              );
-              if (clickable) {
-                clickable.click();
-                clickable.focus();
+          } else if (enterCellEl) {
+            enterCellEl.click();
+          }
+          break;
+        }
+        case "Delete":
+        case "Backspace": {
+          // Delete selected items
+          if (onDeleteItem && selectedIds && selectedIds.size > 0) {
+            e.preventDefault();
+            const allItems = groupedData.flatMap((g) => g.items);
+            const toDelete = allItems.filter((item) => selectedIds.has(item.id));
+            toDelete.forEach((item) => onDeleteItem(item));
+          }
+          break;
+        }
+        case " ": {
+          // Space: toggle checkbox selection on focused row
+          e.preventDefault();
+          if (!onSelectionChange || !selectedIds) break;
+          const spaceRow = expandedMap[currentExpandedIdx]?.group.items[rowIdx];
+          if (spaceRow) {
+            const next = new Set(selectedIds);
+            if (next.has(spaceRow.id)) {
+              next.delete(spaceRow.id);
+            } else {
+              next.add(spaceRow.id);
+            }
+            onSelectionChange(next);
+          }
+          break;
+        }
+        case "a": {
+          // Ctrl+A / Cmd+A: select all items in the current group
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            if (!onSelectionChange) break;
+            const focusedGroup = expandedMap[currentExpandedIdx]?.group;
+            if (focusedGroup) {
+              const groupIds = focusedGroup.items.map((item) => item.id);
+              const allSelected = selectedIds && groupIds.every((id) => selectedIds.has(id));
+              const next = new Set(selectedIds ?? new Set<string>());
+              if (allSelected) {
+                groupIds.forEach((id) => next.delete(id));
               } else {
-                cellEl.click();
+                groupIds.forEach((id) => next.add(id));
               }
+              onSelectionChange(next);
             }
           }
           break;
@@ -604,7 +705,7 @@ export default function MondayBoard<T extends { id: string }>({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [focusedCell, groupedData, collapsedGroups, visibleColumns.length, onRowClick],
+    [focusedCell, groupedData, collapsedGroups, visibleColumns.length, onRowClick, selectedIds, onSelectionChange, onDeleteItem],
   );
 
   // Global "N" shortcut: open new item when no input is focused
@@ -1145,7 +1246,7 @@ export default function MondayBoard<T extends { id: string }>({
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   {/* Column Headers */}
-                  <thead>
+                  <thead className="sticky top-0 z-20 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
                     <tr>
                       {/* Group color indicator + checkbox */}
                       <th
@@ -1401,7 +1502,8 @@ export default function MondayBoard<T extends { id: string }>({
                           onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragItemId(row.id); }}
                           onDragEnd={() => { setDragItemId(null); setDragOverGroupKey(null); }}
                           className={cn(
-                            "group/row border-b border-[#E6E9EF] transition-colors hover:bg-[#F5F6F8]",
+                            "group/row border-b border-[#E6E9EF] transition-colors h-[36px]",
+                            selectedIds?.has(row.id) ? "bg-[#E6F4FF] hover:bg-[#DCF0FF]" : "hover:bg-[#F0F3FF]",
                             newItemId === row.id && "animate-row-slide-in",
                             dragItemId === row.id && "opacity-40",
                           )}
@@ -1423,14 +1525,14 @@ export default function MondayBoard<T extends { id: string }>({
                           />
                           {/* Drag handle */}
                           {onMoveItem && (
-                            <td className="w-[20px] p-0 bg-white group-hover/row:bg-[#F5F6F8]">
+                            <td className="w-[20px] p-0 bg-inherit">
                               <span className="flex items-center justify-center text-[#C3C6D4] opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
                                 <GripVertical size={13} />
                               </span>
                             </td>
                           )}
                           {/* Checkbox */}
-                          <td className="w-[36px] px-1 py-0 bg-white group-hover/row:bg-[#F5F6F8]">
+                          <td className="w-[36px] px-1 py-0 bg-inherit">
                             <input
                               type="checkbox"
                               aria-label="בחר פריט"
@@ -1465,7 +1567,7 @@ export default function MondayBoard<T extends { id: string }>({
                                   setCellRef(groupIdx, rowIdx, colIdx, el)
                                 }
                                 className={cn(
-                                  "text-[13px] text-[#323338] bg-white group-hover/row:bg-[#F5F6F8] transition-shadow",
+                                  "text-[13px] text-[#323338] bg-inherit transition-shadow",
                                   col.noPadding ? "p-0 overflow-hidden" : "px-3 py-[7px]",
                                   colIdx < visibleColumns.length - 1 &&
                                     "border-l border-[#E6E9EF]",
@@ -1489,7 +1591,7 @@ export default function MondayBoard<T extends { id: string }>({
                           })}
                           {/* Delete button */}
                           {onDeleteItem && (
-                            <td className="w-[36px] px-1 py-0 bg-white group-hover/row:bg-[#F5F6F8]">
+                            <td className="w-[36px] px-1 py-0 bg-inherit">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
