@@ -225,18 +225,73 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div>
-        {/* Loading header */}
-        <div className="mb-6">
-          <div className="h-8 w-56 bg-[#F5F6F8] rounded-xl animate-pulse mb-2" />
-          <div className="h-4 w-40 bg-[#F5F6F8] rounded animate-pulse" />
+        {/* Header skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div>
+            <div className="h-7 w-48 bg-[#E6E9EF] rounded animate-pulse mb-2" />
+            <div className="h-4 w-64 bg-[#E6E9EF] rounded animate-pulse" />
+          </div>
+          <div className="flex gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 w-24 bg-[#E6E9EF] rounded animate-pulse" />
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        {/* KPI cards skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 h-28 animate-pulse"
-            />
+              className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 border-r-[3px] border-r-[#E6E9EF] animate-pulse"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-9 h-9 rounded-lg bg-[#E6E9EF]" />
+                <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
+              </div>
+              <div className="h-8 w-16 bg-[#E6E9EF] rounded mb-1.5" />
+              <div className="h-3.5 w-28 bg-[#E6E9EF] rounded mb-1" />
+              <div className="h-3 w-20 bg-[#E6E9EF] rounded" />
+            </div>
           ))}
+        </div>
+
+        {/* Pipeline + Activity feed skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-4 w-24 bg-[#E6E9EF] rounded" />
+              <div className="h-4 w-16 bg-[#E6E9EF] rounded" />
+            </div>
+            <div className="h-8 bg-[#E6E9EF] rounded-xl mb-5" />
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="mb-3">
+                <div className="flex items-center gap-3 mb-1">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E6E9EF]" />
+                  <div className="h-3.5 bg-[#E6E9EF] rounded flex-1" />
+                  <div className="h-3 w-14 bg-[#E6E9EF] rounded" />
+                </div>
+                <div className="h-1.5 bg-[#E6E9EF] rounded-full mr-5" />
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 animate-pulse">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-4 w-24 bg-[#E6E9EF] rounded" />
+              <div className="h-4 w-16 bg-[#E6E9EF] rounded-full" />
+            </div>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-start gap-3 py-2.5">
+                <div className="w-7 h-7 rounded-lg bg-[#E6E9EF] flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="h-3.5 bg-[#E6E9EF] rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-[#E6E9EF] rounded w-1/2" />
+                </div>
+                <div className="h-3 w-12 bg-[#E6E9EF] rounded" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

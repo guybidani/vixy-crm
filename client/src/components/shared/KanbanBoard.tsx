@@ -190,8 +190,14 @@ function DroppableColumn({
         style={{ borderColor: "#E6E9EF" }}
       >
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-lg border border-[#E6E9EF] p-3 animate-pulse">
+                <div className="h-3.5 bg-[#E6E9EF] rounded w-3/4 mb-3" />
+                <div className="h-3 bg-[#E6E9EF] rounded w-1/2 mb-2" />
+                <div className="h-3 bg-[#E6E9EF] rounded w-2/3" />
+              </div>
+            ))}
           </div>
         ) : count === 0 ? (
           <div className="text-center text-[#9699A6] text-xs py-10">

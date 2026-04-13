@@ -132,17 +132,22 @@ export default function DataTable<T extends { id: string }>({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-4 py-12 text-center text-[#676879] text-[13px]"
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
-                    טוען...
-                  </div>
-                </td>
-              </tr>
+              <>
+                {[1, 2, 3, 4, 5, 6].map((row) => (
+                  <tr key={row} className="border-b border-[#F5F6F8]">
+                    {columns.map((col, ci) => (
+                      <td key={ci} className="px-4 py-3">
+                        <div className="animate-pulse">
+                          <div
+                            className="h-3.5 bg-[#E6E9EF] rounded"
+                            style={{ width: ci === 0 ? "70%" : ci === columns.length - 1 ? "40%" : "55%" }}
+                          />
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </>
             ) : data.length === 0 ? (
               <tr>
                 <td
