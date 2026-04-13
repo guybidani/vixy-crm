@@ -89,7 +89,11 @@ export async function list(params: ListParams) {
   const where: Prisma.DealWhereInput = { workspaceId };
 
   if (search) {
-    where.title = { contains: search, mode: "insensitive" };
+    // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
+    // everything.  Prisma's `contains` maps to SQL LIKE '%…%' — percent and
+    // underscore would be interpreted as wildcards without escaping.
+    const safeSearch = search.replace(/[%_]/g, "\\$&");
+    where.title = { contains: safeSearch, mode: "insensitive" };
   }
   if (stage) {
     where.stage = stage as any;

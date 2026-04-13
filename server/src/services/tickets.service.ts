@@ -50,12 +50,16 @@ export async function list(params: ListParams) {
   const where: Prisma.TicketWhereInput = { workspaceId };
 
   if (search) {
+    // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
+    // everything.  Prisma's `contains` maps to SQL LIKE '%…%' — percent and
+    // underscore would be interpreted as wildcards without escaping.
+    const safeSearch = search.replace(/[%_]/g, "\\$&");
     where.OR = [
-      { subject: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
+      { subject: { contains: safeSearch, mode: "insensitive" } },
+      { description: { contains: safeSearch, mode: "insensitive" } },
       { contact: { OR: [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
+        { firstName: { contains: safeSearch, mode: "insensitive" } },
+        { lastName: { contains: safeSearch, mode: "insensitive" } },
       ] } },
     ];
   }
