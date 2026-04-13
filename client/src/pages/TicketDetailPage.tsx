@@ -324,9 +324,21 @@ export default function TicketDetailPage() {
             </h3>
             <div className="space-y-3">
               <DetailRow label="סטטוס">
-                <StatusBadge
-                  label={statusInfo.label}
-                  color={statusInfo.color}
+                <StatusDropdown
+                  value={ticket.status}
+                  options={ticketStatuses}
+                  onChange={(s) => {
+                    if (s === "RESOLVED" || s === "CLOSED") {
+                      setConfirmStatus({
+                        status: s,
+                        message: s === "RESOLVED"
+                          ? "האם אתה בטוח שברצונך לסמן את הפנייה כנפתרה?"
+                          : "האם אתה בטוח שברצונך לסגור את הפנייה?",
+                      });
+                    } else {
+                      statusMutation.mutate(s);
+                    }
+                  }}
                 />
               </DetailRow>
               <DetailRow label="עדיפות">
@@ -692,7 +704,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
               onClick={() => setShowAll((v) => !v)}
               className="text-[11px] text-[#0073EA] hover:underline py-1 w-full text-center"
             >
-              {showAll ? "הצג ��חות" : `הצג את כל ${activities.length} הפעילויות`}
+              {showAll ? "הצג פחות" : `הצג את כל ${activities.length} הפעילויות`}
             </button>
           )}
         </div>
@@ -707,7 +719,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
         onCancel={() => setConfirmDeleteId(null)}
         title="מחיקת פעילות"
         message="האם אתה בטוח שברצונך למחוק את הפעילות? לא ניתן לשחזר."
-        confirmText="מ��ק"
+        confirmText="מחק"
         cancelText="ביטול"
         variant="danger"
       />
