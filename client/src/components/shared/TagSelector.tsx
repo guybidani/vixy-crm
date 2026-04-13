@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -42,6 +42,7 @@ export default function TagSelector({
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0]);
   const [showCreate, setShowCreate] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
 
   const { data: allTags = [] } = useQuery({
@@ -83,9 +84,15 @@ export default function TagSelector({
 
   const currentTagIds = new Set(currentTags.map((t) => t.id));
 
-  const filteredTags = allTags.filter((t: Tag) =>
-    t.name.toLowerCase().includes(search.toLowerCase()),
+  const filteredTags = useMemo(
+    () => allTags.filter((t: Tag) => t.name.toLowerCase().includes(search.toLowerCase())),
+    [allTags, search],
   );
+
+  // Reset highlight when search changes
+  useEffect(() => {
+    setHighlightIndex(-1);
+  }, [search]);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["tags"] });
@@ -147,19 +154,50 @@ export default function TagSelector({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                switch (e.key) {
+                  case "ArrowDown":
+                    e.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev < filteredTags.length - 1 ? prev + 1 : 0,
+                    );
+                    break;
+                  case "ArrowUp":
+                    e.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev > 0 ? prev - 1 : filteredTags.length - 1,
+                    );
+                    break;
+                  case "Enter":
+                    e.preventDefault();
+                    if (highlightIndex >= 0 && filteredTags[highlightIndex]) {
+                      toggleTag(filteredTags[highlightIndex].id);
+                    }
+                    break;
+                  case "Escape":
+                    // Handled by global listener
+                    break;
+                }
+              }}
               placeholder="חיפוש תגיות..."
               autoFocus
+              aria-label="חיפוש תגיות"
               className="w-full text-xs px-2 py-1.5 bg-[#F5F6F8] rounded border-none outline-none placeholder:text-[#9699A6]"
             />
           </div>
 
           {/* Tags list */}
-          <div className="max-h-48 overflow-y-auto p-1">
-            {filteredTags.map((tag: Tag) => (
+          <div className="max-h-48 overflow-y-auto p-1" role="listbox" aria-label="תגיות">
+            {filteredTags.map((tag: Tag, i: number) => (
               <button
                 key={tag.id}
+                role="option"
+                aria-selected={currentTagIds.has(tag.id)}
                 onClick={() => toggleTag(tag.id)}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#F5F6F8]/50 text-right transition-colors"
+                onMouseEnter={() => setHighlightIndex(i)}
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#F5F6F8]/50 text-right transition-colors ${
+                  highlightIndex === i ? "bg-[#F5F6F8]" : ""
+                }`}
               >
                 <span
                   className="w-3 h-3 rounded-full flex-shrink-0"
