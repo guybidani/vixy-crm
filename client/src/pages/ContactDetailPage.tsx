@@ -1251,7 +1251,7 @@ function EditContactModal({
   contact: any;
   onClose: () => void;
 }) {
-  const { contactStatuses } = useWorkspaceOptions();
+  const { contactStatuses, leadSources } = useWorkspaceOptions();
   const queryClient = useQueryClient();
   const [form, setForm] = useState({
     firstName: contact.firstName,
@@ -1394,6 +1394,24 @@ function EditContactModal({
               className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-[13px] font-medium text-[#323338] mb-1">
+            מקור
+          </label>
+          <select
+            value={form.source}
+            onChange={(e) => setField("source", e.target.value)}
+            className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
+          >
+            <option value="">בחרו מקור</option>
+            {leadSources.map((src) => (
+              <option key={src} value={src}>
+                {src}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
