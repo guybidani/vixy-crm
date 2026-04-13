@@ -468,6 +468,7 @@ function MembersTab() {
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "AGENT">("AGENT");
   const [inviteSent, setInviteSent] = useState(false);
   const [roleDropdown, setRoleDropdown] = useState<string | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
   const currentRole = workspaces.find((w) => w.id === currentWorkspaceId)?.role;
   const isOwnerOrAdmin = currentRole === "OWNER" || currentRole === "ADMIN";
@@ -635,11 +636,7 @@ function MembersTab() {
                     <div>
                       {canEdit ? (
                         <button
-                          onClick={() => {
-                            if (confirm(`להסיר את ${m.name} מסביבת העבודה?`)) {
-                              removeMut.mutate(m.memberId);
-                            }
-                          }}
+                          onClick={() => setMemberToRemove({ id: m.memberId, name: m.name || "חבר צוות" })}
                           disabled={removeMut.isPending}
                           className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors group"
                           title="הסר מחבר"
@@ -733,6 +730,20 @@ function MembersTab() {
       {roleDropdown && (
         <div className="fixed inset-0 z-40" onClick={() => setRoleDropdown(null)} />
       )}
+
+      <ConfirmDialog
+        open={!!memberToRemove}
+        onConfirm={() => {
+          if (memberToRemove) removeMut.mutate(memberToRemove.id);
+          setMemberToRemove(null);
+        }}
+        onCancel={() => setMemberToRemove(null)}
+        title="הסרת חבר צוות"
+        message={memberToRemove ? `האם אתה בטוח שברצונך להסיר את ${memberToRemove.name} מסביבת העבודה?` : ""}
+        confirmText="הסר"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }
