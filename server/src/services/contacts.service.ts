@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { enqueueAutomationTrigger } from "../queue/automation.queue";
+import { BOARD_MAX_ITEMS } from "../lib/constants";
 
 const SORTABLE_FIELDS = [
   "firstName",
@@ -401,7 +402,7 @@ export async function board(workspaceId: string) {
       tags: { include: { tag: true } },
     },
     orderBy: { createdAt: "asc" },
-    take: 500,
+    take: BOARD_MAX_ITEMS,
   });
 
   const statuses = ["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"];

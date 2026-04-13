@@ -3,6 +3,7 @@ import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { enqueueAutomationTrigger } from "../queue/automation.queue";
 import { calculateUrgency } from "../utils/urgency.util";
+import { BOARD_MAX_ITEMS } from "../lib/constants";
 
 interface ListParams {
   workspaceId: string;
@@ -466,7 +467,7 @@ export async function board(workspaceId: string) {
       _count: { select: { messages: true } },
     },
     orderBy: { createdAt: "asc" },
-    take: 500,
+    take: BOARD_MAX_ITEMS,
   });
 
   const statuses = ["NEW", "OPEN", "PENDING", "RESOLVED", "CLOSED"];
