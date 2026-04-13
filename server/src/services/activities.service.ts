@@ -245,13 +245,25 @@ export async function update(
   if (existing.memberId !== memberId)
     throw new AppError(403, "FORBIDDEN", "Not the author");
 
-  return prisma.activity.update({
-    where: { id: activityId },
-    data: {
-      subject: data.subject,
-      body: data.body,
-      metadata: data.metadata,
-    },
+  // Build updateData from explicit fields instead of passing raw data object.
+  const updateData: Record<string, unknown> = {};
+  if (data.subject !== undefined) updateData.subject = data.subject;
+  if (data.body !== undefined) updateData.body = data.body;
+  if (data.metadata !== undefined) updateData.metadata = data.metadata;
+
+  // Use updateMany with workspaceId + memberId for defense-in-depth (prevents
+  // a TOCTOU gap between the findFirst check and the write — the activity
+  // could be deleted or reassigned between the two queries).
+  const result = await prisma.activity.updateMany({
+    where: { id: activityId, workspaceId, memberId },
+    data: updateData,
+  });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Activity not found");
+  }
+
+  return prisma.activity.findFirstOrThrow({
+    where: { id: activityId, workspaceId },
     include: {
       member: { include: { user: { select: { name: true } } } },
       contact: { select: { id: true, firstName: true, lastName: true } },
@@ -265,13 +277,20 @@ export async function remove(
   memberId: string,
   activityId: string,
 ) {
-  const existing = await prisma.activity.findFirst({
-    where: { id: activityId, workspaceId },
+  // Use deleteMany with workspaceId + memberId scope in a single round-trip
+  // instead of findFirst + delete (two round-trips with TOCTOU race).
+  // This also enforces author ownership at the delete level, not just the check.
+  const result = await prisma.activity.deleteMany({
+    where: { id: activityId, workspaceId, memberId },
   });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Activity not found");
-  if (existing.memberId !== memberId)
-    throw new AppError(403, "FORBIDDEN", "Not the author");
-
-  await prisma.activity.delete({ where: { id: activityId } });
+  if (result.count === 0) {
+    // Distinguish 404 from 403: check if the activity exists but belongs to another member
+    const exists = await prisma.activity.findFirst({
+      where: { id: activityId, workspaceId },
+      select: { id: true },
+    });
+    if (exists) throw new AppError(403, "FORBIDDEN", "Not the author");
+    throw new AppError(404, "NOT_FOUND", "Activity not found");
+  }
   return { deleted: true };
 }
