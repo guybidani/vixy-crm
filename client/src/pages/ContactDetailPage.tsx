@@ -524,9 +524,16 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-[#9699A6] text-center py-4">
-                אין עסקאות
-              </p>
+              <div className="text-center py-6">
+                <Handshake size={24} className="mx-auto text-[#C4C4C4] mb-2" />
+                <p className="text-sm text-[#9699A6] mb-2">אין עסקאות</p>
+                <button
+                  onClick={() => navigate(`/deals?new=1&contactId=${contact.id}`)}
+                  className="text-[12px] font-medium text-[#0073EA] hover:underline"
+                >
+                  + הוסף עסקה ראשונה
+                </button>
+              </div>
             )}
           </PageCard>
 
@@ -578,9 +585,16 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-[#9699A6] text-center py-4">
-                אין פניות
-              </p>
+              <div className="text-center py-6">
+                <Ticket size={24} className="mx-auto text-[#C4C4C4] mb-2" />
+                <p className="text-sm text-[#9699A6] mb-2">אין פניות</p>
+                <button
+                  onClick={() => navigate(`/tickets?new=1&contactId=${contact.id}`)}
+                  className="text-[12px] font-medium text-[#0073EA] hover:underline"
+                >
+                  + הוסף פנייה ראשונה
+                </button>
+              </div>
             )}
           </PageCard>
 
@@ -651,9 +665,16 @@ export default function ContactDetailPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-[#9699A6] text-center py-4">
-                אין משימות
-              </p>
+              <div className="text-center py-6">
+                <CheckSquare size={24} className="mx-auto text-[#C4C4C4] mb-2" />
+                <p className="text-sm text-[#9699A6] mb-2">אין משימות</p>
+                <button
+                  onClick={() => navigate(`/tasks?new=1&contactId=${contact.id}`)}
+                  className="text-[12px] font-medium text-[#0073EA] hover:underline"
+                >
+                  + הוסף משימה ראשונה
+                </button>
+              </div>
             )}
           </PageCard>
 
