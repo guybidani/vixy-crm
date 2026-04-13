@@ -134,22 +134,34 @@ export async function updateWorkflow(
           order: a.order ?? i,
         })),
       });
-      return tx.workflow.update({
-        where: { id },
+      // Use updateMany with workspaceId for defense-in-depth (prevents
+      // TOCTOU gap between the findFirst check and the actual write).
+      const result = await tx.workflow.updateMany({
+        where: { id, workspaceId },
         data: updateData,
-        include: {
-          actions: { orderBy: { order: "asc" } },
-        },
+      });
+      if (result.count === 0) {
+        throw new AppError(404, "NOT_FOUND", "Workflow not found");
+      }
+      return tx.workflow.findFirstOrThrow({
+        where: { id, workspaceId },
+        include: { actions: { orderBy: { order: "asc" } } },
       });
     });
   }
 
-  return prisma.workflow.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth — same pattern
+  // as deals, tickets, tasks, and contacts services.
+  const result = await prisma.workflow.updateMany({
+    where: { id, workspaceId },
     data: updateData,
-    include: {
-      actions: { orderBy: { order: "asc" } },
-    },
+  });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Workflow not found");
+  }
+  return prisma.workflow.findFirstOrThrow({
+    where: { id, workspaceId },
+    include: { actions: { orderBy: { order: "asc" } } },
   });
 }
 
