@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlarmClockOff, Clock } from "lucide-react";
 import toast from "react-hot-toast";
@@ -22,8 +22,29 @@ export default function SnoozeDropdown({
   variant = "icon",
 }: SnoozeDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const menuItemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const queryClient = useQueryClient();
+
+  // Sync DOM focus with focusedIndex
+  useEffect(() => {
+    if (open) {
+      menuItemRefs.current[focusedIndex]?.focus();
+    }
+  }, [focusedIndex, open]);
+
+  // Auto-focus first item when menu opens
+  useEffect(() => {
+    if (open) {
+      setFocusedIndex(0);
+      requestAnimationFrame(() => {
+        menuItemRefs.current[0]?.focus();
+      });
+    } else {
+      menuItemRefs.current = [];
+    }
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -32,17 +53,9 @@ export default function SnoozeDropdown({
         setOpen(false);
       }
     }
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setOpen(false);
-      }
-    }
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open]);
 
@@ -112,19 +125,52 @@ export default function SnoozeDropdown({
           className="absolute left-0 top-full mt-1 z-30 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#E6E9EF] py-1 min-w-[160px]"
           role="menu"
           aria-label="אפשרויות דחייה"
+          onKeyDown={(e) => {
+            switch (e.key) {
+              case "Escape":
+                e.preventDefault();
+                setOpen(false);
+                break;
+              case "ArrowDown":
+                e.preventDefault();
+                setFocusedIndex((prev) => (prev < options.length - 1 ? prev + 1 : 0));
+                break;
+              case "ArrowUp":
+                e.preventDefault();
+                setFocusedIndex((prev) => (prev > 0 ? prev - 1 : options.length - 1));
+                break;
+              case "Home":
+                e.preventDefault();
+                setFocusedIndex(0);
+                break;
+              case "End":
+                e.preventDefault();
+                setFocusedIndex(options.length - 1);
+                break;
+              case "Tab":
+                e.preventDefault();
+                setOpen(false);
+                break;
+            }
+          }}
         >
           <div className="px-3 py-1.5 text-[10px] font-bold text-[#9699A6] uppercase border-b border-[#E6E9EF]">
             דחה משימה
           </div>
-          {options.map((opt) => (
+          {options.map((opt, i) => (
             <button
               key={opt.label}
+              ref={(el) => { menuItemRefs.current[i] = el; }}
               role="menuitem"
+              tabIndex={focusedIndex === i ? 0 : -1}
               onClick={(e) => {
                 e.stopPropagation();
                 handleSnooze(opt);
               }}
-              className="w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2 focus:outline-none focus-visible:bg-[#F5F6F8]"
+              onMouseEnter={() => setFocusedIndex(i)}
+              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2 focus:outline-none focus-visible:bg-[#F5F6F8] ${
+                focusedIndex === i ? "bg-[#F5F6F8]" : ""
+              }`}
             >
               <Clock
                 size={11}
