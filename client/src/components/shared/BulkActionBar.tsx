@@ -20,11 +20,16 @@ export default function BulkActionBar({
   deleting,
   children,
 }: BulkActionBarProps) {
-  // Escape key clears the selection
+  // Escape key clears the selection — but only if no modal/dialog is open above us.
+  // Modals set aria-modal="true" or use role="dialog", so we check for their presence.
   useEffect(() => {
     if (selectedCount === 0) return;
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        // If a modal or dialog overlay is open, let it handle Escape first
+        const openModal = document.querySelector('[aria-modal="true"], [role="alertdialog"]');
+        if (openModal) return;
+
         e.preventDefault();
         onClear();
       }
