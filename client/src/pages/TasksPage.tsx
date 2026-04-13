@@ -30,6 +30,7 @@ import {
   Trash2,
   AlarmClock,
   AlertCircle,
+  CheckSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
@@ -1266,19 +1267,24 @@ export default function TasksPage() {
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : tasks.length === 0 ? (
-            <EmptyState
-              icon={<CheckCircle2 size={28} className="text-[#9699A6]" />}
-              title="אין משימות"
-              description="צרו משימה חדשה כדי להתחיל לעקוב אחרי המשימות שלכם."
-              action={
-                <button
-                  onClick={() => setShowCreate(true)}
-                  className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-                >
-                  צור משימה ראשונה
-                </button>
-              }
-            />
+            <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+              <div className="mb-6">
+                <div className="w-20 h-20 rounded-full bg-[#E3EFFE] flex items-center justify-center">
+                  <CheckSquare size={36} className="text-[#0073EA]" />
+                </div>
+              </div>
+              <h3 className="text-[18px] font-semibold text-[#323338] mb-2">אין משימות</h3>
+              <p className="text-[14px] text-[#676879] max-w-xs mb-6 leading-relaxed">
+                צור את המשימה הראשונה שלך כדי להתחיל לעקוב אחרי כל המשימות במקום אחד.
+              </p>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors"
+              >
+                <Plus size={16} />
+                משימה חדשה
+              </button>
+            </div>
           ) : (
             <div className="space-y-3">
               {DATE_GROUP_CONFIG.map((cfg) => {

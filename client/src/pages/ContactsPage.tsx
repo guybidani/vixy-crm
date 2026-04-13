@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus, ChevronRight, ChevronLeft, AlertCircle, RefreshCw } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus, ChevronRight, ChevronLeft, AlertCircle, RefreshCw, Users } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -477,8 +477,21 @@ export default function ContactsPage() {
             className="w-full max-w-sm px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
           />
           {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="bg-white rounded-xl border border-[#E6E9EF] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-4 animate-pulse">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#E6E9EF]" />
+                    <div className="flex-1">
+                      <div className="h-3.5 bg-[#E6E9EF] rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-[#E6E9EF] rounded w-1/2" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-[#E6E9EF] rounded w-2/3 mb-2" />
+                  <div className="h-3 bg-[#E6E9EF] rounded w-1/2 mb-2" />
+                  <div className="h-6 bg-[#E6E9EF] rounded-full w-16 mt-3" />
+                </div>
+              ))}
             </div>
           ) : (
             <>
@@ -859,40 +872,25 @@ function ContactCRMCard({
 function ContactsEmptyState({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      {/* Illustration */}
-      <div className="mb-6 relative">
-        <div className="w-24 h-24 rounded-full bg-[#E8E8FF] flex items-center justify-center shadow-sm">
-          <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Face circle */}
-            <circle cx="26" cy="20" r="12" fill="#6161FF" opacity="0.15" stroke="#6161FF" strokeWidth="2"/>
-            {/* Eyes */}
-            <circle cx="22" cy="18" r="1.5" fill="#6161FF"/>
-            <circle cx="30" cy="18" r="1.5" fill="#6161FF"/>
-            {/* Smile */}
-            <path d="M22 23 Q26 27 30 23" stroke="#6161FF" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-            {/* Body */}
-            <path d="M10 44 C10 35 16 32 26 32 C36 32 42 35 42 44" stroke="#6161FF" strokeWidth="2" strokeLinecap="round" fill="none"/>
-            {/* Plus badge */}
-            <circle cx="40" cy="10" r="7" fill="#00CA72"/>
-            <line x1="40" y1="7" x2="40" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            <line x1="37" y1="10" x2="43" y2="10" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
+      <div className="mb-6">
+        <div className="w-20 h-20 rounded-full bg-[#E3EFFE] flex items-center justify-center">
+          <Users size={36} className="text-[#0073EA]" />
         </div>
       </div>
 
-      <h3 className="text-xl font-bold text-[#323338] mb-2">
-        עדיין אין אנשי קשר
+      <h3 className="text-[18px] font-semibold text-[#323338] mb-2">
+        אין אנשי קשר
       </h3>
-      <p className="text-sm text-[#676879] max-w-xs mb-6 leading-relaxed">
-        הוסף לידים ואנשי קשר כדי לעקוב אחרי שיחות, עסקאות ומשימות — הכל במקום אחד.
+      <p className="text-[14px] text-[#676879] max-w-xs mb-6 leading-relaxed">
+        הוסף את איש הקשר הראשון שלך כדי לעקוב אחרי שיחות, עסקאות ומשימות.
       </p>
 
       <button
         onClick={onAdd}
-        className="flex items-center gap-2 px-6 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] shadow-sm hover:shadow-md transition-all active:scale-[0.97]"
+        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors"
       >
-        <UserPlus size={16} />
-        הוסף איש קשר ראשון
+        <Plus size={16} />
+        הוסף איש קשר
       </button>
     </div>
   );
@@ -964,9 +962,13 @@ function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose:
   const mutation = useMutation({
     mutationFn: () =>
       createContact({
-        ...form,
-        companyId: form.companyId || undefined,
+        firstName: form.firstName,
+        lastName: form.lastName,
         email: form.email || undefined,
+        phone: form.phone || undefined,
+        companyId: form.companyId || undefined,
+        position: form.position || undefined,
+        source: form.source || undefined,
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
