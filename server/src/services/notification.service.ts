@@ -60,10 +60,15 @@ export async function createForWorkspace(
   workspaceId: string,
   data: Omit<CreateNotificationData, "workspaceId" | "userId">,
 ) {
+  // Cap at 500 members to prevent unbounded notification creation in very
+  // large workspaces. This matches the cap used in automation SEND_NOTIFICATION.
   const members = await prisma.workspaceMember.findMany({
     where: { workspaceId },
     select: { userId: true },
+    take: 500,
   });
+
+  if (members.length === 0) return { count: 0 };
 
   return prisma.notification.createMany({
     data: members.map((m) => ({
