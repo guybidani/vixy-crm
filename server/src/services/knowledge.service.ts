@@ -177,9 +177,16 @@ export async function updateArticle(
   if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
   if (data.status !== undefined) updateData.status = data.status;
 
-  return prisma.kbArticle.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap between the findFirst check and the actual write), then re-fetch.
+  const result = await prisma.kbArticle.updateMany({
+    where: { id, workspaceId },
     data: updateData,
+  });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Article not found");
+
+  return prisma.kbArticle.findFirstOrThrow({
+    where: { id, workspaceId },
     include: {
       category: { select: { id: true, name: true } },
     },
@@ -202,15 +209,18 @@ export async function voteArticle(
   id: string,
   helpful: boolean,
 ) {
-  const existing = await prisma.kbArticle.findFirst({
+  // Use updateMany with workspaceId scope for defense-in-depth — prevents a
+  // TOCTOU gap between the existence check and the vote write.  The previous
+  // pattern did findFirst(workspaceId) then update(id only).
+  const result = await prisma.kbArticle.updateMany({
     where: { id, workspaceId },
-  });
-  if (!existing) throw new AppError(404, "NOT_FOUND", "Article not found");
-
-  return prisma.kbArticle.update({
-    where: { id },
     data: helpful
       ? { helpfulCount: { increment: 1 } }
       : { notHelpfulCount: { increment: 1 } },
+  });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Article not found");
+
+  return prisma.kbArticle.findFirstOrThrow({
+    where: { id, workspaceId },
   });
 }

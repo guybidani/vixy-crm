@@ -146,9 +146,15 @@ export async function toggleSequence(workspaceId: string, id: string) {
   });
   if (!existing) throw new AppError(404, "NOT_FOUND", "Sequence not found");
 
-  return prisma.followUpSequence.update({
-    where: { id },
+  // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
+  // gap between the findFirst check and the actual write), then re-fetch.
+  await prisma.followUpSequence.updateMany({
+    where: { id, workspaceId },
     data: { isActive: !existing.isActive },
+  });
+
+  return prisma.followUpSequence.findFirstOrThrow({
+    where: { id, workspaceId },
   });
 }
 
@@ -215,19 +221,21 @@ export async function startExecution(
 }
 
 export async function stopExecution(workspaceId: string, id: string) {
-  const existing = await prisma.followUpExecution.findFirst({
+  // Use updateMany with workspaceId + status for defense-in-depth (prevents
+  // a TOCTOU gap and enforces workspace scope at the mutation level).
+  const result = await prisma.followUpExecution.updateMany({
     where: { id, workspaceId, status: "ACTIVE" },
-  });
-  if (!existing)
-    throw new AppError(404, "NOT_FOUND", "Active execution not found");
-
-  return prisma.followUpExecution.update({
-    where: { id },
     data: {
       status: "CANCELLED",
       completedAt: new Date(),
       nextRunAt: null,
     },
+  });
+  if (result.count === 0)
+    throw new AppError(404, "NOT_FOUND", "Active execution not found");
+
+  return prisma.followUpExecution.findFirstOrThrow({
+    where: { id, workspaceId },
   });
 }
 
