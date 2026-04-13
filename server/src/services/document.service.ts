@@ -130,16 +130,26 @@ export async function update(
   id: string,
   data: { title?: string; content?: string },
 ) {
+  // Build updateData from explicit fields instead of passing the raw data
+  // object.  While the TS type is narrow here, the route layer passes
+  // req.body which could contain extra fields at runtime.
+  const updateData: Record<string, unknown> = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.content !== undefined) updateData.content = data.content;
+
   // Use updateMany with workspaceId for defense-in-depth — workspace scope
   // is enforced at the mutation level, not just the existence check.
   const result = await prisma.document.updateMany({
     where: { id, workspaceId },
-    data,
+    data: updateData,
   });
   if (result.count === 0) return null;
 
-  return prisma.document.findUnique({
-    where: { id },
+  // Re-fetch with workspaceId scope (defense-in-depth) instead of findUnique
+  // by id alone, which could theoretically leak a document from another
+  // workspace if the id was reassigned between the updateMany and findUnique.
+  return prisma.document.findFirst({
+    where: { id, workspaceId },
     include: {
       createdBy: { include: { user: { select: { name: true } } } },
       links: true,
