@@ -1610,16 +1610,16 @@ export default function MondayBoard<T extends { id: string }>({
 
                     {/* + Add item row (per-group or global) */}
                     {hasNewItem && (
-                      <tr>
+                      <tr className="h-[36px]">
                         <td
                           className="w-[6px] p-0"
-                          style={{ backgroundColor: group.color }}
+                          style={{ backgroundColor: group.color, opacity: 0.6 }}
                         />
                         <td
                           colSpan={
                             visibleColumns.length + 1 + (onDeleteItem ? 1 : 0) + (onMoveItem ? 1 : 0)
                           }
-                          className="p-0"
+                          className="p-0 border-b border-[#E6E9EF]"
                         >
                           <button
                             onClick={(e) => {
@@ -1630,10 +1630,10 @@ export default function MondayBoard<T extends { id: string }>({
                                 onNewItem?.();
                               }
                             }}
-                            className="w-full text-right px-3 py-[8px] text-[13px] text-[#9699A6] hover:text-[#0073EA] hover:bg-[#E6F4FF]/40 transition-colors flex items-center gap-1.5"
+                            className="w-full text-right px-3 py-[7px] text-[13px] text-[#676879] hover:text-[#0073EA] hover:bg-[#F0F3FF] transition-colors flex items-center gap-1.5"
                           >
-                            <span className="text-[16px] leading-none font-light">+</span>
-                            <span>{newItemLabel}</span>
+                            <Plus size={14} className="opacity-70" />
+                            <span>הוסף פריט</span>
                           </button>
                         </td>
                       </tr>
