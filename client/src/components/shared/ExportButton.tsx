@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { downloadExport } from "../../api/export";
 
@@ -32,7 +32,7 @@ export default function ExportButton({ entity, filters }: ExportButtonProps) {
       title="ייצוא ל-CSV"
       aria-label={loading ? "מייצא..." : "ייצוא ל-CSV"}
     >
-      <Download size={15} className={loading ? "animate-spin" : ""} />
+      {loading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
       <span className="hidden sm:inline">{loading ? "מייצא..." : "ייצוא"}</span>
     </button>
   );
