@@ -784,7 +784,7 @@ function DealCard({
             aria-label={deal.contact.name}
           >
             <span className="text-white text-[8px] font-bold">
-              {deal.contact.name[0].toUpperCase()}
+              {(deal.contact.name[0] || "?").toUpperCase()}
             </span>
           </div>
           <span className="text-[12px] text-[#676879] flex-1 truncate">
@@ -841,7 +841,7 @@ function DealCard({
               title={deal.assignee.name}
             >
               <span className="text-white text-[8px] font-bold">
-                {deal.assignee.name[0].toUpperCase()}
+                {(deal.assignee.name[0] || "?").toUpperCase()}
               </span>
             </div>
           ) : (

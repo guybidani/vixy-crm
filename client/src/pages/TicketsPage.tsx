@@ -385,7 +385,7 @@ function TicketListItem({
               style={{ backgroundColor: avatarColor(ticket.contact.name) }}
             >
               <span className="text-white text-[8px] font-bold">
-                {ticket.contact.name[0]}
+                {ticket.contact.name[0] || "?"}
               </span>
             </div>
             <span className="text-[11px] text-[#676879] truncate">
@@ -721,7 +721,7 @@ function TicketDetailPanel({
                     style={{ backgroundColor: avatarColor(`${ticket.contact.firstName} ${ticket.contact.lastName}`) }}
                   >
                     <span className="text-white text-[9px] font-bold">
-                      {ticket.contact.firstName[0]}
+                      {ticket.contact.firstName[0] || "?"}
                     </span>
                   </div>
                   <button
