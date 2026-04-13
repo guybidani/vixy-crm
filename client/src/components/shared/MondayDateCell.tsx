@@ -40,11 +40,7 @@ export default function MondayDateCell({
 
   return (
     <div className="relative" ref={containerRef}>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setOpen(!open);
-        }}
+      <div
         className={`flex items-center gap-1 text-[13px] transition-colors w-full group ${
           value && isOverdue(value)
             ? "text-[#FB275D] font-medium"
@@ -53,7 +49,17 @@ export default function MondayDateCell({
       >
         {value ? (
           <>
-            <span>{formatDate(value)}</span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(!open);
+              }}
+              className="hover:text-[#0073EA] transition-colors"
+              aria-label={`תאריך: ${formatDate(value)}. לחץ לשינוי`}
+            >
+              {formatDate(value)}
+            </button>
             <button
               type="button"
               onClick={(e) => {
@@ -68,9 +74,19 @@ export default function MondayDateCell({
             </button>
           </>
         ) : (
-          <span className="text-[#C3C6D4]">—</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(!open);
+            }}
+            className="text-[#C3C6D4] hover:text-[#0073EA] transition-colors"
+            aria-label="בחר תאריך"
+          >
+            —
+          </button>
         )}
-      </button>
+      </div>
 
       {open && (
         <CalendarPopover
