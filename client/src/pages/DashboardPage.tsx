@@ -1,7 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 import { formatRelativeTime } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
+import { getSocket } from "../lib/socket";
 import {
   Users,
   Handshake,
@@ -187,6 +188,7 @@ export default function DashboardPage() {
   const { dealStages, activityTypes } = useWorkspaceOptions();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["dashboard"],
@@ -194,6 +196,31 @@ export default function DashboardPage() {
     refetchInterval: 60000,
     refetchIntervalInBackground: false,
   });
+
+  // ─── Real-time: invalidate dashboard on socket events ───
+  const invalidateDashboard = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  }, [queryClient]);
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    // Events emitted by the server that indicate data changes
+    // affecting dashboard KPIs (deals, contacts, tasks, activities)
+    const events = [
+      "notification",       // generic notification — entity was created/updated
+      "notification:new",   // automation-triggered notification
+      "task-reminder",      // task due — affects tasks KPI
+      "followup:update",    // followup sequence update — affects contacts/activities
+      "board:item:updated", // board item changed
+    ];
+
+    events.forEach((event) => socket.on(event, invalidateDashboard));
+
+    return () => {
+      events.forEach((event) => socket.off(event, invalidateDashboard));
+    };
+  }, [invalidateDashboard]);
 
   if (isLoading) {
     return (

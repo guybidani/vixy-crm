@@ -129,7 +129,7 @@ export default function DealDetailPanel({
     };
   }, []);
 
-  const { data: deal, isLoading } = useQuery({
+  const { data: deal, isLoading, isError, refetch } = useQuery({
     queryKey: ["deal", dealId],
     queryFn: () => getDeal(dealId),
     enabled: !!dealId,
@@ -420,6 +420,24 @@ export default function DealDetailPanel({
               </div>
             </div>
           </div>
+        </div>
+      </>
+    );
+  }
+
+  if (isError) {
+    return (
+      <>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} />
+        <div className="fixed top-0 right-0 h-full w-full max-w-[900px] bg-white shadow-2xl z-50 flex flex-col items-center justify-center gap-2">
+          <p className="text-[#E44258] font-semibold">שגיאה בטעינת העסקה</p>
+          <p className="text-[13px] text-[#9699A6]">לא ניתן לטעון את פרטי העסקה.</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-1 text-[13px] text-[#0073EA] hover:underline font-medium"
+          >
+            נסה שוב
+          </button>
         </div>
       </>
     );
