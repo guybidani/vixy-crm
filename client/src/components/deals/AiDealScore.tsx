@@ -5,10 +5,9 @@ import { getAiHealth, scoreDeal } from "../../api/ai";
 
 interface AiDealScoreProps {
   dealId: string;
-  dealTitle: string;
 }
 
-export default function AiDealScore({ dealId, dealTitle }: AiDealScoreProps) {
+export default function AiDealScore({ dealId }: AiDealScoreProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState("");

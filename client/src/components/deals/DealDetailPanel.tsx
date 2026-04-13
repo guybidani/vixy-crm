@@ -488,7 +488,7 @@ export default function DealDetailPanel({
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <AiDealScore dealId={deal.id} dealTitle={deal.title} />
+              <AiDealScore dealId={deal.id} />
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 className="p-1.5 rounded-[4px] hover:bg-[#FFEEF0] text-[#676879] hover:text-[#E44258] transition-colors"
