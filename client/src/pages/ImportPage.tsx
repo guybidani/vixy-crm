@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Upload,
   FileSpreadsheet,
@@ -7,6 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
 import {
@@ -80,6 +82,7 @@ function guessMapping(
 }
 
 export default function ImportPage() {
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [importType, setImportType] = useState<ImportType>("contacts");
   const [file, setFile] = useState<File | null>(null);
@@ -493,12 +496,21 @@ export default function ImportPage() {
             </div>
           )}
 
-          <button
-            onClick={reset}
-            className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] text-[13px] transition-colors"
-          >
-            ייבוא נוסף
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(importType === "contacts" ? "/contacts" : "/deals")}
+              className="flex items-center gap-1.5 px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] text-[13px] transition-colors"
+            >
+              <ExternalLink size={14} />
+              {importType === "contacts" ? "צפה באנשי קשר" : "צפה בעסקאות"}
+            </button>
+            <button
+              onClick={reset}
+              className="px-6 py-2 bg-white border border-[#E6E9EF] hover:bg-[#F5F6F8] text-[#676879] font-semibold rounded-[4px] text-[13px] transition-colors"
+            >
+              ייבוא נוסף
+            </button>
+          </div>
         </div>
       )}
     </div>
