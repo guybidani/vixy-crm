@@ -258,10 +258,11 @@ export async function syncTaskToCalendar(
 
     const event = (await createRes.json()) as { id: string };
 
-    // Persist event ID and last-sync timestamp in parallel — independent writes
+    // Persist event ID and last-sync timestamp in parallel — independent writes.
+    // Use updateMany with workspaceId for defense-in-depth on the task write.
     await Promise.all([
-      prisma.task.update({
-        where: { id: taskId },
+      prisma.task.updateMany({
+        where: { id: taskId, workspaceId },
         data: { googleCalendarEventId: event.id },
       }),
       prisma.calendarIntegration.update({
@@ -286,12 +287,16 @@ export async function updateCalendarEvent(
 ): Promise<void> {
   if (!task.googleCalendarEventId) return;
 
-  const accessToken = await getAccessToken(integration);
-
-  const taskWithAssignee = await prisma.task.findUnique({
-    where: { id: task.id },
-    include: { assignee: { include: { user: { select: { email: true } } } } },
-  });
+  // Fetch access token and task assignee in parallel — independent operations.
+  // Use findFirst with workspaceId for defense-in-depth (the previous
+  // findUnique had no workspace scope, risking cross-workspace data access).
+  const [accessToken, taskWithAssignee] = await Promise.all([
+    getAccessToken(integration),
+    prisma.task.findFirst({
+      where: { id: task.id, workspaceId: integration.workspaceId },
+      include: { assignee: { include: { user: { select: { email: true } } } } },
+    }),
+  ]);
 
   await _updateEvent(
     task.googleCalendarEventId,
