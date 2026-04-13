@@ -470,6 +470,16 @@ function MembersTab() {
   const [roleDropdown, setRoleDropdown] = useState<string | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
+  // Dismiss role dropdown on Escape key
+  useEffect(() => {
+    if (!roleDropdown) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setRoleDropdown(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [roleDropdown]);
+
   const currentRole = workspaces.find((w) => w.id === currentWorkspaceId)?.role;
   const isOwnerOrAdmin = currentRole === "OWNER" || currentRole === "ADMIN";
 
