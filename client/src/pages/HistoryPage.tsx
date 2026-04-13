@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Clock, Phone, Mail, Video, MessageCircle, StickyNote, AlertCircle, RefreshCw } from "lucide-react";
@@ -132,19 +133,60 @@ function ContactCard({ item }: { item: RecentContact }) {
 }
 
 export default function HistoryPage() {
+  const [typeFilter, setTypeFilter] = useState("");
   const { data: recentContacts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["recent-contacts"],
     queryFn: getRecentContacts,
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 
+  const filteredContacts = useMemo(() => {
+    if (!typeFilter) return recentContacts;
+    return recentContacts.filter((item) => item.lastActivity.type === typeFilter);
+  }, [recentContacts, typeFilter]);
+
   return (
     <PageShell
       boardStyle
       emoji="📋"
       title="היסטוריה"
-      subtitle="10 אנשי הקשר האחרונים שדיברת איתם"
+      subtitle={`${filteredContacts.length} אנשי קשר אחרונים`}
     >
+      {/* Activity type filter */}
+      {!isLoading && !isError && recentContacts.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap" role="radiogroup" aria-label="סינון לפי סוג פעילות">
+          <button
+            role="radio"
+            aria-checked={typeFilter === ""}
+            onClick={() => setTypeFilter("")}
+            className={`px-3 py-1.5 text-[12px] font-medium rounded-full transition-colors ${
+              typeFilter === ""
+                ? "bg-[#0073EA] text-white"
+                : "bg-white text-[#676879] border border-[#E6E9EF] hover:border-[#0073EA]/30"
+            }`}
+          >
+            הכל
+          </button>
+          {Object.entries(ACTIVITY_TYPE_CONFIG).map(([key, { label, color, icon: Icon }]) => (
+            <button
+              key={key}
+              role="radio"
+              aria-checked={typeFilter === key}
+              onClick={() => setTypeFilter(typeFilter === key ? "" : key)}
+              className={`flex items-center gap-1 px-3 py-1.5 text-[12px] font-medium rounded-full transition-colors ${
+                typeFilter === key
+                  ? "text-white"
+                  : "bg-white text-[#676879] border border-[#E6E9EF] hover:border-[#0073EA]/30"
+              }`}
+              style={typeFilter === key ? { backgroundColor: color } : undefined}
+            >
+              <Icon size={12} />
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isError ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
@@ -175,15 +217,15 @@ export default function HistoryPage() {
             </div>
           ))}
         </div>
-      ) : recentContacts.length === 0 ? (
+      ) : filteredContacts.length === 0 ? (
         <EmptyState
           icon={<Clock size={32} className="text-[#9699A6]" />}
-          title="אין היסטוריה עדיין"
-          description="התחל לתקשר עם לקוחות — שיחות, אימיילים, פגישות וווטסאפ יופיעו כאן"
+          title={typeFilter ? "אין תוצאות לסינון זה" : "אין היסטוריה עדיין"}
+          description={typeFilter ? "נסו לשנות את סוג הפעילות או להסיר את הסינון" : "התחל לתקשר עם לקוחות — שיחות, אימיילים, פגישות וווטסאפ יופיעו כאן"}
         />
       ) : (
         <div className="space-y-2">
-          {recentContacts.map((item) => (
+          {filteredContacts.map((item) => (
             <ContactCard key={item.contact.id} item={item} />
           ))}
         </div>
