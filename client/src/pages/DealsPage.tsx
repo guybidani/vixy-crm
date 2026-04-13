@@ -403,6 +403,25 @@ export default function DealsPage() {
       ),
     },
     {
+      key: "expectedClose",
+      label: "תאריך סגירה",
+      width: "130px",
+      sortable: true,
+      render: (row) => {
+        if (!row.expectedClose) return <span className="text-[13px] text-[#C5C7D0]">—</span>;
+        const date = new Date(row.expectedClose);
+        const isOverdue = row.stage !== "CLOSED_WON" && row.stage !== "CLOSED_LOST" && date < new Date();
+        return (
+          <div className="flex items-center gap-1">
+            <Calendar size={12} className={isOverdue ? "text-[#FB275D]" : "text-[#9699A6]"} />
+            <span className={`text-[13px] ${isOverdue ? "text-[#FB275D] font-semibold" : "text-[#676879]"}`}>
+              {date.toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
       key: "health",
       label: "בריאות",
       width: "130px",
