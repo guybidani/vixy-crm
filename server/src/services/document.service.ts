@@ -26,7 +26,10 @@ export async function list({
   const where: any = { workspaceId };
   if (type) where.type = type;
   if (search) {
-    where.title = { contains: search, mode: "insensitive" };
+    // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
+    // everything.  Prisma's `contains` maps to SQL LIKE '%…%'.
+    const safeSearch = search.replace(/[%_]/g, "\\$&");
+    where.title = { contains: safeSearch, mode: "insensitive" };
   }
 
   const [data, total] = await Promise.all([

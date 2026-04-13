@@ -29,9 +29,12 @@ export async function listArticles(params: {
   if (categoryId) where.categoryId = categoryId;
   if (status) where.status = status;
   if (search) {
+    // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
+    // everything.  Prisma's `contains` maps to SQL LIKE '%…%'.
+    const safeSearch = search.replace(/[%_]/g, "\\$&");
     where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { body: { contains: search, mode: "insensitive" } },
+      { title: { contains: safeSearch, mode: "insensitive" } },
+      { body: { contains: safeSearch, mode: "insensitive" } },
     ];
   }
 
