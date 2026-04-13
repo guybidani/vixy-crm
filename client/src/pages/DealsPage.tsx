@@ -638,7 +638,7 @@ export default function DealsPage() {
         }}
         onCancel={() => setConfirmWonId(null)}
         title="סגירת עסקה כזכייה"
-        message="האם אתה בטו�� שברצונך לסמן את העסקה כזכייה?"
+        message="האם אתה בטוח שברצונך לסמן את העסקה כזכייה?"
         confirmText="סגור כזכייה"
         cancelText="ביטול"
         variant="warning"
