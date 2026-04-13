@@ -1354,7 +1354,7 @@ function RelatedTab({
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-semibold text-[#323338]">
-                      ₪{deal.value?.toLocaleString() || 0}
+                      ₪{(deal.value ?? 0).toLocaleString()}
                     </span>
                     {stage && (
                       <StatusBadge label={stage.label} color={stage.color} />

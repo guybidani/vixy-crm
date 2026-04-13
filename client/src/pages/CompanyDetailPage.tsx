@@ -702,7 +702,7 @@ export default function CompanyDetailPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-[#323338]">
-                          ₪{deal.value?.toLocaleString() || 0}
+                          ₪{(deal.value ?? 0).toLocaleString()}
                         </span>
                         {stage && (
                           <StatusBadge
@@ -883,7 +883,9 @@ export default function CompanyDetailPage() {
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                                     e.preventDefault();
-                                    updateActivityMut.mutate({ actId: activity.id, body: editingActivityBody.trim() });
+                                    if (editingActivityBody.trim()) {
+                                      updateActivityMut.mutate({ actId: activity.id, body: editingActivityBody.trim() });
+                                    }
                                   }
                                   if (e.key === "Escape") setEditingActivityId(null);
                                 }}
@@ -901,7 +903,7 @@ export default function CompanyDetailPage() {
                                   </button>
                                   <button
                                     onClick={() => updateActivityMut.mutate({ actId: activity.id, body: editingActivityBody.trim() })}
-                                    disabled={updateActivityMut.isPending}
+                                    disabled={updateActivityMut.isPending || !editingActivityBody.trim()}
                                     className="px-2 py-0.5 text-[11px] bg-[#0073EA] text-white rounded transition-colors disabled:opacity-50"
                                   >
                                     שמור
