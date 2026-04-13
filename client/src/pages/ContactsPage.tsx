@@ -69,7 +69,7 @@ export default function ContactsPage() {
         search: debouncedSearch || undefined,
         page,
         status: statusFilter || undefined,
-        sortBy,
+        sortBy: sortBy === "fullName" ? "firstName" : sortBy,
         sortDir,
         needsFollowUp: needsFollowUp || undefined,
       }),

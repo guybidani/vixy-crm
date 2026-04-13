@@ -194,7 +194,6 @@ export default function CompaniesPage() {
     {
       key: "contactCount",
       label: "אנשי קשר",
-      sortable: true,
       width: "100px",
       render: (row: Company) => (
         <div className="flex items-center gap-1.5">
