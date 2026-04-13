@@ -851,6 +851,7 @@ function CannedResponsesTab() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<CannedResponse | null>(null);
+  const [responseToDelete, setResponseToDelete] = useState<{ id: string; title: string } | null>(null);
 
   const { data: responses, isLoading } = useQuery({
     queryKey: ["canned-responses"],
@@ -956,7 +957,7 @@ function CannedResponsesTab() {
                         <Pencil size={14} className="text-[#9699A6]" />
                       </button>
                       <button
-                        onClick={() => deleteMut.mutate(r.id)}
+                        onClick={() => setResponseToDelete({ id: r.id, title: r.title })}
                         className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors"
                       >
                         <Trash2 size={14} className="text-[#E44258]" />
@@ -976,6 +977,20 @@ function CannedResponsesTab() {
           onClose={() => setShowForm(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={!!responseToDelete}
+        onConfirm={() => {
+          if (responseToDelete) deleteMut.mutate(responseToDelete.id);
+          setResponseToDelete(null);
+        }}
+        onCancel={() => setResponseToDelete(null)}
+        title="מחיקת תגובה מוכנה"
+        message={responseToDelete ? `האם אתה בטוח שברצונך למחוק את התגובה "${responseToDelete.title}"?` : ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }
@@ -1111,6 +1126,7 @@ function SlaPoliciesTab() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SlaPolicy | null>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const { data: policies, isLoading } = useQuery({
     queryKey: ["sla-policies"],
@@ -1232,7 +1248,7 @@ function SlaPoliciesTab() {
                   <Pencil size={14} className="text-[#9699A6]" />
                 </button>
                 <button
-                  onClick={() => deleteMut.mutate(p.id)}
+                  onClick={() => setPolicyToDelete({ id: p.id, name: p.name })}
                   className="p-1.5 rounded-md hover:bg-[#FFEEF0] transition-colors"
                 >
                   <Trash2 size={14} className="text-[#E44258]" />
@@ -1246,6 +1262,20 @@ function SlaPoliciesTab() {
       {showForm && (
         <SlaPolicyForm editing={editing} onClose={() => setShowForm(false)} />
       )}
+
+      <ConfirmDialog
+        open={!!policyToDelete}
+        onConfirm={() => {
+          if (policyToDelete) deleteMut.mutate(policyToDelete.id);
+          setPolicyToDelete(null);
+        }}
+        onCancel={() => setPolicyToDelete(null)}
+        title="מחיקת מדיניות SLA"
+        message={policyToDelete ? `האם אתה בטוח שברצונך למחוק את המדיניות "${policyToDelete.name}"?` : ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </div>
   );
 }
