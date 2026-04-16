@@ -259,11 +259,13 @@ export default function TicketsPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       setSelectedIds(new Set());
+      setSelectedId(null);
       setConfirmDelete(null);
       toast.success(`${data.deleted} קריאות נמחקו`);
     },
     onError: (err: any) => {
       toast.error(err?.message || "שגיאה במחיקת קריאות");
+      setConfirmDelete(null);
     },
   });
 

@@ -547,7 +547,7 @@ export default function TaskDetailPanel({
                   ? { id: task.assignee.id, name: task.assignee.name }
                   : null
               }
-              onChange={(id) => updateMutation.mutate({ assigneeId: id || undefined })}
+              onChange={(id) => updateMutation.mutate({ assigneeId: id ?? null })}
               options={memberOptions}
               placeholder="בחר נציג"
             />

@@ -119,7 +119,7 @@ export function updateTask(
     dueDate: string;
     dueTime: string | null;
     reminderMinutes: number;
-    assigneeId: string;
+    assigneeId: string | null;
     outcomeNote: string;
     callResult: string | null;
     snoozedUntil: string | null;

@@ -98,7 +98,7 @@ export function updateDocument(
   data: { title?: string; content?: string },
 ) {
   return api<Document>(`/documents/${id}`, {
-    method: "PUT",
+    method: "PATCH",
     body: JSON.stringify(data),
   });
 }

@@ -524,5 +524,7 @@ export async function remove(workspaceId: string, id: string) {
   if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Ticket not found");
   }
+  // Clean up orphaned notes (polymorphic relation, no FK cascade)
+  await prisma.note.deleteMany({ where: { workspaceId, entityType: "ticket", entityId: id } });
   return { deleted: true };
 }

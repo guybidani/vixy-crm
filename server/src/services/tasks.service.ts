@@ -426,7 +426,7 @@ export async function update(
     dueDate: string;
     dueTime: string | null;
     reminderMinutes: number;
-    assigneeId: string;
+    assigneeId: string | null;
     outcomeNote: string;
     callResult: string | null;
     snoozedUntil: string | null;
@@ -611,6 +611,8 @@ export async function remove(workspaceId: string, id: string) {
   // Single round-trip with workspace-scoped delete (defense-in-depth)
   const result = await prisma.task.deleteMany({ where: { id, workspaceId } });
   if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
+  // Clean up orphaned notes (polymorphic relation, no FK cascade)
+  await prisma.note.deleteMany({ where: { workspaceId, entityType: "task", entityId: id } });
   return { deleted: true };
 }
 

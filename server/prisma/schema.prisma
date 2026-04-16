@@ -347,8 +347,8 @@ model Task {
   dealId      String?    @map("deal_id")
   ticket      Ticket?    @relation(fields: [ticketId], references: [id])
   ticketId    String?    @map("ticket_id")
-  assignee    WorkspaceMember @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  assigneeId  String     @map("assignee_id")
+  assignee    WorkspaceMember? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String?    @map("assignee_id")
   createdBy   WorkspaceMember @relation("TaskCreator", fields: [createdById], references: [id])
   createdById String     @map("created_by_id")
   dueTime                String?    @map("due_time")          // "HH:mm" e.g. "14:30"
@@ -1092,8 +1092,8 @@ model Note {
   entityType  String          @map("entity_type") // "contact", "deal", "company", "task", "ticket"
   entityId    String          @map("entity_id")
   content     String          @db.Text
-  author      WorkspaceMember @relation(fields: [authorId], references: [id])
-  authorId    String          @map("author_id")
+  author      WorkspaceMember? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorId    String?          @map("author_id")
   isPinned    Boolean         @default(false) @map("is_pinned")
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @updatedAt @map("updated_at")
