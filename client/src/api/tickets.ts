@@ -133,6 +133,12 @@ export function updateTicket(
   });
 }
 
+export function deleteTicket(id: string) {
+  return api<{ deleted: boolean }>(`/tickets/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function addTicketMessage(
   ticketId: string,
   data: { body: string; isInternal?: boolean },

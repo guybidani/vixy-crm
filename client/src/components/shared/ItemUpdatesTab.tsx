@@ -40,26 +40,29 @@ export default function ItemUpdatesTab({
   // ── Mutations ──
 
   const createMut = useMutation({
-    mutationFn: () =>
-      createNote({ entityType, entityId, content: newContent.trim() }),
-    onMutate: async () => {
+    mutationFn: (content: string) =>
+      createNote({ entityType, entityId, content }),
+    onMutate: async (content: string) => {
       await queryClient.cancelQueries({ queryKey });
       const prev = queryClient.getQueryData(queryKey);
-      // Optimistic: add a placeholder note at the top (after pinned)
+      // Optimistic: add a placeholder note after pinned notes
       queryClient.setQueryData(queryKey, (old: any) => {
         if (!old) return old;
         const optimistic: Note = {
           id: `temp-${Date.now()}`,
           entityType,
           entityId,
-          content: newContent.trim(),
+          content,
           isPinned: false,
           authorId: currentMemberId ?? "",
           author: { id: currentMemberId ?? "", user: { name: "את/ה" } },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        return { ...old, data: [optimistic, ...old.data] };
+        const pinnedCount = old.data.filter((n: Note) => n.isPinned).length;
+        const newData = [...old.data];
+        newData.splice(pinnedCount, 0, optimistic);
+        return { ...old, data: newData };
       });
       setNewContent("");
       return { prev };
@@ -110,7 +113,7 @@ export default function ItemUpdatesTab({
 
   const handleSubmit = () => {
     if (!newContent.trim()) return;
-    createMut.mutate();
+    createMut.mutate(newContent.trim());
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

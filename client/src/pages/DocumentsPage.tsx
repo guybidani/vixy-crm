@@ -302,7 +302,7 @@ export default function DocumentsPage() {
         ),
       },
     ],
-    [renameMut],
+    [],
   );
 
   const contextMenuItems = (row: Document): ContextMenuItem[] => {
@@ -391,7 +391,7 @@ export default function DocumentsPage() {
             type="file"
             className="hidden"
             onChange={handleFileUpload}
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp,.svg"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp"
           />
         </div>
       }

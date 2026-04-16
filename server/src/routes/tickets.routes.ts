@@ -120,6 +120,19 @@ ticketsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   }
 });
 
+// DELETE /api/v1/tickets/:id
+ticketsRouter.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await ticketsService.remove(
+      req.workspaceId!,
+      req.params.id as string,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/tickets/:id/messages
 ticketsRouter.post(
   "/:id/messages",

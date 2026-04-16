@@ -43,6 +43,7 @@ import {
   createTicket,
   getTicket,
   updateTicket,
+  deleteTicket,
   addTicketMessage,
   type Ticket,
   type TicketDetail,
@@ -248,6 +249,22 @@ export default function TicketsPage() {
       toast.success("סטטוס עודכן");
     },
     onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteTicket(id)));
+      return { deleted: ids.length };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      setSelectedIds(new Set());
+      setConfirmDelete(null);
+      toast.success(`${data.deleted} קריאות נמחקו`);
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "שגיאה במחיקת קריאות");
+    },
   });
 
   // ── Monday Board columns for table view ──
@@ -524,10 +541,9 @@ export default function TicketsPage() {
         <ConfirmDialog
           open={!!confirmDelete}
           onConfirm={() => {
-            // TODO: wire bulk delete when API available
-            setConfirmDelete(null);
-            toast.success("נמחק בהצלחה");
-            queryClient.invalidateQueries({ queryKey: ["tickets"] });
+            if (confirmDelete?.ids.length) {
+              deleteMutation.mutate(confirmDelete.ids);
+            }
           }}
           onCancel={() => setConfirmDelete(null)}
           title="מחיקת קריאות"
@@ -952,7 +968,7 @@ function TicketDetailPanel({
                 onChange={(s) => {
                   if (s === "RESOLVED" || s === "CLOSED") {
                     const msg = s === "RESOLVED"
-                      ? "האם אתה בטוח שברצונך לסמן את הקר��אה כנפתרה?"
+                      ? "האם אתה בטוח שברצונך לסמן את הקריאה כנפתרה?"
                       : "האם אתה בטוח שברצונך לסגור את הקריאה?";
                     setConfirmStatusChange({ status: s, message: msg });
                   } else {

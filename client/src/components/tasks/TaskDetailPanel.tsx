@@ -201,6 +201,7 @@ export default function TaskDetailPanel({
       toast.success("משימה נמחקה");
       onClose();
     },
+    onError: () => toast.error("שגיאה במחיקת משימה"),
   });
 
   if (isLoading) {
@@ -366,7 +367,7 @@ export default function TaskDetailPanel({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-5 border-b border-[#E6E9EF]">
+      <div className="flex gap-1 mb-5 border-b border-[#E6E9EF]" role="tablist">
         {(
           [
             { key: "info", label: "פרטים" },
@@ -377,6 +378,8 @@ export default function TaskDetailPanel({
         ).map((tab) => (
           <button
             key={tab.key}
+            role="tab"
+            aria-selected={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${
               activeTab === tab.key
@@ -544,9 +547,7 @@ export default function TaskDetailPanel({
                   ? { id: task.assignee.id, name: task.assignee.name }
                   : null
               }
-              onChange={(id) => {
-                if (id) updateMutation.mutate({ assigneeId: id });
-              }}
+              onChange={(id) => updateMutation.mutate({ assigneeId: id || undefined })}
               options={memberOptions}
               placeholder="בחר נציג"
             />

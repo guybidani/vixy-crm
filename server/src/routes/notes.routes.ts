@@ -18,12 +18,29 @@ const updateSchema = z.object({
   isPinned: z.boolean().optional(),
 });
 
+const getQuerySchema = z.object({
+  entityType: z.enum(ENTITY_TYPES),
+  entityId: z.string().uuid("entityId must be a valid UUID"),
+});
+
 notesRouter.get("/", async (req, res, next) => {
   try {
+    const parsed = getQuerySchema.safeParse({
+      entityType: req.query.entityType,
+      entityId: req.query.entityId,
+    });
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: parsed.error.errors.map((e) => e.message).join(", "),
+        },
+      });
+    }
     const result = await notesService.list({
       workspaceId: req.workspaceId!,
-      entityType: req.query.entityType as string,
-      entityId: req.query.entityId as string,
+      entityType: parsed.data.entityType,
+      entityId: parsed.data.entityId,
       page: Math.max(1, Number(req.query.page) || 1),
       limit: Math.min(Number(req.query.limit) || 50, 100),
     });

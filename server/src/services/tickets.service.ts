@@ -518,3 +518,11 @@ export async function board(workspaceId: string) {
 
   return { statuses: grouped, totals };
 }
+
+export async function remove(workspaceId: string, id: string) {
+  const result = await prisma.ticket.deleteMany({ where: { id, workspaceId } });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Ticket not found");
+  }
+  return { deleted: true };
+}

@@ -88,9 +88,9 @@ export default function ContactDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
-      toast.success("סטטוס עוד��ן");
+      toast.success("סטטוס עודכן");
     },
-    onError: () => toast.error("שגיאה בעדכו�� סטטוס"),
+    onError: () => toast.error("שגיאה בעדכון סטטוס"),
   });
 
   const nameMutation = useMutation({
@@ -336,7 +336,7 @@ export default function ContactDetailPanel({
       </div>
 
       {/* ── TAB BAR ──────────────────────────────────────────── */}
-      <div className="flex items-center gap-0 border-b border-[#E6E9EF] px-0 mb-0">
+      <div className="flex items-center gap-0 border-b border-[#E6E9EF] px-0 mb-0" role="tablist">
         {([
           { key: "details" as const, label: "פרטים" },
           { key: "updates" as const, label: "עדכונים" },
@@ -344,6 +344,8 @@ export default function ContactDetailPanel({
         ]).map((tab) => (
           <button
             key={tab.key}
+            role="tab"
+            aria-selected={panelTab === tab.key}
             onClick={() => setPanelTab(tab.key)}
             className={`px-4 py-2.5 text-[13px] font-medium border-b-[2px] -mb-px transition-colors ${
               panelTab === tab.key

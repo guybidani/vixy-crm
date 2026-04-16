@@ -212,6 +212,7 @@ export default function LeadsPage() {
         <MondayTextCell
           value={row.email || ""}
           onChange={(val) => inlineUpdate(row.id, { email: val })}
+          dir="ltr"
         />
       ),
     },
@@ -223,6 +224,7 @@ export default function LeadsPage() {
         <MondayTextCell
           value={row.phone || ""}
           onChange={(val) => inlineUpdate(row.id, { phone: val })}
+          dir="ltr"
         />
       ),
     },
@@ -325,8 +327,10 @@ export default function LeadsPage() {
       label: "הסמך ליד",
       icon: <Sparkles size={14} />,
       onClick: () => {
-        setQualifyingId(row.id);
-        qualifyMutation.mutate(row);
+        if (!qualifyMutation.isPending) {
+          setQualifyingId(row.id);
+          qualifyMutation.mutate(row);
+        }
       },
     },
     { label: "", onClick: () => {}, divider: true },

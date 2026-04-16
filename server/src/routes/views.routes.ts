@@ -7,7 +7,7 @@ import * as viewsService from "../services/views.service";
 
 export const viewsRouter = Router();
 
-const VALID_ENTITIES = ["contacts", "deals", "tasks", "tickets"] as const;
+const VALID_ENTITIES = ["contacts", "deals", "tasks", "tickets", "companies", "leads"] as const;
 
 /** Resolve the current user's workspace member ID */
 async function getMemberId(workspaceId: string, userId: string): Promise<string> {

@@ -118,6 +118,7 @@ export default function ContactsPage() {
     mutationFn: (ids?: string[]) => bulkDeleteContacts(ids ?? Array.from(selectedIds)),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success(`${data.deleted} אנשי קשר נמחקו`);
       setSelectedIds(new Set());
     },
