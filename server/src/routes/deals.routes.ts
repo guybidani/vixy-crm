@@ -136,11 +136,22 @@ dealsRouter.post(
     try {
       const { ids, data } = req.body;
 
+      const STAGE_PROBABILITY: Record<string, number> = {
+        LEAD: 10, QUALIFIED: 25, PROPOSAL: 50, NEGOTIATION: 75,
+        CLOSED_WON: 100, CLOSED_LOST: 0,
+      };
+
       const updateData: Record<string, any> = {};
       if (data.stage) {
         updateData.stage = data.stage;
         // Keep stageChangedAt in sync so "days in stage" and deal-health stay accurate
         updateData.stageChangedAt = new Date();
+        // Auto-set probability to match single-deal update behaviour — without
+        // this, bulk stage changes left probability at the old value, causing
+        // forecast calculations to use stale numbers.
+        if (STAGE_PROBABILITY[data.stage] !== undefined) {
+          updateData.probability = STAGE_PROBABILITY[data.stage];
+        }
         // Set/clear closedAt to match single-deal update behaviour
         if (data.stage === "CLOSED_WON" || data.stage === "CLOSED_LOST") {
           updateData.closedAt = new Date();

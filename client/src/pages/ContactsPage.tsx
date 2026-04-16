@@ -1,21 +1,27 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, UserPlus, ChevronRight, ChevronLeft, AlertCircle, RefreshCw, Users } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, AlertCircle, RefreshCw, Users, Clock, Link2 } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
-import DataTable from "../components/shared/DataTable";
 import Modal from "../components/shared/Modal";
-import StatusDropdown from "../components/shared/StatusDropdown";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
 import ExportButton from "../components/shared/ExportButton";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import MondayBoard, {
+  MondayStatusCell,
+  type MondayGroup,
+  type MondayColumn,
+} from "../components/shared/MondayBoard";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import MondayTextCell from "../components/shared/MondayTextCell";
+import MondayPersonCell from "../components/shared/MondayPersonCell";
 import {
   listContacts,
   createContact,
@@ -28,8 +34,6 @@ import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
-import MondayTextCell from "../components/shared/MondayTextCell";
-import MondayPersonCell from "../components/shared/MondayPersonCell";
 
 
 export default function ContactsPage() {
@@ -42,8 +46,7 @@ export default function ContactsPage() {
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
   const [showCreate, setShowCreate] = useState(() => searchParams.get("new") === "1");
 
   const [prefilledCompanyId] = useState(() => searchParams.get("companyId") || "");
@@ -62,15 +65,13 @@ export default function ContactsPage() {
   const { data, isLoading, isError: tableError, refetch: refetchTable } = useQuery({
     queryKey: [
       "contacts",
-      { search: debouncedSearch, page, statusFilter, sortBy, sortDir, needsFollowUp },
+      { search: debouncedSearch, page, statusFilter, needsFollowUp },
     ],
     queryFn: () =>
       listContacts({
         search: debouncedSearch || undefined,
         page,
         status: statusFilter || undefined,
-        sortBy: sortBy === "fullName" ? "firstName" : sortBy,
-        sortDir,
         needsFollowUp: needsFollowUp || undefined,
       }),
     enabled: viewMode === "table" || viewMode === "cards",
@@ -101,7 +102,7 @@ export default function ContactsPage() {
   );
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: () => bulkDeleteContacts(Array.from(selectedIds)),
+    mutationFn: (ids?: string[]) => bulkDeleteContacts(ids ?? Array.from(selectedIds)),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success(`${data.deleted} אנשי קשר נמחקו`);
@@ -159,44 +160,14 @@ export default function ContactsPage() {
     statusMutation.mutate({ id: itemId, status: toColumn });
   }
 
-  const handleSort = useCallback(
-    (key: string) => {
-      if (sortBy === key) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-      } else {
-        setSortBy(key);
-        setSortDir("asc");
-      }
-      setPage(1);
-    },
-    [sortBy],
-  );
-
-  const columns = [
-    {
-      key: "__select",
-      label: "",
-      width: "40px",
-      render: (row: Contact) => (
-        <input
-          type="checkbox"
-          checked={selectedIds.has(row.id)}
-          onChange={() => {
-            const next = new Set(selectedIds);
-            if (next.has(row.id)) next.delete(row.id);
-            else next.add(row.id);
-            setSelectedIds(next);
-          }}
-          onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          className="w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA]"
-        />
-      ),
-    },
+  // ── Monday Board columns ────────────────────
+  const mondayColumns: MondayColumn<Contact>[] = [
     {
       key: "fullName",
       label: "שם",
       sortable: true,
-      render: (row: Contact) => (
+      sortValue: (row) => row.fullName,
+      render: (row) => (
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold"
@@ -227,28 +198,37 @@ export default function ContactsPage() {
       ),
     },
     {
+      key: "status",
+      label: "סטטוס",
+      width: "150px",
+      sortable: true,
+      noPadding: true,
+      render: (row) => (
+        <MondayStatusCell
+          value={row.status}
+          options={contactStatuses}
+          onChange={(status) => statusMutation.mutate({ id: row.id, status })}
+        />
+      ),
+    },
+    {
       key: "email",
       label: "אימייל",
-      render: (row: Contact) =>
-        row.email ? (
-          <MondayTextCell
-            value={row.email}
-            onChange={(val) => inlineUpdate(row.id, { email: val })}
-            dir="ltr"
-          />
-        ) : (
-          <MondayTextCell
-            value=""
-            onChange={(val) => inlineUpdate(row.id, { email: val })}
-            dir="ltr"
-            placeholder="+ הוסף אימייל"
-          />
-        ),
+      sortable: true,
+      sortValue: (row) => row.email || "",
+      render: (row) => (
+        <MondayTextCell
+          value={row.email || ""}
+          onChange={(val) => inlineUpdate(row.id, { email: val })}
+          dir="ltr"
+          placeholder="+ הוסף אימייל"
+        />
+      ),
     },
     {
       key: "phone",
       label: "טלפון",
-      render: (row: Contact) => (
+      render: (row) => (
         <MondayTextCell
           value={row.phone || ""}
           onChange={(val) => inlineUpdate(row.id, { phone: val })}
@@ -260,7 +240,8 @@ export default function ContactsPage() {
     {
       key: "company",
       label: "חברה",
-      render: (row: Contact) => (
+      width: "160px",
+      render: (row) => (
         <MondayPersonCell
           value={row.company}
           options={companyOptions}
@@ -270,23 +251,14 @@ export default function ContactsPage() {
       ),
     },
     {
-      key: "status",
-      label: "סטטוס",
-      sortable: true,
-      render: (row: Contact) => (
-        <StatusDropdown
-          value={row.status}
-          options={contactStatuses}
-          onChange={(status) => statusMutation.mutate({ id: row.id, status })}
-        />
-      ),
-    },
-    {
       key: "leadScore",
       label: "חום ליד",
+      width: "130px",
       sortable: true,
-      width: "150px",
-      render: (row: Contact) => {
+      sortValue: (row) => row.leadScore ?? 0,
+      summary: "avg",
+      summaryValue: (row) => row.leadScore ?? 0,
+      render: (row) => {
         const score = row.leadScore ?? 0;
         const heat = row.leadHeat || heatFromScore(score);
         return (
@@ -300,7 +272,8 @@ export default function ContactsPage() {
     {
       key: "tags",
       label: "תגיות",
-      render: (row: Contact) =>
+      width: "160px",
+      render: (row) =>
         row.tags.length > 0 ? (
           <div className="flex gap-1 flex-wrap items-center">
             {row.tags.slice(0, 2).map((t) => (
@@ -334,9 +307,10 @@ export default function ContactsPage() {
     {
       key: "nextFollowUpDate",
       label: "תאריך מעקב",
-      sortable: true,
       width: "140px",
-      render: (row: Contact) => {
+      sortable: true,
+      sortValue: (row) => row.nextFollowUpDate ? new Date(row.nextFollowUpDate).getTime() : 0,
+      render: (row) => {
         if (!row.nextFollowUpDate) {
           return <span className="text-[11px] text-[#9699A6]">—</span>;
         }
@@ -363,10 +337,22 @@ export default function ContactsPage() {
       },
     },
     {
+      key: "createdAt",
+      label: "נוצר",
+      width: "110px",
+      sortable: true,
+      sortValue: (row) => new Date(row.createdAt).getTime(),
+      render: (row) => (
+        <span className="text-[13px] text-[#676879]">
+          {new Date(row.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+        </span>
+      ),
+    },
+    {
       key: "__quickActions",
       label: "",
       width: "120px",
-      render: (row: Contact) => (
+      render: (row) => (
         <div
           className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
           onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -392,6 +378,16 @@ export default function ContactsPage() {
           })}
         </div>
       ),
+    },
+  ];
+
+  // Monday groups — single group with all contacts
+  const mondayGroups: MondayGroup<Contact>[] = [
+    {
+      key: "all",
+      label: "כל אנשי הקשר",
+      color: "#579BFC",
+      items: data?.data || [],
     },
   ];
 
@@ -567,69 +563,62 @@ export default function ContactsPage() {
         )
       ) : tableError ? (
         <ContactsErrorState onRetry={() => refetchTable()} />
+      ) : !isLoading &&
+          !debouncedSearch &&
+          !statusFilter &&
+          !needsFollowUp &&
+          (data?.data || []).length === 0 ? (
+        <ContactsEmptyState onAdd={() => setShowCreate(true)} />
       ) : (
-        <>
-          {/* Status filter chips */}
-          <div className="flex gap-2 flex-wrap">
-            <FilterChip
-              label="הכל"
-              active={!statusFilter}
-              onClick={() => {
-                setStatusFilter("");
-                setPage(1);
-              }}
-            />
-            {Object.entries(contactStatuses).map(([key, val]) => (
-              <FilterChip
-                key={key}
-                label={val.label}
-                color={val.color}
-                active={statusFilter === key}
-                onClick={() => {
-                  setStatusFilter(key);
-                  setPage(1);
-                }}
-              />
-            ))}
-            <span className="text-border text-xs select-none">|</span>
-            <FilterChip
-              label="דורש מעקב"
-              color="#FF4D4F"
-              active={needsFollowUp}
-              onClick={() => {
-                setNeedsFollowUp(!needsFollowUp);
-                setPage(1);
-              }}
-            />
-          </div>
-
-          {/* Empty state — no contacts at all, no active filter/search */}
-          {!isLoading &&
-            !debouncedSearch &&
-            !statusFilter &&
-            !needsFollowUp &&
-            (data?.data || []).length === 0 ? (
-            <ContactsEmptyState onAdd={() => setShowCreate(true)} />
-          ) : (
-            <DataTable
-              columns={columns}
-              data={data?.data || []}
-              loading={isLoading}
-              search={search}
-              onSearchChange={(s) => {
-                setSearch(s);
-                setPage(1);
-              }}
-              searchPlaceholder="חיפוש לפי שם, אימייל או טלפון..."
-              pagination={data?.pagination}
-              onPageChange={setPage}
-              sortBy={sortBy}
-              sortDir={sortDir}
-              onSortChange={handleSort}
-              onRowClick={(row) => navigate(`/contacts/${row.id}`)}
-            />
-          )}
-        </>
+        <MondayBoard<Contact>
+          groups={mondayGroups}
+          columns={mondayColumns}
+          onRowClick={(row) => navigate(`/contacts/${row.id}`)}
+          onNewItem={() => setShowCreate(true)}
+          newItemLabel="איש קשר חדש"
+          search={search}
+          onSearchChange={(s) => {
+            setSearch(s);
+            setPage(1);
+          }}
+          searchPlaceholder="חיפוש לפי שם, אימייל או טלפון..."
+          loading={isLoading}
+          pagination={data?.pagination}
+          onPageChange={setPage}
+          statusKey="status"
+          statusOptions={contactStatuses}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          groupByColumns={[
+            { key: "status", label: "סטטוס" },
+            { key: "source", label: "מקור" },
+            { key: "company", label: "חברה" },
+          ]}
+          contextMenuItems={(row: Contact) => {
+            const items: ContextMenuItem[] = [
+              {
+                label: "פתח איש קשר",
+                icon: <Clock size={14} />,
+                onClick: () => navigate(`/contacts/${row.id}`),
+              },
+              {
+                label: "העתק קישור",
+                icon: <Link2 size={14} />,
+                onClick: () => {
+                  navigator.clipboard.writeText(`${window.location.origin}/contacts/${row.id}`);
+                  toast.success("קישור הועתק");
+                },
+              },
+              { label: "", onClick: () => {}, divider: true },
+              {
+                label: "מחק",
+                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק איש קשר זה?" }),
+                danger: true,
+              },
+            ];
+            return items;
+          }}
+        />
       )}
 
       {showCreate && (
@@ -647,11 +636,25 @@ export default function ContactsPage() {
         open={showBulkDeleteConfirm}
         onConfirm={() => {
           setShowBulkDeleteConfirm(false);
-          bulkDeleteMutation.mutate();
+          bulkDeleteMutation.mutate(Array.from(selectedIds));
         }}
         onCancel={() => setShowBulkDeleteConfirm(false)}
         title="מחיקת אנשי קשר"
         message={`האם אתה בטוח שברצונך למחוק ${selectedIds.size} אנשי קשר?`}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onConfirm={() => {
+          if (confirmDelete) bulkDeleteMutation.mutate(confirmDelete.ids);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+        title="מחיקת איש קשר"
+        message={confirmDelete?.message ?? ""}
         confirmText="מחק"
         cancelText="ביטול"
         variant="danger"

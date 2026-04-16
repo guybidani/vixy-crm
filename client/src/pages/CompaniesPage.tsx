@@ -1,15 +1,20 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw, Mail, Phone } from "lucide-react";
+import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw, Mail, Phone, Clock } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
-import DataTable from "../components/shared/DataTable";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import Modal from "../components/shared/Modal";
 import MondayTextCell from "../components/shared/MondayTextCell";
-import StatusDropdown from "../components/shared/StatusDropdown";
-// import SidePanel from "../components/shared/SidePanel";
+import MondayBoard, {
+  MondayStatusCell,
+  type MondayGroup,
+  type MondayColumn,
+} from "../components/shared/MondayBoard";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import BulkActionBar from "../components/shared/BulkActionBar";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
@@ -18,6 +23,7 @@ import {
   listCompanies,
   createCompany,
   updateCompany,
+  deleteCompany,
   getCompaniesBoard,
   type Company,
 } from "../api/companies";
@@ -50,12 +56,12 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
-  // Reset to page 1 when search changes so the user sees the first page of results
-  useEffect(() => setPage(1), [debouncedSearch]);
+  // Reset selection on page/search change
+  useEffect(() => setSelectedIds(new Set()), [page, debouncedSearch]);
 
   const inlineUpdate = useInlineUpdate(updateCompany, [
     ["companies"],
@@ -63,13 +69,11 @@ export default function CompaniesPage() {
   ]);
 
   const { data, isLoading, isError: tableError, refetch: refetchTable } = useQuery({
-    queryKey: ["companies", { search: debouncedSearch, page, sortBy, sortDir }],
+    queryKey: ["companies", { search: debouncedSearch, page }],
     queryFn: () =>
       listCompanies({
         search: debouncedSearch || undefined,
         page,
-        sortBy,
-        sortDir,
       }),
     enabled: viewMode === "table",
   });
@@ -92,6 +96,20 @@ export default function CompaniesPage() {
     onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteCompany(id)));
+      return { deleted: ids.length };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+      toast.success(`${data.deleted} חברות נמחקו`);
+      setSelectedIds(new Set());
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
   // Kanban columns
   const kanbanColumns: KanbanCol<Company>[] = Object.entries(
     companyStatuses,
@@ -110,25 +128,13 @@ export default function CompaniesPage() {
     statusMutation.mutate({ id: itemId, status: toColumn });
   }
 
-  const handleSort = useCallback(
-    (key: string) => {
-      if (sortBy === key) {
-        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-      } else {
-        setSortBy(key);
-        setSortDir("asc");
-      }
-      setPage(1);
-    },
-    [sortBy],
-  );
-
-  const columns = [
+  // ── Monday Board columns ────────────────────
+  const mondayColumns: MondayColumn<Company>[] = [
     {
       key: "name",
       label: "שם חברה",
       sortable: true,
-      render: (row: Company) => (
+      render: (row) => (
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
@@ -145,9 +151,26 @@ export default function CompaniesPage() {
       ),
     },
     {
+      key: "status",
+      label: "סטטוס",
+      width: "150px",
+      sortable: true,
+      render: (row) => (
+        <MondayStatusCell
+          value={row.status}
+          options={companyStatuses}
+          onChange={(status) => {
+            inlineUpdate(row.id, { status: status as Company["status"] });
+            toast.success("סטטוס עודכן");
+          }}
+        />
+      ),
+    },
+    {
       key: "industry",
       label: "תעשייה",
-      render: (row: Company) => (
+      sortable: true,
+      render: (row) => (
         <MondayTextCell
           value={row.industry || ""}
           onChange={(val) => inlineUpdate(row.id, { industry: val })}
@@ -158,7 +181,8 @@ export default function CompaniesPage() {
     {
       key: "email",
       label: "אימייל",
-      render: (row: Company) => (
+      width: "180px",
+      render: (row) => (
         <MondayTextCell
           value={row.email || ""}
           onChange={(val) => inlineUpdate(row.id, { email: val })}
@@ -170,7 +194,8 @@ export default function CompaniesPage() {
     {
       key: "phone",
       label: "טלפון",
-      render: (row: Company) => (
+      width: "140px",
+      render: (row) => (
         <MondayTextCell
           value={row.phone || ""}
           onChange={(val) => inlineUpdate(row.id, { phone: val })}
@@ -180,22 +205,12 @@ export default function CompaniesPage() {
       ),
     },
     {
-      key: "status",
-      label: "סטטוס",
-      sortable: true,
-      render: (row: Company) => (
-        <StatusDropdown
-          value={row.status}
-          options={companyStatuses}
-          onChange={(status) => statusMutation.mutate({ id: row.id, status })}
-        />
-      ),
-    },
-    {
       key: "contactCount",
       label: "אנשי קשר",
       width: "100px",
-      render: (row: Company) => (
+      sortable: true,
+      summary: "sum",
+      render: (row) => (
         <div className="flex items-center gap-1.5">
           <Users size={14} className="text-[#6161FF]" />
           <span className="font-semibold text-[13px] text-[#323338]">
@@ -208,7 +223,9 @@ export default function CompaniesPage() {
       key: "dealCount",
       label: "עסקאות",
       width: "100px",
-      render: (row: Company) => (
+      sortable: true,
+      summary: "sum",
+      render: (row) => (
         <div className="flex items-center gap-1.5">
           <Handshake size={14} className="text-[#00CA72]" />
           <span className="font-semibold text-[13px] text-[#323338]">
@@ -216,6 +233,16 @@ export default function CompaniesPage() {
           </span>
         </div>
       ),
+    },
+  ];
+
+  // Monday groups — single group with all companies
+  const mondayGroups: MondayGroup<Company>[] = [
+    {
+      key: "all",
+      label: "כל החברות",
+      color: "#579BFC",
+      items: data?.data || [],
     },
   ];
 
@@ -265,24 +292,68 @@ export default function CompaniesPage() {
       ) : tableError ? (
         <CompaniesErrorState onRetry={() => refetchTable()} />
       ) : (
-        <DataTable
-          columns={columns}
-          data={data?.data || []}
-          loading={isLoading}
+        <MondayBoard<Company>
+          groups={mondayGroups}
+          columns={mondayColumns}
+          onRowClick={(row) => navigate(`/companies/${row.id}`)}
+          onNewItem={() => setShowCreate(true)}
+          newItemLabel="חברה חדשה"
           search={search}
           onSearchChange={(s) => {
             setSearch(s);
             setPage(1);
           }}
           searchPlaceholder="חיפוש לפי שם, אימייל או טלפון..."
+          loading={isLoading}
           pagination={data?.pagination}
           onPageChange={setPage}
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSortChange={handleSort}
-          onRowClick={(row) => navigate(`/companies/${row.id}`)}
+          statusKey="status"
+          statusOptions={companyStatuses}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          groupByColumns={[
+            { key: "status", label: "סטטוס" },
+            { key: "industry", label: "תעשייה" },
+          ]}
+          contextMenuItems={(row: Company) => {
+            const items: ContextMenuItem[] = [
+              {
+                label: "פתח חברה",
+                icon: <Clock size={14} />,
+                onClick: () => navigate(`/companies/${row.id}`),
+              },
+              { label: "", onClick: () => {}, divider: true },
+              {
+                label: "מחק",
+                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק חברה זו?" }),
+                danger: true,
+              },
+            ];
+            return items;
+          }}
         />
       )}
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} חברות?` })}
+        deleting={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onConfirm={() => {
+          if (confirmDelete) deleteMutation.mutate(confirmDelete.ids);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+        title="מחיקת חברות"
+        message={confirmDelete?.message ?? ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
 
       {showCreate && (
         <CreateCompanyModal

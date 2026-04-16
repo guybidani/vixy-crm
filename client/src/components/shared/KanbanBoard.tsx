@@ -153,6 +153,8 @@ function DroppableColumn({
   return (
     <div
       ref={setNodeRef}
+      role="group"
+      aria-label={`${label} — ${count} פריטים`}
       className={`flex-shrink-0 w-[280px] flex flex-col rounded-xl overflow-hidden transition-all ${
         isOver ? "shadow-lg" : ""
       }`}

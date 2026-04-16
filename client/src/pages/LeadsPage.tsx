@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDebounce } from "../hooks/useDebounce";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,21 +17,33 @@ import {
   RefreshCw,
   ChevronRight,
   ChevronLeft,
+  Trash2,
+  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
 import SidePanel from "../components/shared/SidePanel";
 import ContactDetailPanel from "../components/contacts/ContactDetailPanel";
+import BulkActionBar from "../components/shared/BulkActionBar";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
+import MondayBoard, {
+  type MondayGroup,
+  type MondayColumn,
+} from "../components/shared/MondayBoard";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import MondayTextCell from "../components/shared/MondayTextCell";
 import {
   listContacts,
   createContact,
   updateContact,
+  bulkDeleteContacts,
   type Contact,
 } from "../api/contacts";
 import { createDeal } from "../api/deals";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { getAvatarColor } from "../utils/avatar";
 
 // Pipeline stages for board view — thresholds are the single source of truth
 const PIPELINE_STAGES = [
@@ -72,8 +85,10 @@ export default function LeadsPage() {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(
     null,
   );
-  const [viewMode, setViewMode] = useState<"cards" | "pipeline">("cards");
+  const [viewMode, setViewMode] = useState<"cards" | "pipeline" | "table">("cards");
   const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["leads", { search: debouncedSearch, page }],
@@ -121,6 +136,24 @@ export default function LeadsPage() {
     },
   });
 
+  // Inline update for table view
+  const inlineUpdate = useInlineUpdate(updateContact, [
+    ["leads"],
+    ["contacts"],
+  ]);
+
+  // Bulk delete for table view
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids?: string[]) => bulkDeleteContacts(ids ?? Array.from(selectedIds)),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success(`${data.deleted} לידים נמחקו`);
+      setSelectedIds(new Set());
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
   const leads = data?.data || [];
 
   // Group leads by score range for pipeline view
@@ -131,6 +164,169 @@ export default function LeadsPage() {
     ),
   }));
 
+  // ── Monday Board columns for table view ──────────────────
+  const mondayColumns: MondayColumn<Contact>[] = [
+    {
+      key: "fullName",
+      label: "שם",
+      sortable: true,
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: getAvatarColor(row.fullName) }}
+          >
+            <span className="text-white text-[10px] font-bold">
+              {(row.fullName[0] || "?").toUpperCase()}
+            </span>
+          </div>
+          <MondayTextCell
+            value={row.fullName}
+            onChange={(val) => {
+              const parts = val.trim().split(/\s+/);
+              const firstName = parts[0] || "";
+              const lastName = parts.slice(1).join(" ") || "";
+              inlineUpdate(row.id, { firstName, lastName });
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      key: "email",
+      label: "אימייל",
+      width: "180px",
+      sortable: true,
+      render: (row) => (
+        <MondayTextCell
+          value={row.email || ""}
+          onChange={(val) => inlineUpdate(row.id, { email: val })}
+        />
+      ),
+    },
+    {
+      key: "phone",
+      label: "טלפון",
+      width: "140px",
+      render: (row) => (
+        <MondayTextCell
+          value={row.phone || ""}
+          onChange={(val) => inlineUpdate(row.id, { phone: val })}
+        />
+      ),
+    },
+    {
+      key: "company",
+      label: "חברה",
+      width: "150px",
+      render: (row) => (
+        <span className="text-[13px] text-[#676879] truncate">
+          {row.company?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "leadScore",
+      label: "ציון ליד",
+      width: "110px",
+      sortable: true,
+      render: (row) => {
+        const bg = scoreBgClass(row.leadScore);
+        return (
+          <span className={`text-[12px] font-bold px-2.5 py-1 rounded-full ${bg}`}>
+            {row.leadScore} — {scoreLabel(row.leadScore)}
+          </span>
+        );
+      },
+    },
+    {
+      key: "source",
+      label: "מקור",
+      width: "120px",
+      sortable: true,
+      render: (row) => (
+        <span className="text-[13px] text-[#676879]">
+          {row.source || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "lastActivityAt",
+      label: "פעילות אחרונה",
+      width: "130px",
+      sortable: true,
+      render: (row) => {
+        if (!row.lastActivityAt) return <span className="text-[13px] text-[#C5C7D0]">—</span>;
+        return (
+          <span className="text-[13px] text-[#676879]">
+            {new Date(row.lastActivityAt).toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+          </span>
+        );
+      },
+    },
+    {
+      key: "nextFollowUpDate",
+      label: "מעקב הבא",
+      width: "130px",
+      sortable: true,
+      render: (row) => {
+        if (!row.nextFollowUpDate) return <span className="text-[13px] text-[#C5C7D0]">—</span>;
+        const date = new Date(row.nextFollowUpDate);
+        const isOverdue = date < new Date();
+        return (
+          <span className={`text-[13px] ${isOverdue ? "text-[#FB275D] font-semibold" : "text-[#676879]"}`}>
+            {date.toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+          </span>
+        );
+      },
+    },
+    {
+      key: "createdAt",
+      label: "נוצר",
+      width: "110px",
+      sortable: true,
+      render: (row) => (
+        <span className="text-[13px] text-[#676879]">
+          {new Date(row.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+        </span>
+      ),
+    },
+  ];
+
+  // Monday groups — group by heat/score range
+  const mondayGroups: MondayGroup<Contact>[] = PIPELINE_STAGES.map((stage) => ({
+    key: stage.key,
+    label: stage.label,
+    color: stage.color,
+    items: leads.filter(
+      (l) => l.leadScore >= stage.minScore && l.leadScore <= stage.maxScore,
+    ),
+  }));
+
+  // Context menu for table rows
+  const contextMenuItems = (row: Contact): ContextMenuItem[] => [
+    {
+      label: "פתח פרטים",
+      icon: <Eye size={14} />,
+      onClick: () => setSelectedContactId(row.id),
+    },
+    {
+      label: "הסמך ליד",
+      icon: <Sparkles size={14} />,
+      onClick: () => {
+        setQualifyingId(row.id);
+        qualifyMutation.mutate(row);
+      },
+    },
+    { label: "", onClick: () => {}, divider: true },
+    {
+      label: "מחק",
+      icon: <Trash2 size={14} />,
+      onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק ליד זה?" }),
+      danger: true,
+    },
+  ];
+
   return (
     <PageShell
       boardStyle
@@ -140,9 +336,10 @@ export default function LeadsPage() {
       views={[
         { key: "cards", label: "כרטיסים" },
         { key: "pipeline", label: "משפך" },
+        { key: "table", label: "טבלה" },
       ]}
       activeView={viewMode}
-      onViewChange={(key) => setViewMode(key as "cards" | "pipeline")}
+      onViewChange={(key) => setViewMode(key as "cards" | "pipeline" | "table")}
       actions={
         <div className="flex items-center gap-2">
           <button
@@ -155,21 +352,23 @@ export default function LeadsPage() {
         </div>
       }
     >
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search
-          size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
-        />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          placeholder="חיפוש לידים..."
-          aria-label="חיפוש לידים"
-          className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
-        />
-      </div>
+      {/* Search — hidden in table view (MondayBoard has its own) */}
+      {viewMode !== "table" && (
+        <div className="relative max-w-sm">
+          <Search
+            size={16}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="חיפוש לידים..."
+            aria-label="חיפוש לידים"
+            className="w-full pr-9 pl-4 py-2 bg-white border border-[#E6E9EF] rounded-[4px] text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
+          />
+        </div>
+      )}
 
       {isError ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -229,6 +428,31 @@ export default function LeadsPage() {
               הוסף ליד ראשון
             </button>
           }
+        />
+      ) : viewMode === "table" ? (
+        /* Monday-style Table View */
+        <MondayBoard<Contact>
+          groups={mondayGroups}
+          columns={mondayColumns}
+          onRowClick={(row) => setSelectedContactId(row.id)}
+          onNewItem={() => setShowCreate(true)}
+          newItemLabel="ליד חדש"
+          search={search}
+          onSearchChange={(s) => {
+            setSearch(s);
+            setPage(1);
+          }}
+          searchPlaceholder="חיפוש לידים..."
+          loading={isLoading}
+          pagination={data?.pagination}
+          onPageChange={setPage}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          groupByColumns={[
+            { key: "leadHeat", label: "חום ליד" },
+            { key: "source", label: "מקור" },
+          ]}
+          contextMenuItems={contextMenuItems}
         />
       ) : viewMode === "pipeline" ? (
         /* Pipeline / Funnel Board View */
@@ -291,8 +515,8 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* Pagination */}
-      {data?.pagination && data.pagination.totalPages > 1 && (
+      {/* Pagination — hidden in table view (MondayBoard handles its own) */}
+      {viewMode !== "table" && data?.pagination && data.pagination.totalPages > 1 && (
         <div className="flex items-center justify-between pt-4" dir="rtl">
           <span className="text-[13px] text-[#676879]">
             מציג {((data.pagination.page - 1) * data.pagination.limit) + 1}–{Math.min(data.pagination.page * data.pagination.limit, data.pagination.total)} מתוך {data.pagination.total}
@@ -368,6 +592,28 @@ export default function LeadsPage() {
           }}
         />
       )}
+
+      {/* Bulk action bar for table view */}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} לידים?` })}
+        deleting={bulkDeleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onConfirm={() => {
+          if (confirmDelete) bulkDeleteMutation.mutate(confirmDelete.ids);
+          setConfirmDelete(null);
+        }}
+        onCancel={() => setConfirmDelete(null)}
+        title="מחיקת לידים"
+        message={confirmDelete?.message ?? ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
     </PageShell>
   );
 }

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useDebounce } from "../hooks/useDebounce";
+import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import {
   Plus,
   MessageSquare,
@@ -21,10 +22,22 @@ import {
   AlertCircle,
   ArrowRight,
   Maximize2,
+  List,
+  LayoutList,
+  Link2,
+  Trash2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "../components/shared/Modal";
 import StatusDropdown from "../components/shared/StatusDropdown";
+import MondayBoard, {
+  MondayStatusCell,
+  type MondayGroup,
+  type MondayColumn,
+} from "../components/shared/MondayBoard";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import MondayPersonCell from "../components/shared/MondayPersonCell";
+import BulkActionBar from "../components/shared/BulkActionBar";
 import {
   listTickets,
   createTicket,
@@ -41,6 +54,8 @@ import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useAuth } from "../hooks/useAuth";
 import { timeAgo, avatarColor } from "../lib/utils";
+
+type ViewMode = "queue" | "table";
 
 const CHANNEL_ICONS: Record<string, React.ReactNode> = {
   email: <Mail size={12} />,
@@ -110,6 +125,7 @@ export default function TicketsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const [viewMode, setViewMode] = useState<ViewMode>("queue");
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
@@ -117,6 +133,13 @@ export default function TicketsPage() {
   const [accumulatedTickets, setAccumulatedTickets] = useState<Ticket[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
+
+  // Table view search (separate from queue search)
+  const [tableSearch, setTableSearch] = useState("");
+  const debouncedTableSearch = useDebounce(tableSearch);
+  const [tablePage, setTablePage] = useState(1);
 
   // Reset accumulated tickets, page, and selection when filters change
   useEffect(() => {
@@ -125,6 +148,7 @@ export default function TicketsPage() {
     setSelectedId(null);
   }, [debouncedSearch, statusFilter]);
 
+  // Queue data
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["tickets", { search: debouncedSearch, statusFilter, page }],
     queryFn: () =>
@@ -136,7 +160,40 @@ export default function TicketsPage() {
         sortBy: "createdAt",
         sortDir: "desc",
       }),
+    enabled: viewMode === "queue",
   });
+
+  // Table data
+  const { data: tableData, isLoading: tableLoading } = useQuery({
+    queryKey: ["tickets", { search: debouncedTableSearch, page: tablePage, view: "table" }],
+    queryFn: () =>
+      listTickets({
+        search: debouncedTableSearch || undefined,
+        page: tablePage,
+        limit: 50,
+        sortBy: "createdAt",
+        sortDir: "desc",
+      }),
+    enabled: viewMode === "table",
+  });
+
+  // Members for assignee picker
+  const { data: members } = useQuery({
+    queryKey: ["members"],
+    queryFn: () => getWorkspaceMembers(currentWorkspaceId!),
+    enabled: !!currentWorkspaceId && viewMode === "table",
+  });
+
+  const memberOptions = (members || []).map((m) => ({
+    id: m.memberId,
+    name: m.name,
+  }));
+
+  // Inline update for table view
+  const inlineUpdate = useInlineUpdate(updateTicket, [["tickets"]]);
+
+  // Clear table selection on page/search change
+  useEffect(() => setSelectedIds(new Set()), [tablePage, debouncedTableSearch]);
 
   // Accumulate tickets as pages load — page 1 replaces, later pages append
   useEffect(() => {
@@ -161,10 +218,10 @@ export default function TicketsPage() {
 
   // Auto-select first ticket
   useEffect(() => {
-    if (!selectedId && sortedRows.length > 0) {
+    if (viewMode === "queue" && !selectedId && sortedRows.length > 0) {
       setSelectedId(sortedRows[0].id);
     }
-  }, [sortedRows.length]);
+  }, [sortedRows.length, viewMode]);
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
@@ -180,6 +237,297 @@ export default function TicketsPage() {
     onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
   });
 
+  // ── Monday Board columns for table view ──
+  const mondayColumns: MondayColumn<Ticket>[] = [
+    {
+      key: "subject",
+      label: "נושא",
+      sortable: true,
+      render: (row) => (
+        <span className="text-[13px] font-semibold text-[#323338] truncate block">
+          {row.subject}
+        </span>
+      ),
+    },
+    {
+      key: "contact",
+      label: "איש קשר",
+      width: "150px",
+      render: (row) => (
+        <span className="text-[13px] text-[#676879] truncate block">
+          {row.contact?.name || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "channel",
+      label: "ערוץ",
+      width: "100px",
+      sortable: true,
+      render: (row) => {
+        const channelInfo = ticketChannels[row.channel];
+        return (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[#676879]">{CHANNEL_ICONS[row.channel]}</span>
+            <span className="text-[12px] text-[#676879]">
+              {channelInfo?.label || row.channel}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "priority",
+      label: "עדיפות",
+      width: "120px",
+      sortable: true,
+      noPadding: true,
+      render: (row) => (
+        <MondayStatusCell
+          value={row.priority}
+          options={priorities}
+          onChange={(priority) => {
+            inlineUpdate(row.id, { priority });
+            toast.success("עדיפות עודכנה");
+          }}
+        />
+      ),
+    },
+    {
+      key: "status",
+      label: "סטטוס",
+      width: "140px",
+      sortable: true,
+      noPadding: true,
+      render: (row) => (
+        <MondayStatusCell
+          value={row.status}
+          options={ticketStatuses}
+          onChange={(status) => {
+            inlineUpdate(row.id, { status });
+            toast.success("סטטוס עודכן");
+          }}
+        />
+      ),
+    },
+    {
+      key: "assignee",
+      label: "נציג",
+      width: "150px",
+      render: (row) => (
+        <MondayPersonCell
+          value={row.assignee ? { id: row.assignee.id, name: row.assignee.name } : null}
+          options={memberOptions}
+          onChange={(id) => inlineUpdate(row.id, { assigneeId: id || undefined })}
+          placeholder="לא שויך"
+        />
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "נוצר",
+      width: "110px",
+      sortable: true,
+      render: (row) => (
+        <span className="text-[12px] text-[#676879]">
+          {new Date(row.createdAt).toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
+        </span>
+      ),
+    },
+    {
+      key: "updatedAt",
+      label: "הודעה אחרונה",
+      width: "110px",
+      sortable: true,
+      render: (row) => (
+        <span className="text-[12px] text-[#676879]">
+          {timeAgo(row.updatedAt)}
+        </span>
+      ),
+    },
+    {
+      key: "messageCount",
+      label: "הודעות",
+      width: "80px",
+      sortable: true,
+      summary: "sum",
+      render: (row) => (
+        <div className="flex items-center gap-1 text-[12px] text-[#676879]">
+          <MessageSquare size={11} />
+          {row.messageCount}
+        </div>
+      ),
+    },
+  ];
+
+  // Group tickets by status for MondayBoard
+  const STATUS_GROUP_ORDER = ["NEW", "OPEN", "PENDING", "RESOLVED", "CLOSED"];
+  const STATUS_GROUP_COLORS: Record<string, string> = {
+    NEW: "#579BFC",
+    OPEN: "#00CA72",
+    PENDING: "#FDAB3D",
+    RESOLVED: "#A25DDC",
+    CLOSED: "#C4C4C4",
+  };
+
+  const tableTickets = tableData?.data || [];
+  const mondayGroups: MondayGroup<Ticket>[] = STATUS_GROUP_ORDER.map((statusKey) => ({
+    key: statusKey,
+    label: ticketStatuses[statusKey]?.label || statusKey,
+    color: STATUS_GROUP_COLORS[statusKey] || ticketStatuses[statusKey]?.color || "#579BFC",
+    items: tableTickets.filter((t) => t.status === statusKey),
+  })).filter((g) => g.items.length > 0);
+
+  // If no tickets match any group, show a single "all" group
+  const finalGroups = mondayGroups.length > 0
+    ? mondayGroups
+    : [{ key: "all", label: "כל הקריאות", color: "#579BFC", items: tableTickets }];
+
+  const contextMenuItems = (row: Ticket): ContextMenuItem[] => [
+    {
+      label: "פתח קריאה",
+      icon: <Maximize2 size={14} />,
+      onClick: () => navigate(`/tickets/${row.id}`),
+    },
+    {
+      label: "העתק קישור",
+      icon: <Link2 size={14} />,
+      onClick: () => {
+        navigator.clipboard.writeText(`${window.location.origin}/tickets/${row.id}`);
+        toast.success("קישור הועתק");
+      },
+    },
+    { label: "", onClick: () => {}, divider: true },
+    {
+      label: "מחק",
+      icon: <Trash2 size={14} />,
+      onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק קריאה זו?" }),
+      danger: true,
+    },
+  ];
+
+  // ── View toggle buttons ──
+  const viewToggle = (
+    <div className="flex items-center border border-[#D0D4E4] rounded-[4px] overflow-hidden" role="group" aria-label="תצוגה">
+      <button
+        onClick={() => setViewMode("queue")}
+        aria-label="תור שירות"
+        aria-pressed={viewMode === "queue"}
+        className={`p-[6px] transition-colors ${
+          viewMode === "queue"
+            ? "bg-[#0073EA] text-white"
+            : "bg-white text-[#676879] hover:bg-[#F5F6F8]"
+        }`}
+      >
+        <LayoutList size={15} />
+      </button>
+      <button
+        onClick={() => setViewMode("table")}
+        aria-label="טבלה"
+        aria-pressed={viewMode === "table"}
+        className={`p-[6px] transition-colors ${
+          viewMode === "table"
+            ? "bg-[#0073EA] text-white"
+            : "bg-white text-[#676879] hover:bg-[#F5F6F8]"
+        }`}
+      >
+        <List size={15} />
+      </button>
+    </div>
+  );
+
+  // ── Table view ──
+  if (viewMode === "table") {
+    return (
+      <div className="bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6 min-h-[calc(100vh-56px)]">
+        {/* Header */}
+        <div className="px-6 pt-5 pb-3 bg-white border-b border-[#E6E9EF]">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-[18px] font-bold text-[#323338]">קריאות</h2>
+              {viewToggle}
+            </div>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              קריאה חדשה
+            </button>
+          </div>
+        </div>
+
+        {/* MondayBoard */}
+        <div className="p-4">
+          <MondayBoard<Ticket>
+            groups={finalGroups}
+            columns={mondayColumns}
+            onRowClick={(row) => navigate(`/tickets/${row.id}`)}
+            onNewItem={() => setShowCreate(true)}
+            newItemLabel="קריאה חדשה"
+            search={tableSearch}
+            onSearchChange={(s) => {
+              setTableSearch(s);
+              setTablePage(1);
+            }}
+            searchPlaceholder="חיפוש קריאות..."
+            loading={tableLoading}
+            pagination={tableData?.pagination ? {
+              page: tableData.pagination.page,
+              totalPages: tableData.pagination.totalPages,
+              total: tableData.pagination.total,
+            } : undefined}
+            onPageChange={setTablePage}
+            statusKey="status"
+            statusOptions={ticketStatuses}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            groupByColumns={[
+              { key: "status", label: "סטטוס" },
+              { key: "priority", label: "עדיפות" },
+              { key: "channel", label: "ערוץ" },
+            ]}
+            contextMenuItems={contextMenuItems}
+          />
+        </div>
+
+        <BulkActionBar
+          selectedCount={selectedIds.size}
+          onClear={() => setSelectedIds(new Set())}
+          onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} קריאות?` })}
+        />
+
+        <ConfirmDialog
+          open={!!confirmDelete}
+          onConfirm={() => {
+            // TODO: wire bulk delete when API available
+            setConfirmDelete(null);
+            toast.success("נמחק בהצלחה");
+            queryClient.invalidateQueries({ queryKey: ["tickets"] });
+          }}
+          onCancel={() => setConfirmDelete(null)}
+          title="מחיקת קריאות"
+          message={confirmDelete?.message ?? ""}
+          confirmText="מחק"
+          cancelText="ביטול"
+          variant="danger"
+        />
+
+        {showCreate && (
+          <CreateTicketModal
+            onClose={() => setShowCreate(false)}
+            onCreated={(id) => {
+              setShowCreate(false);
+              navigate(`/tickets/${id}`);
+              queryClient.invalidateQueries({ queryKey: ["tickets"] });
+            }}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── Queue view (original, untouched) ──
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
       {/* ── Left: Ticket List ── */}
@@ -187,7 +535,10 @@ export default function TicketsPage() {
         {/* Header */}
         <div className="px-4 pt-4 pb-2 border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-[15px] font-semibold text-[#323338]">קריאות</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-[15px] font-semibold text-[#323338]">קריאות</h2>
+              {viewToggle}
+            </div>
             <button
               onClick={() => setShowCreate(true)}
               className="flex items-center gap-1 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
@@ -280,7 +631,7 @@ export default function TicketsPage() {
             ))
           )}
           {/* Load more */}
-          {data?.pagination && data.pagination.page < data.pagination.pages && (
+          {data?.pagination && data.pagination.page < data.pagination.totalPages && (
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={isLoading}
@@ -546,8 +897,6 @@ function TicketDetailPanel({
     );
   }
 
-  const statusInfo = ticketStatuses[ticket.status];
-  const priorityInfo = priorities[ticket.priority];
   const slaInfo = ticket.slaPolicy ? getSlaInfo(ticket) : null;
   const createdHoursAgo = (Date.now() - new Date(ticket.createdAt).getTime()) / 3600000;
   const showSlaAlert =

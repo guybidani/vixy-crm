@@ -31,6 +31,7 @@ const WORKSPACE_SCOPED_MODELS = [
   "FollowUpExecution",
   "Document",
   "DocumentLink",
+  "Note",
   "Board",
   "SavedView",
   "Workflow",
