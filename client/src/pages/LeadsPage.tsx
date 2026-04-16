@@ -758,7 +758,7 @@ function LeadCard({
       </div>
 
       {/* Tags */}
-      {lead.tags.length > 0 && (
+      {lead.tags && lead.tags.length > 0 && (
         <div className="flex gap-1.5 flex-wrap mb-4">
           {lead.tags.map((t) => (
             <span
@@ -1006,7 +1006,7 @@ function CreateLeadModal({
               className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA] bg-white"
             >
               <option value="">ללא חברה</option>
-              {companies?.data.map((c) => (
+              {companies?.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

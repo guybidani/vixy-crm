@@ -1,4 +1,9 @@
+import toast from "react-hot-toast";
+
 const API_BASE = "/api/v1";
+
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 1000;
 
 let accessToken: string | null = localStorage.getItem("vixy_at");
 
@@ -104,6 +109,32 @@ export async function api<T = unknown>(
       clearWorkspaceId();
       window.location.href = "/login";
       throw { code: "SESSION_EXPIRED", message: "Session expired" };
+    }
+  }
+
+  // Handle 429 rate limiting with automatic retry + backoff
+  if (res.status === 429) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const retryAfter = res.headers.get("Retry-After");
+      const delayMs = retryAfter
+        ? Number(retryAfter) * 1000
+        : RETRY_BASE_MS * Math.pow(2, attempt - 1);
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+
+      res = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers,
+        credentials: "include",
+      });
+
+      if (res.status !== 429) break;
+    }
+
+    // Still rate limited after all retries
+    if (res.status === 429) {
+      toast.error("יותר מדי בקשות, נסה שוב בעוד רגע");
+      throw { code: "RATE_LIMITED", message: "Too many requests, please try again later" };
     }
   }
 

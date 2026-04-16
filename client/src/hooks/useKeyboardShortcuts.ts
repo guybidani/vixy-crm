@@ -13,16 +13,17 @@ interface UseKeyboardShortcutsReturn {
   closeShortcutsHelp: () => void;
 }
 
-function isEditableTarget(e: KeyboardEvent): boolean {
-  const target = e.target as HTMLElement | null;
-  if (!target) return false;
-  const tag = target.tagName;
+function isEditingContext(): boolean {
+  const el = document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
-  if (target.isContentEditable) return true;
+  if ((el as HTMLElement).isContentEditable) return true;
+  if (document.querySelector('[role="dialog"]')) return true;
   return false;
 }
 
-const CHORD_TIMEOUT = 500;
+const CHORD_TIMEOUT = 200;
 
 const CHORD_MAP: Record<string, string> = {
   d: "/dashboard",
@@ -63,8 +64,8 @@ export function useKeyboardShortcuts({
         return;
       }
 
-      // Don't fire shortcuts when user is typing in an input
-      if (isEditableTarget(e)) return;
+      // Don't fire shortcuts when user is typing in an input, editing, or a dialog is open
+      if (isEditingContext()) return;
 
       // Handle chord second key
       if (chordPendingRef.current) {

@@ -95,8 +95,6 @@ app.use(
     },
   }),
 );
-app.use(apiLimiter);
-
 // Make io available to routes
 app.set("io", io);
 
@@ -125,8 +123,8 @@ app.get("/uploads/:filename", requireAuth, (req, res) => {
   });
 });
 
-// Routes
-app.use("/api/v1", router);
+// Routes — rate limiter scoped to API routes only (not static assets)
+app.use("/api/v1", apiLimiter, router);
 
 // Health check (deep — DB + Redis)
 app.get("/health", async (_req, res) => {

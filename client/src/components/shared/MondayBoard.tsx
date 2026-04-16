@@ -1501,11 +1501,18 @@ export default function MondayBoard<T extends { id: string }>({
                           draggable={!!onMoveItem}
                           onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragItemId(row.id); }}
                           onDragEnd={() => { setDragItemId(null); setDragOverGroupKey(null); }}
+                          onClick={(e) => {
+                            const tag = (e.target as HTMLElement).tagName;
+                            if (tag === 'INPUT' || tag === 'BUTTON' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+                            if ((e.target as HTMLElement).closest('button, input, select, textarea, [role="button"], [role="listbox"]')) return;
+                            onRowClick?.(row);
+                          }}
                           className={cn(
                             "group/row border-b border-[#E6E9EF] transition-colors h-[36px]",
                             selectedIds?.has(row.id) ? "bg-[#E6F4FF] hover:bg-[#DCF0FF]" : "hover:bg-[#F0F3FF]",
                             newItemId === row.id && "animate-row-slide-in",
                             dragItemId === row.id && "opacity-40",
+                            onRowClick && "cursor-pointer",
                           )}
                           onContextMenu={(e) => {
                             if (contextMenuItems) {
