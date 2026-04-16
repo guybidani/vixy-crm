@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Hash } from "lucide-react";
+import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import { addBoardColumn } from "../../api/boards";
@@ -93,6 +94,7 @@ export default function ColumnEditorModal({
       onClose();
       resetForm();
     },
+    onError: () => toast.error("שגיאה בהוספת עמודה"),
   });
 
   function resetForm() {

@@ -684,6 +684,7 @@ export default function BoardItemDetailPanel({
       toast.success("שם עודכן");
       setEditingName(false);
     },
+    onError: () => toast.error("שגיאה בעדכון שם"),
   });
 
   const updateValuesMut = useMutation({
@@ -700,6 +701,7 @@ export default function BoardItemDetailPanel({
       qc.invalidateQueries({ queryKey: ["board", boardId] });
       onUpdated();
     },
+    onError: () => toast.error("שגיאה בעדכון ערכים"),
   });
 
   const createCommentMut = useMutation({
@@ -747,6 +749,7 @@ export default function BoardItemDetailPanel({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["board-item-comments", boardId, itemId] });
     },
+    onError: () => toast.error("שגיאה"),
   });
 
   const duplicateItemMut = useMutation({
@@ -799,6 +802,7 @@ export default function BoardItemDetailPanel({
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["board-item-subitems", boardId, itemId] });
     },
+    onError: () => toast.error("שגיאה בעדכון תת-פריט"),
   });
 
   const deleteSubItemMut = useMutation({

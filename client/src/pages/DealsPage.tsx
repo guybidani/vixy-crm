@@ -29,7 +29,6 @@ import Modal from "../components/shared/Modal";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
 } from "../components/shared/KanbanBoard";
-import ViewToggle from "../components/shared/ViewToggle";
 import ExportButton from "../components/shared/ExportButton";
 import BulkActionBar from "../components/shared/BulkActionBar";
 import MondayBoard, {

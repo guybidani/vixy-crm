@@ -28,12 +28,11 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  AlarmClock,
   AlertCircle,
   CheckSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import PageShell, { EmptyState } from "../components/layout/PageShell";
+import PageShell from "../components/layout/PageShell";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import KanbanBoard, {

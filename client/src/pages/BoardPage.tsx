@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Lock, Shield, PanelRightOpen, Link2, List, Columns2, CalendarDays, Zap } from "lucide-react";
+import { Pencil, Lock, Shield, PanelRightOpen, Link2, CalendarDays, Zap } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 import BoardPermissionsModal from "../components/boards/BoardPermissionsModal";
 import BoardItemDetailPanel from "../components/boards/BoardItemDetailPanel";
@@ -367,6 +368,7 @@ export default function BoardPage() {
       qc.invalidateQueries({ queryKey: ["board", id] });
       qc.invalidateQueries({ queryKey: ["boards"] });
     },
+    onError: () => toast.error("שגיאה בעדכון לוח"),
   });
 
   const addItemMut = useMutation({
@@ -380,6 +382,7 @@ export default function BoardPage() {
         setTimeout(() => setNewItemId(null), 1000);
       }
     },
+    onError: () => toast.error("שגיאה בהוספת פריט"),
   });
 
   const updateValuesMut = useMutation({
@@ -394,28 +397,33 @@ export default function BoardPage() {
       }>;
     }) => updateBoardItemValues(id!, p.itemId, p.values),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בעדכון ערכים"),
   });
 
   const updateItemMut = useMutation({
     mutationFn: (p: { itemId: string; name: string }) =>
       updateBoardItem(id!, p.itemId, { name: p.name }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בעדכון פריט"),
   });
 
   const moveItemMut = useMutation({
     mutationFn: (p: { itemId: string; groupId: string }) =>
       updateBoardItem(id!, p.itemId, { groupId: p.groupId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בהעברת פריט"),
   });
 
   const deleteItemMut = useMutation({
     mutationFn: (itemId: string) => deleteBoardItem(id!, itemId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה במחיקת פריט"),
   });
 
   const addGroupMut = useMutation({
     mutationFn: () => addBoardGroup(id!, { name: "קבוצה חדשה" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בהוספת קבוצה"),
   });
 
   const saveAutomationsMut = useMutation({
@@ -424,6 +432,7 @@ export default function BoardPage() {
       qc.invalidateQueries({ queryKey: ["board", id] });
       setAutomationsOpen(false);
     },
+    onError: () => toast.error("שגיאה בשמירת אוטומציות"),
   });
 
   const updateGroupMut = useMutation({
@@ -432,11 +441,13 @@ export default function BoardPage() {
       data: Partial<{ name: string; color: string }>;
     }) => updateBoardGroup(id!, p.groupId, p.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בעדכון קבוצה"),
   });
 
   const deleteGroupMut = useMutation({
     mutationFn: (groupId: string) => deleteBoardGroup(id!, groupId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה במחיקת קבוצה"),
   });
 
   const updateColMut = useMutation({
@@ -448,11 +459,13 @@ export default function BoardPage() {
       }>;
     }) => updateBoardColumn(id!, p.columnId, p.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה בעדכון עמודה"),
   });
 
   const deleteColMut = useMutation({
     mutationFn: (columnId: string) => deleteBoardColumn(id!, columnId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["board", id] }),
+    onError: () => toast.error("שגיאה במחיקת עמודה"),
   });
 
   // ── Handlers ──

@@ -34,6 +34,7 @@ import {
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
 import Modal from "../components/shared/Modal";
+import ConfirmDialog from "../components/shared/ConfirmDialog";
 import AutomationTab from "../components/settings/AutomationTab";
 import OptionsTab from "../components/settings/OptionsTab";
 import TagsTab from "../components/settings/TagsTab";

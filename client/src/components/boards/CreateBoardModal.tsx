@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid, Users, Handshake, CheckSquare, Calendar, ChevronLeft } from "lucide-react";
+import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import {
@@ -65,6 +66,7 @@ export default function CreateBoardModal({
       setName("");
       navigate(`/boards/${board.id}`);
     },
+    onError: () => toast.error("שגיאה ביצירת לוח"),
   });
 
   if (!open) return null;

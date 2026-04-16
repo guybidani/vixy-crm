@@ -520,11 +520,15 @@ export async function board(workspaceId: string) {
 }
 
 export async function remove(workspaceId: string, id: string) {
-  const result = await prisma.ticket.deleteMany({ where: { id, workspaceId } });
-  if (result.count === 0) {
+  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
+  // wrapped in a transaction to prevent orphaned notes if the entity delete
+  // fails or vice-versa (race condition fix).
+  const [, deleteResult] = await prisma.$transaction([
+    prisma.note.deleteMany({ where: { workspaceId, entityType: "ticket", entityId: id } }),
+    prisma.ticket.deleteMany({ where: { id, workspaceId } }),
+  ]);
+  if (deleteResult.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Ticket not found");
   }
-  // Clean up orphaned notes (polymorphic relation, no FK cascade)
-  await prisma.note.deleteMany({ where: { workspaceId, entityType: "ticket", entityId: id } });
   return { deleted: true };
 }

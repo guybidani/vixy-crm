@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth";
 import { NAV_ITEMS } from "../../lib/constants";
@@ -239,6 +240,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["boards"] });
     },
+    onError: () => toast.error("שגיאה בעדכון לוח"),
   });
 
   const handleNavRename = (key: string, newLabel: string) => {

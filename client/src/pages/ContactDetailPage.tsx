@@ -610,7 +610,7 @@ export default function ContactDetailPage() {
                 className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-medium text-[#0073EA] hover:bg-[#E8F3FF] rounded-[4px] transition-colors"
               >
                 <Plus size={13} />
-                הו��ף משימה
+                הוסף משימה
               </button>
             </div>
             {contact.tasks && contact.tasks.length > 0 ? (

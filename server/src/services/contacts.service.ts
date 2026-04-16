@@ -348,17 +348,16 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  // Use deleteMany with workspaceId filter in a single round-trip instead of
-  // find + delete (two round-trips). This also provides defense-in-depth — the
-  // workspace scope is enforced at the delete level, not just the check.
-  const result = await prisma.contact.deleteMany({
-    where: { id, workspaceId },
-  });
-  if (result.count === 0) {
+  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
+  // wrapped in a transaction to prevent orphaned notes if the entity delete
+  // fails or vice-versa (race condition fix).
+  const [, deleteResult] = await prisma.$transaction([
+    prisma.note.deleteMany({ where: { workspaceId, entityType: "contact", entityId: id } }),
+    prisma.contact.deleteMany({ where: { id, workspaceId } }),
+  ]);
+  if (deleteResult.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
-  // Clean up orphaned notes (polymorphic relation, no FK cascade)
-  await prisma.note.deleteMany({ where: { workspaceId, entityType: "contact", entityId: id } });
   return { deleted: true };
 }
 

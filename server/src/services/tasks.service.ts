@@ -608,11 +608,14 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  // Single round-trip with workspace-scoped delete (defense-in-depth)
-  const result = await prisma.task.deleteMany({ where: { id, workspaceId } });
-  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
-  // Clean up orphaned notes (polymorphic relation, no FK cascade)
-  await prisma.note.deleteMany({ where: { workspaceId, entityType: "task", entityId: id } });
+  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
+  // wrapped in a transaction to prevent orphaned notes if the entity delete
+  // fails or vice-versa (race condition fix).
+  const [, deleteResult] = await prisma.$transaction([
+    prisma.note.deleteMany({ where: { workspaceId, entityType: "task", entityId: id } }),
+    prisma.task.deleteMany({ where: { id, workspaceId } }),
+  ]);
+  if (deleteResult.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
   return { deleted: true };
 }
 

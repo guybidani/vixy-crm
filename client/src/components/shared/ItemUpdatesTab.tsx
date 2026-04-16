@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pin, PinOff, Pencil, Trash2, Send } from "lucide-react";
 import toast from "react-hot-toast";
@@ -7,6 +7,8 @@ import type { Note } from "../../api/notes";
 import { useAuth } from "../../hooks/useAuth";
 import { avatarColor, timeAgo } from "../../lib/utils";
 import { getInitials } from "../../utils/avatar";
+
+const PAGE_SIZE = 100;
 
 interface ItemUpdatesTabProps {
   entityType: string;
@@ -26,53 +28,96 @@ export default function ItemUpdatesTab({
   const [newContent, setNewContent] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [page, setPage] = useState(1);
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
+  const [total, setTotal] = useState(0);
+  const prevEntityId = useRef(entityId);
 
-  const queryKey = ["notes", entityType, entityId];
+  // Reset when entity changes
+  useEffect(() => {
+    if (prevEntityId.current !== entityId) {
+      prevEntityId.current = entityId;
+      setPage(1);
+      setAllNotes([]);
+      setTotal(0);
+    }
+  }, [entityId]);
 
-  const { data, isLoading } = useQuery({
+  const queryKey = ["notes", entityType, entityId, page];
+
+  const { data, isLoading, isFetching } = useQuery({
     queryKey,
-    queryFn: () => listNotes({ entityType, entityId, limit: 100 }),
+    queryFn: () => listNotes({ entityType, entityId, page, limit: PAGE_SIZE }),
     enabled: !!entityId,
   });
 
-  const notes = data?.data ?? [];
+  // Accumulate notes across pages
+  useEffect(() => {
+    if (!data) return;
+    setTotal(data.pagination.total);
+    if (page === 1) {
+      setAllNotes(data.data);
+    } else {
+      setAllNotes((prev) => {
+        const existingIds = new Set(prev.map((n) => n.id));
+        const newNotes = data.data.filter((n) => !existingIds.has(n.id));
+        return [...prev, ...newNotes];
+      });
+    }
+  }, [data, page]);
+
+  const loadMore = useCallback(() => {
+    setPage((p) => p + 1);
+  }, []);
+
+  const notes = allNotes;
 
   // ── Mutations ──
+
+  // Broad key for invalidating all pages of this entity's notes
+  const baseQueryKey = ["notes", entityType, entityId];
+
+  const resetAndInvalidate = useCallback(() => {
+    setPage(1);
+    setAllNotes([]);
+    queryClient.invalidateQueries({ queryKey: baseQueryKey });
+  }, [queryClient, entityType, entityId]);
 
   const createMut = useMutation({
     mutationFn: (content: string) =>
       createNote({ entityType, entityId, content }),
     onMutate: async (content: string) => {
-      await queryClient.cancelQueries({ queryKey });
-      const prev = queryClient.getQueryData(queryKey);
-      // Optimistic: add a placeholder note after pinned notes
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old) return old;
-        const optimistic: Note = {
-          id: `temp-${Date.now()}`,
-          entityType,
-          entityId,
-          content,
-          isPinned: false,
-          authorId: currentMemberId ?? "",
-          author: { id: currentMemberId ?? "", user: { name: "את/ה" } },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        const pinnedCount = old.data.filter((n: Note) => n.isPinned).length;
-        const newData = [...old.data];
-        newData.splice(pinnedCount, 0, optimistic);
-        return { ...old, data: newData };
+      // Optimistic: add a placeholder note to local state
+      const optimistic: Note = {
+        id: `temp-${Date.now()}`,
+        entityType,
+        entityId,
+        content,
+        isPinned: false,
+        authorId: currentMemberId ?? "",
+        author: { id: currentMemberId ?? "", user: { name: "את/ה" } },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setAllNotes((prev) => {
+        const pinnedCount = prev.filter((n) => n.isPinned).length;
+        const newNotes = [...prev];
+        newNotes.splice(pinnedCount, 0, optimistic);
+        return newNotes;
       });
+      setTotal((t) => t + 1);
       setNewContent("");
-      return { prev };
+      return { optimisticId: optimistic.id };
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
+      if (ctx?.optimisticId) {
+        setAllNotes((prev) => prev.filter((n) => n.id !== ctx.optimisticId));
+        setTotal((t) => t - 1);
+      }
       toast.error("שגיאה בשמירת העדכון");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      resetAndInvalidate();
     },
   });
 
@@ -83,7 +128,7 @@ export default function ItemUpdatesTab({
         isPinned: vars.isPinned,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
+      resetAndInvalidate();
       setEditingId(null);
     },
     onError: () => toast.error("שגיאה בעדכון"),
@@ -92,20 +137,20 @@ export default function ItemUpdatesTab({
   const deleteMut = useMutation({
     mutationFn: (id: string) => deleteNote(id),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey });
-      const prev = queryClient.getQueryData(queryKey);
-      queryClient.setQueryData(queryKey, (old: any) => {
-        if (!old) return old;
-        return { ...old, data: old.data.filter((n: Note) => n.id !== id) };
-      });
-      return { prev };
+      const removed = allNotes.find((n) => n.id === id);
+      setAllNotes((prev) => prev.filter((n) => n.id !== id));
+      setTotal((t) => t - 1);
+      return { removed };
     },
     onError: (_err, _id, ctx) => {
-      if (ctx?.prev) queryClient.setQueryData(queryKey, ctx.prev);
+      if (ctx?.removed) {
+        setAllNotes((prev) => [...prev, ctx.removed!]);
+        setTotal((t) => t + 1);
+      }
       toast.error("שגיאה במחיקה");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+      resetAndInvalidate();
     },
   });
 
@@ -333,6 +378,27 @@ export default function ItemUpdatesTab({
             </div>
           );
         })}
+
+        {/* Load More */}
+        {total > allNotes.length && (
+          <div className="pt-1">
+            {isFetching && page > 1 ? (
+              <div className="flex justify-center py-2">
+                <div
+                  className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+                  style={{ borderColor: "#0073EA", borderTopColor: "transparent" }}
+                />
+              </div>
+            ) : (
+              <button
+                onClick={loadMore}
+                className="w-full py-2 text-[13px] text-[#0073EA] hover:bg-[#F5F6F8] rounded transition-colors"
+              >
+                טען עוד ({total - allNotes.length} נותרו)
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
