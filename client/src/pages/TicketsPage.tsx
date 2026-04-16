@@ -54,6 +54,8 @@ import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useAuth } from "../hooks/useAuth";
 import { timeAgo, avatarColor } from "../lib/utils";
+import SavedViewsBar from "../components/shared/SavedViewsBar";
+import { type SavedView } from "../api/views";
 
 type ViewMode = "queue" | "table";
 
@@ -136,6 +138,15 @@ export default function TicketsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
+  // Saved views filter state
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
+
+  function handleSelectView(view: SavedView | null) {
+    setActiveView(view);
+    setTablePage(1);
+  }
+
   // Table view search (separate from queue search)
   const [tableSearch, setTableSearch] = useState("");
   const debouncedTableSearch = useDebounce(tableSearch);
@@ -165,14 +176,16 @@ export default function TicketsPage() {
 
   // Table data
   const { data: tableData, isLoading: tableLoading } = useQuery({
-    queryKey: ["tickets", { search: debouncedTableSearch, page: tablePage, view: "table" }],
+    queryKey: ["tickets", { search: debouncedTableSearch, page: tablePage, view: "table", status: viewFilters.status, priority: viewFilters.priority, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir }],
     queryFn: () =>
       listTickets({
         search: debouncedTableSearch || undefined,
         page: tablePage,
         limit: 50,
-        sortBy: "createdAt",
-        sortDir: "desc",
+        status: viewFilters.status || undefined,
+        priority: viewFilters.priority || undefined,
+        sortBy: activeView?.sortBy ?? "createdAt",
+        sortDir: activeView?.sortDir ?? "desc",
       }),
     enabled: viewMode === "table",
   });
@@ -455,6 +468,17 @@ export default function TicketsPage() {
               קריאה חדשה
             </button>
           </div>
+        </div>
+
+        {/* Saved views bar */}
+        <div className="px-4 pt-4 pb-0">
+          <SavedViewsBar
+            entity="tickets"
+            activeViewId={activeView?.id ?? null}
+            onSelectView={handleSelectView}
+            currentFilters={viewFilters}
+            hasActiveFilters={Object.keys(viewFilters).length > 0}
+          />
         </div>
 
         {/* MondayBoard */}

@@ -52,6 +52,7 @@ import { updateTask, createTask } from "../../api/tasks";
 import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import AiDealScore from "./AiDealScore";
+import ItemUpdatesTab from "../shared/ItemUpdatesTab";
 
 interface DealDetailPanelProps {
   dealId: string;
@@ -93,7 +94,7 @@ export default function DealDetailPanel({
   const { currentWorkspaceId, user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"activity" | "details" | "tasks">("activity");
+  const [activeTab, setActiveTab] = useState<"activity" | "updates" | "details" | "tasks">("activity");
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState("");
   const [autoSaving, setAutoSaving] = useState(false);
@@ -614,6 +615,7 @@ export default function DealDetailPanel({
             {(
               [
                 { key: "activity", label: "פעילות" },
+                { key: "updates", label: "עדכונים" },
                 { key: "details", label: "הערות" },
                 { key: "tasks", label: `משימות${deal.tasks?.length ? ` (${deal.tasks.length})` : ""}` },
               ] as const
@@ -829,6 +831,12 @@ export default function DealDetailPanel({
                   </div>
                 </div>
               </>
+            )}
+
+            {activeTab === "updates" && (
+              <div className="p-6">
+                <ItemUpdatesTab entityType="deal" entityId={dealId} />
+              </div>
             )}
 
             {activeTab === "details" && (

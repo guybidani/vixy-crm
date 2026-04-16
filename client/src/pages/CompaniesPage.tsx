@@ -29,6 +29,8 @@ import {
 } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import SavedViewsBar from "../components/shared/SavedViewsBar";
+import { type SavedView } from "../api/views";
 
 const COMPANY_COLORS = [
   "#6161FF",
@@ -60,6 +62,15 @@ export default function CompaniesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
+  // Saved views filter state
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
+
+  function handleSelectView(view: SavedView | null) {
+    setActiveView(view);
+    setPage(1);
+  }
+
   // Reset selection on page/search change
   useEffect(() => setSelectedIds(new Set()), [page, debouncedSearch]);
 
@@ -69,11 +80,13 @@ export default function CompaniesPage() {
   ]);
 
   const { data, isLoading, isError: tableError, refetch: refetchTable } = useQuery({
-    queryKey: ["companies", { search: debouncedSearch, page }],
+    queryKey: ["companies", { search: debouncedSearch, page, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir }],
     queryFn: () =>
       listCompanies({
         search: debouncedSearch || undefined,
         page,
+        sortBy: activeView?.sortBy ?? undefined,
+        sortDir: activeView?.sortDir ?? undefined,
       }),
     enabled: viewMode === "table",
   });
@@ -274,6 +287,17 @@ export default function CompaniesPage() {
         </div>
       }
     >
+      {/* Saved views bar — table view only */}
+      {viewMode === "table" && (
+        <SavedViewsBar
+          entity="companies"
+          activeViewId={activeView?.id ?? null}
+          onSelectView={handleSelectView}
+          currentFilters={viewFilters}
+          hasActiveFilters={Object.keys(viewFilters).length > 0}
+        />
+      )}
+
       {viewMode === "kanban" ? (
         boardError ? (
           <CompaniesErrorState onRetry={() => refetchBoard()} />

@@ -44,6 +44,8 @@ import { createDeal } from "../api/deals";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { getAvatarColor } from "../utils/avatar";
+import SavedViewsBar from "../components/shared/SavedViewsBar";
+import { type SavedView } from "../api/views";
 
 // Pipeline stages for board view — thresholds are the single source of truth
 const PIPELINE_STAGES = [
@@ -90,16 +92,25 @@ export default function LeadsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[]; message: string } | null>(null);
 
+  // Saved views filter state
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
+
+  function handleSelectView(view: SavedView | null) {
+    setActiveView(view);
+    setPage(1);
+  }
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["leads", { search: debouncedSearch, page }],
+    queryKey: ["leads", { search: debouncedSearch, page, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir }],
     queryFn: () =>
       listContacts({
         status: "LEAD",
         search: debouncedSearch || undefined,
         page,
         limit: 50,
-        sortBy: "leadScore",
-        sortDir: "desc",
+        sortBy: activeView?.sortBy ?? "leadScore",
+        sortDir: activeView?.sortDir ?? "desc",
       }),
   });
 
@@ -352,6 +363,17 @@ export default function LeadsPage() {
         </div>
       }
     >
+      {/* Saved views bar — table view only */}
+      {viewMode === "table" && (
+        <SavedViewsBar
+          entity="leads"
+          activeViewId={activeView?.id ?? null}
+          onSelectView={handleSelectView}
+          currentFilters={viewFilters}
+          hasActiveFilters={Object.keys(viewFilters).length > 0}
+        />
+      )}
+
       {/* Search — hidden in table view (MondayBoard has its own) */}
       {viewMode !== "table" && (
         <div className="relative max-w-sm">

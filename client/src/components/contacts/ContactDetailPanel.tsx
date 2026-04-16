@@ -44,6 +44,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { getWhatsAppUrl } from "../../utils/phone";
 import FollowUpCard from "./FollowUpCard";
+import ItemUpdatesTab from "../shared/ItemUpdatesTab";
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -70,6 +71,7 @@ export default function ContactDetailPanel({
   const [editing, setEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showRelated, setShowRelated] = useState(false);
+  const [panelTab, setPanelTab] = useState<"details" | "updates" | "activity">("details");
 
   const { data: contact, isLoading, isError, refetch } = useQuery({
     queryKey: ["contact", contactId],
@@ -333,38 +335,66 @@ export default function ContactDetailPanel({
         />
       </div>
 
-      {/* ── 2-COLUMN BODY ────────────────────────────────────── */}
-      <div className="flex gap-5 flex-1 min-h-0">
-        {/* LEFT — Activity Feed */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
-          <h3 className="text-xs font-bold text-[#676879] uppercase tracking-wide mb-3">
-            פעילות
-          </h3>
-          <TimelineTab contact={contact} />
-        </div>
-
-        {/* RIGHT — Contact Fields */}
-        <div className="w-64 flex-shrink-0 overflow-y-auto">
-          <h3 className="text-xs font-bold text-[#676879] uppercase tracking-wide mb-3">
-            פרטים
-          </h3>
-          <ContactFieldsPanel contact={contact} />
-        </div>
+      {/* ── TAB BAR ──────────────────────────────────────────── */}
+      <div className="flex items-center gap-0 border-b border-[#E6E9EF] px-0 mb-0">
+        {([
+          { key: "details" as const, label: "פרטים" },
+          { key: "updates" as const, label: "עדכונים" },
+          { key: "activity" as const, label: "פעילות" },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setPanelTab(tab.key)}
+            className={`px-4 py-2.5 text-[13px] font-medium border-b-[2px] -mb-px transition-colors ${
+              panelTab === tab.key
+                ? "text-[#0073EA] border-[#0073EA]"
+                : "text-[#676879] border-transparent hover:text-[#323338]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* ── RELATED SECTION (collapsible) ────────────────────── */}
-      <div className="mt-5 border-t border-[#E6E9EF] pt-4">
-        <button
-          onClick={() => setShowRelated((v) => !v)}
-          className="flex items-center gap-2 text-sm font-semibold text-[#676879] hover:text-[#323338] transition-colors w-full"
-        >
-          <span>{showRelated ? "▼" : "▶"}</span>
-          קשורים (עסקאות, פניות, משימות)
-        </button>
-        {showRelated && (
-          <div className="mt-3">
-            <RelatedTab contact={contact} navigate={navigate} />
-          </div>
+      {/* ── TAB CONTENT ──────────────────────────────────────── */}
+      <div className="flex-1 min-h-0 overflow-y-auto mt-4">
+        {panelTab === "details" && (
+          <>
+            {/* 2-Column: Activity + Fields */}
+            <div className="flex gap-5 flex-1 min-h-0">
+              {/* LEFT — Contact Fields */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-xs font-bold text-[#676879] uppercase tracking-wide mb-3">
+                  פרטים
+                </h3>
+                <ContactFieldsPanel contact={contact} />
+              </div>
+            </div>
+
+            {/* RELATED SECTION (collapsible) */}
+            <div className="mt-5 border-t border-[#E6E9EF] pt-4">
+              <button
+                onClick={() => setShowRelated((v) => !v)}
+                className="flex items-center gap-2 text-sm font-semibold text-[#676879] hover:text-[#323338] transition-colors w-full"
+              >
+                <span>{showRelated ? "▼" : "▶"}</span>
+                קשורים (עסקאות, פניות, משימות)
+              </button>
+              {showRelated && (
+                <div className="mt-3">
+                  <RelatedTab contact={contact} navigate={navigate} />
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {panelTab === "updates" && (
+          <ItemUpdatesTab entityType="contact" entityId={contactId} />
+        )}
+
+        {panelTab === "activity" && (
+          <TimelineTab contact={contact} />
         )}
       </div>
 
@@ -599,12 +629,6 @@ function isOverdue(date: Date): boolean {
   return target.getTime() < today.getTime();
 }
 
-const PRIORITY_DOT_COLORS: Record<string, string> = {
-  URGENT: "#FB275D",
-  HIGH: "#FDAB3D",
-  MEDIUM: "#579BFC",
-  LOW: "#C4C4C4",
-};
 
 type ComposeTab = "NOTE" | "CALL" | "EMAIL" | "MEETING";
 type FilterType = "ALL" | "CALL" | "EMAIL" | "NOTE" | "MEETING";

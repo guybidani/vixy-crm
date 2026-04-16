@@ -42,6 +42,7 @@ const TASK_CONTEXT_OPTIONS = [
   { value: "GENERAL", label: "כללי", icon: Layers, color: "#C3C6D4" },
 ];
 
+import ItemUpdatesTab from "../shared/ItemUpdatesTab";
 import toast from "react-hot-toast";
 import StatusDropdown from "../shared/StatusDropdown";
 import MondayPersonCell, {
@@ -101,7 +102,7 @@ export default function TaskDetailPanel({
   const { currentWorkspaceId, workspaces } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<"info" | "activity" | "comments">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "updates" | "activity" | "comments">("info");
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
@@ -369,6 +370,7 @@ export default function TaskDetailPanel({
         {(
           [
             { key: "info", label: "פרטים" },
+            { key: "updates", label: "עדכונים" },
             { key: "comments", label: `תגובות${comments && comments.length > 0 ? ` (${comments.length})` : ""}` },
             { key: "activity", label: "פעילות" },
           ] as const
@@ -692,6 +694,8 @@ export default function TaskDetailPanel({
             )}
           </div>
         </div>
+      ) : activeTab === "updates" ? (
+        <ItemUpdatesTab entityType="task" entityId={taskId} />
       ) : activeTab === "comments" ? (
         /* Comments Tab */
         <div className="flex flex-col gap-4">

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { handleMutationError } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,16 +13,23 @@ import {
   Upload,
   Trash2,
   Download,
-  Search,
   AlertCircle,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDebounce } from "../hooks/useDebounce";
 import Modal from "../components/shared/Modal";
-import PageShell, { EmptyState } from "../components/layout/PageShell";
+import PageShell from "../components/layout/PageShell";
 import SidePanel from "../components/shared/SidePanel";
 import RichTextEditor from "../components/shared/RichTextEditor";
+import MondayBoard, {
+  type MondayGroup,
+  type MondayColumn,
+} from "../components/shared/MondayBoard";
+import MondayTextCell from "../components/shared/MondayTextCell";
+import BulkActionBar from "../components/shared/BulkActionBar";
+import { type ContextMenuItem } from "../components/shared/RowContextMenu";
 import {
   getDocuments,
   uploadDocument,
@@ -33,22 +40,22 @@ import {
 } from "../api/documents";
 
 function getFileIcon(mimeType: string | null) {
-  if (!mimeType) return <File size={20} />;
+  if (!mimeType) return <File size={16} />;
   if (mimeType.startsWith("image/"))
-    return <Image size={20} className="text-[#00CA72]" />;
+    return <Image size={16} className="text-[#00CA72]" />;
   if (mimeType.includes("pdf"))
-    return <FileText size={20} className="text-[#FB275D]" />;
+    return <FileText size={16} className="text-[#FB275D]" />;
   if (mimeType.includes("spreadsheet") || mimeType.includes("excel"))
-    return <FileSpreadsheet size={20} className="text-[#00CA72]" />;
+    return <FileSpreadsheet size={16} className="text-[#00CA72]" />;
   if (mimeType.includes("presentation") || mimeType.includes("powerpoint"))
-    return <Presentation size={20} className="text-[#FDAB3D]" />;
+    return <Presentation size={16} className="text-[#FDAB3D]" />;
   if (mimeType.includes("word") || mimeType.includes("document"))
-    return <FileText size={20} className="text-[#579BFC]" />;
-  return <File size={20} className="text-[#9699A6]" />;
+    return <FileText size={16} className="text-[#579BFC]" />;
+  return <File size={16} className="text-[#9699A6]" />;
 }
 
 function formatFileSize(bytes: number | null) {
-  if (!bytes) return "";
+  if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -58,9 +65,6 @@ export default function DocumentsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "FILE" | "RICH_TEXT">(
-    "ALL",
-  );
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState<null | "upload" | "rich-text">(
     null,
@@ -68,6 +72,11 @@ export default function DocumentsPage() {
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [docToDelete, setDocToDelete] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState<{
+    ids: string[];
+    message: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Close "new document" dropdown on Escape key
@@ -83,15 +92,12 @@ export default function DocumentsPage() {
   }, [showMenu]);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: [
-      "documents",
-      { search: debouncedSearch, type: typeFilter, page },
-    ],
+    queryKey: ["documents", { search: debouncedSearch, page }],
     queryFn: () =>
       getDocuments({
         search: debouncedSearch || undefined,
-        type: typeFilter === "ALL" ? undefined : typeFilter,
         page,
+        limit: 50,
       }),
   });
 
@@ -115,17 +121,217 @@ export default function DocumentsPage() {
     onError: (err: unknown) => handleMutationError(err, "שגיאה במחיקת מסמך"),
   });
 
+  const bulkDeleteMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteDocument(id)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+      toast.success("מסמכים נמחקו!");
+      setSelectedIds(new Set());
+    },
+    onError: (err: unknown) =>
+      handleMutationError(err, "שגיאה במחיקת מסמכים"),
+  });
+
+  const renameMut = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      updateDocument(id, { title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+    },
+    onError: (err: unknown) => handleMutationError(err, "שגיאה בשינוי שם"),
+  });
+
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) uploadMut.mutate(file);
     e.target.value = "";
   }
 
-  const TYPE_FILTERS = [
-    { value: "ALL" as const, label: "הכל" },
-    { value: "FILE" as const, label: "קבצים" },
-    { value: "RICH_TEXT" as const, label: "מסמכי טקסט" },
-  ];
+  // Group documents by type
+  const allDocs = data?.data || [];
+
+  const mondayGroups: MondayGroup<Document>[] = useMemo(() => {
+    const files = allDocs.filter((d) => d.type === "FILE");
+    const richTexts = allDocs.filter((d) => d.type === "RICH_TEXT");
+    const groups: MondayGroup<Document>[] = [];
+    if (files.length > 0 || richTexts.length === 0) {
+      groups.push({
+        key: "files",
+        label: "קבצים",
+        color: "#579BFC",
+        items: files,
+      });
+    }
+    if (richTexts.length > 0 || files.length === 0) {
+      groups.push({
+        key: "rich-text",
+        label: "מסמכי טקסט",
+        color: "#6161FF",
+        items: richTexts,
+      });
+    }
+    return groups;
+  }, [allDocs]);
+
+  const mondayColumns: MondayColumn<Document>[] = useMemo(
+    () => [
+      {
+        key: "title",
+        label: "שם מסמך",
+        sortable: true,
+        sortValue: (row: Document) => row.title.toLowerCase(),
+        render: (row: Document) => (
+          <div className="flex items-center gap-2">
+            <span className="flex-shrink-0">
+              {row.type === "RICH_TEXT" ? (
+                <FileText size={16} className="text-[#6161FF]" />
+              ) : (
+                getFileIcon(row.mimeType)
+              )}
+            </span>
+            <MondayTextCell
+              value={row.title}
+              onChange={(val) => renameMut.mutate({ id: row.id, title: val })}
+            />
+          </div>
+        ),
+      },
+      {
+        key: "type",
+        label: "סוג",
+        width: "120px",
+        sortable: true,
+        sortValue: (row: Document) => row.type,
+        render: (row: Document) => (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+              row.type === "FILE"
+                ? "bg-[#579BFC]/10 text-[#579BFC]"
+                : "bg-[#6161FF]/10 text-[#6161FF]"
+            }`}
+          >
+            {row.type === "FILE" ? "קובץ" : "טקסט"}
+          </span>
+        ),
+      },
+      {
+        key: "size",
+        label: "גודל",
+        width: "100px",
+        sortable: true,
+        sortValue: (row: Document) => row.fileSize ?? 0,
+        render: (row: Document) => (
+          <span className="text-[13px] text-[#676879]">
+            {row.type === "FILE" ? formatFileSize(row.fileSize) : "—"}
+          </span>
+        ),
+      },
+      {
+        key: "author",
+        label: "יוצר",
+        width: "140px",
+        render: (row: Document) => (
+          <span className="text-[13px] text-[#676879]">
+            {row.createdBy?.user?.name || "—"}
+          </span>
+        ),
+      },
+      {
+        key: "createdAt",
+        label: "נוצר",
+        width: "120px",
+        sortable: true,
+        sortValue: (row: Document) => new Date(row.createdAt).getTime(),
+        render: (row: Document) => (
+          <span className="text-[13px] text-[#676879]">
+            {new Date(row.createdAt).toLocaleDateString("he-IL", {
+              day: "numeric",
+              month: "short",
+            })}
+          </span>
+        ),
+      },
+      {
+        key: "updatedAt",
+        label: "עודכן",
+        width: "120px",
+        sortable: true,
+        sortValue: (row: Document) => new Date(row.updatedAt).getTime(),
+        render: (row: Document) => (
+          <span className="text-[13px] text-[#676879]">
+            {new Date(row.updatedAt).toLocaleDateString("he-IL", {
+              day: "numeric",
+              month: "short",
+            })}
+          </span>
+        ),
+      },
+      {
+        key: "actions",
+        label: "",
+        width: "80px",
+        render: (row: Document) => (
+          <div className="flex items-center gap-1">
+            {row.type === "FILE" && row.fileUrl && (
+              <a
+                href={`/uploads/${row.fileUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] hover:text-[#579BFC] transition-colors"
+                title="הורדה"
+                aria-label={`הורד ${row.title}`}
+              >
+                <Download size={14} />
+              </a>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDocToDelete(row.id);
+              }}
+              className="p-1.5 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-red-500 transition-colors"
+              title="מחק"
+              aria-label={`מחק ${row.title}`}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ),
+      },
+    ],
+    [renameMut],
+  );
+
+  const contextMenuItems = (row: Document): ContextMenuItem[] => {
+    const items: ContextMenuItem[] = [
+      {
+        label: "פתח / תצוגה מקדימה",
+        icon: <Eye size={14} />,
+        onClick: () => setSelectedDoc(row),
+      },
+    ];
+    if (row.type === "FILE" && row.fileUrl) {
+      items.push({
+        label: "הורדה",
+        icon: <Download size={14} />,
+        onClick: () => {
+          window.open(`/uploads/${row.fileUrl}`, "_blank");
+        },
+      });
+    }
+    items.push(
+      { label: "", onClick: () => {}, divider: true },
+      {
+        label: "מחק",
+        onClick: () => setDocToDelete(row.id),
+        danger: true,
+      },
+    );
+    return items;
+  };
 
   return (
     <PageShell
@@ -150,7 +356,11 @@ export default function DocumentsPage() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowMenu(false)}
               />
-              <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] py-1 w-48 z-50" role="menu" aria-label="יצירת מסמך חדש">
+              <div
+                className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] py-1 w-48 z-50"
+                role="menu"
+                aria-label="יצירת מסמך חדש"
+              >
                 <button
                   role="menuitem"
                   onClick={() => {
@@ -186,119 +396,52 @@ export default function DocumentsPage() {
         </div>
       }
     >
-      {/* Search & Filters */}
-      <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search
-              size={16}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9699A6]"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="חיפוש מסמכים..."
-              aria-label="חיפוש מסמכים"
-              className="w-full pr-9 pl-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30 focus:border-[#0073EA]"
-            />
+      {isError ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
+            <AlertCircle size={28} className="text-[#E44258]" />
           </div>
-          <div className="flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] p-0.5" role="tablist" aria-label="סוג מסמך">
-            {TYPE_FILTERS.map((f) => (
-              <button
-                key={f.value}
-                role="tab"
-                aria-selected={typeFilter === f.value}
-                onClick={() => {
-                  setTypeFilter(f.value);
-                  setPage(1);
-                }}
-                className={`px-3 py-1.5 text-[12px] font-medium rounded-md transition-colors ${
-                  typeFilter === f.value
-                    ? "bg-white shadow-sm text-[#323338]"
-                    : "text-[#676879] hover:text-[#323338]"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <h2 className="text-base font-bold text-[#323338] mb-1">
+            שגיאה בטעינת מסמכים
+          </h2>
+          <p className="text-[13px] text-[#676879] mb-4">
+            לא הצלחנו לטעון את הנתונים. נסו שוב.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+          >
+            <RefreshCw size={14} />
+            נסה שוב
+          </button>
         </div>
-
-        {/* Document Grid */}
-        {isError ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-              <AlertCircle size={28} className="text-[#E44258]" />
-            </div>
-            <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת מסמכים</h2>
-            <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-            <button
-              onClick={() => refetch()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-            >
-              <RefreshCw size={14} />
-              נסה שוב
-            </button>
-          </div>
-        ) : isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div
-                key={i}
-                className="bg-[#F5F6F8] rounded-xl p-4 animate-pulse h-32"
-              />
-            ))}
-          </div>
-        ) : !data?.data.length ? (
-          <EmptyState
-            icon={<FileText size={28} className="text-[#9699A6]" />}
-            title="אין מסמכים"
-            description="העלה קובץ או צור מסמך טקסט חדש כדי להתחיל"
-          />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {data.data.map((doc) => (
-                <DocumentCard
-                  key={doc.id}
-                  doc={doc}
-                  onClick={() => setSelectedDoc(doc)}
-                  onDelete={() => setDocToDelete(doc.id)}
-                />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {data.totalPages > 1 && (
-              <nav className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-[#E6E9EF]" aria-label="ניווט עמודים">
-                <button
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                  aria-label="עמוד קודם"
-                  className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
-                >
-                  הקודם
-                </button>
-                <span className="text-[13px] text-[#676879]" aria-current="page">
-                  עמוד {page} מתוך {data.totalPages}
-                </span>
-                <button
-                  disabled={page >= data.totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                  aria-label="עמוד הבא"
-                  className="px-3 py-1.5 text-[13px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] disabled:opacity-30"
-                >
-                  הבא
-                </button>
-              </nav>
-            )}
-          </>
-        )}
-      </div>
+      ) : (
+        <MondayBoard<Document>
+          groups={mondayGroups}
+          columns={mondayColumns}
+          onRowClick={(row) => setSelectedDoc(row)}
+          search={search}
+          onSearchChange={(s) => {
+            setSearch(s);
+            setPage(1);
+          }}
+          searchPlaceholder="חיפוש מסמכים..."
+          loading={isLoading}
+          pagination={
+            data
+              ? {
+                  page: data.page,
+                  totalPages: data.totalPages,
+                  total: data.total,
+                }
+              : undefined
+          }
+          onPageChange={setPage}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          contextMenuItems={contextMenuItems}
+        />
+      )}
 
       {/* Create Rich Text Modal */}
       {showCreate === "rich-text" && (
@@ -315,6 +458,7 @@ export default function DocumentsPage() {
         />
       )}
 
+      {/* Single delete confirm */}
       <ConfirmDialog
         open={!!docToDelete}
         onConfirm={() => {
@@ -328,90 +472,35 @@ export default function DocumentsPage() {
         cancelText="ביטול"
         variant="danger"
       />
+
+      {/* Bulk delete confirm */}
+      <ConfirmDialog
+        open={!!confirmBulkDelete}
+        onConfirm={() => {
+          if (confirmBulkDelete) bulkDeleteMut.mutate(confirmBulkDelete.ids);
+          setConfirmBulkDelete(null);
+        }}
+        onCancel={() => setConfirmBulkDelete(null)}
+        title="מחיקת מסמכים"
+        message={confirmBulkDelete?.message ?? ""}
+        confirmText="מחק"
+        cancelText="ביטול"
+        variant="danger"
+      />
+
+      {/* Bulk action bar */}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        onDelete={() =>
+          setConfirmBulkDelete({
+            ids: Array.from(selectedIds),
+            message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} מסמכים?`,
+          })
+        }
+        deleting={bulkDeleteMut.isPending}
+      />
     </PageShell>
-  );
-}
-
-function DocumentCard({
-  doc,
-  onClick,
-  onDelete,
-}: {
-  doc: Document;
-  onClick: () => void;
-  onDelete: () => void;
-}) {
-  const linkedEntities = doc.links
-    .map((l) => {
-      if (l.contact)
-        return `${l.contact.firstName} ${l.contact.lastName || ""}`.trim();
-      if (l.deal) return l.deal.title;
-      if (l.company) return l.company.name;
-      if (l.ticket) return l.ticket.subject;
-      return null;
-    })
-    .filter(Boolean);
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } }}
-      className="bg-white border border-[#E6E9EF] rounded-xl p-4 hover:border-[#0073EA]/30 hover:shadow-sm transition-all cursor-pointer group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
-          {doc.type === "RICH_TEXT" ? (
-            <FileText size={20} className="text-[#6161FF]" />
-          ) : (
-            getFileIcon(doc.mimeType)
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-[13px] text-[#323338] truncate">
-            {doc.title}
-          </h3>
-          <p className="text-[12px] text-[#9699A6] mt-0.5">
-            {doc.type === "FILE" ? formatFileSize(doc.fileSize) : "מסמך טקסט"}
-            {" · "}
-            {new Date(doc.createdAt).toLocaleDateString("he-IL")}
-          </p>
-          {linkedEntities.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {linkedEntities.slice(0, 2).map((name, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] px-1.5 py-0.5 bg-[#0073EA]/8 text-[#0073EA] rounded-full"
-                >
-                  {name}
-                </span>
-              ))}
-              {linkedEntities.length > 2 && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-[#F5F6F8] text-[#9699A6] rounded-full">
-                  +{linkedEntities.length - 2}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Hover actions — also visible on focus-within for keyboard users */}
-      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-1.5 rounded-[4px] hover:bg-red-50 text-[#9699A6] hover:text-red-500 transition-colors"
-          title="מחק"
-          aria-label={`מחק ${doc.title}`}
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
-    </div>
   );
 }
 

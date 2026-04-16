@@ -34,6 +34,8 @@ import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import SavedViewsBar from "../components/shared/SavedViewsBar";
+import { type SavedView } from "../api/views";
 
 
 export default function ContactsPage() {
@@ -62,17 +64,28 @@ export default function ContactsPage() {
   const [needsFollowUp, setNeedsFollowUp] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
+  // Saved views filter state
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
+
+  function handleSelectView(view: SavedView | null) {
+    setActiveView(view);
+    setPage(1);
+  }
+
   const { data, isLoading, isError: tableError, refetch: refetchTable } = useQuery({
     queryKey: [
       "contacts",
-      { search: debouncedSearch, page, statusFilter, needsFollowUp },
+      { search: debouncedSearch, page, statusFilter, needsFollowUp, viewStatus: viewFilters.status, sortBy: activeView?.sortBy, sortDir: activeView?.sortDir },
     ],
     queryFn: () =>
       listContacts({
         search: debouncedSearch || undefined,
         page,
-        status: statusFilter || undefined,
+        status: viewFilters.status || statusFilter || undefined,
         needsFollowUp: needsFollowUp || undefined,
+        sortBy: activeView?.sortBy ?? undefined,
+        sortDir: activeView?.sortDir ?? undefined,
       }),
     enabled: viewMode === "table" || viewMode === "cards",
   });
@@ -420,6 +433,17 @@ export default function ContactsPage() {
         </div>
       }
     >
+      {/* Saved views bar — table view only */}
+      {viewMode === "table" && (
+        <SavedViewsBar
+          entity="contacts"
+          activeViewId={activeView?.id ?? null}
+          onSelectView={handleSelectView}
+          currentFilters={viewFilters}
+          hasActiveFilters={Object.keys(viewFilters).length > 0}
+        />
+      )}
+
       {viewMode === "kanban" ? (
         boardError ? (
           <ContactsErrorState onRetry={() => refetchBoard()} />
