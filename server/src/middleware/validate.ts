@@ -4,7 +4,10 @@ import { ZodSchema, ZodError } from "zod";
 export function validate(schema: ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req.body);
+      // Assign the parsed result back so downstream handlers see the
+      // sanitized body — zod strips unknown keys and applies defaults
+      // that were previously silently discarded.
+      req.body = schema.parse(req.body);
       next();
     } catch (err) {
       if (err instanceof ZodError) {

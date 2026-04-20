@@ -199,8 +199,10 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const { user, workspaces, currentWorkspaceId, selectWorkspace } = useAuth();
-  const { moduleLabels } = useWorkspaceOptions();
+  const { moduleLabels, branding } = useWorkspaceOptions();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
+  const logoUrl = branding.logoUrl;
+  const brandColor = branding.brandColor || "#0073EA";
   const isOwner = currentWs?.role === "OWNER";
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
   const [boardsExpanded, setBoardsExpanded] = useState(() => {
@@ -323,9 +325,24 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
             {/* Logo / Workspace */}
             <div className="flex items-center gap-2.5 px-3 py-4 border-b border-[#EEEFF3]">
-              <div className="flex-shrink-0 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center shadow-sm w-8 h-8">
-                <span className="text-white font-bold text-sm">V</span>
-              </div>
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={currentWs?.name || "לוגו"}
+                  className="flex-shrink-0 w-8 h-8 rounded-xl object-cover shadow-sm bg-white"
+                />
+              ) : (
+                <div
+                  className="flex-shrink-0 rounded-xl flex items-center justify-center shadow-sm w-8 h-8"
+                  style={{
+                    background: `linear-gradient(135deg, ${brandColor}, ${brandColor}CC)`,
+                  }}
+                >
+                  <span className="text-white font-bold text-sm">
+                    {(currentWs?.name || "V").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 {workspaces.length > 1 ? (
                   <select
@@ -530,9 +547,24 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         {/* ── Product Rail (always visible, 48px) ── */}
         <div className="w-12 flex flex-col items-center py-2 gap-1 flex-shrink-0" role="group" aria-label="בחירת מוצר">
           {/* Logo icon */}
-          <div className="w-8 h-8 mb-1 bg-gradient-to-br from-[#0073EA] to-[#0060C2] rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={currentWs?.name || "לוגו"}
+              className="w-8 h-8 mb-1 rounded-xl object-cover shadow-sm flex-shrink-0 bg-white"
+            />
+          ) : (
+            <div
+              className="w-8 h-8 mb-1 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
+              style={{
+                background: `linear-gradient(135deg, ${brandColor}, ${brandColor}CC)`,
+              }}
+            >
+              <span className="text-white font-bold text-sm">
+                {(currentWs?.name || "V").charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
 
           {/* Work Management */}
           <ProductBtn

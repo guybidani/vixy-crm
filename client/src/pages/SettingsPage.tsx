@@ -45,6 +45,7 @@ import IntegrationsTab from "../components/settings/IntegrationsTab";
 import SnoozeSettingsTab from "../components/settings/SnoozeSettingsTab";
 import ModuleLabelsTab from "../components/settings/ModuleLabelsTab";
 import CustomFieldsTab from "../components/settings/CustomFieldsTab";
+import BrandingTab from "../components/settings/BrandingTab";
 import { useAuth } from "../hooks/useAuth";
 import {
   getWorkspaceMembers,
@@ -80,6 +81,7 @@ interface SettingsTab {
 
 const BASE_TABS: SettingsTab[] = [
   { key: "general", label: "כללי", icon: Settings2, color: "#6161FF", adminOnly: true },
+  { key: "branding", label: "מיתוג", icon: Palette, color: "#6161FF", adminOnly: true },
   { key: "profile", label: "פרופיל", icon: User, color: "#6161FF" },
   { key: "members", label: "חברי צוות", icon: Users, color: "#00CA72", adminOnly: true },
   { key: "permissions", label: "הרשאות", icon: Lock, color: "#FB275D", adminOnly: true },
@@ -152,6 +154,7 @@ export default function SettingsPage() {
       </div>
 
       {tab === "general" && <GeneralTab />}
+      {tab === "branding" && <BrandingTab />}
       {tab === "profile" && <ProfileTab />}
       {tab === "members" && <MembersTab />}
       {tab === "permissions" && <WorkspacePermissionsTab />}

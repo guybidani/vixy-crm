@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../db/client';
+import { audit } from '../services/audit.service';
 
 // Map route prefixes to nav permission keys
 const ROUTE_TO_NAV_KEY: Record<string, string> = {
@@ -35,7 +36,18 @@ export async function checkNavPermission(req: Request, res: Response, next: Next
     const member = await prisma.workspaceMember.findFirst({
       where: { workspaceId, userId }
     });
-    if (!member) return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not a workspace member' } });
+    if (!member) {
+      audit({
+        workspaceId,
+        userId,
+        action: 'nav.forbidden',
+        entityType: 'nav',
+        entityId: navKey,
+        metadata: { path, method: req.method, reason: 'not_a_member' },
+        ip: req.ip,
+      });
+      return res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Not a workspace member' } });
+    }
 
     // Get workspace settings
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
@@ -48,6 +60,20 @@ export async function checkNavPermission(req: Request, res: Response, next: Next
     const allowedSections = navPermissions[member.id] as string[];
     if (allowedSections.includes(navKey)) return next();
 
+    audit({
+      workspaceId,
+      userId,
+      action: 'nav.forbidden',
+      entityType: 'nav',
+      entityId: navKey,
+      metadata: {
+        path,
+        method: req.method,
+        memberId: member.id,
+        allowedSections,
+      },
+      ip: req.ip,
+    });
     return res.status(403).json({ error: { code: 'NAV_FORBIDDEN', message: '\u05D0\u05D9\u05DF \u05D4\u05E8\u05E9\u05D0\u05D4 \u05DC\u05D2\u05E9\u05EA \u05DC\u05D0\u05D6\u05D5\u05E8 \u05D6\u05D4' } });
   } catch (err) {
     next(err);

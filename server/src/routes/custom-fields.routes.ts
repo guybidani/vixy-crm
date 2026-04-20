@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { requireRole } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import * as cfService from "../services/custom-fields.service";
 
@@ -18,43 +19,42 @@ function requireUuid(value: unknown, paramName: string): string {
 const ENTITY_TYPES = ["contact", "deal", "company"] as const;
 const FIELD_TYPES = ["text", "number", "date", "select", "email", "phone", "url", "checkbox"] as const;
 
+const optionSchema = z.object({
+  label: z.string().min(1).max(100),
+  value: z.string().min(1).max(100),
+  color: z.string().max(30).optional(),
+});
+
 const createSchema = z.object({
   entityType: z.enum(ENTITY_TYPES),
   name: z.string().min(1).max(100),
   fieldType: z.enum(FIELD_TYPES),
-  options: z.array(z.object({
-    label: z.string(),
-    value: z.string(),
-    color: z.string().optional(),
-  })).optional(),
+  options: z.array(optionSchema).max(50).optional(),
   required: z.boolean().optional(),
 }).refine(
   (data) => data.fieldType !== "select" || (data.options && data.options.length > 0),
   { message: "Select fields must have at least one option", path: ["options"] },
 );
 
+// NOTE: `fieldType` is intentionally omitted — type is immutable after creation
+// to protect existing stored values. To change type, delete & recreate the field.
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  fieldType: z.enum(FIELD_TYPES).optional(),
-  options: z.array(z.object({
-    label: z.string(),
-    value: z.string(),
-    color: z.string().optional(),
-  })).optional(),
+  options: z.array(optionSchema).max(50).optional(),
   required: z.boolean().optional(),
   order: z.number().int().min(0).optional(),
 });
 
 const reorderSchema = z.object({
   entityType: z.enum(ENTITY_TYPES),
-  fieldIds: z.array(z.string().uuid()),
+  fieldIds: z.array(z.string().uuid()).max(100),
 });
 
 const bulkValuesSchema = z.object({
   values: z.array(z.object({
     fieldId: z.string().uuid(),
     value: z.string().nullable(),
-  })),
+  })).max(100),
 });
 
 // ─── Field CRUD ───
@@ -75,8 +75,8 @@ customFieldsRouter.get("/", async (req, res, next) => {
   }
 });
 
-// POST /custom-fields
-customFieldsRouter.post("/", validate(createSchema), async (req, res, next) => {
+// POST /custom-fields — OWNER or ADMIN only (mutates workspace schema)
+customFieldsRouter.post("/", requireRole("OWNER", "ADMIN"), validate(createSchema), async (req, res, next) => {
   try {
     const field = await cfService.createField(req.workspaceId!, req.body);
     res.status(201).json(field);
@@ -85,8 +85,8 @@ customFieldsRouter.post("/", validate(createSchema), async (req, res, next) => {
   }
 });
 
-// PATCH /custom-fields/reorder
-customFieldsRouter.patch("/reorder", validate(reorderSchema), async (req, res, next) => {
+// PATCH /custom-fields/reorder — OWNER or ADMIN only (mutates workspace schema)
+customFieldsRouter.patch("/reorder", requireRole("OWNER", "ADMIN"), validate(reorderSchema), async (req, res, next) => {
   try {
     const result = await cfService.reorderFields(
       req.workspaceId!,
@@ -99,8 +99,8 @@ customFieldsRouter.patch("/reorder", validate(reorderSchema), async (req, res, n
   }
 });
 
-// PATCH /custom-fields/:id
-customFieldsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
+// PATCH /custom-fields/:id — OWNER or ADMIN only (mutates workspace schema)
+customFieldsRouter.patch("/:id", requireRole("OWNER", "ADMIN"), validate(updateSchema), async (req, res, next) => {
   try {
     const field = await cfService.updateField(req.workspaceId!, requireUuid(req.params.id, "id"), req.body);
     res.json(field);
@@ -109,8 +109,8 @@ customFieldsRouter.patch("/:id", validate(updateSchema), async (req, res, next) 
   }
 });
 
-// DELETE /custom-fields/:id
-customFieldsRouter.delete("/:id", async (req, res, next) => {
+// DELETE /custom-fields/:id — OWNER or ADMIN only (mutates workspace schema)
+customFieldsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     const result = await cfService.deleteField(req.workspaceId!, requireUuid(req.params.id, "id"));
     res.json(result);

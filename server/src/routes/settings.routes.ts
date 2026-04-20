@@ -2,51 +2,93 @@ import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
 import { requireRole } from "../middleware/auth";
+import { brandingUpload } from "../middleware/brandingUpload";
 import { audit } from "../services/audit.service";
 import * as settingsService from "../services/settings.service";
+import { generateDemoData } from "../services/demo-data.service";
 
 export const settingsRouter = Router();
 
+// Record cap — we store these on a single workspace row so allowing an
+// attacker to post an unbounded number of keys would blow up the JSON
+// payload size and storage.
+const MAX_OPTION_CATEGORY_KEYS = 20;
+const MAX_OPTIONS_PER_CATEGORY = 50;
+
 const optionOverride = z.object({
-  label: z.string().min(1).optional(),
-  color: z.string().min(1).optional(),
+  label: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(30).optional(),
   order: z.number().int().min(0).optional(),
   hidden: z.boolean().optional(),
 });
 
 const optionOverrideNoHidden = z.object({
-  label: z.string().min(1).optional(),
-  color: z.string().min(1).optional(),
+  label: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(30).optional(),
   order: z.number().int().min(0).optional(),
 });
 
 const activityOverride = z.object({
-  label: z.string().min(1).optional(),
-  color: z.string().min(1).optional(),
-  icon: z.string().min(1).optional(),
+  label: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(30).optional(),
+  icon: z.string().min(1).max(50).optional(),
 });
 
 const channelOverride = z.object({
-  label: z.string().min(1).optional(),
-  color: z.string().min(1).optional(),
+  label: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).max(30).optional(),
 });
 
+// Each category is a record keyed by enum value (e.g. "LEAD" → override).
+// Bound the key count so settings JSON can't be grown unboundedly.
+const boundedOverrideRecord = z.record(optionOverride).refine(
+  (r) => Object.keys(r).length <= MAX_OPTION_CATEGORY_KEYS,
+  { message: `A category may have at most ${MAX_OPTION_CATEGORY_KEYS} keys` },
+);
+const boundedOverrideNoHiddenRecord = z.record(optionOverrideNoHidden).refine(
+  (r) => Object.keys(r).length <= MAX_OPTION_CATEGORY_KEYS,
+  { message: `A category may have at most ${MAX_OPTION_CATEGORY_KEYS} keys` },
+);
+const boundedActivityRecord = z.record(activityOverride).refine(
+  (r) => Object.keys(r).length <= MAX_OPTION_CATEGORY_KEYS,
+  { message: `A category may have at most ${MAX_OPTION_CATEGORY_KEYS} keys` },
+);
+const boundedChannelRecord = z.record(channelOverride).refine(
+  (r) => Object.keys(r).length <= MAX_OPTION_CATEGORY_KEYS,
+  { message: `A category may have at most ${MAX_OPTION_CATEGORY_KEYS} keys` },
+);
+
 const optionsSchema = z.object({
-  dealStages: z.record(optionOverride).optional(),
-  priorities: z.record(optionOverrideNoHidden).optional(),
-  ticketStatuses: z.record(optionOverride).optional(),
-  taskStatuses: z.record(optionOverride).optional(),
-  contactStatuses: z.record(optionOverride).optional(),
-  companyStatuses: z.record(optionOverride).optional(),
-  activityTypes: z.record(activityOverride).optional(),
-  leadSources: z.array(z.string().min(1)).optional(),
-  ticketChannels: z.record(channelOverride).optional(),
-});
+  dealStages: boundedOverrideRecord.optional(),
+  priorities: boundedOverrideNoHiddenRecord.optional(),
+  ticketStatuses: boundedOverrideRecord.optional(),
+  taskStatuses: boundedOverrideRecord.optional(),
+  contactStatuses: boundedOverrideRecord.optional(),
+  companyStatuses: boundedOverrideRecord.optional(),
+  activityTypes: boundedActivityRecord.optional(),
+  leadSources: z.array(z.string().min(1).max(100)).max(50).optional(),
+  ticketChannels: boundedChannelRecord.optional(),
+}).refine(
+  // Cross-category guard: no single sub-record should exceed per-category cap.
+  // We leave this to the refiners above but keep the outer object so future
+  // fields are easy to add.
+  () => true,
+  { message: "" },
+);
+// Note: MAX_OPTIONS_PER_CATEGORY is enforced implicitly by MAX_OPTION_CATEGORY_KEYS
+// on the record-keyed overrides, which are per-category maps. For the array-
+// typed `leadSources` we cap at 50 directly above.
+void MAX_OPTIONS_PER_CATEGORY;
 
 // ─── Nav Permissions ───
 
 const navPermissionsSchema = z.object({
-  navPermissions: z.record(z.array(z.string())),
+  navPermissions: z.record(
+    z.array(z.string().min(1).max(50)).max(20),
+  ).refine(
+    (r) => Object.keys(r).length <= 100,
+    { message: "navPermissions may have at most 100 member keys" },
+  ),
 });
 
 // GET /settings/nav-permissions — any workspace member can read
@@ -88,7 +130,7 @@ settingsRouter.put(
 // ─── Module Labels ───
 
 const moduleLabelsSchema = z.object({
-  moduleLabels: z.record(z.string().min(1)).refine(
+  moduleLabels: z.record(z.string().min(1).max(50)).refine(
     (labels) => Object.keys(labels).every((k) =>
       ["dashboard", "contacts", "companies", "deals", "leads", "tasks", "tickets",
        "documents", "knowledge", "templates", "automations", "reports", "analytics",
@@ -137,16 +179,16 @@ settingsRouter.patch(
 // ─── Snooze Options ───
 
 const snoozeOptionSchema = z.object({
-  label: z.string().min(1),
+  label: z.string().min(1).max(100),
   minutes: z.number().int(),
-  special: z.string().min(1).optional(),
+  special: z.string().min(1).max(50).optional(),
 }).refine(
   (opt) => opt.minutes > 0 || (opt.minutes === -1 && !!opt.special),
   { message: "minutes must be > 0, or -1 with a special field" },
 );
 
 const snoozeOptionsSchema = z.object({
-  snoozeOptions: z.array(snoozeOptionSchema).min(1).max(10),
+  snoozeOptions: z.array(snoozeOptionSchema).min(1).max(20),
 });
 
 // GET /settings/snooze-options — any workspace member can read
@@ -188,7 +230,7 @@ settingsRouter.patch(
 // ─── Onboarding / Industry Templates ───
 
 const applyTemplateSchema = z.object({
-  templateId: z.string().min(1),
+  templateId: z.string().min(1).max(100),
 });
 
 // GET /settings/setup-status — any workspace member can read
@@ -227,6 +269,70 @@ settingsRouter.post(
         ip: req.ip,
       });
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /settings/populate-demo-data — OWNER or ADMIN only.
+//
+// Generates industry-specific demo data (companies, contacts, deals) for the
+// given template. Fire-and-forget semantics: we kick off the generator in
+// the background and return 202 so the UI can navigate into the dashboard
+// while data streams in. Errors are logged but never bubble up to the
+// caller because the request has already been answered.
+settingsRouter.post(
+  "/populate-demo-data",
+  requireRole("OWNER", "ADMIN"),
+  validate(applyTemplateSchema),
+  async (req, res, next) => {
+    try {
+      const workspaceId = req.workspaceId!;
+      const memberId = req.memberId!;
+      const userId = req.user!.userId;
+      const ip = req.ip;
+      const templateId = req.body.templateId as string;
+
+      // Kick off the generator detached from the request. The user can
+      // navigate to the dashboard immediately; data appears as soon as the
+      // bulk insert transaction commits (~1s typical).
+      void generateDemoData(workspaceId, memberId, templateId)
+        .then((result) => {
+          audit({
+            workspaceId,
+            userId,
+            action: "settings.demo_data.populated",
+            entityType: "Workspace",
+            entityId: workspaceId,
+            metadata: { templateId, ...result },
+            ip,
+          });
+        })
+        .catch((err) => {
+          // Detached promise — must catch, otherwise a DB hiccup becomes an
+          // unhandled rejection that can crash the Node process.
+          // eslint-disable-next-line no-console
+          console.error("[demo-data] population failed", {
+            workspaceId,
+            templateId,
+            err,
+          });
+          audit({
+            workspaceId,
+            userId,
+            action: "settings.demo_data.failed",
+            entityType: "Workspace",
+            entityId: workspaceId,
+            metadata: {
+              templateId,
+              error: err instanceof Error ? err.message : String(err),
+            },
+            ip,
+          });
+        });
+
+      res.status(202).json({ accepted: true, templateId });
     } catch (err) {
       next(err);
     }
@@ -285,6 +391,88 @@ settingsRouter.put(
         ip: req.ip,
       });
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Branding ───
+
+// Hex color string — #RGB or #RRGGBB (case-insensitive). Null/empty resets to default.
+const brandingSchema = z.object({
+  logoUrl: z.string().max(500).nullable().optional(),
+  brandColor: z
+    .string()
+    .regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "צבע מותג חייב להיות קוד HEX תקין")
+    .nullable()
+    .optional(),
+});
+
+// PATCH /settings/branding — update logo URL and/or brand color (OWNER/ADMIN)
+settingsRouter.patch(
+  "/branding",
+  requireRole("OWNER", "ADMIN"),
+  validate(brandingSchema),
+  async (req, res, next) => {
+    try {
+      const result = await settingsService.updateBranding(req.workspaceId!, {
+        logoUrl: req.body.logoUrl,
+        brandColor: req.body.brandColor,
+      });
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.branding.update",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        metadata: {
+          logoUrlSet: req.body.logoUrl !== undefined,
+          brandColor: req.body.brandColor ?? undefined,
+        },
+        ip: req.ip,
+      });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /settings/branding/logo — multipart logo upload (OWNER/ADMIN)
+// Field name "logo". Stores file in uploads/branding/ and returns a public
+// path served by the /branding/:filename route (no auth required).
+settingsRouter.post(
+  "/branding/logo",
+  requireRole("OWNER", "ADMIN"),
+  brandingUpload.single("logo"),
+  async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          error: { code: "BAD_REQUEST", message: "לא נבחר קובץ" },
+        });
+      }
+
+      const publicPath = `/branding/${req.file.filename}`;
+      const result = await settingsService.updateBranding(req.workspaceId!, {
+        logoUrl: publicPath,
+      });
+
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.branding.logo_upload",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        metadata: {
+          fileName: req.file.originalname,
+          size: req.file.size,
+        },
+        ip: req.ip,
+      });
+
+      res.status(201).json(result);
     } catch (err) {
       next(err);
     }

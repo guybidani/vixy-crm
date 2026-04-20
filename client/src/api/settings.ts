@@ -25,11 +25,17 @@ export function updateSnoozeOptions(snoozeOptions: SnoozeOption[]) {
 
 // ─── Workspace Options ───
 
+export interface WorkspaceBranding {
+  logoUrl: string | null;
+  brandColor: string | null;
+}
+
 export interface WorkspaceOptionsResponse {
   customOptions: Record<string, any>;
   defaults: Record<string, any>;
   snoozeOptions?: SnoozeOption[];
   moduleLabels?: Record<string, string>;
+  branding?: WorkspaceBranding;
 }
 
 export function getWorkspaceOptions() {
@@ -41,6 +47,50 @@ export function updateWorkspaceOptions(customOptions: Record<string, any>) {
     method: "PUT",
     body: JSON.stringify(customOptions),
   });
+}
+
+// ─── Branding ───
+
+export function updateBranding(data: {
+  logoUrl?: string | null;
+  brandColor?: string | null;
+}) {
+  return api<WorkspaceBranding>("/settings/branding", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Upload workspace logo as multipart/form-data. Returns the updated branding
+ * (with the newly-assigned logoUrl pointing at /branding/<uuid>.<ext>).
+ */
+export async function uploadBrandingLogo(file: File): Promise<WorkspaceBranding> {
+  const formData = new FormData();
+  formData.append("logo", file);
+
+  // Mirror the fetch options of api() but without the JSON content-type header
+  // (browser sets multipart boundary automatically).
+  const accessToken = localStorage.getItem("vixy_at");
+  const workspaceId = localStorage.getItem("workspaceId");
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  if (workspaceId) headers["X-Workspace-Id"] = workspaceId;
+
+  const res = await fetch("/api/v1/settings/branding/logo", {
+    method: "POST",
+    headers,
+    body: formData,
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({
+      error: { code: "UNKNOWN", message: "Upload failed" },
+    }));
+    throw err.error || err;
+  }
+  return res.json();
 }
 
 // ─── Module Labels ───
@@ -94,6 +144,21 @@ export function skipOnboarding() {
   return api<Record<string, any>>("/settings/skip-onboarding", {
     method: "POST",
   });
+}
+
+/**
+ * Kick off async generation of industry-specific demo data. Server returns
+ * 202 Accepted immediately; actual rows appear in the workspace shortly
+ * after (typically <1s for the bulk insert transaction).
+ */
+export function populateDemoData(templateId: string) {
+  return api<{ accepted: boolean; templateId: string }>(
+    "/settings/populate-demo-data",
+    {
+      method: "POST",
+      body: JSON.stringify({ templateId }),
+    },
+  );
 }
 
 // ─── Nav Permissions ───

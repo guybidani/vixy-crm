@@ -30,6 +30,7 @@ import {
   type CustomField,
   type SelectOption,
 } from "../../api/custom-fields";
+import { handleMutationError } from "../../lib/utils";
 
 const ENTITY_TYPES = [
   { key: "contact", label: "אנשי קשר", icon: Users, color: "#0073EA" },
@@ -73,7 +74,19 @@ export default function CustomFieldsTab() {
       queryClient.invalidateQueries({ queryKey: ["custom-fields", activeEntity] });
       toast.success("שדה נמחק");
     },
-    onError: () => toast.error("שגיאה במחיקת שדה"),
+    onError: (err) => handleMutationError(err, "שגיאה במחיקת שדה"),
+  });
+
+  const reorderMut = useMutation({
+    mutationFn: (fieldIds: string[]) => reorderCustomFields(activeEntity, fieldIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-fields", activeEntity] });
+    },
+    onError: (err) => {
+      // Revert optimistic cache change by refetching
+      queryClient.invalidateQueries({ queryKey: ["custom-fields", activeEntity] });
+      handleMutationError(err, "שגיאה בסידור השדות");
+    },
   });
 
   // Simple drag reorder
@@ -86,7 +99,10 @@ export default function CustomFieldsTab() {
   function handleDragOver(e: React.DragEvent, idx: number) {
     e.preventDefault();
     if (dragIdx === null || dragIdx === idx) return;
-    const newFields = [...fields];
+    // Read latest cache instead of stale closure `fields`
+    const current =
+      queryClient.getQueryData<CustomField[]>(["custom-fields", activeEntity]) ?? fields;
+    const newFields = [...current];
     const [moved] = newFields.splice(dragIdx, 1);
     newFields.splice(idx, 0, moved);
     // Optimistic reorder via cache
@@ -97,14 +113,15 @@ export default function CustomFieldsTab() {
   function handleDragEnd() {
     if (dragIdx === null) return;
     setDragIdx(null);
-    const fieldIds = fields.map((f) => f.id);
-    reorderCustomFields(activeEntity, fieldIds).catch(() => {
-      queryClient.invalidateQueries({ queryKey: ["custom-fields", activeEntity] });
-    });
+    // Use latest cache — the closure-captured `fields` is stale after dragOver mutations
+    const latest =
+      queryClient.getQueryData<CustomField[]>(["custom-fields", activeEntity]) ?? fields;
+    const fieldIds = latest.map((f) => f.id);
+    reorderMut.mutate(fieldIds);
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-[#323338]">שדות מותאמים</h2>
@@ -282,14 +299,14 @@ function CustomFieldForm({
       toast.success("שדה נוצר!");
       onClose();
     },
-    onError: () => toast.error("שגיאה ביצירת שדה"),
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת שדה"),
   });
 
   const updateMut = useMutation({
     mutationFn: () =>
       updateCustomField(editing!.id, {
         name,
-        fieldType,
+        // fieldType is immutable after creation — do not send it
         required,
         options: fieldType === "select" ? options.filter((o) => o.label.trim()) : undefined,
       }),
@@ -298,7 +315,7 @@ function CustomFieldForm({
       toast.success("שדה עודכן!");
       onClose();
     },
-    onError: () => toast.error("שגיאה בעדכון שדה"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון שדה"),
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -336,7 +353,7 @@ function CustomFieldForm({
       onClose={onClose}
       title={editing ? "עריכת שדה מותאם" : "שדה מותאם חדש"}
     >
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 p-6" dir="rtl">
         {/* Name */}
         <div>
           <label className="block text-sm font-medium text-[#323338] mb-1">שם השדה *</label>
@@ -347,26 +364,36 @@ function CustomFieldForm({
             className="w-full px-3 py-2 border border-[#D0D4E4] rounded-[4px] text-sm focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
             required
             autoFocus
+            dir="rtl"
             placeholder='לדוגמה: "גודל נכס (מ"ר)"'
           />
         </div>
 
         {/* Field type */}
         <div>
-          <label className="block text-sm font-medium text-[#323338] mb-1">סוג שדה *</label>
+          <label className="block text-sm font-medium text-[#323338] mb-1">
+            סוג שדה *
+            {editing && (
+              <span className="mr-2 text-[11px] font-normal text-[#9699A6]">
+                (לא ניתן לשינוי — מחק וצור מחדש)
+              </span>
+            )}
+          </label>
           <div className="grid grid-cols-4 gap-2">
             {FIELD_TYPES.map((ft) => {
               const isActive = fieldType === ft.value;
+              const isLocked = !!editing;
               return (
                 <button
                   key={ft.value}
                   type="button"
-                  onClick={() => setFieldType(ft.value)}
+                  onClick={() => !isLocked && setFieldType(ft.value)}
+                  disabled={isLocked && !isActive}
                   className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg border-2 transition-all text-[12px] font-medium ${
                     isActive
                       ? "border-[#0073EA] bg-[#F0F4FF] text-[#0073EA]"
                       : "border-[#E6E9EF] text-[#676879] hover:border-[#C5C7D0]"
-                  }`}
+                  } ${isLocked && !isActive ? "opacity-40 cursor-not-allowed" : ""}`}
                 >
                   <ft.icon size={16} />
                   {ft.label}
@@ -409,6 +436,7 @@ function CustomFieldForm({
                     value={opt.label}
                     onChange={(e) => updateOption(idx, { label: e.target.value })}
                     placeholder={`אפשרות ${idx + 1}`}
+                    dir="rtl"
                     className="flex-1 px-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA]"
                   />
                   {options.length > 1 && (

@@ -51,7 +51,7 @@ export function updateCustomField(
   id: string,
   data: {
     name?: string;
-    fieldType?: string;
+    // fieldType is immutable after creation — delete & recreate to change type
     options?: SelectOption[];
     required?: boolean;
     order?: number;

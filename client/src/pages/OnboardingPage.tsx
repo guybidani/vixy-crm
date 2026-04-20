@@ -1,80 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronLeft, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "../lib/utils";
 import * as settingsApi from "../api/settings";
+import { getIndustryTemplates } from "../api/settings";
 import type { IndustryTemplate } from "../api/settings";
 import toast from "react-hot-toast";
 
-// ─── Hardcoded templates (avoid extra network call) ───
-
-const TEMPLATES: Record<string, IndustryTemplate> = {
-  sales: {
-    name: "\u05DE\u05DB\u05D9\u05E8\u05D5\u05EA B2B",
-    icon: "\uD83D\uDCBC",
-    description: "\u05E6\u05D5\u05D5\u05EA\u05D9 \u05DE\u05DB\u05D9\u05E8\u05D5\u05EA, SDR, AE",
-    moduleLabels: { contacts: "\u05D0\u05E0\u05E9\u05D9 \u05E7\u05E9\u05E8", deals: "\u05E2\u05E1\u05E7\u05D0\u05D5\u05EA", leads: "\u05DC\u05D9\u05D3\u05D9\u05DD", tickets: "\u05EA\u05DE\u05D9\u05DB\u05D4" },
-    dealStages: ["\u05DC\u05D9\u05D3", "\u05D4\u05E1\u05DE\u05DB\u05D4", "\u05D4\u05E6\u05E2\u05EA \u05DE\u05D7\u05D9\u05E8", "\u05DE\u05E9\u05D0 \u05D5\u05DE\u05EA\u05DF", "\u05E0\u05E1\u05D2\u05E8-\u05D4\u05E6\u05DC\u05D7\u05D4", "\u05E0\u05E1\u05D2\u05E8-\u05D4\u05E4\u05E1\u05D3"],
-    contactStatuses: ["\u05DC\u05D9\u05D3", "\u05DE\u05D5\u05E1\u05DE\u05DA", "\u05DC\u05E7\u05D5\u05D7", "\u05E0\u05D8\u05E9", "\u05DC\u05D0 \u05E4\u05E2\u05D9\u05DC"],
-  },
-  realestate: {
-    name: '\u05E0\u05D3\u05DC"\u05DF',
-    icon: "\uD83C\uDFE0",
-    description: '\u05E1\u05D5\u05DB\u05E0\u05D5\u05D9\u05D5\u05EA \u05E0\u05D3\u05DC"\u05DF, \u05D9\u05D6\u05DE\u05D9\u05DD',
-    moduleLabels: { contacts: "\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA", deals: "\u05E0\u05DB\u05E1\u05D9\u05DD", leads: "\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05E0\u05D9\u05DD", companies: "\u05D9\u05D6\u05DE\u05D9\u05DD", tasks: "\u05D1\u05D9\u05E7\u05D5\u05E8\u05D9\u05DD", tickets: "\u05E4\u05E0\u05D9\u05D5\u05EA" },
-    dealStages: ["\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05DF", "\u05D1\u05D9\u05E7\u05D5\u05E8 \u05E8\u05D0\u05E9\u05D5\u05DF", "\u05D1\u05D9\u05E7\u05D5\u05E8 \u05E9\u05E0\u05D9", "\u05D4\u05E6\u05E2\u05D4", "\u05DE\u05E9\u05D0 \u05D5\u05DE\u05EA\u05DF", "\u05E0\u05D7\u05EA\u05DD", "\u05D1\u05D5\u05D8\u05DC"],
-    contactStatuses: ["\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05DF", "\u05E4\u05E2\u05D9\u05DC", "\u05E8\u05DB\u05E9", "\u05DE\u05D5\u05E9\u05DB\u05E8", "\u05DC\u05D0 \u05E8\u05DC\u05D5\u05D5\u05E0\u05D8\u05D9"],
-  },
-  agency: {
-    name: "\u05E1\u05D5\u05DB\u05E0\u05D5\u05EA \u05E4\u05E8\u05E1\u05D5\u05DD",
-    icon: "\uD83D\uDCE2",
-    description: "\u05E7\u05DE\u05E4\u05D9\u05D9\u05E0\u05E8\u05D9\u05DD, \u05DE\u05D3\u05D9\u05D4, \u05E7\u05E8\u05D9\u05D9\u05D0\u05D9\u05D9\u05D8\u05D9\u05D1",
-    moduleLabels: { contacts: "\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA", deals: "\u05E7\u05DE\u05E4\u05D9\u05D9\u05E0\u05D9\u05DD", leads: "\u05DC\u05D9\u05D3\u05D9\u05DD", companies: "\u05DE\u05D5\u05EA\u05D2\u05D9\u05DD", tasks: "\u05DE\u05E9\u05D9\u05DE\u05D5\u05EA", tickets: "\u05D1\u05E7\u05E9\u05D5\u05EA" },
-    dealStages: ["\u05D1\u05E8\u05D9\u05E3", "\u05D4\u05E6\u05E2\u05D4", "\u05D0\u05D9\u05E9\u05D5\u05E8", "\u05D4\u05E4\u05E7\u05D4", "\u05E4\u05E2\u05D9\u05DC", "\u05E1\u05D9\u05D5\u05DD", "\u05D1\u05D5\u05D8\u05DC"],
-    contactStatuses: ["\u05E4\u05D5\u05D8\u05E0\u05E6\u05D9\u05D0\u05DC\u05D9", "\u05E4\u05E2\u05D9\u05DC", "VIP", "\u05D4\u05D5\u05E7\u05E4\u05D0", "\u05E2\u05D6\u05D1"],
-  },
-  recruitment: {
-    name: "\u05D2\u05D9\u05D5\u05E1",
-    icon: "\uD83D\uDC65",
-    description: "HR, \u05D4\u05E9\u05DE\u05D4, \u05D2\u05D9\u05D5\u05E1 \u05D8\u05DB\u05E0\u05D5\u05DC\u05D5\u05D2\u05D9",
-    moduleLabels: { contacts: "\u05DE\u05D5\u05E2\u05DE\u05D3\u05D9\u05DD", deals: "\u05DE\u05E9\u05E8\u05D5\u05EA", leads: "\u05DE\u05D2\u05D5\u05D9\u05E1\u05D9\u05DD", companies: "\u05D7\u05D1\u05E8\u05D5\u05EA \u05DE\u05D2\u05D9\u05D9\u05E1\u05D5\u05EA", tasks: "\u05E8\u05D0\u05D9\u05D5\u05E0\u05D5\u05EA", tickets: "\u05E4\u05E0\u05D9\u05D5\u05EA" },
-    dealStages: ["\u05E1\u05D9\u05E0\u05D5\u05DF", "\u05E8\u05D0\u05D9\u05D5\u05DF \u05D8\u05DC\u05E4\u05D5\u05E0\u05D9", "\u05E8\u05D0\u05D9\u05D5\u05DF \u05E8\u05D0\u05E9\u05D5\u05DF", "\u05E8\u05D0\u05D9\u05D5\u05DF \u05E9\u05E0\u05D9", "\u05D4\u05E6\u05E2\u05D4", "\u05D4\u05EA\u05D7\u05D9\u05DC", "\u05E0\u05D3\u05D7\u05D4"],
-    contactStatuses: ["\u05DE\u05D5\u05E2\u05DE\u05D3", "\u05D1\u05EA\u05D4\u05DC\u05D9\u05DA", "\u05D4\u05D5\u05E6\u05E2", "\u05D4\u05EA\u05E7\u05D1\u05DC", "\u05E0\u05D3\u05D7\u05D4"],
-  },
-  coaching: {
-    name: "\u05D0\u05D9\u05DE\u05D5\u05DF \u05D5\u05D9\u05D9\u05E2\u05D5\u05E5",
-    icon: "\uD83C\uDFAF",
-    description: "\u05DE\u05D0\u05DE\u05E0\u05D9\u05DD, \u05D9\u05D5\u05E2\u05E6\u05D9\u05DD, \u05DE\u05D8\u05E4\u05DC\u05D9\u05DD",
-    moduleLabels: { contacts: "\u05DE\u05D8\u05D5\u05E4\u05DC\u05D9\u05DD", deals: "\u05EA\u05D5\u05DB\u05E0\u05D9\u05D5\u05EA", leads: "\u05E4\u05E0\u05D9\u05D5\u05EA", companies: "\u05D0\u05E8\u05D2\u05D5\u05E0\u05D9\u05DD", tasks: "\u05DE\u05E4\u05D2\u05E9\u05D9\u05DD", tickets: "\u05E9\u05D0\u05DC\u05D5\u05EA" },
-    dealStages: ["\u05E4\u05E0\u05D9\u05D9\u05D4", "\u05E9\u05D9\u05D7\u05EA \u05D4\u05D9\u05DB\u05E8\u05D5\u05EA", "\u05D4\u05E6\u05E2\u05D4", "\u05E4\u05E2\u05D9\u05DC", "\u05D4\u05D5\u05E9\u05DC\u05DD", "\u05D1\u05D5\u05D8\u05DC"],
-    contactStatuses: ["\u05E4\u05E0\u05D9\u05D9\u05D4 \u05D7\u05D3\u05E9\u05D4", "\u05E4\u05E2\u05D9\u05DC", "VIP", "\u05E1\u05D9\u05D9\u05DD", "\u05DC\u05D0 \u05E4\u05E2\u05D9\u05DC"],
-  },
-  ecommerce: {
-    name: "\u05DE\u05E1\u05D7\u05E8 \u05D0\u05DC\u05E7\u05D8\u05E8\u05D5\u05E0\u05D9",
-    icon: "\uD83D\uDED2",
-    description: "\u05D7\u05E0\u05D5\u05D9\u05D5\u05EA \u05D0\u05D5\u05E0\u05DC\u05D9\u05D9\u05DF, D2C",
-    moduleLabels: { contacts: "\u05DC\u05E7\u05D5\u05D7\u05D5\u05EA", deals: "\u05D4\u05D6\u05DE\u05E0\u05D5\u05EA", leads: "\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05E0\u05D9\u05DD", companies: "\u05E1\u05E4\u05E7\u05D9\u05DD", tasks: "\u05DE\u05E9\u05DC\u05D5\u05D7\u05D9\u05DD", tickets: "\u05D4\u05D7\u05D6\u05E8\u05D5\u05EA" },
-    dealStages: ["\u05E2\u05D2\u05DC\u05D4", "\u05D4\u05D6\u05DE\u05E0\u05D4", "\u05D1\u05EA\u05E9\u05DC\u05D5\u05DD", "\u05E0\u05E9\u05DC\u05D7", "\u05D4\u05D5\u05E9\u05DC\u05DD", "\u05D1\u05D9\u05D8\u05D5\u05DC"],
-    contactStatuses: ["\u05D7\u05D3\u05E9", "\u05E4\u05E2\u05D9\u05DC", "VIP", "\u05DC\u05D0 \u05E4\u05E2\u05D9\u05DC", "\u05D7\u05E1\u05D5\u05DD"],
-  },
-  saas: {
-    name: "SaaS / \u05D8\u05DB\u05E0\u05D5\u05DC\u05D5\u05D2\u05D9\u05D4",
-    icon: "\uD83D\uDCBB",
-    description: "\u05D7\u05D1\u05E8\u05D5\u05EA \u05EA\u05D5\u05DB\u05E0\u05D4, SaaS, \u05E1\u05D8\u05D0\u05E8\u05D8\u05D0\u05E4\u05D9\u05DD",
-    moduleLabels: { contacts: "\u05D0\u05E0\u05E9\u05D9 \u05E7\u05E9\u05E8", deals: "\u05E2\u05E1\u05E7\u05D0\u05D5\u05EA", leads: "\u05DC\u05D9\u05D3\u05D9\u05DD", companies: "\u05D7\u05E9\u05D1\u05D5\u05E0\u05D5\u05EA", tasks: "\u05DE\u05E9\u05D9\u05DE\u05D5\u05EA", tickets: "\u05EA\u05DE\u05D9\u05DB\u05D4 \u05D8\u05DB\u05E0\u05D9\u05EA" },
-    dealStages: ["Discovery", "Demo", "POC", "Proposal", "Negotiation", "Closed Won", "Closed Lost"],
-    contactStatuses: ["Trial", "Active", "Paying", "Churned", "Inactive"],
-  },
-  education: {
-    name: "\u05D7\u05D9\u05E0\u05D5\u05DA \u05D5\u05D4\u05DB\u05E9\u05E8\u05D4",
-    icon: "\uD83D\uDCDA",
-    description: "\u05DE\u05DB\u05DC\u05DC\u05D5\u05EA, \u05E7\u05D5\u05E8\u05E1\u05D9\u05DD, \u05E1\u05D3\u05E0\u05D0\u05D5\u05EA",
-    moduleLabels: { contacts: "\u05EA\u05DC\u05DE\u05D9\u05D3\u05D9\u05DD", deals: "\u05D4\u05E8\u05E9\u05DE\u05D5\u05EA", leads: "\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05E0\u05D9\u05DD", companies: "\u05DE\u05D5\u05E1\u05D3\u05D5\u05EA", tasks: "\u05E9\u05D9\u05E2\u05D5\u05E8\u05D9\u05DD", tickets: "\u05E4\u05E0\u05D9\u05D5\u05EA" },
-    dealStages: ["\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05DF", "\u05D9\u05D9\u05E2\u05D5\u05E5", "\u05D4\u05E8\u05E9\u05DE\u05D4", "\u05EA\u05E9\u05DC\u05D5\u05DD", "\u05DC\u05D5\u05DE\u05D3", "\u05E1\u05D9\u05D9\u05DD", "\u05D1\u05D9\u05D8\u05D5\u05DC"],
-    contactStatuses: ["\u05DE\u05EA\u05E2\u05E0\u05D9\u05D9\u05DF", "\u05E0\u05E8\u05E9\u05DD", "\u05DC\u05D5\u05DE\u05D3", "\u05D1\u05D5\u05D2\u05E8", "\u05E2\u05D6\u05D1"],
-  },
-};
-
+// ─── Industry templates are fetched from the server's getIndustryTemplates() ───
+// The server is the source of truth (INDUSTRY_TEMPLATES in settings.service.ts).
+// We cache with staleTime: Infinity — the template catalog is effectively static
+// within a session, and re-fetching on re-mount would be wasted work.
+//
+// Server response shape is { templates: Record<string, IndustryTemplate> } —
+// a keyed object, not an array. The id is the record key (e.g. "sales").
+// Display order for the UI; each key must exist in the server response.
 const TEMPLATE_ORDER = [
   "sales",
   "realestate",
@@ -123,17 +64,29 @@ function TemplateCard({
   template,
   selected,
   onClick,
+  onKeyDown,
+  tabIndex,
+  cardRef,
 }: {
   template: IndustryTemplate;
   selected: boolean;
   onClick: () => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
+  tabIndex: number;
+  cardRef: (el: HTMLButtonElement | null) => void;
 }) {
   return (
     <button
+      ref={cardRef}
       onClick={onClick}
+      onKeyDown={onKeyDown}
+      role="radio"
+      aria-checked={selected}
+      tabIndex={tabIndex}
       className={cn(
         "relative group p-5 rounded-xl border-2 text-right transition-all duration-200 cursor-pointer",
         "hover:shadow-lg hover:-translate-y-0.5",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2",
         selected
           ? "border-[#6161FF] bg-[#F0F0FF] shadow-md"
           : "border-gray-200 bg-white hover:border-[#6161FF]/40",
@@ -200,7 +153,7 @@ function ModulePreview({ labels }: { labels: Record<string, string> }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <h4 className="text-[13px] font-bold text-[#676879] mb-3 uppercase tracking-wide">
-        {"\u05E9\u05DE\u05D5\u05EA \u05DE\u05D5\u05D3\u05D5\u05DC\u05D9\u05DD"}
+        שמות מודולים
       </h4>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {Object.entries(labels).map(([key, label]) => (
@@ -274,29 +227,69 @@ export default function OnboardingPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  // Default ON: most first-time users benefit from seeing a populated
+  // workspace rather than staring at an empty board. Easy to turn off.
+  const [populateSamples, setPopulateSamples] = useState(true);
 
-  const template = selectedTemplate ? TEMPLATES[selectedTemplate] : null;
+  // Fetch the industry template catalog from the server. The catalog is
+  // effectively static — cache forever within the session.
+  const {
+    data: templatesData,
+    isLoading: templatesLoading,
+    isError: templatesError,
+  } = useQuery({
+    queryKey: ["industry-templates"],
+    queryFn: getIndustryTemplates,
+    staleTime: Infinity,
+  });
+
+  const templates = useMemo<Record<string, IndustryTemplate>>(
+    () => templatesData?.templates ?? {},
+    [templatesData],
+  );
+
+  const template = selectedTemplate ? templates[selectedTemplate] ?? null : null;
+
+  // Refs for focus management on step change
+  const step0HeadingRef = useRef<HTMLHeadingElement>(null);
+  const step1HeadingRef = useRef<HTMLHeadingElement>(null);
+  const step2HeadingRef = useRef<HTMLHeadingElement>(null);
+
+  // Refs for keyboard navigation between template cards
+  const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleApply = useCallback(async () => {
     if (!selectedTemplate) return;
     setIsApplying(true);
     try {
       await settingsApi.applyTemplate(selectedTemplate);
+
+      // Fire-and-forget: the server returns 202 immediately and generates
+      // the rows in the background. We intentionally don't await this — the
+      // user shouldn't stare at a spinner while rows are bulk-inserted.
+      if (populateSamples) {
+        settingsApi.populateDemoData(selectedTemplate).catch((err) => {
+          // Non-fatal: template was applied, just the samples failed.
+          // eslint-disable-next-line no-console
+          console.warn("populateDemoData failed", err);
+        });
+      }
+
       setStep(2);
       setShowSuccess(true);
     } catch (err: any) {
-      toast.error(err?.message || "\u05E9\u05D2\u05D9\u05D0\u05D4 \u05D1\u05D4\u05D7\u05DC\u05EA \u05D4\u05EA\u05D1\u05E0\u05D9\u05EA");
+      toast.error(err?.message || "שגיאה בהחלת התבנית");
     } finally {
       setIsApplying(false);
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate, populateSamples]);
 
   const handleSkip = useCallback(async () => {
     try {
       await settingsApi.skipOnboarding();
       navigate("/dashboard", { replace: true });
-    } catch {
-      navigate("/dashboard", { replace: true });
+    } catch (err: any) {
+      toast.error(err?.message || "שגיאה בדילוג");
     }
   }, [navigate]);
 
@@ -304,12 +297,66 @@ export default function OnboardingPage() {
     navigate("/dashboard", { replace: true });
   }, [navigate]);
 
-  // Fire confetti on success
+  // Focus heading on step change for screen reader announcement
   useEffect(() => {
-    if (showSuccess) {
-      const container = document.getElementById("confetti-container");
-      if (container) createConfetti(container);
+    const refs = [step0HeadingRef, step1HeadingRef, step2HeadingRef];
+    const target = refs[step]?.current;
+    if (target) {
+      target.focus();
     }
+  }, [step]);
+
+  // Visible templates in rendered order — filtered to those the server
+  // actually returned so keyboard nav can't land on a missing key.
+  const visibleTemplateKeys = useMemo(
+    () => TEMPLATE_ORDER.filter((key) => templates[key]),
+    [templates],
+  );
+
+  // Keyboard arrow-key navigation between template cards
+  const handleCardKeyDown = useCallback(
+    (index: number) => (e: React.KeyboardEvent<HTMLButtonElement>) => {
+      const lastIndex = visibleTemplateKeys.length - 1;
+      if (lastIndex < 0) return;
+      let nextIndex = -1;
+      // RTL: visually "right" = previous, "left" = next. But per radiogroup
+      // semantics, use Left/Right for horizontal and Up/Down for vertical.
+      switch (e.key) {
+        case "ArrowRight":
+        case "ArrowDown":
+          nextIndex = index === lastIndex ? 0 : index + 1;
+          break;
+        case "ArrowLeft":
+        case "ArrowUp":
+          nextIndex = index === 0 ? lastIndex : index - 1;
+          break;
+        case "Home":
+          nextIndex = 0;
+          break;
+        case "End":
+          nextIndex = lastIndex;
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+      const nextKey = visibleTemplateKeys[nextIndex];
+      setSelectedTemplate(nextKey);
+      cardRefs.current[nextIndex]?.focus();
+    },
+    [visibleTemplateKeys],
+  );
+
+  // Fire confetti on success — respect prefers-reduced-motion
+  useEffect(() => {
+    if (!showSuccess) return;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+    const container = document.getElementById("confetti-container");
+    if (container) createConfetti(container);
   }, [showSuccess]);
 
   return (
@@ -317,7 +364,7 @@ export default function OnboardingPage() {
       className="min-h-screen bg-gradient-to-br from-[#F5F6F8] via-white to-[#EEF0FF] flex items-center justify-center p-4"
       dir="rtl"
     >
-      <div id="confetti-container" className="fixed inset-0 pointer-events-none z-50" />
+      <div id="confetti-container" className="fixed inset-0 pointer-events-none z-50" aria-hidden="true" />
 
       <div className="w-full max-w-3xl">
         {/* Header */}
@@ -333,43 +380,85 @@ export default function OnboardingPage() {
         {step === 0 && (
           <div className="animate-fadeIn">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-[#323338] mb-2">
-                {"\u05DE\u05D4 \u05E1\u05D5\u05D2 \u05D4\u05E2\u05E1\u05E7 \u05E9\u05DC\u05DA?"}
+              <h1
+                ref={step0HeadingRef}
+                tabIndex={-1}
+                className="text-2xl font-bold text-[#323338] mb-2 focus:outline-none"
+              >
+                מה סוג העסק שלך?
               </h1>
               <p className="text-[15px] text-[#676879]">
-                {"\u05E0\u05EA\u05D0\u05D9\u05DD \u05D0\u05EA \u05D4-CRM \u05DC\u05E2\u05E1\u05E7 \u05E9\u05DC\u05DA \u05D1\u05DC\u05D7\u05D9\u05E6\u05EA \u05DB\u05E4\u05EA\u05D5\u05E8"}
+                נתאים את ה-CRM לעסק שלך בלחיצת כפתור
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-              {TEMPLATE_ORDER.map((key) => (
-                <TemplateCard
-                  key={key}
-                  template={TEMPLATES[key]}
-                  selected={selectedTemplate === key}
-                  onClick={() => setSelectedTemplate(key)}
-                />
-              ))}
-            </div>
+            {templatesLoading ? (
+              <div
+                role="status"
+                aria-label="טוען תבניות"
+                className="flex items-center justify-center py-16 mb-8"
+              >
+                <span className="w-8 h-8 border-2 border-[#6161FF]/20 border-t-[#6161FF] rounded-full animate-spin" />
+              </div>
+            ) : templatesError ? (
+              <div
+                role="alert"
+                className="mb-8 p-4 rounded-xl border border-[#FB275D]/30 bg-[#FFF0F3] text-center"
+              >
+                <p className="text-[14px] font-bold text-[#FB275D] mb-1">
+                  שגיאה בטעינת התבניות
+                </p>
+                <p className="text-[13px] text-[#676879]">
+                  נסה לרענן את העמוד. אם הבעיה נמשכת, אפשר לדלג ולהגדיר ידנית.
+                </p>
+              </div>
+            ) : (
+              <div
+                role="radiogroup"
+                aria-label="בחר תבנית ענף"
+                className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8"
+              >
+                {visibleTemplateKeys.map((key, i) => {
+                  const isSelected = selectedTemplate === key;
+                  // Roving tabindex: if nothing selected, only the first is tabbable;
+                  // otherwise the selected card is the single tab stop.
+                  const tabIndex = isSelected || (!selectedTemplate && i === 0) ? 0 : -1;
+                  return (
+                    <TemplateCard
+                      key={key}
+                      template={templates[key]}
+                      selected={isSelected}
+                      onClick={() => setSelectedTemplate(key)}
+                      onKeyDown={handleCardKeyDown(i)}
+                      tabIndex={tabIndex}
+                      cardRef={(el) => {
+                        cardRefs.current[i] = el;
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <button
                 onClick={handleSkip}
-                className="text-[13px] text-[#676879] hover:text-[#323338] transition-colors"
+                className="text-[13px] text-[#676879] hover:text-[#323338] transition-colors rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2 px-1"
               >
-                {"\u05D3\u05DC\u05D2 \u2192"}
+                דלג →
               </button>
               <button
                 onClick={() => selectedTemplate && setStep(1)}
                 disabled={!selectedTemplate}
                 className={cn(
                   "px-8 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200",
+                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2",
                   selectedTemplate
                     ? "bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-md shadow-[#6161FF]/20"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed",
                 )}
               >
-                {"\u05D4\u05DE\u05E9\u05DA"}
+                המשך
               </button>
             </div>
           </div>
@@ -380,58 +469,94 @@ export default function OnboardingPage() {
           <div className="animate-fadeIn">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">{template.icon}</div>
-              <h1 className="text-2xl font-bold text-[#323338] mb-2">
+              <h1
+                ref={step1HeadingRef}
+                tabIndex={-1}
+                className="text-2xl font-bold text-[#323338] mb-2 focus:outline-none"
+              >
                 {template.name}
               </h1>
               <p className="text-[15px] text-[#676879]">
-                {"\u05DB\u05DA \u05D9\u05D9\u05E8\u05D0\u05D4 \u05D4-CRM \u05E9\u05DC\u05DA"}
+                כך ייראה ה-CRM שלך
               </p>
             </div>
 
-            <div className="space-y-4 mb-8">
+            <div className="space-y-4 mb-6">
               <ModulePreview labels={template.moduleLabels} />
               <PreviewSection
-                title={"\u05E9\u05DC\u05D1\u05D9 \u05E2\u05E1\u05E7\u05D4"}
+                title="שלבי עסקה"
                 items={template.dealStages}
                 type="stages"
               />
               <PreviewSection
-                title={"\u05E1\u05D8\u05D8\u05D5\u05E1\u05D9 \u05D0\u05E0\u05E9\u05D9 \u05E7\u05E9\u05E8"}
+                title="סטטוסי אנשי קשר"
                 items={template.contactStatuses}
                 type="statuses"
               />
             </div>
 
+            {/* Populate-with-demo-data toggle. Default ON — an empty CRM on
+                day one feels broken. Rendered as a labelled container so the
+                entire row is clickable (bigger hit target on touch). */}
+            <label
+              className={cn(
+                "flex items-start gap-3 p-4 mb-6 rounded-xl border-2 cursor-pointer transition-all duration-200",
+                populateSamples
+                  ? "border-[#6161FF] bg-[#F0F0FF]"
+                  : "border-gray-200 bg-white hover:border-[#6161FF]/40",
+              )}
+            >
+              <input
+                type="checkbox"
+                checked={populateSamples}
+                onChange={(e) => setPopulateSamples(e.target.checked)}
+                className="mt-0.5 w-5 h-5 accent-[#6161FF] cursor-pointer"
+              />
+              <div className="flex-1 text-right">
+                <div className="text-[14px] font-bold text-[#323338] mb-0.5">
+                  מלא נתוני דוגמה
+                </div>
+                <div className="text-[13px] text-[#676879] leading-relaxed">
+                  נוסיף לך חברות, אנשי קשר ועסקאות לדוגמה שמתאימים לתחום שבחרת — כדי שתוכל להתנסות מיד. אפשר למחוק בכל עת.
+                </div>
+              </div>
+            </label>
+
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setStep(0)}
-                className="flex items-center gap-1.5 text-[13px] text-[#676879] hover:text-[#323338] transition-colors"
+                className="flex items-center gap-1.5 text-[13px] text-[#676879] hover:text-[#323338] transition-colors rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2 px-1"
               >
                 <ChevronLeft className="w-4 h-4" />
-                {"\u05D7\u05D6\u05E8\u05D4"}
+                חזרה
               </button>
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleSkip}
-                  className="text-[13px] text-[#676879] hover:text-[#323338] transition-colors"
+                  className="text-[13px] text-[#676879] hover:text-[#323338] transition-colors rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2 px-1"
                 >
-                  {"\u05D3\u05DC\u05D2"}
+                  דלג
                 </button>
                 <button
                   onClick={handleApply}
                   disabled={isApplying}
-                  className="px-8 py-2.5 rounded-lg text-[14px] font-medium bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-md shadow-[#6161FF]/20 transition-all duration-200 disabled:opacity-60"
+                  className="px-8 py-2.5 rounded-lg text-[14px] font-medium bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-md shadow-[#6161FF]/20 transition-all duration-200 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
                 >
                   {isApplying ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      {"\u05DE\u05D7\u05D9\u05DC..."}
+                      מחיל...
                     </span>
                   ) : (
-                    "\u05D4\u05D7\u05DC \u05EA\u05D1\u05E0\u05D9\u05EA"
+                    "החל תבנית"
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* aria-live region for applying state */}
+            <div role="status" aria-live="polite" className="sr-only">
+              {isApplying ? "מחיל את התבנית, אנא המתן" : ""}
             </div>
           </div>
         )}
@@ -445,24 +570,30 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <h1 className="text-2xl font-bold text-[#323338] mb-2">
-              {"\u05D4-CRM \u05E9\u05DC\u05DA \u05DE\u05D5\u05DB\u05DF!"}
-            </h1>
-            <p className="text-[15px] text-[#676879] mb-2">
-              {template
-                ? `\u05D4\u05EA\u05D1\u05E0\u05D9\u05EA "${template.name}" \u05D4\u05D5\u05D7\u05DC\u05D4 \u05D1\u05D4\u05E6\u05DC\u05D7\u05D4`
-                : "\u05D4\u05DB\u05DC \u05DE\u05D5\u05DB\u05DF"}
-            </p>
+            <div role="status" aria-live="polite">
+              <h1
+                ref={step2HeadingRef}
+                tabIndex={-1}
+                className="text-2xl font-bold text-[#323338] mb-2 focus:outline-none"
+              >
+                ה-CRM שלך מוכן!
+              </h1>
+              <p className="text-[15px] text-[#676879] mb-2">
+                {template
+                  ? `התבנית "${template.name}" הוחלה בהצלחה`
+                  : "הכל מוכן"}
+              </p>
+            </div>
             <p className="text-[13px] text-[#9699A6] mb-8">
-              {"\u05EA\u05D5\u05DB\u05DC \u05DC\u05E9\u05E0\u05D5\u05EA \u05D0\u05EA \u05D4\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA \u05D1\u05DB\u05DC \u05E2\u05EA \u05D1\u05D4\u05D2\u05D3\u05E8\u05D5\u05EA"}
+              תוכל לשנות את ההגדרות בכל עת בהגדרות
             </p>
 
             <button
               onClick={handleFinish}
-              className="inline-flex items-center gap-2 px-10 py-3 rounded-xl text-[15px] font-bold bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-lg shadow-[#6161FF]/25 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-10 py-3 rounded-xl text-[15px] font-bold bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-lg shadow-[#6161FF]/25 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
             >
               <Sparkles className="w-5 h-5" />
-              {"\u05D4\u05EA\u05D7\u05DC \u05DC\u05E2\u05D1\u05D5\u05D3"}
+              התחל לעבוד
             </button>
           </div>
         )}
@@ -475,6 +606,11 @@ export default function OnboardingPage() {
         }
         .animate-fadeIn {
           animation: fadeIn 0.4s ease-out;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fadeIn {
+            animation: none;
+          }
         }
       `}</style>
     </div>

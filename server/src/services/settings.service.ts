@@ -1,6 +1,43 @@
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 
+// ─── Shared helper ───
+
+/**
+ * Read-modify-write a workspace's `settings` JSON column inside a transaction.
+ * Prevents concurrent updates from clobbering each other's unrelated keys.
+ *
+ * `patchFn` receives the current settings object and returns a partial patch;
+ * the patch is shallow-merged onto the existing settings (so unrelated top-
+ * level keys survive untouched).
+ *
+ * Returns the full updated settings object — callers pick out whatever slice
+ * they want to return to the client.
+ */
+async function patchWorkspaceSettings(
+  workspaceId: string,
+  patchFn: (existing: Record<string, any>) => Record<string, any>,
+): Promise<Record<string, any>> {
+  return prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+    const existing = (workspace.settings as Record<string, any>) || {};
+    const patch = patchFn(existing);
+    const newSettings = { ...existing, ...patch };
+
+    const updated = await tx.workspace.update({
+      where: { id: workspaceId },
+      data: { settings: newSettings },
+      select: { settings: true },
+    });
+    return (updated.settings as Record<string, any>) || {};
+  });
+}
+
 // ─── Snooze Options ───
 
 export interface SnoozeOption {
@@ -32,30 +69,10 @@ export async function updateSnoozeOptions(
   workspaceId: string,
   snoozeOptions: SnoozeOption[],
 ): Promise<SnoozeOption[]> {
-  // Wrap read-modify-write in a transaction to prevent concurrent updates
-  // from overwriting each other's settings changes.
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    const newSettings = {
-      ...existingSettings,
-      snoozeOptions: snoozeOptions as unknown as Record<string, any>[],
-    };
-
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: { settings: newSettings },
-      select: { settings: true },
-    });
-  });
-
-  return (updated.settings as Record<string, any>).snoozeOptions || DEFAULT_SNOOZE_OPTIONS;
+  const settings = await patchWorkspaceSettings(workspaceId, () => ({
+    snoozeOptions: snoozeOptions as unknown as Record<string, any>[],
+  }));
+  return settings.snoozeOptions || DEFAULT_SNOOZE_OPTIONS;
 }
 
 /** Default option configs — source of truth for labels, colors, ordering. */
@@ -128,7 +145,7 @@ const SYSTEM_ACTIVITY_TYPES = new Set(["STATUS_CHANGE", "SYSTEM"]);
 export async function getWorkspaceOptions(workspaceId: string) {
   const workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId },
-    select: { settings: true },
+    select: { settings: true, logoUrl: true },
   });
   if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
 
@@ -139,6 +156,59 @@ export async function getWorkspaceOptions(workspaceId: string) {
     defaults: DEFAULT_OPTIONS,
     snoozeOptions: settings.snoozeOptions || DEFAULT_SNOOZE_OPTIONS,
     moduleLabels: { ...DEFAULT_MODULE_LABELS, ...moduleLabelsOverrides },
+    branding: {
+      logoUrl: workspace.logoUrl ?? null,
+      brandColor: (settings.brandColor as string | undefined) ?? null,
+    },
+  };
+}
+
+// ─── Branding ───
+
+export const DEFAULT_BRAND_COLOR = "#0073EA";
+
+/** Update the workspace branding (logo URL and/or brand color). */
+export async function updateBranding(
+  workspaceId: string,
+  data: { logoUrl?: string | null; brandColor?: string | null },
+) {
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true, logoUrl: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
+
+    // Merge settings — only include brandColor if explicitly provided.
+    const newSettings: Record<string, any> = { ...existingSettings };
+    if (data.brandColor !== undefined) {
+      if (data.brandColor === null || data.brandColor === "") {
+        delete newSettings.brandColor;
+      } else {
+        newSettings.brandColor = data.brandColor;
+      }
+    }
+
+    const updateData: { settings: Record<string, any>; logoUrl?: string | null } = {
+      settings: newSettings,
+    };
+    if (data.logoUrl !== undefined) {
+      updateData.logoUrl = data.logoUrl === "" ? null : data.logoUrl;
+    }
+
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: updateData,
+      select: { settings: true, logoUrl: true },
+    });
+  });
+
+  const settings = (updated.settings as Record<string, any>) || {};
+  return {
+    logoUrl: updated.logoUrl ?? null,
+    brandColor: (settings.brandColor as string | undefined) ?? null,
   };
 }
 
@@ -159,30 +229,12 @@ export async function updateNavPermissions(
   workspaceId: string,
   navPermissions: Record<string, string[]>,
 ) {
-  // Wrap read-modify-write in a transaction to prevent concurrent updates
-  // from overwriting each other's settings changes.
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: {
-        settings: {
-          ...existingSettings,
-          navPermissions,
-        },
-      },
-      select: { settings: true },
-    });
-  });
-
-  return { navPermissions: ((updated.settings as Record<string, any>).navPermissions || {}) as Record<string, string[]> };
+  const settings = await patchWorkspaceSettings(workspaceId, () => ({
+    navPermissions,
+  }));
+  return {
+    navPermissions: (settings.navPermissions || {}) as Record<string, string[]>,
+  };
 }
 
 // ─── Module Labels ───
@@ -221,36 +273,18 @@ export async function updateModuleLabels(
   workspaceId: string,
   moduleLabels: Record<string, string>,
 ): Promise<Record<string, string>> {
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    // Only store overrides that differ from defaults
-    const overrides: Record<string, string> = {};
-    for (const [key, value] of Object.entries(moduleLabels)) {
-      if (key in DEFAULT_MODULE_LABELS && value !== DEFAULT_MODULE_LABELS[key]) {
-        overrides[key] = value;
-      }
+  // Only store overrides that differ from defaults — avoids bloating the
+  // settings JSON with redundant values and makes default-tracking possible.
+  const overrides: Record<string, string> = {};
+  for (const [key, value] of Object.entries(moduleLabels)) {
+    if (key in DEFAULT_MODULE_LABELS && value !== DEFAULT_MODULE_LABELS[key]) {
+      overrides[key] = value;
     }
+  }
 
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: {
-        settings: {
-          ...existingSettings,
-          moduleLabels: overrides,
-        },
-      },
-      select: { settings: true },
-    });
-  });
-
-  const settings = (updated.settings as Record<string, any>) || {};
+  const settings = await patchWorkspaceSettings(workspaceId, () => ({
+    moduleLabels: overrides,
+  }));
   return { ...DEFAULT_MODULE_LABELS, ...(settings.moduleLabels || {}) };
 }
 
@@ -367,56 +401,31 @@ export async function applyIndustryTemplate(workspaceId: string, templateId: str
     contactStatuses: buildContactStatusOptions(template.contactStatuses),
   };
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+  return patchWorkspaceSettings(workspaceId, (existing) => {
+    // Block re-applying a template once onboarding is complete — the
+    // template wholesale-replaces customOptions and moduleLabels, so
+    // re-running would silently destroy the user's customisations.
+    if (existing.setupCompleted === true) {
+      throw new AppError(
+        409,
+        "ALREADY_CONFIGURED",
+        "Workspace already configured — delete and recreate the workspace to change template",
+      );
+    }
 
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: {
-        settings: {
-          ...existingSettings,
-          customOptions,
-          moduleLabels: template.moduleLabels,
-          industryTemplate: templateId,
-          setupCompleted: true,
-        },
-      },
-      select: { settings: true },
-    });
+    return {
+      customOptions,
+      moduleLabels: template.moduleLabels,
+      industryTemplate: templateId,
+      setupCompleted: true,
+    };
   });
-
-  return updated.settings as Record<string, any>;
 }
 
 export async function skipOnboarding(workspaceId: string) {
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: {
-        settings: {
-          ...existingSettings,
-          setupCompleted: true,
-        },
-      },
-      select: { settings: true },
-    });
-  });
-
-  return updated.settings as Record<string, any>;
+  return patchWorkspaceSettings(workspaceId, () => ({
+    setupCompleted: true,
+  }));
 }
 
 export async function getSetupStatus(workspaceId: string) {
@@ -451,28 +460,8 @@ export async function updateWorkspaceOptions(
     }
   }
 
-  // Wrap read-modify-write in a transaction to prevent concurrent updates
-  // from overwriting each other's settings changes.
-  const updated = await prisma.$transaction(async (tx) => {
-    const workspace = await tx.workspace.findUnique({
-      where: { id: workspaceId },
-      select: { settings: true },
-    });
-    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
-
-    const existingSettings = (workspace.settings as Record<string, any>) || {};
-
-    return tx.workspace.update({
-      where: { id: workspaceId },
-      data: {
-        settings: {
-          ...existingSettings,
-          customOptions,
-        },
-      },
-      select: { settings: true },
-    });
-  });
-
-  return (updated.settings as Record<string, any>).customOptions || {};
+  const settings = await patchWorkspaceSettings(workspaceId, () => ({
+    customOptions,
+  }));
+  return settings.customOptions || {};
 }

@@ -15,6 +15,7 @@ import { connectSocket, disconnectSocket } from "./lib/socket";
 import { cn } from "./lib/utils";
 import Sidebar from "./components/layout/Sidebar";
 import Header from "./components/layout/Header";
+import BrandingStyleInjector from "./components/layout/BrandingStyleInjector";
 import QuickAdd from "./components/shared/QuickAdd";
 import QuickAddModal from "./components/shared/QuickAddModal";
 import GlobalSearch from "./components/shared/GlobalSearch";
@@ -251,6 +252,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-[#F5F6F8]" dir="rtl">
+      <BrandingStyleInjector />
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}

@@ -7,6 +7,7 @@ import {
   useWorkspaceOptions,
   DEFAULT_MODULE_LABELS,
 } from "../../hooks/useWorkspaceOptions";
+import { useAuth } from "../../hooks/useAuth";
 import { handleMutationError } from "../../lib/utils";
 
 const MODULE_ICONS: Record<string, string> = {
@@ -27,26 +28,14 @@ const MODULE_ICONS: Record<string, string> = {
   import: "📤",
 };
 
-const MODULE_ORDER = [
-  "dashboard",
-  "contacts",
-  "companies",
-  "deals",
-  "leads",
-  "tasks",
-  "tickets",
-  "documents",
-  "knowledge",
-  "templates",
-  "automations",
-  "reports",
-  "analytics",
-  "history",
-  "import",
-];
+// Derived from DEFAULT_MODULE_LABELS — JS objects preserve insertion order,
+// so this matches the original hardcoded array. Keeping the order defined
+// in one place prevents drift when new modules are added.
+const MODULE_ORDER = Object.keys(DEFAULT_MODULE_LABELS);
 
 export default function ModuleLabelsTab() {
   const { moduleLabels } = useWorkspaceOptions();
+  const { currentWorkspaceId } = useAuth();
   const queryClient = useQueryClient();
   const [labels, setLabels] = useState<Record<string, string>>(moduleLabels);
   const [hasChanges, setHasChanges] = useState(false);
@@ -61,7 +50,9 @@ export default function ModuleLabelsTab() {
   const saveMut = useMutation<unknown, Error, void>({
     mutationFn: () => updateModuleLabels(labels),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-options"] });
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-options", currentWorkspaceId],
+      });
       toast.success("שמות המודולים עודכנו");
       setHasChanges(false);
     },

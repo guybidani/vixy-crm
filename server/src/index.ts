@@ -123,6 +123,33 @@ app.get("/uploads/:filename", requireAuth, (req, res) => {
   });
 });
 
+// Public branding asset serving — logos need to be loadable by <img> tags
+// without auth headers (including on the login page before auth exists).
+// Images are not sensitive; anyone with a UUID filename can view them.
+const BRANDING_DIR = path.resolve(__dirname, "../uploads/branding");
+app.get("/branding/:filename", (req, res) => {
+  const filename = req.params.filename as string;
+  if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
+    return res.status(400).json({
+      error: { code: "INVALID_FILENAME", message: "Invalid filename" },
+    });
+  }
+  const filePath = path.join(BRANDING_DIR, filename);
+  if (!filePath.startsWith(BRANDING_DIR)) {
+    return res
+      .status(403)
+      .json({ error: { code: "FORBIDDEN", message: "Access denied" } });
+  }
+  // Cache branding assets for a day (filenames are random UUIDs so safe to cache).
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  res.sendFile(filePath, (err) => {
+    if (err)
+      res
+        .status(404)
+        .json({ error: { code: "NOT_FOUND", message: "File not found" } });
+  });
+});
+
 // Routes — rate limiter scoped to API routes only (not static assets)
 app.use("/api/v1", apiLimiter, router);
 
@@ -166,7 +193,8 @@ if (config.nodeEnv === "production") {
     if (
       req.path.startsWith("/api/") ||
       req.path.startsWith("/socket.io/") ||
-      req.path.startsWith("/uploads/")
+      req.path.startsWith("/uploads/") ||
+      req.path.startsWith("/branding/")
     ) {
       return next();
     }

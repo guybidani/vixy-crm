@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, X, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import { useCustomFields, useCustomFieldValues } from "../../hooks/useCustomFields";
 import { updateCustomFieldValues } from "../../api/custom-fields";
-import type { CustomField, SelectOption } from "../../api/custom-fields";
+import type { CustomField } from "../../api/custom-fields";
+import CustomTextField from "./custom-fields/CustomTextField";
+import CustomNumberField from "./custom-fields/CustomNumberField";
+import CustomDateField from "./custom-fields/CustomDateField";
+import CustomSelectField from "./custom-fields/CustomSelectField";
+import CustomCheckboxField from "./custom-fields/CustomCheckboxField";
 
 interface Props {
   entityType: "contact" | "deal" | "company";
@@ -61,48 +64,6 @@ function FieldRow({
   value: string;
   onSave: (val: string) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  function save() {
-    if (editValue !== value) onSave(editValue);
-    setEditing(false);
-  }
-
-  function cancel() {
-    setEditValue(value);
-    setEditing(false);
-  }
-
-  function displayValue() {
-    if (!value) return <span className="text-[#C5C7D0]">—</span>;
-    if (field.fieldType === "checkbox") {
-      return value === "true" ? (
-        <Check size={14} className="text-[#00CA72]" />
-      ) : (
-        <X size={14} className="text-[#C5C7D0]" />
-      );
-    }
-    if (field.fieldType === "select" && field.options) {
-      const opt = (field.options as SelectOption[]).find((o) => o.value === value);
-      if (opt) {
-        return (
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-white"
-            style={{ backgroundColor: opt.color || "#579BFC" }}
-          >
-            {opt.label}
-          </span>
-        );
-      }
-    }
-    return <span className="text-[#323338]">{value}</span>;
-  }
-
   return (
     <div className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors group min-h-[34px]">
       <span className="text-[12px] font-medium text-[#676879] w-[120px] flex-shrink-0 truncate">
@@ -110,22 +71,7 @@ function FieldRow({
         {field.required && <span className="text-[#E44258] mr-0.5">*</span>}
       </span>
       <div className="flex-1 min-w-0">
-        {editing ? (
-          <FieldInput
-            field={field}
-            value={editValue}
-            onChange={setEditValue}
-            onSave={save}
-            onCancel={cancel}
-          />
-        ) : (
-          <button
-            onClick={() => setEditing(true)}
-            className="text-[13px] text-right w-full cursor-pointer"
-          >
-            {displayValue()}
-          </button>
-        )}
+        <FieldInput field={field} value={value} onSave={onSave} />
       </div>
     </div>
   );
@@ -134,134 +80,27 @@ function FieldRow({
 function FieldInput({
   field,
   value,
-  onChange,
   onSave,
-  onCancel,
 }: {
   field: CustomField;
   value: string;
-  onChange: (v: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
+  onSave: (val: string) => void;
 }) {
-  const baseClass =
-    "w-full px-2 py-1 text-[13px] border border-[#0073EA] rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20";
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter") onSave();
-    if (e.key === "Escape") onCancel();
-  }
-
   switch (field.fieldType) {
     case "text":
     case "email":
     case "phone":
     case "url":
-      return (
-        <input
-          type={field.fieldType === "email" ? "email" : field.fieldType === "url" ? "url" : "text"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onSave}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          className={baseClass}
-          placeholder={field.fieldType === "email" ? "example@mail.com" : field.fieldType === "phone" ? "050-000-0000" : ""}
-          dir={field.fieldType === "email" || field.fieldType === "url" ? "ltr" : undefined}
-        />
-      );
-
+      return <CustomTextField field={field} value={value} onSave={onSave} />;
     case "number":
-      return (
-        <input
-          type="number"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onSave}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          className={baseClass}
-          dir="ltr"
-        />
-      );
-
+      return <CustomNumberField field={field} value={value} onSave={onSave} />;
     case "date":
-      return (
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
-            // Auto-save on date pick
-            setTimeout(onSave, 50);
-          }}
-          onBlur={onSave}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          className={baseClass}
-          dir="ltr"
-        />
-      );
-
+      return <CustomDateField field={field} value={value} onSave={onSave} />;
+    case "select":
+      return <CustomSelectField field={field} value={value} onSave={onSave} />;
     case "checkbox":
-      return (
-        <button
-          onClick={() => {
-            const newVal = value === "true" ? "false" : "true";
-            onChange(newVal);
-            // Auto-save on toggle
-            setTimeout(() => onSave(), 50);
-          }}
-          className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${
-            value === "true"
-              ? "bg-[#0073EA] text-white"
-              : "border-2 border-[#C5C7D0] hover:border-[#0073EA]"
-          }`}
-        >
-          {value === "true" && <Check size={12} />}
-        </button>
-      );
-
-    case "select": {
-      const options = (field.options as SelectOption[]) || [];
-      return (
-        <div className="relative">
-          <select
-            value={value}
-            onChange={(e) => {
-              onChange(e.target.value);
-              setTimeout(onSave, 50);
-            }}
-            onBlur={onSave}
-            autoFocus
-            className={`${baseClass} appearance-none pl-7`}
-          >
-            <option value="">בחר...</option>
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={14}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none"
-          />
-        </div>
-      );
-    }
-
+      return <CustomCheckboxField field={field} value={value} onSave={onSave} />;
     default:
-      return (
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={onSave}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          className={baseClass}
-        />
-      );
+      return <CustomTextField field={field} value={value} onSave={onSave} />;
   }
 }

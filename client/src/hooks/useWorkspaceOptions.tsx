@@ -38,6 +38,11 @@ export interface ChannelOption {
   color: string;
 }
 
+export interface BrandingOption {
+  logoUrl: string | null;
+  brandColor: string | null;
+}
+
 export interface WorkspaceOptions {
   dealStages: Record<string, StatusOption>;
   priorities: Record<string, StatusOption>;
@@ -49,8 +54,11 @@ export interface WorkspaceOptions {
   leadSources: string[];
   ticketChannels: Record<string, ChannelOption>;
   moduleLabels: Record<string, string>;
+  branding: BrandingOption;
   isLoading: boolean;
 }
+
+export const DEFAULT_BRAND_COLOR = "#0073EA";
 
 export const DEFAULT_MODULE_LABELS: Record<string, string> = {
   dashboard: "דשבורד",
@@ -171,6 +179,10 @@ export function WorkspaceOptionsProvider({
       leadSources: co.leadSources || DEFAULT_LEAD_SOURCES,
       ticketChannels: mergeOptions(DEFAULT_TICKET_CHANNELS, co.ticketChannels),
       moduleLabels: { ...DEFAULT_MODULE_LABELS, ...(data?.moduleLabels || {}) },
+      branding: {
+        logoUrl: data?.branding?.logoUrl ?? null,
+        brandColor: data?.branding?.brandColor ?? null,
+      },
       isLoading,
     };
   }, [data, isLoading]);
@@ -209,6 +221,7 @@ export function useWorkspaceOptions(): WorkspaceOptions {
       leadSources: DEFAULT_LEAD_SOURCES,
       ticketChannels: DEFAULT_TICKET_CHANNELS,
       moduleLabels: DEFAULT_MODULE_LABELS,
+      branding: { logoUrl: null, brandColor: null },
       isLoading: false,
     };
   }
