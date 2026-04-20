@@ -51,11 +51,12 @@ export default function ModuleLabelsTab() {
   const [labels, setLabels] = useState<Record<string, string>>(moduleLabels);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Sync when server data changes
+  // Sync when server data changes — but only if user hasn't made local edits
   useEffect(() => {
-    setLabels(moduleLabels);
-    setHasChanges(false);
-  }, [moduleLabels]);
+    if (!hasChanges) {
+      setLabels(moduleLabels);
+    }
+  }, [moduleLabels, hasChanges]);
 
   const saveMut = useMutation<unknown, Error, void>({
     mutationFn: () => updateModuleLabels(labels),

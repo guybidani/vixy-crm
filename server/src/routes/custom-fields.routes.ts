@@ -1,9 +1,19 @@
 import { Router } from "express";
 import { z } from "zod";
 import { validate } from "../middleware/validate";
+import { AppError } from "../middleware/errorHandler";
 import * as cfService from "../services/custom-fields.service";
 
 export const customFieldsRouter = Router();
+
+const uuidSchema = z.string().uuid();
+function requireUuid(value: unknown, paramName: string): string {
+  const result = uuidSchema.safeParse(value);
+  if (!result.success) {
+    throw new AppError(400, "INVALID_PARAM", `${paramName} must be a valid UUID`);
+  }
+  return result.data;
+}
 
 const ENTITY_TYPES = ["contact", "deal", "company"] as const;
 const FIELD_TYPES = ["text", "number", "date", "select", "email", "phone", "url", "checkbox"] as const;
@@ -18,7 +28,10 @@ const createSchema = z.object({
     color: z.string().optional(),
   })).optional(),
   required: z.boolean().optional(),
-});
+}).refine(
+  (data) => data.fieldType !== "select" || (data.options && data.options.length > 0),
+  { message: "Select fields must have at least one option", path: ["options"] },
+);
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -89,7 +102,7 @@ customFieldsRouter.patch("/reorder", validate(reorderSchema), async (req, res, n
 // PATCH /custom-fields/:id
 customFieldsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   try {
-    const field = await cfService.updateField(req.workspaceId!, req.params.id as string, req.body);
+    const field = await cfService.updateField(req.workspaceId!, requireUuid(req.params.id, "id"), req.body);
     res.json(field);
   } catch (err) {
     next(err);
@@ -99,7 +112,7 @@ customFieldsRouter.patch("/:id", validate(updateSchema), async (req, res, next) 
 // DELETE /custom-fields/:id
 customFieldsRouter.delete("/:id", async (req, res, next) => {
   try {
-    const result = await cfService.deleteField(req.workspaceId!, req.params.id as string);
+    const result = await cfService.deleteField(req.workspaceId!, requireUuid(req.params.id, "id"));
     res.json(result);
   } catch (err) {
     next(err);
@@ -111,7 +124,7 @@ customFieldsRouter.delete("/:id", async (req, res, next) => {
 // GET /custom-fields/values/:entityId
 customFieldsRouter.get("/values/:entityId", async (req, res, next) => {
   try {
-    const values = await cfService.getValues(req.workspaceId!, req.params.entityId as string);
+    const values = await cfService.getValues(req.workspaceId!, requireUuid(req.params.entityId, "entityId"));
     res.json(values);
   } catch (err) {
     next(err);
@@ -123,7 +136,7 @@ customFieldsRouter.patch("/values/:entityId", validate(bulkValuesSchema), async 
   try {
     const result = await cfService.bulkUpdateValues(
       req.workspaceId!,
-      req.params.entityId as string,
+      requireUuid(req.params.entityId, "entityId"),
       req.body.values,
     );
     res.json(result);

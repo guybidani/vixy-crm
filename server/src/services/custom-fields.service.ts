@@ -135,6 +135,24 @@ export async function bulkUpdateValues(
   entityId: string,
   values: Array<{ fieldId: string; value: string | null }>,
 ) {
+  // IDOR protection: verify every fieldId belongs to this workspace before upserting
+  const fieldIds = [...new Set(values.map((v) => v.fieldId))];
+  if (fieldIds.length === 0) return [];
+
+  const validFields = await prisma.customField.findMany({
+    where: { id: { in: fieldIds }, workspaceId },
+    select: { id: true },
+  });
+  const validFieldIds = new Set(validFields.map((f) => f.id));
+  const invalidIds = fieldIds.filter((id) => !validFieldIds.has(id));
+  if (invalidIds.length > 0) {
+    throw new AppError(
+      403,
+      "FORBIDDEN",
+      `Field(s) do not belong to workspace: ${invalidIds.join(", ")}`,
+    );
+  }
+
   const ops = values.map(({ fieldId, value }) =>
     prisma.customFieldValue.upsert({
       where: { fieldId_entityId: { fieldId, entityId } },
