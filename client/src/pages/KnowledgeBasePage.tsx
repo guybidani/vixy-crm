@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import StatusBadge from "../components/shared/StatusBadge";
 import {
@@ -50,6 +51,7 @@ function getCategoryColor(index: number) {
 }
 
 export default function KnowledgeBasePage() {
+  const knowledgeLabel = useModuleLabel("knowledge");
   const queryClient = useQueryClient();
   const [view, setView] = useState<View>("list");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -123,7 +125,7 @@ export default function KnowledgeBasePage() {
     <PageShell
       boardStyle
       emoji="📚"
-      title="מאגר ידע"
+      title={knowledgeLabel}
       subtitle={`${articles?.length || 0} מאמרים`}
       actions={
         <div className="flex gap-2">

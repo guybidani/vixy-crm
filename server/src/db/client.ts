@@ -32,6 +32,8 @@ const WORKSPACE_SCOPED_MODELS = [
   "Document",
   "DocumentLink",
   "Note",
+  "CustomField",
+  "CustomFieldValue",
   "Board",
   "SavedView",
   "Workflow",

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import StatusBadge from "../components/shared/StatusBadge";
 import {
@@ -67,6 +68,7 @@ function renderPreview(
 }
 
 export default function TemplatesPage() {
+  const templatesLabel = useModuleLabel("templates");
   const queryClient = useQueryClient();
   const [filterCategory, setFilterCategory] = useState("");
   const [filterChannel, setFilterChannel] = useState("");
@@ -116,8 +118,8 @@ export default function TemplatesPage() {
     <PageShell
       boardStyle
       emoji="📋"
-      title="תבניות הודעות"
-      subtitle={`${filteredTemplates.length} תבניות`}
+      title={templatesLabel}
+      subtitle={`${filteredTemplates.length} ${templatesLabel}`}
       actions={
         <button
           onClick={() => setShowCreate(true)}

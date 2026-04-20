@@ -28,6 +28,7 @@ import {
 import toast from "react-hot-toast";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../hooks/useAuth";
+import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { NAV_ITEMS } from "../../lib/constants";
 import { listBoards, updateBoard } from "../../api/boards";
 import { getNavPermissions } from "../../api/settings";
@@ -198,6 +199,7 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const { user, workspaces, currentWorkspaceId, selectWorkspace } = useAuth();
+  const { moduleLabels } = useWorkspaceOptions();
   const currentWs = workspaces.find((w) => w.id === currentWorkspaceId);
   const isOwner = currentWs?.role === "OWNER";
   const [createBoardOpen, setCreateBoardOpen] = useState(false);
@@ -250,7 +252,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   };
 
   const getNavLabel = (item: (typeof NAV_ITEMS)[number]) => {
-    return navLabels[item.key] || item.label;
+    // Priority: localStorage override > workspace moduleLabels > constant default
+    return navLabels[item.key] || moduleLabels[item.key] || item.label;
   };
 
   const toggleBoards = () => {

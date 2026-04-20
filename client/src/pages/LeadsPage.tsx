@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import SidePanel from "../components/shared/SidePanel";
 import ContactDetailPanel from "../components/contacts/ContactDetailPanel";
@@ -78,6 +79,7 @@ function scoreBgClass(score: number) {
 }
 
 export default function LeadsPage() {
+  const leadsLabel = useModuleLabel("leads");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -346,8 +348,8 @@ export default function LeadsPage() {
     <PageShell
       boardStyle
       emoji="🎯"
-      title="לידים"
-      subtitle={`${data?.pagination.total || 0} לידים ממתינים`}
+      title={leadsLabel}
+      subtitle={`${data?.pagination.total || 0} ${leadsLabel}`}
       views={[
         { key: "cards", label: "כרטיסים" },
         { key: "pipeline", label: "משפך" },

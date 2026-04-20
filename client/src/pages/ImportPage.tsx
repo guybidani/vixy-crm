@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import {
   previewImport,
   importContacts,
@@ -82,6 +83,7 @@ function guessMapping(
 }
 
 export default function ImportPage() {
+  const importLabel = useModuleLabel("import");
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [importType, setImportType] = useState<ImportType>("contacts");
@@ -176,7 +178,7 @@ export default function ImportPage() {
     <PageShell
       boardStyle
       emoji="📥"
-      title="ייבוא נתונים"
+      title={importLabel}
       subtitle="ייבוא אנשי קשר או עסקאות מקובץ CSV"
     >
     <div className="max-w-4xl mx-auto">

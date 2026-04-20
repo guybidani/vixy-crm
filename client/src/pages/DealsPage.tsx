@@ -25,6 +25,7 @@ import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
 import { getAvatarColor } from "../utils/avatar";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
@@ -63,6 +64,7 @@ type TableTab = "table" | "chart";
 
 export default function DealsPage() {
   const { dealStages, priorities } = useWorkspaceOptions();
+  const dealsLabel = useModuleLabel("deals");
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -455,10 +457,10 @@ export default function DealsPage() {
 
   return (
     <PageShell
-      title="עסקאות"
+      title={dealsLabel}
       emoji="🤝"
       boardStyle
-      subtitle={totalDeals ? `${totalDeals} עסקאות` : undefined}
+      subtitle={totalDeals ? `${totalDeals} ${dealsLabel}` : undefined}
       views={[
         { key: "table", label: "טבלה" },
         { key: "kanban", label: "קנבאן" },

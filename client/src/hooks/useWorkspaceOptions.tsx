@@ -48,8 +48,27 @@ export interface WorkspaceOptions {
   activityTypes: Record<string, ActivityOption>;
   leadSources: string[];
   ticketChannels: Record<string, ChannelOption>;
+  moduleLabels: Record<string, string>;
   isLoading: boolean;
 }
+
+export const DEFAULT_MODULE_LABELS: Record<string, string> = {
+  dashboard: "דשבורד",
+  contacts: "אנשי קשר",
+  companies: "חברות",
+  deals: "עסקאות",
+  leads: "לידים",
+  tasks: "משימות",
+  tickets: "קריאות שירות",
+  documents: "מסמכים",
+  knowledge: "מאגר ידע",
+  templates: "תבניות",
+  automations: "אוטומציות",
+  reports: "דוחות",
+  analytics: "ניתוחים",
+  history: "היסטוריה",
+  import: "ייבוא",
+};
 
 // ── Defaults for items not in constants.ts ──
 
@@ -151,6 +170,7 @@ export function WorkspaceOptionsProvider({
       ),
       leadSources: co.leadSources || DEFAULT_LEAD_SOURCES,
       ticketChannels: mergeOptions(DEFAULT_TICKET_CHANNELS, co.ticketChannels),
+      moduleLabels: { ...DEFAULT_MODULE_LABELS, ...(data?.moduleLabels || {}) },
       isLoading,
     };
   }, [data, isLoading]);
@@ -188,6 +208,7 @@ export function useWorkspaceOptions(): WorkspaceOptions {
       >,
       leadSources: DEFAULT_LEAD_SOURCES,
       ticketChannels: DEFAULT_TICKET_CHANNELS,
+      moduleLabels: DEFAULT_MODULE_LABELS,
       isLoading: false,
     };
   }

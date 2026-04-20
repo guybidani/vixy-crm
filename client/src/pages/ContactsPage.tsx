@@ -8,6 +8,7 @@ import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
@@ -40,6 +41,7 @@ import { type SavedView } from "../api/views";
 
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
+  const contactsLabel = useModuleLabel("contacts");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -407,10 +409,10 @@ export default function ContactsPage() {
 
   return (
     <PageShell
-      title="אנשי קשר"
+      title={contactsLabel}
       emoji="👥"
       boardStyle
-      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s: any, t: any) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} אנשי קשר`}
+      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s: any, t: any) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} ${contactsLabel}`}
       views={[
         { key: "table", label: "טבלה" },
         { key: "kanban", label: "קנבאן" },

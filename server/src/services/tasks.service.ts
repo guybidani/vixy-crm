@@ -291,7 +291,7 @@ export async function create(
   }
 
   // Sync to Google Calendar (fire-and-forget)
-  maybeSyncTask(workspaceId, task.assigneeId, task).catch(() => {});
+  if (task.assigneeId) maybeSyncTask(workspaceId, task.assigneeId, task).catch(() => {});
 
   // Schedule BullMQ reminder if dueDate + dueTime are set
   if (data.dueDate && data.dueTime) {
@@ -398,7 +398,7 @@ export async function createNextRecurrence(taskId: string, workspaceId: string) 
   });
 
   // Schedule reminder for the new task if applicable
-  if (nextTask.dueDate && nextTask.dueTime) {
+  if (nextTask.dueDate && nextTask.dueTime && nextTask.assigneeId) {
     scheduleTaskReminder(
       nextTask.id,
       workspaceId,
@@ -532,7 +532,7 @@ export async function update(
     }
 
     // Auto-create activity on task completion (linked to contact/deal)
-    if (updated.contactId || updated.dealId) {
+    if ((updated.contactId || updated.dealId) && updated.assigneeId) {
       const memberId = updated.assigneeId;
       prisma.activity
         .create({
@@ -556,7 +556,7 @@ export async function update(
   }
 
   // Sync to Google Calendar (fire-and-forget)
-  maybeSyncTask(workspaceId, updated.assigneeId, updated).catch(() => {});
+  if (updated.assigneeId) maybeSyncTask(workspaceId, updated.assigneeId, updated).catch(() => {});
 
   // Re-schedule reminder whenever dueDate, dueTime, or reminderMinutes change
   const effectiveDueDate = data.dueDate
@@ -566,7 +566,7 @@ export async function update(
   const effectiveReminderMinutes =
     data.reminderMinutes ?? existing.reminderMinutes ?? 15;
 
-  if (effectiveDueDate && effectiveDueTime) {
+  if (effectiveDueDate && effectiveDueTime && updated.assigneeId) {
     scheduleTaskReminder(
       id,
       workspaceId,

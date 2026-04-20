@@ -30,6 +30,7 @@ import {
   Globe,
   Building2,
   CheckCircle2,
+  Type,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -42,6 +43,8 @@ import NavPermissionsTab from "../components/settings/NavPermissionsTab";
 import CalendarTab from "../components/settings/CalendarTab";
 import IntegrationsTab from "../components/settings/IntegrationsTab";
 import SnoozeSettingsTab from "../components/settings/SnoozeSettingsTab";
+import ModuleLabelsTab from "../components/settings/ModuleLabelsTab";
+import CustomFieldsTab from "../components/settings/CustomFieldsTab";
 import { useAuth } from "../hooks/useAuth";
 import {
   getWorkspaceMembers,
@@ -84,6 +87,8 @@ const BASE_TABS: SettingsTab[] = [
   { key: "sla", label: "מדיניות SLA", icon: Shield, color: "#A25DDC" },
   { key: "automation", label: "אוטומציה", icon: Workflow, color: "#FF642E" },
   { key: "options", label: "אפשרויות תצוגה", icon: Palette, color: "#66CCFF" },
+  { key: "module-labels", label: "שמות מודולים", icon: Type, color: "#A25DDC", adminOnly: true },
+  { key: "custom-fields", label: "שדות מותאמים", icon: Type, color: "#0073EA", adminOnly: true },
   { key: "tags", label: "תגיות", icon: Tag, color: "#579BFC" },
   { key: "calendar", label: "Google Calendar", icon: Calendar, color: "#4285F4" },
   { key: "snooze", label: "הגדרות דחייה", icon: AlarmClock, color: "#FF642E", adminOnly: true },
@@ -154,6 +159,8 @@ export default function SettingsPage() {
       {tab === "sla" && <SlaPoliciesTab />}
       {tab === "automation" && <AutomationTab />}
       {tab === "options" && <OptionsTab />}
+      {tab === "module-labels" && <ModuleLabelsTab />}
+      {tab === "custom-fields" && <CustomFieldsTab />}
       {tab === "tags" && <TagsTab />}
       {tab === "calendar" && <CalendarTab />}
       {tab === "snooze" && <SnoozeSettingsTab />}

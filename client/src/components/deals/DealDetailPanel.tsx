@@ -53,6 +53,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import AiDealScore from "./AiDealScore";
 import ItemUpdatesTab from "../shared/ItemUpdatesTab";
+import CustomFieldsEditor from "../shared/CustomFieldsEditor";
 
 interface DealDetailPanelProps {
   dealId: string;
@@ -886,6 +887,7 @@ export default function DealDetailPanel({
                     </p>
                   )}
                 </div>
+                <CustomFieldsEditor entityType="deal" entityId={dealId} />
               </div>
             )}
 

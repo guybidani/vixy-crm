@@ -78,6 +78,8 @@ model Workspace {
   calendarIntegrations CalendarIntegration[]
   savedViews          SavedView[]
   notes               Note[]
+  customFields        CustomField[]
+  customFieldValues   CustomFieldValue[]
 
   @@map("workspaces")
 }
@@ -1121,4 +1123,43 @@ model SavedView {
 
   @@index([workspaceId, memberId, entity])
   @@map("saved_views")
+}
+
+// ─── Custom Fields ───
+
+model CustomField {
+  id          String   @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String   @map("workspace_id")
+  entityType  String   @map("entity_type") // "contact", "deal", "company"
+  name        String   // field display name
+  key         String   // field key (auto-generated slug)
+  fieldType   String   @map("field_type") // "text", "number", "date", "select", "email", "phone", "url", "checkbox"
+  options     Json?    // for select type: [{label, value, color}]
+  required    Boolean  @default(false)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  values CustomFieldValue[]
+
+  @@unique([workspaceId, entityType, key])
+  @@index([workspaceId, entityType])
+  @@map("custom_fields")
+}
+
+model CustomFieldValue {
+  id          String   @id @default(uuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String   @map("workspace_id")
+  field       CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId     String   @map("field_id")
+  entityId    String   @map("entity_id") // the contact/deal/company ID
+  value       String?  @db.Text // stored as string, parsed by type
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([fieldId, entityId])
+  @@index([workspaceId, entityId])
+  @@map("custom_field_values")
 }

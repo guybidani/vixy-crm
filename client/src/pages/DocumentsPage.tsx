@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import { useDebounce } from "../hooks/useDebounce";
 import Modal from "../components/shared/Modal";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import SidePanel from "../components/shared/SidePanel";
 import RichTextEditor from "../components/shared/RichTextEditor";
 import MondayBoard, {
@@ -62,6 +63,7 @@ function formatFileSize(bytes: number | null) {
 }
 
 export default function DocumentsPage() {
+  const documentsLabel = useModuleLabel("documents");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search);
@@ -337,8 +339,8 @@ export default function DocumentsPage() {
     <PageShell
       boardStyle
       emoji="📄"
-      title="מסמכים"
-      subtitle={`${data?.total || 0} מסמכים`}
+      title={documentsLabel}
+      subtitle={`${data?.total || 0} ${documentsLabel}`}
       actions={
         <div className="relative">
           <button

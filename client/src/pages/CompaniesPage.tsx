@@ -5,6 +5,7 @@ import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw, Mail, Phone,
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import Modal from "../components/shared/Modal";
 import MondayTextCell from "../components/shared/MondayTextCell";
@@ -52,6 +53,7 @@ function companyColor(name: string) {
 
 export default function CompaniesPage() {
   const { companyStatuses } = useWorkspaceOptions();
+  const companiesLabel = useModuleLabel("companies");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
@@ -263,8 +265,8 @@ export default function CompaniesPage() {
     <PageShell
       boardStyle
       emoji="🏢"
-      title="חברות"
-      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s, t) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} חברות`}
+      title={companiesLabel}
+      subtitle={`${viewMode === "kanban" ? (boardData?.totals?.reduce((s, t) => s + t.count, 0) ?? 0) : (data?.pagination.total || 0)} ${companiesLabel}`}
       views={[
         { key: "table", label: "טבלה" },
         { key: "kanban", label: "לוח" },

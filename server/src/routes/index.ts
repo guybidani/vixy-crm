@@ -28,6 +28,7 @@ import { viewsRouter } from "./views.routes";
 import { importRouter } from "./import.routes";
 import { aiRouter } from "./ai.routes";
 import { notesRouter } from "./notes.routes";
+import { customFieldsRouter } from "./custom-fields.routes";
 import { requireAuth, requireWorkspace } from "../middleware/auth";
 import { checkNavPermission } from "../middleware/navPermission";
 
@@ -71,4 +72,5 @@ router.use("/views", viewsRouter);
 router.use("/import", importRouter);
 router.use("/ai", aiRouter);
 router.use("/notes", notesRouter);
+router.use("/custom-fields", customFieldsRouter);
 // router.use('/smart-views', smartViewsRouter);

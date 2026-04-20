@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Clock, Phone, Mail, Video, MessageCircle, StickyNote, AlertCircle, RefreshCw } from "lucide-react";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import { getRecentContacts, type RecentContact } from "../api/history";
 import { avatarColor } from "../lib/utils";
 
@@ -133,6 +134,7 @@ function ContactCard({ item }: { item: RecentContact }) {
 }
 
 export default function HistoryPage() {
+  const historyLabel = useModuleLabel("history");
   const [typeFilter, setTypeFilter] = useState("");
   const { data: recentContacts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["recent-contacts"],
@@ -149,7 +151,7 @@ export default function HistoryPage() {
     <PageShell
       boardStyle
       emoji="📋"
-      title="היסטוריה"
+      title={historyLabel}
       subtitle={`${filteredContacts.length} אנשי קשר אחרונים`}
     >
       {/* Activity type filter */}

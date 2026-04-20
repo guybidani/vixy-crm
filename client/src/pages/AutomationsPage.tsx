@@ -21,6 +21,7 @@ import PageShell, {
   PageCard,
   EmptyState,
 } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import {
   listWorkflows,
@@ -552,6 +553,7 @@ function WorkflowDialog({
 // ─── Page Component ───
 
 export default function AutomationsPage() {
+  const automationsLabel = useModuleLabel("automations");
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Workflow | null>(null);
@@ -638,7 +640,7 @@ export default function AutomationsPage() {
     <PageShell
       boardStyle
       emoji="⚡"
-      title="אוטומציות"
+      title={automationsLabel}
       subtitle="הגדר טריגרים ופעולות אוטומטיות לתהליכי העבודה שלך"
       actions={
         <button

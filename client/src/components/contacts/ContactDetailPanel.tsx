@@ -45,6 +45,7 @@ import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { getWhatsAppUrl } from "../../utils/phone";
 import FollowUpCard from "./FollowUpCard";
 import ItemUpdatesTab from "../shared/ItemUpdatesTab";
+import CustomFieldsEditor from "../shared/CustomFieldsEditor";
 
 const ACTIVITY_COLORS: Record<string, string> = {
   NOTE: "#6161FF",
@@ -370,6 +371,7 @@ export default function ContactDetailPanel({
                   פרטים
                 </h3>
                 <ContactFieldsPanel contact={contact} />
+                <CustomFieldsEditor entityType="contact" entityId={contactId} />
               </div>
             </div>
 

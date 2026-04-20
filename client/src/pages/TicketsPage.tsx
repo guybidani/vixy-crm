@@ -53,6 +53,7 @@ import { listContacts } from "../api/contacts";
 import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import { useAuth } from "../hooks/useAuth";
 import { timeAgo, avatarColor } from "../lib/utils";
 import SavedViewsBar from "../components/shared/SavedViewsBar";
@@ -124,6 +125,7 @@ function SlaCountdown({ ticket }: { ticket: Ticket }) {
 
 export default function TicketsPage() {
   const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
+  const ticketsLabel = useModuleLabel("tickets");
   const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -476,7 +478,7 @@ export default function TicketsPage() {
         <div className="px-6 pt-5 pb-3 bg-white border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
-              <h2 className="text-[18px] font-bold text-[#323338]">קריאות</h2>
+              <h2 className="text-[18px] font-bold text-[#323338]">{ticketsLabel}</h2>
               {viewToggle}
             </div>
             <button
@@ -578,7 +580,7 @@ export default function TicketsPage() {
         <div className="px-4 pt-4 pb-2 border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-[15px] font-semibold text-[#323338]">קריאות</h2>
+              <h2 className="text-[15px] font-semibold text-[#323338]">{ticketsLabel}</h2>
               {viewToggle}
             </div>
             <button

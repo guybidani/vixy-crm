@@ -47,6 +47,7 @@ const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ImportPage = lazy(() => import("./pages/ImportPage"));
 const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 
 function SuspenseFallback() {
   return <PageSkeleton />;
@@ -162,6 +163,42 @@ function HomeRoute() {
   }
 
   return <LandingPage />;
+}
+
+function OnboardingGuard({ children }: { children: React.ReactNode }) {
+  const [status, setStatus] = useState<"loading" | "done" | "redirect">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    import("./api/settings").then((mod) =>
+      mod.getSetupStatus().then((data) => {
+        if (cancelled) return;
+        setStatus(data.setupCompleted ? "done" : "redirect");
+      }).catch(() => {
+        if (!cancelled) setStatus("done"); // On error, don't block
+      })
+    );
+    return () => { cancelled = true; };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <span className="text-[#0073EA] text-xl font-bold">V</span>
+          </div>
+          <p className="text-[#676879] text-sm">טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "redirect") {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function AppLayout() {
@@ -339,9 +376,21 @@ function App() {
             }
           />
           <Route
+            path="/onboarding"
+            element={
+              withErrorBoundary(
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              )
+            }
+          />
+          <Route
             element={
               <ProtectedRoute>
-                <AppLayout />
+                <OnboardingGuard>
+                  <AppLayout />
+                </OnboardingGuard>
               </ProtectedRoute>
             }
           >

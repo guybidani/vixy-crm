@@ -85,6 +85,55 @@ settingsRouter.put(
   },
 );
 
+// ─── Module Labels ───
+
+const moduleLabelsSchema = z.object({
+  moduleLabels: z.record(z.string().min(1)).refine(
+    (labels) => Object.keys(labels).every((k) =>
+      ["dashboard", "contacts", "companies", "deals", "leads", "tasks", "tickets",
+       "documents", "knowledge", "templates", "automations", "reports", "analytics",
+       "history", "import"].includes(k)
+    ),
+    { message: "Invalid module key" },
+  ),
+});
+
+// GET /settings/module-labels — any workspace member can read
+settingsRouter.get("/module-labels", async (req, res, next) => {
+  try {
+    const data = await settingsService.getModuleLabels(req.workspaceId!);
+    res.json({ moduleLabels: data });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /settings/module-labels — OWNER or ADMIN only
+settingsRouter.patch(
+  "/module-labels",
+  requireRole("OWNER", "ADMIN"),
+  validate(moduleLabelsSchema),
+  async (req, res, next) => {
+    try {
+      const result = await settingsService.updateModuleLabels(
+        req.workspaceId!,
+        req.body.moduleLabels,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.module_labels.update",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        ip: req.ip,
+      });
+      res.json({ moduleLabels: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ─── Snooze Options ───
 
 const snoozeOptionSchema = z.object({
@@ -130,6 +179,76 @@ settingsRouter.patch(
         ip: req.ip,
       });
       res.json({ snoozeOptions: result });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Onboarding / Industry Templates ───
+
+const applyTemplateSchema = z.object({
+  templateId: z.string().min(1),
+});
+
+// GET /settings/setup-status — any workspace member can read
+settingsRouter.get("/setup-status", async (req, res, next) => {
+  try {
+    const data = await settingsService.getSetupStatus(req.workspaceId!);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /settings/templates — list all available industry templates
+settingsRouter.get("/templates", async (_req, res) => {
+  res.json({ templates: settingsService.INDUSTRY_TEMPLATES });
+});
+
+// POST /settings/apply-template — OWNER or ADMIN only
+settingsRouter.post(
+  "/apply-template",
+  requireRole("OWNER", "ADMIN"),
+  validate(applyTemplateSchema),
+  async (req, res, next) => {
+    try {
+      const result = await settingsService.applyIndustryTemplate(
+        req.workspaceId!,
+        req.body.templateId,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.template.apply",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        metadata: { templateId: req.body.templateId },
+        ip: req.ip,
+      });
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /settings/skip-onboarding — OWNER or ADMIN only
+settingsRouter.post(
+  "/skip-onboarding",
+  requireRole("OWNER", "ADMIN"),
+  async (req, res, next) => {
+    try {
+      const result = await settingsService.skipOnboarding(req.workspaceId!);
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.onboarding.skip",
+        entityType: "Workspace",
+        entityId: req.workspaceId!,
+        ip: req.ip,
+      });
+      res.json(result);
     } catch (err) {
       next(err);
     }

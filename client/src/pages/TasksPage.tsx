@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import KanbanBoard, {
@@ -827,6 +828,7 @@ function StatsBar({ tasks }: { tasks: Task[] }) {
 
 export default function TasksPage() {
   const { taskStatuses, priorities } = useWorkspaceOptions();
+  const tasksLabel = useModuleLabel("tasks");
   const { currentWorkspaceId, workspaces } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1068,8 +1070,8 @@ export default function TasksPage() {
         <PageShell
           boardStyle
           emoji="✅"
-          title="המשימות שלי"
-          subtitle={`${allTasks.length} משימות`}
+          title={tasksLabel}
+          subtitle={`${allTasks.length} ${tasksLabel}`}
           views={[
             { key: "table", label: "טבלה" },
             { key: "kanban", label: "לוח" },

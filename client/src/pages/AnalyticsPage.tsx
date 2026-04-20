@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, TrendingUp, Users, Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import PageShell, { PageCard } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import {
   getActivityBreakdown,
   getDealFunnel,
@@ -292,6 +293,7 @@ function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
 // ─── Main Page ───
 
 export default function AnalyticsPage() {
+  const analyticsLabel = useModuleLabel("analytics");
   const [rangeKey, setRangeKey] = useState<RangeKey>("month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -337,7 +339,7 @@ export default function AnalyticsPage() {
     <PageShell
       boardStyle
       emoji="📊"
-      title="דוחות וניתוחים"
+      title={analyticsLabel}
       actions={
         <div className="flex items-center gap-2 flex-wrap" role="radiogroup" aria-label="טווח זמן">
           {RANGE_OPTIONS.map((opt) => (

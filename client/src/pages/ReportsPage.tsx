@@ -24,6 +24,7 @@ import {
   Legend,
 } from "recharts";
 import PageShell, { PageCard } from "../components/layout/PageShell";
+import { useModuleLabel } from "../hooks/useModuleLabel";
 import { getDealGrowth, getDealFunnel, getLeadSources } from "../api/analytics";
 import { getTeamPerformance } from "../api/dashboard";
 import { DEAL_STAGES } from "../lib/constants";
@@ -500,11 +501,12 @@ function LeadSources() {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
+  const reportsLabel = useModuleLabel("reports");
   return (
     <PageShell
       boardStyle
       emoji="📈"
-      title="דוחות"
+      title={reportsLabel}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DealsTimeline />

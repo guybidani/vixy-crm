@@ -133,10 +133,12 @@ export async function getWorkspaceOptions(workspaceId: string) {
   if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
 
   const settings = (workspace.settings as Record<string, any>) || {};
+  const moduleLabelsOverrides = (settings.moduleLabels || {}) as Record<string, string>;
   return {
     customOptions: settings.customOptions || {},
     defaults: DEFAULT_OPTIONS,
     snoozeOptions: settings.snoozeOptions || DEFAULT_SNOOZE_OPTIONS,
+    moduleLabels: { ...DEFAULT_MODULE_LABELS, ...moduleLabelsOverrides },
   };
 }
 
@@ -181,6 +183,255 @@ export async function updateNavPermissions(
   });
 
   return { navPermissions: ((updated.settings as Record<string, any>).navPermissions || {}) as Record<string, string[]> };
+}
+
+// ─── Module Labels ───
+
+export const DEFAULT_MODULE_LABELS: Record<string, string> = {
+  dashboard: "דשבורד",
+  contacts: "אנשי קשר",
+  companies: "חברות",
+  deals: "עסקאות",
+  leads: "לידים",
+  tasks: "משימות",
+  tickets: "קריאות שירות",
+  documents: "מסמכים",
+  knowledge: "מאגר ידע",
+  templates: "תבניות",
+  automations: "אוטומציות",
+  reports: "דוחות",
+  analytics: "ניתוחים",
+  history: "היסטוריה",
+  import: "ייבוא",
+};
+
+export async function getModuleLabels(workspaceId: string): Promise<Record<string, string>> {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: { settings: true },
+  });
+  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+  const settings = (workspace.settings as Record<string, any>) || {};
+  const overrides = (settings.moduleLabels || {}) as Record<string, string>;
+  return { ...DEFAULT_MODULE_LABELS, ...overrides };
+}
+
+export async function updateModuleLabels(
+  workspaceId: string,
+  moduleLabels: Record<string, string>,
+): Promise<Record<string, string>> {
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
+
+    // Only store overrides that differ from defaults
+    const overrides: Record<string, string> = {};
+    for (const [key, value] of Object.entries(moduleLabels)) {
+      if (key in DEFAULT_MODULE_LABELS && value !== DEFAULT_MODULE_LABELS[key]) {
+        overrides[key] = value;
+      }
+    }
+
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        settings: {
+          ...existingSettings,
+          moduleLabels: overrides,
+        },
+      },
+      select: { settings: true },
+    });
+  });
+
+  const settings = (updated.settings as Record<string, any>) || {};
+  return { ...DEFAULT_MODULE_LABELS, ...(settings.moduleLabels || {}) };
+}
+
+// ─── Industry Templates ───
+
+export interface IndustryTemplate {
+  name: string;
+  icon: string;
+  description: string;
+  moduleLabels: Record<string, string>;
+  dealStages: string[];
+  contactStatuses: string[];
+}
+
+export const INDUSTRY_TEMPLATES: Record<string, IndustryTemplate> = {
+  sales: {
+    name: "מכירות B2B",
+    icon: "💼",
+    description: "צוותי מכירות, SDR, AE",
+    moduleLabels: { contacts: "אנשי קשר", deals: "עסקאות", leads: "לידים", tickets: "תמיכה" },
+    dealStages: ["ליד", "הסמכה", "הצעת מחיר", "משא ומתן", "נסגר-הצלחה", "נסגר-הפסד"],
+    contactStatuses: ["ליד", "מוסמך", "לקוח", "נטש", "לא פעיל"],
+  },
+  realestate: {
+    name: 'נדל"ן',
+    icon: "🏠",
+    description: "סוכנויות נדל\"ן, יזמים",
+    moduleLabels: { contacts: "לקוחות", deals: "נכסים", leads: "מתעניינים", companies: "יזמים", tasks: "ביקורים", tickets: "פניות" },
+    dealStages: ["מתעניין", "ביקור ראשון", "ביקור שני", "הצעה", "משא ומתן", "נחתם", "בוטל"],
+    contactStatuses: ["מתעניין", "פעיל", "רכש", "מושכר", "לא רלוונטי"],
+  },
+  agency: {
+    name: "סוכנות פרסום",
+    icon: "📢",
+    description: "קמפיינרים, מדיה, קריאייטיב",
+    moduleLabels: { contacts: "לקוחות", deals: "קמפיינים", leads: "לידים", companies: "מותגים", tasks: "משימות", tickets: "בקשות" },
+    dealStages: ["בריף", "הצעה", "אישור", "הפקה", "פעיל", "סיום", "בוטל"],
+    contactStatuses: ["פוטנציאלי", "פעיל", "VIP", "הוקפא", "עזב"],
+  },
+  recruitment: {
+    name: "גיוס",
+    icon: "👥",
+    description: "HR, השמה, גיוס טכנולוגי",
+    moduleLabels: { contacts: "מועמדים", deals: "משרות", leads: "מגויסים", companies: "חברות מגייסות", tasks: "ראיונות", tickets: "פניות" },
+    dealStages: ["סינון", "ראיון טלפוני", "ראיון ראשון", "ראיון שני", "הצעה", "התחיל", "נדחה"],
+    contactStatuses: ["מועמד", "בתהליך", "הוצע", "התקבל", "נדחה"],
+  },
+  coaching: {
+    name: "אימון וייעוץ",
+    icon: "🎯",
+    description: "מאמנים, יועצים, מטפלים",
+    moduleLabels: { contacts: "מטופלים", deals: "תוכניות", leads: "פניות", companies: "ארגונים", tasks: "מפגשים", tickets: "שאלות" },
+    dealStages: ["פנייה", "שיחת היכרות", "הצעה", "פעיל", "הושלם", "בוטל"],
+    contactStatuses: ["פנייה חדשה", "פעיל", "VIP", "סיים", "לא פעיל"],
+  },
+  ecommerce: {
+    name: "מסחר אלקטרוני",
+    icon: "🛒",
+    description: "חנויות אונליין, D2C",
+    moduleLabels: { contacts: "לקוחות", deals: "הזמנות", leads: "מתעניינים", companies: "ספקים", tasks: "משלוחים", tickets: "החזרות" },
+    dealStages: ["עגלה", "הזמנה", "בתשלום", "נשלח", "הושלם", "ביטול"],
+    contactStatuses: ["חדש", "פעיל", "VIP", "לא פעיל", "חסום"],
+  },
+  saas: {
+    name: "SaaS / טכנולוגיה",
+    icon: "💻",
+    description: "חברות תוכנה, SaaS, סטארטאפים",
+    moduleLabels: { contacts: "אנשי קשר", deals: "עסקאות", leads: "לידים", companies: "חשבונות", tasks: "משימות", tickets: "תמיכה טכנית" },
+    dealStages: ["Discovery", "Demo", "POC", "Proposal", "Negotiation", "Closed Won", "Closed Lost"],
+    contactStatuses: ["Trial", "Active", "Paying", "Churned", "Inactive"],
+  },
+  education: {
+    name: "חינוך והכשרה",
+    icon: "📚",
+    description: "מכללות, קורסים, סדנאות",
+    moduleLabels: { contacts: "תלמידים", deals: "הרשמות", leads: "מתעניינים", companies: "מוסדות", tasks: "שיעורים", tickets: "פניות" },
+    dealStages: ["מתעניין", "ייעוץ", "הרשמה", "תשלום", "לומד", "סיים", "ביטול"],
+    contactStatuses: ["מתעניין", "נרשם", "לומד", "בוגר", "עזב"],
+  },
+};
+
+/** Colors to assign to deal stages and contact statuses. */
+const STAGE_COLORS = ["#579BFC", "#A25DDC", "#6161FF", "#FDAB3D", "#FF642E", "#00CA72", "#FB275D", "#C4C4C4"];
+const STATUS_COLORS = ["#579BFC", "#A25DDC", "#00CA72", "#FB275D", "#C4C4C4"];
+
+function buildStageOptions(labels: string[]) {
+  const result: Record<string, { label: string; color: string; order: number }> = {};
+  const enumKeys = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "CLOSED_WON", "CLOSED_LOST"];
+  labels.forEach((label, i) => {
+    const key = enumKeys[i] || `CUSTOM_${i}`;
+    result[key] = { label, color: STAGE_COLORS[i % STAGE_COLORS.length], order: i };
+  });
+  return result;
+}
+
+function buildContactStatusOptions(labels: string[]) {
+  const result: Record<string, { label: string; color: string; order: number }> = {};
+  const enumKeys = ["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"];
+  labels.forEach((label, i) => {
+    const key = enumKeys[i] || `CUSTOM_${i}`;
+    result[key] = { label, color: STATUS_COLORS[i % STATUS_COLORS.length], order: i };
+  });
+  return result;
+}
+
+export async function applyIndustryTemplate(workspaceId: string, templateId: string) {
+  const template = INDUSTRY_TEMPLATES[templateId];
+  if (!template) {
+    throw new AppError(400, "INVALID_TEMPLATE", `Unknown template: ${templateId}`);
+  }
+
+  const customOptions: Record<string, any> = {
+    dealStages: buildStageOptions(template.dealStages),
+    contactStatuses: buildContactStatusOptions(template.contactStatuses),
+  };
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
+
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        settings: {
+          ...existingSettings,
+          customOptions,
+          moduleLabels: template.moduleLabels,
+          industryTemplate: templateId,
+          setupCompleted: true,
+        },
+      },
+      select: { settings: true },
+    });
+  });
+
+  return updated.settings as Record<string, any>;
+}
+
+export async function skipOnboarding(workspaceId: string) {
+  const updated = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { settings: true },
+    });
+    if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+    const existingSettings = (workspace.settings as Record<string, any>) || {};
+
+    return tx.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        settings: {
+          ...existingSettings,
+          setupCompleted: true,
+        },
+      },
+      select: { settings: true },
+    });
+  });
+
+  return updated.settings as Record<string, any>;
+}
+
+export async function getSetupStatus(workspaceId: string) {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: { settings: true },
+  });
+  if (!workspace) throw new AppError(404, "NOT_FOUND", "Workspace not found");
+
+  const settings = (workspace.settings as Record<string, any>) || {};
+  return {
+    setupCompleted: !!settings.setupCompleted,
+    industryTemplate: settings.industryTemplate || null,
+    moduleLabels: settings.moduleLabels || null,
+  };
 }
 
 export async function updateWorkspaceOptions(
