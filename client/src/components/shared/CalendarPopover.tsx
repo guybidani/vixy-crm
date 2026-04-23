@@ -198,7 +198,7 @@ export default function CalendarPopover({
           onKeyDown={(e) => {
             if (e.key === "Enter") handleTextSubmit();
           }}
-          placeholder="YYYY-MM-DD"
+          placeholder="שנה-חודש-יום"
           className="w-full text-[13px] text-[#323338] border border-[#9699A6] rounded px-2 py-1.5 outline-none focus:border-[#0073EA] text-center font-mono"
           dir="ltr"
         />

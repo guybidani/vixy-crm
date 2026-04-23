@@ -4,6 +4,7 @@ import { config } from "../config";
 import { encrypt, decrypt } from "../lib/encryption";
 import { logger } from "../lib/logger";
 import { FIVE_MINUTES_MS } from "../lib/constants";
+import { AppError } from "../middleware/errorHandler";
 import type { CalendarIntegration, Task } from "@prisma/client";
 
 // ─── OAuth State Store ────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ export async function handleCallback(
 
   const stored = stateStore.get(state);
   if (!stored || stored.expiresAt < Date.now()) {
-    throw new Error("Invalid or expired OAuth state");
+    throw new AppError(400, "OAUTH_STATE_INVALID", "Invalid or expired OAuth state");
   }
   stateStore.delete(state);
 
@@ -92,7 +93,8 @@ export async function handleCallback(
 
   if (!tokenRes.ok) {
     const errText = await tokenRes.text();
-    throw new Error(`Token exchange failed: ${errText}`);
+    logger.error({ status: tokenRes.status, errText }, "Google token exchange failed");
+    throw new AppError(502, "GOOGLE_TOKEN_EXCHANGE_FAILED", "Failed to exchange OAuth code with Google");
   }
 
   const tokens = (await tokenRes.json()) as {
@@ -102,8 +104,10 @@ export async function handleCallback(
   };
 
   if (!tokens.refresh_token) {
-    throw new Error(
-      "No refresh_token returned. Ensure prompt=consent and access_type=offline.",
+    throw new AppError(
+      502,
+      "GOOGLE_NO_REFRESH_TOKEN",
+      "Google did not return a refresh_token. Revoke and reconnect with prompt=consent.",
     );
   }
 
@@ -112,7 +116,7 @@ export async function handleCallback(
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   });
   if (!userRes.ok) {
-    throw new Error("Failed to fetch Google user info");
+    throw new AppError(502, "GOOGLE_USERINFO_FAILED", "Failed to fetch Google user info");
   }
   const userInfo = (await userRes.json()) as { email: string };
   const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
@@ -172,7 +176,8 @@ export async function getAccessToken(
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Token refresh failed: ${errText}`);
+    logger.error({ status: res.status, errText }, "Google token refresh failed");
+    throw new AppError(502, "GOOGLE_TOKEN_REFRESH_FAILED", "Failed to refresh Google access token");
   }
 
   const data = (await res.json()) as {
@@ -253,7 +258,8 @@ export async function syncTaskToCalendar(
 
     if (!createRes.ok) {
       const errText = await createRes.text();
-      throw new Error(`Calendar event creation failed: ${errText}`);
+      logger.error({ status: createRes.status, errText }, "Google calendar event creation failed");
+      throw new AppError(502, "CALENDAR_CREATE_FAILED", "Failed to create Google Calendar event");
     }
 
     const event = (await createRes.json()) as { id: string };
@@ -332,7 +338,8 @@ export async function deleteCalendarEvent(
 
   if (!res.ok && res.status !== 404) {
     const errText = await res.text();
-    throw new Error(`Calendar event deletion failed: ${errText}`);
+    logger.error({ status: res.status, errText }, "Google calendar event deletion failed");
+    throw new AppError(502, "CALENDAR_DELETE_FAILED", "Failed to delete Google Calendar event");
   }
 }
 
@@ -393,7 +400,8 @@ async function _updateEvent(
 
   if (!res.ok) {
     const errText = await res.text();
-    throw new Error(`Calendar event update failed: ${errText}`);
+    logger.error({ status: res.status, errText }, "Google calendar event update failed");
+    throw new AppError(502, "CALENDAR_UPDATE_FAILED", "Failed to update Google Calendar event");
   }
 }
 

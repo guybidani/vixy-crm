@@ -33,7 +33,8 @@ export async function sendEmail(
 ): Promise<void> {
   const client = getClient();
   if (!client) {
-    console.debug("Resend API key not configured, skipping email send");
+    // Resend API key not configured — silently skip in environments without
+    // email (dev/preview). Not an error condition worth logging on every send.
     return;
   }
 

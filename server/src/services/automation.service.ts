@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
+import { logger } from "../lib/logger";
 
 // ─── Workflow CRUD ───
 
@@ -260,9 +261,9 @@ export async function processTrigger(ctx: TriggerContext) {
         status: "FAILED",
         error: err.message,
       });
-      console.error(
-        `Workflow ${workflow.id} (${workflow.name}) failed:`,
-        err.message,
+      logger.error(
+        { workflowId: workflow.id, workflowName: workflow.name, err: err.message },
+        "Workflow execution failed",
       );
     }
   }
@@ -307,7 +308,10 @@ function evaluateConditions(
       case "is_not_empty":
         return !!value && value !== "";
       default:
-        console.warn(`[Automation] Unknown condition operator: ${cond.operator}`);
+        logger.warn(
+          { operator: cond.operator },
+          "[Automation] Unknown condition operator",
+        );
         return false;
     }
   });
@@ -406,8 +410,9 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
       const allowed = ALLOWED_FIELDS[ctx.entityType];
       if (!allowed || !allowed.includes(field)) {
-        console.error(
-          `[Automation] CHANGE_FIELD blocked: field "${field}" is not allowed for entity type "${ctx.entityType}"`,
+        logger.error(
+          { field, entityType: ctx.entityType },
+          "[Automation] CHANGE_FIELD blocked: field not allowed for entity type",
         );
         break;
       }
@@ -419,8 +424,9 @@ async function executeAction(action: any, ctx: TriggerContext) {
           select: { id: true },
         });
         if (!memberRef) {
-          console.error(
-            `[Automation] CHANGE_FIELD blocked: assigneeId "${value}" not found in workspace "${ctx.workspaceId}"`,
+          logger.error(
+            { assigneeId: value, workspaceId: ctx.workspaceId },
+            "[Automation] CHANGE_FIELD blocked: assigneeId not found in workspace",
           );
           break;
         }
@@ -484,8 +490,9 @@ async function executeAction(action: any, ctx: TriggerContext) {
           select: { id: true },
         });
         if (!assigneeMember) {
-          console.error(
-            `[Automation] ASSIGN_OWNER blocked: assigneeId "${config.assigneeId}" not found in workspace "${ctx.workspaceId}"`,
+          logger.error(
+            { assigneeId: config.assigneeId, workspaceId: ctx.workspaceId },
+            "[Automation] ASSIGN_OWNER blocked: assigneeId not found in workspace",
           );
           break;
         }

@@ -1,6 +1,7 @@
 import { parse } from "csv-parse/sync";
 import { prisma } from "../db/client";
 import { IMPORT_MAX_ROWS } from "../lib/constants";
+import { AppError } from "../middleware/errorHandler";
 
 /**
  * Parse a CSV buffer into headers + rows.
@@ -721,6 +722,6 @@ export async function executeImport(
         duplicateStrategy,
       );
     default:
-      throw new Error(`Unknown entity type: ${entityType}`);
+      throw new AppError(400, "INVALID_ENTITY_TYPE", `Unknown entity type: ${entityType}`);
   }
 }

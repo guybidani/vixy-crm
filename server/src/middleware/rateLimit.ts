@@ -41,3 +41,37 @@ export const apiLimiter = rateLimit({
     },
   },
 });
+
+/**
+ * Strict rate limit for AI endpoints — streaming completions are expensive
+ * (each call fans out to a paid LLM provider). Applied on top of apiLimiter.
+ */
+export const aiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  limit: 20, // 20 AI calls per minute per IP
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: "RATE_LIMITED",
+      message: "Too many AI requests. Please wait a moment.",
+    },
+  },
+});
+
+/**
+ * Strict rate limit for bulk import / export endpoints — each call can
+ * touch thousands of rows and holds DB connections for a while.
+ */
+export const heavyLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  limit: 10, // 10 heavy operations per 5 minutes per IP
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    error: {
+      code: "RATE_LIMITED",
+      message: "Too many bulk operations. Please wait a few minutes.",
+    },
+  },
+});

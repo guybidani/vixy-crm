@@ -31,6 +31,7 @@ import { notesRouter } from "./notes.routes";
 import { customFieldsRouter } from "./custom-fields.routes";
 import { requireAuth, requireWorkspace } from "../middleware/auth";
 import { checkNavPermission } from "../middleware/navPermission";
+import { aiLimiter, heavyLimiter } from "../middleware/rateLimit";
 
 export const router = Router();
 
@@ -65,12 +66,15 @@ router.use("/notifications", notificationRouter);
 router.use("/settings", settingsRouter);
 router.use("/tags", tagsRouter);
 router.use("/search", searchRouter);
-router.use("/export", exportRouter);
+router.use("/export", heavyLimiter, exportRouter);
 router.use("/calendar", calendarRouter);
 router.use("/analytics", analyticsRouter);
 router.use("/views", viewsRouter);
-router.use("/import", importRouter);
-router.use("/ai", aiRouter);
+// Import and AI endpoints are expensive — add stricter limiters on top of
+// the generic apiLimiter. Import touches thousands of rows per request; AI
+// streams fan out to a paid LLM provider.
+router.use("/import", heavyLimiter, importRouter);
+router.use("/ai", aiLimiter, aiRouter);
 router.use("/notes", notesRouter);
 router.use("/custom-fields", customFieldsRouter);
 // router.use('/smart-views', smartViewsRouter);

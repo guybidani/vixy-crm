@@ -63,6 +63,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
+    /* Hebrew glyphs (esp. with niqqud / tall letters) need extra
+       vertical breathing room; 1.5 is the accepted safe default. */
+    line-height: 1.5;
+  }
+
+  /* Headings keep tighter line-height to stay visually compact */
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.25;
   }
 
   input::placeholder,
