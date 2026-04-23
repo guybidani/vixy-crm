@@ -42,13 +42,20 @@ export default function CreateWorkspaceModal({
     onError: (err) => handleMutationError(err, "שגיאה ביצירת סביבת עבודה"),
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit(e?: React.FormEvent | React.MouseEvent) {
+    e?.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed || trimmed.length < 2) {
-      toast.error("שם סביבת עבודה חייב להכיל לפחות 2 תווים");
+    if (!trimmed) {
+      toast.error("נא להזין שם סביבת עבודה");
+      inputRef.current?.focus();
       return;
     }
+    if (trimmed.length < 2) {
+      toast.error("שם סביבת עבודה חייב להכיל לפחות 2 תווים");
+      inputRef.current?.focus();
+      return;
+    }
+    if (createMut.isPending) return; // Guard against double-click
     createMut.mutate(trimmed);
   }
 
@@ -89,11 +96,16 @@ export default function CreateWorkspaceModal({
               className="input"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmit(e as unknown as React.FormEvent);
+                }
+              }}
               placeholder="לדוגמה: החברה שלי"
               maxLength={80}
               dir="rtl"
               disabled={createMut.isPending}
-              required
             />
             <p className="help-text mt-1.5">
               ניתן לשנות בכל עת מהגדרות
@@ -120,8 +132,9 @@ export default function CreateWorkspaceModal({
               ביטול
             </button>
             <button
-              type="submit"
-              disabled={createMut.isPending || name.trim().length < 2}
+              type="button"
+              onClick={handleSubmit}
+              disabled={createMut.isPending}
               className="modal-btn-primary flex items-center gap-1.5"
             >
               {createMut.isPending ? (

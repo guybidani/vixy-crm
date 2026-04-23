@@ -117,7 +117,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop"
+      className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-label={title}
