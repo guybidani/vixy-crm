@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useMemo, useState } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -16,6 +16,7 @@ import {
   Activity,
   AlertCircle,
   RefreshCw,
+  Sparkles,
 } from "lucide-react";
 import PageShell, {
   PageCard,
@@ -23,6 +24,13 @@ import PageShell, {
 } from "../components/layout/PageShell";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
+import RecipePickerModal from "../components/automations/RecipePickerModal";
+import RecipeConfiguratorModal from "../components/automations/RecipeConfiguratorModal";
+import {
+  RECIPE_CATEGORIES,
+  RECIPE_TEMPLATES,
+  type RecipeTemplate,
+} from "../lib/automation-recipes";
 import {
   listWorkflows,
   createWorkflow,
@@ -552,6 +560,14 @@ function WorkflowDialog({
 
 // ─── Page Component ───
 
+// Recipes highlighted at the top of the page as "recommended templates".
+const FEATURED_RECIPE_IDS = [
+  "notify-on-status-change",
+  "task-on-deal-stage",
+  "welcome-new-contact",
+  "auto-assign-deal",
+];
+
 export default function AutomationsPage() {
   const automationsLabel = useModuleLabel("automations");
   const qc = useQueryClient();
@@ -559,6 +575,16 @@ export default function AutomationsPage() {
   const [editing, setEditing] = useState<Workflow | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [automationToDelete, setAutomationToDelete] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [activeRecipe, setActiveRecipe] = useState<RecipeTemplate | null>(null);
+
+  const featuredRecipes = useMemo(
+    () =>
+      FEATURED_RECIPE_IDS.map((id) =>
+        RECIPE_TEMPLATES.find((r) => r.id === id),
+      ).filter((r): r is RecipeTemplate => Boolean(r)),
+    [],
+  );
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["automations"],
@@ -626,6 +652,65 @@ export default function AutomationsPage() {
     onError: (err) => handleMutationError(err, "שגיאה במחיקת אוטומציה"),
   });
 
+  // Recipe-based creation. Accepts the output of buildWorkflowFromRecipe().
+  const createFromRecipeMut = useMutation({
+    mutationFn: (payload: {
+      name: string;
+      trigger: string;
+      conditions: Array<Record<string, unknown>>;
+      actions: Array<{
+        type: string;
+        config: Record<string, unknown>;
+        order: number;
+      }>;
+    }) =>
+      createWorkflow({
+        name: payload.name,
+        trigger: payload.trigger,
+        conditions: payload.conditions.length > 0 ? payload.conditions : undefined,
+        actions: payload.actions,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["automations"] });
+      setActiveRecipe(null);
+      setPickerOpen(false);
+      toast.success("אוטומציה נוצרה בהצלחה!");
+    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת אוטומציה"),
+  });
+
+  const openPicker = () => {
+    setEditing(null);
+    setActiveRecipe(null);
+    setPickerOpen(true);
+  };
+
+  const openCustomBuilder = () => {
+    setEditing(null);
+    setActiveRecipe(null);
+    setPickerOpen(false);
+    setDialogOpen(true);
+  };
+
+  const handlePickRecipe = (recipe: RecipeTemplate) => {
+    if (recipe.placeholders.length === 0) {
+      // No placeholders — create immediately with defaults.
+      createFromRecipeMut.mutate({
+        name: recipe.template.name,
+        trigger: recipe.template.trigger,
+        conditions: recipe.template.conditions.map((c) => ({ ...c })),
+        actions: recipe.template.actions.map((a, i) => ({
+          type: a.type,
+          config: { ...a.config },
+          order: a.order ?? i,
+        })),
+      });
+      return;
+    }
+    setPickerOpen(false);
+    setActiveRecipe(recipe);
+  };
+
   const workflows = data?.data ?? [];
 
   return (
@@ -636,14 +721,11 @@ export default function AutomationsPage() {
       subtitle="הגדר טריגרים ופעולות אוטומטיות לתהליכי העבודה שלך"
       actions={
         <button
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
-          }}
+          onClick={openPicker}
           className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
         >
           <Plus size={15} strokeWidth={2.5} />
-          אוטומציה חדשה
+          חדש
         </button>
       }
     >
@@ -678,23 +760,133 @@ export default function AutomationsPage() {
           ))}
         </div>
       ) : workflows.length === 0 ? (
-        <PageCard>
-          <EmptyState
-            icon={<Zap size={32} className="text-purple-400" />}
-            title="אין אוטומציות עדיין"
-            description="צור אוטומציה ראשונה כדי לייעל את תהליכי העבודה. לדוגמה: שלח התראה כשעסקה עוברת לשלב חדש."
-            action={
-              <button
-                onClick={() => setDialogOpen(true)}
-                className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all"
-              >
-                צור אוטומציה
-              </button>
-            }
-          />
-        </PageCard>
+        <div className="space-y-4">
+          <PageCard>
+            <EmptyState
+              icon={<Zap size={32} className="text-purple-400" />}
+              title="אין אוטומציות עדיין"
+              description="התחל עם תבנית מוכנה או בנה אוטומציה מאפס. לדוגמה: שלח התראה כשעסקה עוברת לשלב חדש."
+              action={
+                <button
+                  onClick={openPicker}
+                  className="px-6 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all inline-flex items-center gap-2"
+                >
+                  <Sparkles size={14} />
+                  התחל עם תבנית
+                </button>
+              }
+            />
+          </PageCard>
+          {/* Recipe gallery */}
+          <PageCard>
+            <div className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles size={16} className="text-[#0073EA]" />
+                <h3 className="text-[14px] font-bold text-[#323338]">
+                  תבניות פופולריות
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {featuredRecipes.map((recipe) => {
+                  const cat = RECIPE_CATEGORIES.find(
+                    (c) => c.id === recipe.category,
+                  );
+                  const color = cat?.color || "#0073EA";
+                  return (
+                    <button
+                      key={recipe.id}
+                      onClick={() => handlePickRecipe(recipe)}
+                      className="group text-right p-4 bg-white border border-[#E6E9EF] rounded-[8px] hover:border-[#0073EA]/40 hover:shadow-[0_4px_12px_rgba(0,115,234,0.08)] transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-[20px]"
+                          style={{
+                            backgroundColor: `${color}1A`,
+                            color,
+                          }}
+                        >
+                          {recipe.icon}
+                        </div>
+                        <div className="flex-1 min-w-0 text-[13px] leading-7 text-[#323338]">
+                          {recipe.sentence
+                            .split(/(\{\{\w+\}\})/g)
+                            .map((part, i) => {
+                              const match = part.match(/^\{\{(\w+)\}\}$/);
+                              if (match) {
+                                return (
+                                  <span
+                                    key={i}
+                                    className="inline-block mx-0.5 px-2 py-0.5 rounded-full bg-[#CCE5FF] text-[#0073EA] font-medium text-[12px] align-middle"
+                                  >
+                                    {match[1]}
+                                  </span>
+                                );
+                              }
+                              return <span key={i}>{part}</span>;
+                            })}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </PageCard>
+        </div>
       ) : (
         <div className="space-y-3">
+          {/* Featured recipe chips */}
+          <PageCard className="!p-0 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#E6E9EF] bg-gradient-to-l from-[#F6F7FB] to-white">
+              <Sparkles size={14} className="text-[#0073EA]" />
+              <span className="text-[13px] font-bold text-[#323338]">
+                תבניות מומלצות
+              </span>
+              <span className="text-[11px] text-[#9699A6]">
+                הוסף אוטומציה בקליק
+              </span>
+            </div>
+            <div className="flex gap-2 px-5 py-3 overflow-x-auto">
+              {featuredRecipes.map((recipe) => {
+                const cat = RECIPE_CATEGORIES.find(
+                  (c) => c.id === recipe.category,
+                );
+                const color = cat?.color || "#0073EA";
+                return (
+                  <button
+                    key={recipe.id}
+                    onClick={() => handlePickRecipe(recipe)}
+                    className="group flex items-center gap-2 px-3 py-2 bg-white border border-[#E6E9EF] rounded-[8px] hover:border-[#0073EA]/40 hover:shadow-[0_2px_8px_rgba(0,115,234,0.08)] transition-all whitespace-nowrap flex-shrink-0"
+                    title={recipe.template.name}
+                  >
+                    <span
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[15px] flex-shrink-0"
+                      style={{
+                        backgroundColor: `${color}1A`,
+                        color,
+                      }}
+                    >
+                      {recipe.icon}
+                    </span>
+                    <span className="text-[12px] font-medium text-[#323338]">
+                      {recipe.template.name}
+                    </span>
+                    <Plus
+                      size={12}
+                      className="text-[#9699A6] group-hover:text-[#0073EA]"
+                    />
+                  </button>
+                );
+              })}
+              <button
+                onClick={openPicker}
+                className="flex items-center gap-1 px-3 py-2 text-[12px] text-[#0073EA] hover:bg-[#0073EA]/5 rounded-[8px] transition-colors whitespace-nowrap"
+              >
+                כל התבניות ←
+              </button>
+            </div>
+          </PageCard>
           {workflows.map((w) => {
             const triggerInfo = TRIGGERS[w.trigger];
             const isExpanded = expandedId === w.id;
@@ -861,7 +1053,25 @@ export default function AutomationsPage() {
         </div>
       )}
 
-      {/* Dialog */}
+      {/* Recipe picker */}
+      <RecipePickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onPickRecipe={handlePickRecipe}
+        onPickCustom={openCustomBuilder}
+      />
+
+      {/* Recipe configurator */}
+      {activeRecipe && (
+        <RecipeConfiguratorModal
+          recipe={activeRecipe}
+          onClose={() => setActiveRecipe(null)}
+          onCreate={(payload) => createFromRecipeMut.mutate(payload)}
+          isCreating={createFromRecipeMut.isPending}
+        />
+      )}
+
+      {/* Advanced builder dialog (edit existing OR custom automation) */}
       {dialogOpen && (
         <WorkflowDialog
           initial={editing || undefined}
