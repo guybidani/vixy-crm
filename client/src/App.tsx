@@ -208,28 +208,28 @@ function AppLayout() {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
-  const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | null>(null);
+  const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | "ticket" | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   // "+" button in header → QuickAddModal (tab-based)
   const openQuickAdd = useCallback(() => {
     setQuickAddModalOpen(true);
   }, []);
-  const openQuickAddWithType = useCallback((type?: "task" | "contact" | "deal") => {
+  const openQuickAddWithType = useCallback((type?: "task" | "contact" | "deal" | "ticket") => {
     setQuickAddType(type ?? null);
     setQuickAddOpen(true);
   }, []);
-  // Ctrl+K → GlobalSearch
-  const openGlobalSearch = useCallback(() => {
-    setGlobalSearchOpen(true);
-  }, []);
+  // Ctrl+K → CommandPalette (full power-user palette).
+  // GlobalSearch remains mounted for backward compat but no longer wired to a hotkey;
+  // CommandPalette subsumes its functionality.
   const openCommandPalette = useCallback(() => {
     setCommandPaletteOpen(true);
   }, []);
   const { currentWorkspaceId } = useAuth();
 
-  const { showShortcutsHelp, closeShortcutsHelp } = useKeyboardShortcuts({
-    onQuickAdd: openQuickAddWithType,
-  });
+  const { showShortcutsHelp, toggleShortcutsHelp, closeShortcutsHelp } =
+    useKeyboardShortcuts({
+      onQuickAdd: openQuickAddWithType,
+    });
 
   // Connect socket.io and join workspace room
   useEffect(() => {
@@ -262,7 +262,7 @@ function AppLayout() {
       <Header
         sidebarCollapsed={sidebarCollapsed}
         onQuickAdd={openQuickAdd}
-        onCommandPalette={openGlobalSearch}
+        onCommandPalette={openCommandPalette}
         onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
       <main
@@ -293,6 +293,7 @@ function AppLayout() {
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         onQuickAdd={openQuickAddWithType}
+        onOpenShortcuts={toggleShortcutsHelp}
       />
       <ShortcutsHelp open={showShortcutsHelp} onClose={closeShortcutsHelp} />
     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-type QuickAddType = "task" | "contact" | "deal";
+type QuickAddType = "task" | "contact" | "deal" | "ticket";
 
 interface UseKeyboardShortcutsOptions {
   onQuickAdd: (type?: QuickAddType) => void;

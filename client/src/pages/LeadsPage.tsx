@@ -45,7 +45,7 @@ import { createDeal } from "../api/deals";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { getAvatarColor } from "../utils/avatar";
-import SavedViewsBar from "../components/shared/SavedViewsBar";
+import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
 
 // Pipeline stages for board view — thresholds are the single source of truth
@@ -98,8 +98,30 @@ export default function LeadsPage() {
   const [activeView, setActiveView] = useState<SavedView | null>(null);
   const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
 
+  // Controlled board state for saved-view capture/restore
+  const [boardFilters, setBoardFilters] = useState<
+    Array<{ column: string; values: string[] }>
+  >([]);
+  const [boardSortBy, setBoardSortBy] = useState<string | null>(null);
+  const [boardSortDir, setBoardSortDir] = useState<"asc" | "desc">("asc");
+  const [groupByKey, setGroupByKey] = useState<string | null>(null);
+
   function handleSelectView(view: SavedView | null) {
     setActiveView(view);
+    setPage(1);
+    if (!view) {
+      setBoardFilters([]);
+      setBoardSortBy(null);
+      setBoardSortDir("asc");
+      setGroupByKey(null);
+    }
+  }
+
+  function handleApplyView(state: ViewState) {
+    setBoardFilters(state.boardFilters ?? []);
+    setBoardSortBy(state.sortBy ?? null);
+    setBoardSortDir((state.sortDir as "asc" | "desc") ?? "asc");
+    setGroupByKey(state.groupByKey ?? null);
     setPage(1);
   }
 
@@ -375,8 +397,21 @@ export default function LeadsPage() {
           entity="leads"
           activeViewId={activeView?.id ?? null}
           onSelectView={handleSelectView}
+          onApplyView={handleApplyView}
           currentFilters={viewFilters}
-          hasActiveFilters={Object.keys(viewFilters).length > 0}
+          boardFilters={boardFilters}
+          sortBy={boardSortBy}
+          sortDir={boardSortDir}
+          groupByKey={groupByKey}
+          columnLabels={{
+            status: "סטטוס",
+            source: "מקור",
+            leadScore: "חום ליד",
+            fullName: "שם",
+            email: "אימייל",
+            phone: "טלפון",
+            createdAt: "נוצר",
+          }}
         />
       )}
 
@@ -480,6 +515,14 @@ export default function LeadsPage() {
             { key: "leadHeat", label: "חום ליד" },
             { key: "source", label: "מקור" },
           ]}
+          groupByKey={groupByKey}
+          onGroupByChange={setGroupByKey}
+          activeFilters={boardFilters}
+          onFiltersChange={setBoardFilters}
+          sortColumn={boardSortBy}
+          sortDirection={boardSortDir}
+          onSortColumnChange={setBoardSortBy}
+          onSortDirectionChange={setBoardSortDir}
           contextMenuItems={contextMenuItems}
         />
       ) : viewMode === "pipeline" ? (

@@ -1,5 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatRelativeTime } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
 import { getSocket } from "../lib/socket";
@@ -22,13 +22,29 @@ import {
   LayoutGrid,
   X,
   RefreshCw,
+  Sliders,
+  Pencil,
+  Check,
+  GripVertical,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
-import { getDashboard } from "../api/dashboard";
+import { getDashboard, type DashboardData } from "../api/dashboard";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import CalendarWidget from "../components/dashboard/CalendarWidget";
 import TodaysTasksWidget from "../components/dashboard/TodaysTasksWidget";
 import TeamLeaderboard from "../components/dashboard/TeamLeaderboard";
+import DashboardCustomizeModal from "../components/dashboard/DashboardCustomizeModal";
+import {
+  WIDGET_REGISTRY,
+  DEFAULT_WIDGET_ORDER,
+} from "../components/dashboard/widgetRegistry";
+import {
+  getDashboardLayout,
+  updateDashboardLayout,
+  type DashboardLayout,
+  type DashboardWidgetConfig,
+  type DashboardWidgetSize,
+} from "../api/settings";
 
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "#C4C4C4",
@@ -80,6 +96,18 @@ function formatTodayDate() {
 }
 
 const WELCOME_DISMISSED_KEY = "vixy_crm_welcome_dismissed";
+
+// Client-side fallback when the server hasn't returned a layout yet.
+function buildDefaultLayout(): DashboardLayout {
+  return {
+    widgets: DEFAULT_WIDGET_ORDER.map((id, idx) => ({
+      id,
+      visible: id !== "my-tasks",
+      order: idx,
+      size: WIDGET_REGISTRY[id]?.defaultSize ?? "medium",
+    })),
+  };
+}
 
 function WelcomeBanner() {
   const navigate = useNavigate();
@@ -187,7 +215,6 @@ function WelcomeBanner() {
 export default function DashboardPage() {
   const { dealStages, activityTypes } = useWorkspaceOptions();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -196,6 +223,28 @@ export default function DashboardPage() {
     refetchInterval: 60000,
     refetchIntervalInBackground: false,
   });
+
+  // ─── Dashboard layout (per member) ───
+  const { data: serverLayout } = useQuery({
+    queryKey: ["dashboard-layout"],
+    queryFn: getDashboardLayout,
+    staleTime: 5 * 60_000,
+  });
+
+  const layoutMutation = useMutation({
+    mutationFn: updateDashboardLayout,
+    onSuccess: (next) => {
+      queryClient.setQueryData(["dashboard-layout"], next);
+    },
+  });
+
+  const layout: DashboardLayout = useMemo(
+    () => serverLayout ?? buildDefaultLayout(),
+    [serverLayout],
+  );
+
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // ─── Real-time: invalidate dashboard on socket events ───
   const invalidateDashboard = useCallback(() => {
@@ -221,6 +270,71 @@ export default function DashboardPage() {
       events.forEach((event) => socket.off(event, invalidateDashboard));
     };
   }, [invalidateDashboard]);
+
+  // ─── Edit-mode helpers ───
+  const persistLayout = useCallback(
+    async (next: DashboardLayout): Promise<void> => {
+      await layoutMutation.mutateAsync(next);
+    },
+    [layoutMutation],
+  );
+
+  const hideWidget = useCallback(
+    (id: string) => {
+      const next: DashboardLayout = {
+        widgets: layout.widgets.map((w) =>
+          w.id === id ? { ...w, visible: false } : w,
+        ),
+      };
+      persistLayout(next);
+    },
+    [layout, persistLayout],
+  );
+
+  const resizeWidget = useCallback(
+    (id: string, size: DashboardWidgetSize) => {
+      const next: DashboardLayout = {
+        widgets: layout.widgets.map((w) => (w.id === id ? { ...w, size } : w)),
+      };
+      persistLayout(next);
+    },
+    [layout, persistLayout],
+  );
+
+  const reorderWidget = useCallback(
+    (id: string, direction: "up" | "down") => {
+      const visible = [...layout.widgets]
+        .filter((w) => w.visible)
+        .sort((a, b) => a.order - b.order);
+      const idx = visible.findIndex((w) => w.id === id);
+      if (idx === -1) return;
+      const swapWith = direction === "up" ? idx - 1 : idx + 1;
+      if (swapWith < 0 || swapWith >= visible.length) return;
+
+      const swapped = [...visible];
+      [swapped[idx], swapped[swapWith]] = [swapped[swapWith], swapped[idx]];
+
+      // Rebuild full widget list preserving hidden ones; re-number orders.
+      const visibleOrder = new Map(swapped.map((w, i) => [w.id, i]));
+      const next: DashboardLayout = {
+        widgets: layout.widgets.map((w) => {
+          if (w.visible && visibleOrder.has(w.id)) {
+            return { ...w, order: visibleOrder.get(w.id)! };
+          }
+          return w;
+        }),
+      };
+      // Ensure hidden widgets sit after visible ones so ordering stays tidy.
+      next.widgets.sort((a, b) => {
+        if (a.visible && !b.visible) return -1;
+        if (!a.visible && b.visible) return 1;
+        return a.order - b.order;
+      });
+      next.widgets.forEach((w, i) => (w.order = i));
+      persistLayout(next);
+    },
+    [layout, persistLayout],
+  );
 
   if (isLoading) {
     return (
@@ -316,198 +430,387 @@ export default function DashboardPage() {
     );
   }
 
-  const { kpis, pipeline, recentActivities, rottingDeals } = data;
+  const { kpis } = data;
+  const isNewUser = kpis.contactsTotal === 0 && kpis.dealsOpenCount === 0;
 
-  const callsThisWeek = kpis.callsThisWeek;
-
-  const isNewUser =
-    kpis.contactsTotal === 0 && kpis.dealsOpenCount === 0;
+  // Ordered, visible widgets. Unknown ids are gracefully skipped.
+  const orderedWidgets = [...layout.widgets]
+    .sort((a, b) => a.order - b.order)
+    .filter((w) => WIDGET_REGISTRY[w.id])
+    .filter((w) => w.visible);
 
   return (
     <div>
       {/* ===== WELCOME BANNER (new user) ===== */}
       {isNewUser && <WelcomeBanner />}
 
-      {/* ===== HEADER ===== */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-[22px] font-bold text-[#323338] mb-0.5">
-            שלום, {user?.name} 👋
-          </h1>
-          <p className="text-[13px] text-[#676879]">
-            {formatTodayDate()} · {getTodayMotivational()}
-          </p>
-        </div>
-
-        {/* Quick actions */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <QuickActionButton
-            label="ליד חדש"
-            color="#6161FF"
-            bg="#E8E8FF"
-            onClick={() => navigate("/contacts?new=1")}
-          />
-          <QuickActionButton
-            label="עסקה חדשה"
-            color="#00CA72"
-            bg="#D6F5E8"
-            onClick={() => navigate("/deals?new=1")}
-          />
-          <QuickActionButton
-            label="משימה"
-            color="#FDAB3D"
-            bg="#FEF0D8"
-            onClick={() => navigate("/tasks?new=1")}
-          />
-        </div>
+      {/* ===== TOP BAR (customize + edit mode) ===== */}
+      <div className="flex items-center justify-end gap-2 mb-4">
+        {editMode ? (
+          <button
+            onClick={() => setEditMode(false)}
+            className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-[#00CA72] hover:bg-[#00A75F] text-white text-[12px] font-semibold transition-colors"
+          >
+            <Check size={14} />
+            סיום עריכה
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => setEditMode(true)}
+              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F5F6F8] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
+              title="ערוך תצוגה"
+            >
+              <Pencil size={14} />
+              ערוך תצוגה
+            </button>
+            <button
+              onClick={() => setCustomizeOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F5F6F8] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
+            >
+              <Sliders size={14} />
+              התאם דשבורד
+            </button>
+          </>
+        )}
       </div>
 
-      {/* ===== STATS ROW (4 KPI cards) ===== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 [&>*:nth-child(1)]:animate-fade-in-up [&>*:nth-child(2)]:animate-fade-in-up [&>*:nth-child(2)]:[animation-delay:50ms] [&>*:nth-child(3)]:animate-fade-in-up [&>*:nth-child(3)]:[animation-delay:100ms] [&>*:nth-child(4)]:animate-fade-in-up [&>*:nth-child(4)]:[animation-delay:150ms]">
-        {/* לידים חדשים השבוע */}
-        <StatCard
-          borderColor="#6161FF"
-          icon={<Users size={22} />}
-          iconBg="#E8E8FF"
-          iconColor="#6161FF"
-          label="לידים חדשים השבוע"
-          value={kpis.contactsThisWeek}
-          subValue={`סה"כ ${kpis.contactsTotal}`}
-          trend={kpis.contactsThisWeek > 0 ? "up" : "neutral"}
-          trendLabel={kpis.contactsThisWeek > 0 ? `+${kpis.contactsThisWeek} השבוע` : "אין לידים חדשים"}
-          onClick={() => navigate("/contacts")}
-        />
+      {/* ===== WIDGETS ===== */}
+      <div className="space-y-6">
+        {orderedWidgets.map((cfg, idx) => (
+          <WidgetFrame
+            key={cfg.id}
+            config={cfg}
+            editMode={editMode}
+            canMoveUp={idx > 0}
+            canMoveDown={idx < orderedWidgets.length - 1}
+            onHide={() => hideWidget(cfg.id)}
+            onResize={(s) => resizeWidget(cfg.id, s)}
+            onMove={(dir) => reorderWidget(cfg.id, dir)}
+          >
+            <WidgetBody
+              id={cfg.id}
+              size={cfg.size}
+              data={data}
+              userName={user?.name ?? ""}
+              dealStages={dealStages}
+              activityTypes={activityTypes}
+            />
+          </WidgetFrame>
+        ))}
 
-        {/* עסקאות פתוחות */}
-        <StatCard
-          borderColor="#00CA72"
-          icon={<Handshake size={22} />}
-          iconBg="#D6F5E8"
-          iconColor="#00CA72"
-          label="עסקאות פתוחות"
-          value={kpis.dealsOpenCount}
-          subValue={`₪${kpis.totalPipelineValue.toLocaleString()}`}
-          trend="neutral"
-          trendLabel={`שווי צינור`}
-          onClick={() => navigate("/deals")}
-        />
-
-        {/* משימות להיום */}
-        <StatCard
-          borderColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
-          icon={<CheckCircle2 size={22} />}
-          iconBg={kpis.tasksOverdue > 0 ? "#FFE8E8" : "#EDE1F5"}
-          iconColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
-          label="משימות להיום"
-          value={kpis.tasksToday}
-          subValue={
-            kpis.tasksOverdue > 0
-              ? `${kpis.tasksOverdue} באיחור`
-              : "הכל בזמן"
-          }
-          trend={kpis.tasksOverdue > 0 ? "down" : "up"}
-          trendLabel={
-            kpis.tasksOverdue > 0
-              ? `${kpis.tasksOverdue} באיחור!`
-              : `${kpis.tasksCompletedThisWeek} הושלמו השבוע`
-          }
-          onClick={() => navigate("/tasks")}
-        />
-
-        {/* שיחות השבוע */}
-        <StatCard
-          borderColor="#579BFC"
-          icon={<Phone size={22} />}
-          iconBg="#E3EFFE"
-          iconColor="#579BFC"
-          label="שיחות השבוע"
-          value={callsThisWeek}
-          subValue="שיחות בשבוע האחרון"
-          trend={callsThisWeek > 0 ? "up" : "neutral"}
-          trendLabel={callsThisWeek > 0 ? `${callsThisWeek} שיחות` : "לא נרשמו שיחות"}
-          onClick={() => navigate("/contacts")}
-        />
+        {orderedWidgets.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-[#E6E9EF]">
+            <LayoutGrid size={28} className="text-[#9699A6] mb-2" />
+            <p className="text-sm font-semibold text-[#323338] mb-1">
+              אין ווידג׳טים גלויים
+            </p>
+            <p className="text-[12px] text-[#676879] mb-4">
+              הפעל ווידג׳טים בחלון ההתאמה
+            </p>
+            <button
+              onClick={() => setCustomizeOpen(true)}
+              className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
+            >
+              פתח התאמה
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ===== MAIN GRID: Pipeline + Activity Feed ===== */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        {/* Pipeline Funnel Widget */}
+      {/* ===== CUSTOMIZE MODAL ===== */}
+      <DashboardCustomizeModal
+        open={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        layout={layout}
+        onSave={persistLayout}
+      />
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// WidgetFrame — wraps every widget. In edit mode shows the drag
+// handles, close button and S/M/L picker overlaid on the widget.
+// ──────────────────────────────────────────────────────────────
+function WidgetFrame({
+  config,
+  editMode,
+  canMoveUp,
+  canMoveDown,
+  onHide,
+  onResize,
+  onMove,
+  children,
+}: {
+  config: DashboardWidgetConfig;
+  editMode: boolean;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  onHide: () => void;
+  onResize: (s: DashboardWidgetSize) => void;
+  onMove: (dir: "up" | "down") => void;
+  children: React.ReactNode;
+}) {
+  const meta = WIDGET_REGISTRY[config.id];
+  if (!editMode) return <>{children}</>;
+
+  return (
+    <div className="relative group">
+      {/* Edit-mode toolbar */}
+      <div className="absolute -top-3 right-3 z-10 flex items-center gap-1 bg-white rounded-[6px] shadow-[0_2px_10px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-1">
+        <button
+          onClick={() => onMove("up")}
+          disabled={!canMoveUp}
+          className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] disabled:opacity-30"
+          title="הזז למעלה"
+        >
+          <GripVertical size={14} />
+        </button>
+        <span className="text-[11px] font-semibold text-[#323338] px-1.5">
+          {meta?.title || config.id}
+        </span>
+        {meta?.resizable && (
+          <div className="flex items-center gap-0.5 border-r border-[#E6E9EF] pr-1 mr-0.5">
+            {(["small", "medium", "large"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => onResize(s)}
+                className={`w-5 h-5 text-[10px] font-bold rounded-[3px] transition-colors ${
+                  config.size === s
+                    ? "bg-[#0073EA] text-white"
+                    : "text-[#9699A6] hover:text-[#323338]"
+                }`}
+                title={`גודל ${s === "small" ? "S" : s === "medium" ? "M" : "L"}`}
+              >
+                {s === "small" ? "S" : s === "medium" ? "M" : "L"}
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={onHide}
+          disabled={!meta?.hideable}
+          className="p-1 rounded-[4px] hover:bg-[#FFE8E8] text-[#E44258] disabled:opacity-30"
+          title="הסתר"
+        >
+          <X size={14} />
+        </button>
+        <button
+          onClick={() => onMove("down")}
+          disabled={!canMoveDown}
+          className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] disabled:opacity-30"
+          title="הזז למטה"
+        >
+          <GripVertical size={14} />
+        </button>
+      </div>
+
+      {/* Widget body with edit-mode ring */}
+      <div className="outline outline-2 outline-offset-2 outline-[#0073EA]/40 rounded-xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// WidgetBody — renders the actual component for a given widget id.
+// New widgets? Add them to WIDGET_REGISTRY + a case here.
+// ──────────────────────────────────────────────────────────────
+function WidgetBody({
+  id,
+  data,
+  userName,
+  dealStages,
+  activityTypes,
+}: {
+  id: string;
+  size: DashboardWidgetSize;
+  data: DashboardData;
+  userName: string;
+  dealStages: Record<string, { label: string }>;
+  activityTypes: Record<string, { label: string }>;
+}) {
+  const navigate = useNavigate();
+  const { kpis, pipeline, recentActivities, rottingDeals, myTasks } = data;
+
+  switch (id) {
+    case "greeting":
+      return <GreetingHeader userName={userName} />;
+
+    case "stat-cards":
+      return (
+        <StatCardsRow
+          kpis={kpis}
+          onNavigate={(path) => navigate(path)}
+        />
+      );
+
+    case "pipeline-chart":
+      return (
         <PipelineFunnelWidget
           pipeline={pipeline}
           totalValue={kpis.totalPipelineValue}
           dealStages={dealStages}
           onNavigate={() => navigate("/deals")}
         />
+      );
 
-        {/* Activity Feed Widget */}
+    case "activity-feed":
+      return (
         <ActivityFeedWidget
           activities={recentActivities}
           activityTypes={activityTypes}
         />
+      );
+
+    case "team-performance":
+      return <TeamLeaderboard />;
+
+    case "deals-at-risk":
+      if (!rottingDeals || rottingDeals.length === 0) return null;
+      return (
+        <DealsAtRiskWidget
+          deals={rottingDeals}
+          onOpen={(id) => navigate(`/deals?open=${id}`)}
+        />
+      );
+
+    case "my-tasks":
+      return (
+        <MyTasksWidget
+          tasks={myTasks}
+          onNavigate={() => navigate("/tasks")}
+        />
+      );
+
+    case "calendar":
+      return <CalendarWidget />;
+
+    case "todays-tasks":
+      return <TodaysTasksWidget />;
+
+    default:
+      // Unknown widget id — skip gracefully.
+      return null;
+  }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Greeting
+// ──────────────────────────────────────────────────────────────
+function GreetingHeader({ userName }: { userName: string }) {
+  const navigate = useNavigate();
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 className="text-[22px] font-bold text-[#323338] mb-0.5">
+          שלום, {userName} 👋
+        </h1>
+        <p className="text-[13px] text-[#676879]">
+          {formatTodayDate()} · {getTodayMotivational()}
+        </p>
       </div>
 
-      {/* ===== TEAM + CALENDAR ===== */}
-      <div className="grid grid-cols-1 gap-4 mb-6">
-        <TeamLeaderboard />
+      {/* Quick actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <QuickActionButton
+          label="ליד חדש"
+          color="#6161FF"
+          bg="#E8E8FF"
+          onClick={() => navigate("/contacts?new=1")}
+        />
+        <QuickActionButton
+          label="עסקה חדשה"
+          color="#00CA72"
+          bg="#D6F5E8"
+          onClick={() => navigate("/deals?new=1")}
+        />
+        <QuickActionButton
+          label="משימה"
+          color="#FDAB3D"
+          bg="#FEF0D8"
+          onClick={() => navigate("/tasks?new=1")}
+        />
       </div>
+    </div>
+  );
+}
 
-      <div className="mb-6">
-        <CalendarWidget />
-      </div>
-
-      {/* ===== AT RISK DEALS ===== */}
-      {rottingDeals && rottingDeals.length > 0 && (
-        <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 mb-6 border-r-[3px] border-r-[#FDAB3D]">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-warning/10">
-                <AlertTriangle size={18} className="text-warning" />
-              </div>
-              <div>
-                <h2 className="font-bold text-[#323338] text-base">
-                  עסקאות בסיכון
-                </h2>
-                <p className="text-xs text-[#676879]">
-                  ללא פעילות 14+ ימים
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-warning/10 text-warning">
-              {rottingDeals.length} עסקאות
-            </span>
-          </div>
-          <div className="space-y-2">
-            {rottingDeals.map((deal: any) => (
-              <button
-                key={deal.id}
-                onClick={() => navigate(`/deals?open=${deal.id}`)}
-                className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#323338] truncate">
-                    {deal.title}
-                  </p>
-                  <p className="text-xs text-[#676879] mt-0.5">
-                    {deal.contact?.name || "—"}{" "}
-                    {deal.owner && `· ${deal.owner}`}
-                  </p>
-                </div>
-                <div className="text-left flex-shrink-0">
-                  <p className="text-sm font-bold text-[#323338]">
-                    ₪{deal.value.toLocaleString()}
-                  </p>
-                  <p className="text-[10px] font-bold text-[#E44258]">
-                    {deal.daysSinceUpdate} ימים ללא פעילות
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ===== TODAY'S TASKS ===== */}
-      <TodaysTasksWidget />
+// ──────────────────────────────────────────────────────────────
+// Stat cards row
+// ──────────────────────────────────────────────────────────────
+function StatCardsRow({
+  kpis,
+  onNavigate,
+}: {
+  kpis: DashboardData["kpis"];
+  onNavigate: (path: string) => void;
+}) {
+  const callsThisWeek = kpis.callsThisWeek;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 [&>*:nth-child(1)]:animate-fade-in-up [&>*:nth-child(2)]:animate-fade-in-up [&>*:nth-child(2)]:[animation-delay:50ms] [&>*:nth-child(3)]:animate-fade-in-up [&>*:nth-child(3)]:[animation-delay:100ms] [&>*:nth-child(4)]:animate-fade-in-up [&>*:nth-child(4)]:[animation-delay:150ms]">
+      <StatCard
+        borderColor="#6161FF"
+        icon={<Users size={22} />}
+        iconBg="#E8E8FF"
+        iconColor="#6161FF"
+        label="לידים חדשים השבוע"
+        value={kpis.contactsThisWeek}
+        subValue={`סה"כ ${kpis.contactsTotal}`}
+        trend={kpis.contactsThisWeek > 0 ? "up" : "neutral"}
+        trendLabel={
+          kpis.contactsThisWeek > 0
+            ? `+${kpis.contactsThisWeek} השבוע`
+            : "אין לידים חדשים"
+        }
+        onClick={() => onNavigate("/contacts")}
+      />
+      <StatCard
+        borderColor="#00CA72"
+        icon={<Handshake size={22} />}
+        iconBg="#D6F5E8"
+        iconColor="#00CA72"
+        label="עסקאות פתוחות"
+        value={kpis.dealsOpenCount}
+        subValue={`₪${kpis.totalPipelineValue.toLocaleString()}`}
+        trend="neutral"
+        trendLabel={`שווי צינור`}
+        onClick={() => onNavigate("/deals")}
+      />
+      <StatCard
+        borderColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
+        icon={<CheckCircle2 size={22} />}
+        iconBg={kpis.tasksOverdue > 0 ? "#FFE8E8" : "#EDE1F5"}
+        iconColor={kpis.tasksOverdue > 0 ? "#FF4D4F" : "#A25DDC"}
+        label="משימות להיום"
+        value={kpis.tasksToday}
+        subValue={
+          kpis.tasksOverdue > 0 ? `${kpis.tasksOverdue} באיחור` : "הכל בזמן"
+        }
+        trend={kpis.tasksOverdue > 0 ? "down" : "up"}
+        trendLabel={
+          kpis.tasksOverdue > 0
+            ? `${kpis.tasksOverdue} באיחור!`
+            : `${kpis.tasksCompletedThisWeek} הושלמו השבוע`
+        }
+        onClick={() => onNavigate("/tasks")}
+      />
+      <StatCard
+        borderColor="#579BFC"
+        icon={<Phone size={22} />}
+        iconBg="#E3EFFE"
+        iconColor="#579BFC"
+        label="שיחות השבוע"
+        value={callsThisWeek}
+        subValue="שיחות בשבוע האחרון"
+        trend={callsThisWeek > 0 ? "up" : "neutral"}
+        trendLabel={
+          callsThisWeek > 0 ? `${callsThisWeek} שיחות` : "לא נרשמו שיחות"
+        }
+        onClick={() => onNavigate("/contacts")}
+      />
     </div>
   );
 }
@@ -832,5 +1135,140 @@ function ActivityFeedWidget({
         </div>
       )}
     </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// Deals At Risk Widget
+// ──────────────────────────────────────────────────────────────
+function DealsAtRiskWidget({
+  deals,
+  onOpen,
+}: {
+  deals: NonNullable<DashboardData["rottingDeals"]>;
+  onOpen: (id: string) => void;
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5 border-r-[3px] border-r-[#FDAB3D]">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-warning/10">
+            <AlertTriangle size={18} className="text-warning" />
+          </div>
+          <div>
+            <h2 className="font-bold text-[#323338] text-base">
+              עסקאות בסיכון
+            </h2>
+            <p className="text-xs text-[#676879]">ללא פעילות 14+ ימים</p>
+          </div>
+        </div>
+        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-warning/10 text-warning">
+          {deals.length} עסקאות
+        </span>
+      </div>
+      <div className="space-y-2">
+        {deals.map((deal) => (
+          <button
+            key={deal.id}
+            onClick={() => onOpen(deal.id)}
+            className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#323338] truncate">
+                {deal.title}
+              </p>
+              <p className="text-xs text-[#676879] mt-0.5">
+                {deal.contact?.name || "—"}{" "}
+                {deal.owner && `· ${deal.owner}`}
+              </p>
+            </div>
+            <div className="text-left flex-shrink-0">
+              <p className="text-sm font-bold text-[#323338]">
+                ₪{deal.value.toLocaleString()}
+              </p>
+              <p className="text-[10px] font-bold text-[#E44258]">
+                {deal.daysSinceUpdate} ימים ללא פעילות
+              </p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────
+// My Tasks Widget (lightweight, separate from TodaysTasksWidget)
+// ──────────────────────────────────────────────────────────────
+function MyTasksWidget({
+  tasks,
+  onNavigate,
+}: {
+  tasks: DashboardData["myTasks"];
+  onNavigate: () => void;
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="font-semibold text-[#323338] text-[15px]">
+            המשימות שלי
+          </h2>
+          <p className="text-[12px] text-[#676879] mt-0.5">פתוחות ודחופות</p>
+        </div>
+        <button
+          onClick={onNavigate}
+          className="text-[12px] font-medium text-[#0073EA] hover:underline transition-colors"
+        >
+          הצג הכל →
+        </button>
+      </div>
+
+      {tasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <CheckCircle2 size={32} className="text-[#9699A6] mb-2" />
+          <p className="text-sm text-[#9699A6]">אין משימות פתוחות</p>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {tasks.slice(0, 6).map((t) => (
+            <li
+              key={t.id}
+              className="flex items-center gap-3 px-3 py-2 bg-[#F5F6F8]/50 rounded-[4px]"
+            >
+              <Circle size={14} className="text-[#9699A6] flex-shrink-0" />
+              <span className="flex-1 text-sm text-[#323338] truncate">
+                {t.title}
+              </span>
+              {t.dueDate && (
+                <span className="text-[11px] text-[#9699A6] flex-shrink-0">
+                  {new Date(t.dueDate).toLocaleDateString("he-IL", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Minimal circle icon for MyTasksWidget rows (no extra import needed elsewhere).
+function Circle({ size, className }: { size: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="9" />
+    </svg>
   );
 }

@@ -128,6 +128,14 @@ interface MondayBoardProps<T extends { id: string }> {
   activeFilters?: Array<{ column: string; values: string[] }>;
   /** Called when filters change */
   onFiltersChange?: (filters: Array<{ column: string; values: string[] }>) => void;
+  /** Controlled sort column (lifted state for persistence) */
+  sortColumn?: string | null;
+  /** Controlled sort direction */
+  sortDirection?: "asc" | "desc";
+  /** Called when sort column changes */
+  onSortColumnChange?: (col: string | null) => void;
+  /** Called when sort direction changes */
+  onSortDirectionChange?: (dir: "asc" | "desc") => void;
   /** Bulk selection */
   selectedIds?: Set<string>;
   onSelectionChange?: (selectedIds: Set<string>) => void;
@@ -169,6 +177,10 @@ export default function MondayBoard<T extends { id: string }>({
   onGroupByChange,
   activeFilters: controlledActiveFilters,
   onFiltersChange,
+  sortColumn: controlledSortColumn,
+  sortDirection: controlledSortDirection,
+  onSortColumnChange,
+  onSortDirectionChange,
   selectedIds,
   onSelectionChange,
   newItemId,
@@ -203,9 +215,23 @@ export default function MondayBoard<T extends { id: string }>({
     });
   }, [columns]);
 
-  // ── Sort state ──
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  // ── Sort state (controlled or internal) ──
+  const [internalSortColumn, setInternalSortColumn] = useState<string | null>(null);
+  const [internalSortDirection, setInternalSortDirection] = useState<"asc" | "desc">("asc");
+  const sortColumn =
+    controlledSortColumn !== undefined ? controlledSortColumn : internalSortColumn;
+  const sortDirection =
+    controlledSortDirection !== undefined
+      ? controlledSortDirection
+      : internalSortDirection;
+  const setSortColumn = (val: string | null) => {
+    if (onSortColumnChange) onSortColumnChange(val);
+    else setInternalSortColumn(val);
+  };
+  const setSortDirection = (val: "asc" | "desc") => {
+    if (onSortDirectionChange) onSortDirectionChange(val);
+    else setInternalSortDirection(val);
+  };
 
   // ── Context menu state ──
   const [contextMenu, setContextMenu] = useState<{

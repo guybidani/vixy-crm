@@ -465,3 +465,192 @@ export async function updateWorkspaceOptions(
   }));
   return settings.customOptions || {};
 }
+
+// ─── Mention Dropdown Members ───
+
+// 12-color palette used across the product for user avatars. Kept in sync
+// with client/src/lib/utils.ts::AVATAR_COLORS so the server-rendered color
+// matches the client. Deterministic hash → stable per-user.
+const AVATAR_COLORS = [
+  "#0073EA", "#00C875", "#FDAB3D", "#E2445C", "#A25DDC",
+  "#037F4C", "#FFAD4A", "#579BFC", "#C4C4C4", "#784BD1",
+  "#00CAD1", "#9D50DD",
+];
+
+function avatarColorFromName(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+export interface MentionableMember {
+  id: string;           // workspaceMember.id — what we embed in @[name](id)
+  userId: string;
+  name: string;
+  email: string;
+  avatarColor: string;
+  avatarUrl: string | null;
+  role: string;
+}
+
+/**
+ * Light-weight member list tailored for the @mention dropdown. Deliberately
+ * narrower than getWorkspaceMembers — we only need rendering fields, not
+ * invitedAt/joinedAt/lastActive. Capped at 500 to protect the dropdown from
+ * very large workspaces (fuzzy-search happens client-side).
+ */
+export async function listMentionableMembers(
+  workspaceId: string,
+): Promise<MentionableMember[]> {
+  const members = await prisma.workspaceMember.findMany({
+    where: { workspaceId },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, avatarUrl: true },
+      },
+    },
+    orderBy: { invitedAt: "asc" },
+    take: 500,
+  });
+
+  return members.map((m) => ({
+    id: m.id,
+    userId: m.user.id,
+    name: m.user.name,
+    email: m.user.email,
+    avatarColor: avatarColorFromName(m.user.name || m.user.email),
+    avatarUrl: m.user.avatarUrl,
+    role: m.role,
+  }));
+}
+
+// ─── Dashboard Layout (per workspace member) ───
+
+export type DashboardWidgetSize = "small" | "medium" | "large";
+
+export interface DashboardWidgetConfig {
+  id: string;
+  visible: boolean;
+  order: number;
+  size: DashboardWidgetSize;
+}
+
+export interface DashboardLayout {
+  widgets: DashboardWidgetConfig[];
+}
+
+/**
+ * Registry of known widget ids. Keeping this on the server lets us
+ * reject unknown ids in PUT requests (cheap guard against unbounded-
+ * size JSON) while letting the client be the source of truth for
+ * presentation (title, icon, component).
+ */
+export const KNOWN_DASHBOARD_WIDGETS = [
+  "greeting",
+  "stat-cards",
+  "pipeline-chart",
+  "activity-feed",
+  "team-performance",
+  "deals-at-risk",
+  "my-tasks",
+  "calendar",
+  "todays-tasks",
+] as const;
+
+export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = {
+  widgets: [
+    { id: "greeting", visible: true, order: 0, size: "large" },
+    { id: "stat-cards", visible: true, order: 1, size: "large" },
+    { id: "pipeline-chart", visible: true, order: 2, size: "medium" },
+    { id: "activity-feed", visible: true, order: 3, size: "medium" },
+    { id: "team-performance", visible: true, order: 4, size: "large" },
+    { id: "deals-at-risk", visible: true, order: 5, size: "large" },
+    { id: "calendar", visible: true, order: 6, size: "large" },
+    { id: "todays-tasks", visible: true, order: 7, size: "large" },
+    { id: "my-tasks", visible: false, order: 8, size: "medium" },
+  ],
+};
+
+function normalizeLayout(raw: unknown): DashboardLayout {
+  if (!raw || typeof raw !== "object") return DEFAULT_DASHBOARD_LAYOUT;
+  const obj = raw as Record<string, any>;
+  const widgets = Array.isArray(obj.widgets) ? obj.widgets : null;
+  if (!widgets) return DEFAULT_DASHBOARD_LAYOUT;
+
+  const known = new Set<string>(KNOWN_DASHBOARD_WIDGETS as readonly string[]);
+  const seen = new Set<string>();
+  const cleaned: DashboardWidgetConfig[] = [];
+
+  for (const w of widgets) {
+    if (!w || typeof w !== "object") continue;
+    const id = typeof w.id === "string" ? w.id : null;
+    if (!id || !known.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    const size: DashboardWidgetSize =
+      w.size === "small" || w.size === "medium" || w.size === "large"
+        ? w.size
+        : "medium";
+    cleaned.push({
+      id,
+      visible: w.visible !== false,
+      order: Number.isFinite(w.order) ? Number(w.order) : cleaned.length,
+      size,
+    });
+  }
+
+  // Append any known widgets not present in the saved layout so new
+  // widgets appear at the end (hidden-neutral) instead of vanishing.
+  const defaultById = new Map(
+    DEFAULT_DASHBOARD_LAYOUT.widgets.map((w) => [w.id, w]),
+  );
+  let nextOrder = cleaned.length;
+  for (const id of KNOWN_DASHBOARD_WIDGETS) {
+    if (seen.has(id)) continue;
+    const def = defaultById.get(id)!;
+    cleaned.push({ ...def, order: nextOrder++ });
+  }
+
+  // Ensure orders are contiguous 0..n-1 after sort.
+  cleaned.sort((a, b) => a.order - b.order);
+  cleaned.forEach((w, i) => (w.order = i));
+
+  return { widgets: cleaned };
+}
+
+export async function getDashboardLayout(
+  memberId: string,
+): Promise<DashboardLayout> {
+  const member = await prisma.workspaceMember.findUnique({
+    where: { id: memberId },
+    select: { settings: true },
+  });
+  if (!member) throw new AppError(404, "NOT_FOUND", "Member not found");
+
+  const settings = (member.settings as Record<string, any>) || {};
+  return normalizeLayout(settings.dashboardLayout);
+}
+
+export async function updateDashboardLayout(
+  memberId: string,
+  layout: DashboardLayout,
+): Promise<DashboardLayout> {
+  const normalized = normalizeLayout(layout);
+
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.workspaceMember.findUnique({
+      where: { id: memberId },
+      select: { settings: true },
+    });
+    if (!member) throw new AppError(404, "NOT_FOUND", "Member not found");
+
+    const existing = (member.settings as Record<string, any>) || {};
+    const nextSettings = { ...existing, dashboardLayout: normalized };
+    await tx.workspaceMember.update({
+      where: { id: memberId },
+      data: { settings: nextSettings as any },
+    });
+    return normalized;
+  });
+}

@@ -1,5 +1,6 @@
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
+import { dispatchMentionNotifications } from "./mentions.service";
 
 interface ListParams {
   workspaceId: string;
@@ -58,6 +59,17 @@ export async function create(
     },
   });
 
+  // Fire-and-forget: parse @mentions out of the note and create MENTION
+  // notifications for each tagged workspace member. Never blocks the response
+  // or bubbles errors — the note itself has already been persisted.
+  void dispatchMentionNotifications({
+    workspaceId,
+    authorMemberId: authorId,
+    entityType: data.entityType,
+    entityId: data.entityId,
+    content: data.content,
+  });
+
   return note;
 }
 
@@ -86,12 +98,40 @@ export async function update(
     data: updateData,
   });
 
-  return prisma.note.findFirstOrThrow({
+  const updated = await prisma.note.findFirstOrThrow({
     where: { id: noteId, workspaceId },
     include: {
       author: { include: { user: { select: { name: true } } } },
     },
   });
+
+  // When content changes, diff the mentions so we only ping *newly added*
+  // members — editing a typo shouldn't re-notify everyone who was already
+  // mentioned in the original version.
+  if (data.content !== undefined && existing.content !== data.content) {
+    const { parseMentions } = await import("../utils/mentions.util");
+    const oldIds = new Set(parseMentions(existing.content).map((m) => m.memberId));
+    const newMentions = parseMentions(data.content).filter(
+      (m) => !oldIds.has(m.memberId),
+    );
+    if (newMentions.length > 0) {
+      // Rebuild a content string containing just the new mentions so
+      // dispatchMentionNotifications' parseMentions finds exactly them.
+      const syntheticContent = newMentions
+        .map((m) => `@[${m.name}](${m.memberId})`)
+        .join(" ") +
+        " " + data.content;
+      void dispatchMentionNotifications({
+        workspaceId,
+        authorMemberId: memberId,
+        entityType: updated.entityType,
+        entityId: updated.entityId,
+        content: syntheticContent,
+      });
+    }
+  }
+
+  return updated;
 }
 
 export async function remove(

@@ -133,3 +133,24 @@ export function removeMember(workspaceId: string, memberId: string) {
     method: "DELETE",
   });
 }
+
+// ── Mention dropdown members ──────────────────────────────────
+// Slim member shape served by GET /settings/workspace-members-mentions.
+// Use this instead of getWorkspaceMembers when populating the @mention
+// dropdown — it avoids shipping invite timestamps and lastActive fields
+// the dropdown doesn't need, and is readable by all workspace members.
+export interface MentionableMember {
+  id: string; // workspaceMember.id — what gets embedded in @[name](id)
+  userId: string;
+  name: string;
+  email: string;
+  avatarColor: string;
+  avatarUrl: string | null;
+  role: string;
+}
+
+export function listMentionableMembers() {
+  return api<{ members: MentionableMember[] }>(
+    "/settings/workspace-members-mentions",
+  );
+}

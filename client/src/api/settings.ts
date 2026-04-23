@@ -161,6 +161,32 @@ export function populateDemoData(templateId: string) {
   );
 }
 
+// ─── Dashboard Layout (per member) ───
+
+export type DashboardWidgetSize = "small" | "medium" | "large";
+
+export interface DashboardWidgetConfig {
+  id: string;
+  visible: boolean;
+  order: number;
+  size: DashboardWidgetSize;
+}
+
+export interface DashboardLayout {
+  widgets: DashboardWidgetConfig[];
+}
+
+export function getDashboardLayout() {
+  return api<DashboardLayout>("/settings/dashboard-layout");
+}
+
+export function updateDashboardLayout(layout: DashboardLayout) {
+  return api<DashboardLayout>("/settings/dashboard-layout", {
+    method: "PUT",
+    body: JSON.stringify(layout),
+  });
+}
+
 // ─── Nav Permissions ───
 
 export type NavPermissions = Record<string, string[]>;

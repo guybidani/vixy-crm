@@ -93,6 +93,10 @@ model WorkspaceMember {
   role        WorkspaceRole   @default(AGENT)
   invitedAt   DateTime        @default(now()) @map("invited_at")
   joinedAt    DateTime?       @map("joined_at")
+  /// Per-member preferences (dashboard layout, etc.). Scoped to this
+  /// workspace membership so the same user can have different settings
+  /// across workspaces.
+  settings    Json            @default("{}")
 
   // Relations within workspace
   assignedDeals   Deal[]     @relation("DealAssignee")

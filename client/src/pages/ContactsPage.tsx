@@ -35,7 +35,7 @@ import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
-import SavedViewsBar from "../components/shared/SavedViewsBar";
+import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
 
 
@@ -70,8 +70,31 @@ export default function ContactsPage() {
   const [activeView, setActiveView] = useState<SavedView | null>(null);
   const viewFilters = (activeView?.filters ?? {}) as Record<string, string | undefined>;
 
+  // Controlled board state (filters, sort, group-by) — lets saved views capture/restore them
+  const [boardFilters, setBoardFilters] = useState<
+    Array<{ column: string; values: string[] }>
+  >([]);
+  const [boardSortBy, setBoardSortBy] = useState<string | null>(null);
+  const [boardSortDir, setBoardSortDir] = useState<"asc" | "desc">("asc");
+  const [groupByKey, setGroupByKey] = useState<string | null>(null);
+
   function handleSelectView(view: SavedView | null) {
     setActiveView(view);
+    setPage(1);
+    if (!view) {
+      // "All" tab — reset controlled board state
+      setBoardFilters([]);
+      setBoardSortBy(null);
+      setBoardSortDir("asc");
+      setGroupByKey(null);
+    }
+  }
+
+  function handleApplyView(state: ViewState) {
+    setBoardFilters(state.boardFilters ?? []);
+    setBoardSortBy(state.sortBy ?? null);
+    setBoardSortDir((state.sortDir as "asc" | "desc") ?? "asc");
+    setGroupByKey(state.groupByKey ?? null);
     setPage(1);
   }
 
@@ -442,8 +465,23 @@ export default function ContactsPage() {
           entity="contacts"
           activeViewId={activeView?.id ?? null}
           onSelectView={handleSelectView}
+          onApplyView={handleApplyView}
           currentFilters={viewFilters}
-          hasActiveFilters={Object.keys(viewFilters).length > 0}
+          boardFilters={boardFilters}
+          sortBy={boardSortBy}
+          sortDir={boardSortDir}
+          groupByKey={groupByKey}
+          columnLabels={{
+            status: "סטטוס",
+            source: "מקור",
+            company: "חברה",
+            fullName: "שם",
+            email: "אימייל",
+            phone: "טלפון",
+            leadScore: "חום ליד",
+            nextFollowUpDate: "תאריך מעקב",
+            createdAt: "נוצר",
+          }}
         />
       )}
 
@@ -621,6 +659,14 @@ export default function ContactsPage() {
             { key: "source", label: "מקור" },
             { key: "company", label: "חברה" },
           ]}
+          groupByKey={groupByKey}
+          onGroupByChange={setGroupByKey}
+          activeFilters={boardFilters}
+          onFiltersChange={setBoardFilters}
+          sortColumn={boardSortBy}
+          sortDirection={boardSortDir}
+          onSortColumnChange={setBoardSortBy}
+          onSortDirectionChange={setBoardSortDir}
           contextMenuItems={(row: Contact) => {
             const items: ContextMenuItem[] = [
               {

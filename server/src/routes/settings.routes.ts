@@ -361,6 +361,20 @@ settingsRouter.post(
   },
 );
 
+// GET /settings/workspace-members-mentions — slim member list for @mention
+// dropdowns. Any authenticated workspace member can read (not admin-gated);
+// the dropdown needs to work for everyone who can write a note.
+settingsRouter.get("/workspace-members-mentions", async (req, res, next) => {
+  try {
+    const members = await settingsService.listMentionableMembers(
+      req.workspaceId!,
+    );
+    res.json({ members });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /settings/options — any workspace member can read
 settingsRouter.get("/options", async (req, res, next) => {
   try {
@@ -391,6 +405,54 @@ settingsRouter.put(
         ip: req.ip,
       });
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Dashboard Layout (per workspace member) ───
+
+const dashboardWidgetSchema = z.object({
+  id: z.string().min(1).max(64),
+  visible: z.boolean(),
+  order: z.number().int().min(0).max(100),
+  size: z.enum(["small", "medium", "large"]),
+});
+
+const dashboardLayoutSchema = z.object({
+  widgets: z.array(dashboardWidgetSchema).max(50),
+});
+
+// GET /settings/dashboard-layout — any workspace member reads their own layout
+settingsRouter.get("/dashboard-layout", async (req, res, next) => {
+  try {
+    const layout = await settingsService.getDashboardLayout(req.memberId!);
+    res.json(layout);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /settings/dashboard-layout — any workspace member updates their own layout
+settingsRouter.put(
+  "/dashboard-layout",
+  validate(dashboardLayoutSchema),
+  async (req, res, next) => {
+    try {
+      const layout = await settingsService.updateDashboardLayout(
+        req.memberId!,
+        req.body,
+      );
+      audit({
+        workspaceId: req.workspaceId!,
+        userId: req.user!.userId,
+        action: "settings.dashboard_layout.update",
+        entityType: "WorkspaceMember",
+        entityId: req.memberId!,
+        ip: req.ip,
+      });
+      res.json(layout);
     } catch (err) {
       next(err);
     }

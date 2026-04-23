@@ -1,6 +1,7 @@
 import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 import { calculateScoreDelta } from "../utils/scoring.util";
+import { dispatchMentionNotifications } from "./mentions.service";
 
 interface ListParams {
   workspaceId: string;
@@ -226,6 +227,31 @@ export async function create(
       .catch(() => {
         // Silently ignore — don't block activity creation
       });
+  }
+
+  // Fire-and-forget: parse @mentions out of the activity body and notify
+  // tagged members. We search subject+body since users may @mention in
+  // either. Linked entity for the notification is whichever of contact/deal/
+  // ticket the activity is attached to (prefer deal > ticket > contact).
+  const mentionContent = [data.subject, data.body].filter(Boolean).join(" ");
+  if (mentionContent) {
+    const linkedType = data.dealId
+      ? "deal"
+      : data.ticketId
+        ? "ticket"
+        : data.contactId
+          ? "contact"
+          : null;
+    const linkedId = data.dealId || data.ticketId || data.contactId;
+    if (linkedType && linkedId) {
+      void dispatchMentionNotifications({
+        workspaceId,
+        authorMemberId: memberId,
+        entityType: linkedType,
+        entityId: linkedId,
+        content: mentionContent,
+      });
+    }
   }
 
   return activity;

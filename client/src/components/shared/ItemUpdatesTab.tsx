@@ -4,9 +4,12 @@ import { Pin, PinOff, Pencil, Trash2, Send } from "lucide-react";
 import toast from "react-hot-toast";
 import { listNotes, createNote, updateNote, deleteNote } from "../../api/notes";
 import type { Note } from "../../api/notes";
+import { listMentionableMembers } from "../../api/auth";
 import { useAuth } from "../../hooks/useAuth";
 import { avatarColor, timeAgo } from "../../lib/utils";
 import { getInitials } from "../../utils/avatar";
+import MentionInput from "./MentionInput";
+import { renderWithMentions } from "../../utils/mentions";
 
 const PAGE_SIZE = 100;
 
@@ -50,6 +53,15 @@ export default function ItemUpdatesTab({
     queryFn: () => listNotes({ entityType, entityId, page, limit: PAGE_SIZE }),
     enabled: !!entityId,
   });
+
+  // Cached workspace member list — used both to feed the MentionInput dropdown
+  // and to resolve mention pills to live names on historical notes.
+  const { data: membersResp } = useQuery({
+    queryKey: ["workspace-members-mentions"],
+    queryFn: listMentionableMembers,
+    staleTime: 5 * 60 * 1000,
+  });
+  const members = membersResp?.members ?? [];
 
   // Accumulate notes across pages
   useEffect(() => {
@@ -161,13 +173,6 @@ export default function ItemUpdatesTab({
     createMut.mutate(newContent.trim());
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-
   const startEdit = (note: Note) => {
     setEditingId(note.id);
     setEditContent(note.content);
@@ -195,14 +200,13 @@ export default function ItemUpdatesTab({
           className="rounded-lg border bg-white overflow-hidden"
           style={{ borderColor: "#E6E9EF" }}
         >
-          <textarea
-            className="w-full p-3 text-sm resize-none focus:outline-none"
-            style={{ color: "#323338", minHeight: 80 }}
-            placeholder="כתוב עדכון..."
+          <MentionInput
             value={newContent}
-            onChange={(e) => setNewContent(e.target.value)}
-            onKeyDown={handleKeyDown}
+            onChange={setNewContent}
+            onSubmit={handleSubmit}
+            placeholder="כתוב עדכון... (השתמש ב-@ כדי לתייג משתמש)"
             rows={3}
+            minHeight={80}
           />
           <div
             className="flex items-center justify-between px-3 py-2 border-t"
@@ -260,16 +264,16 @@ export default function ItemUpdatesTab({
                 className="bg-white rounded-lg border p-4"
                 style={{ borderColor: "#E6E9EF" }}
               >
-                <textarea
+                <MentionInput
+                  value={editContent}
+                  onChange={setEditContent}
+                  onSubmit={saveEdit}
+                  autoFocus
+                  minHeight={60}
                   className="w-full p-2 text-sm border rounded resize-none focus:outline-none focus:ring-2"
                   style={{
                     borderColor: "#E6E9EF",
-                    color: "#323338",
-                    minHeight: 60,
                   }}
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  autoFocus
                 />
                 <div className="flex gap-2 mt-2 justify-end">
                   <button
@@ -368,12 +372,12 @@ export default function ItemUpdatesTab({
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Content — mentions rendered as Monday-blue pills */}
               <div
                 className="text-sm whitespace-pre-wrap leading-relaxed"
                 style={{ color: "#323338" }}
               >
-                {note.content}
+                {renderWithMentions(note.content, members)}
               </div>
             </div>
           );
