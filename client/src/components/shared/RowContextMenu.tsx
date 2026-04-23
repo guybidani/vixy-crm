@@ -120,51 +120,64 @@ export default function RowContextMenu({
         boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.02)",
       }}
     >
-      {items.map((item, i) => (
-        <div key={i}>
-          {item.divider && i > 0 && (
-            <div className="h-px bg-[#E6E9EF] my-1 mx-[-4px]" />
-          )}
-          <button
-            ref={(el) => {
-              buttonRefs.current[i] = el;
-            }}
-            role="menuitem"
-            tabIndex={focusedIndex === i ? 0 : -1}
-            onClick={() => {
-              item.onClick();
-              onClose();
-            }}
-            onMouseEnter={() => setFocusedIndex(i)}
-            className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-[14px] text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA]/30 ${
-              item.danger
-                ? "text-[#E2445C] hover:bg-[#FFF1F2] focus-visible:bg-[#FFF1F2]"
-                : "text-[#323338] hover:bg-[#F6F7FB] focus-visible:bg-[#F6F7FB]"
-            }`}
-          >
-            {item.icon && (
-              <span
-                className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
-                  item.danger ? "text-[#E2445C]" : "text-[#676879]"
-                }`}
-              >
-                {item.icon}
-              </span>
+      {items.map((item, i) => {
+        // Divider-only rows: when an item exists purely to render a separator
+        // (empty label + divider=true), skip the button entirely so we don't
+        // get a clickable blank row that steals keyboard focus.
+        const isDividerOnly = item.divider === true && item.label === "";
+        if (isDividerOnly) {
+          return (
+            <div key={i}>
+              {i > 0 && <div className="h-px bg-[#E6E9EF] my-1 mx-[-4px]" />}
+            </div>
+          );
+        }
+        return (
+          <div key={i}>
+            {item.divider && i > 0 && (
+              <div className="h-px bg-[#E6E9EF] my-1 mx-[-4px]" />
             )}
-            <span className="flex-1 truncate">{item.label}</span>
-            {item.shortcut && (
-              <span
-                className={`flex-shrink-0 text-[11px] font-mono tracking-wider ${
-                  item.danger ? "text-[#E2445C]/70" : "text-[#9699A6]"
-                }`}
-                dir="ltr"
-              >
-                {item.shortcut}
-              </span>
-            )}
-          </button>
-        </div>
-      ))}
+            <button
+              ref={(el) => {
+                buttonRefs.current[i] = el;
+              }}
+              role="menuitem"
+              tabIndex={focusedIndex === i ? 0 : -1}
+              onClick={() => {
+                item.onClick();
+                onClose();
+              }}
+              onMouseEnter={() => setFocusedIndex(i)}
+              className={`w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[4px] text-[14px] text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA]/30 ${
+                item.danger
+                  ? "text-[#E2445C] hover:bg-[#FFF1F2] focus-visible:bg-[#FFF1F2]"
+                  : "text-[#323338] hover:bg-[#F6F7FB] focus-visible:bg-[#F6F7FB]"
+              }`}
+            >
+              {item.icon && (
+                <span
+                  className={`flex-shrink-0 w-4 h-4 flex items-center justify-center ${
+                    item.danger ? "text-[#E2445C]" : "text-[#676879]"
+                  }`}
+                >
+                  {item.icon}
+                </span>
+              )}
+              <span className="flex-1 truncate">{item.label}</span>
+              {item.shortcut && (
+                <span
+                  className={`flex-shrink-0 text-[11px] font-mono tracking-wider ${
+                    item.danger ? "text-[#E2445C]/70" : "text-[#9699A6]"
+                  }`}
+                  dir="ltr"
+                >
+                  {item.shortcut}
+                </span>
+              )}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }

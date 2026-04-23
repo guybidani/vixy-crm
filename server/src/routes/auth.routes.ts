@@ -228,9 +228,13 @@ authRouter.get("/me", requireAuth, async (req, res, next) => {
 });
 
 // POST /api/v1/auth/workspaces (protected - create new workspace)
+// Rate-limited: without this, a logged-in user could script workspace
+// creation and spam the database / saturate the background jobs that seed
+// each new workspace.
 authRouter.post(
   "/workspaces",
   requireAuth,
+  authLimiter,
   validate(createWorkspaceSchema),
   async (req, res, next) => {
     try {

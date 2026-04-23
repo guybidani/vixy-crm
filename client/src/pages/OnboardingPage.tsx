@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronLeft, Sparkles } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "../lib/utils";
 import {
   applyTemplate,
@@ -11,6 +11,7 @@ import {
   type IndustryTemplate,
 } from "../api/settings";
 import { handleMutationError } from "../lib/utils";
+import { useAuth } from "../hooks/useAuth";
 
 // ─── Industry templates are fetched from the server's getIndustryTemplates() ───
 // The server is the source of truth (INDUSTRY_TEMPLATES in settings.service.ts).
@@ -227,6 +228,8 @@ function createConfetti(container: HTMLElement) {
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { currentWorkspaceId } = useAuth();
   const [step, setStep] = useState(0);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState(false);
@@ -268,6 +271,15 @@ export default function OnboardingPage() {
     try {
       await applyTemplate(selectedTemplate);
 
+      // The template mutates the workspace's module labels, deal stages,
+      // contact statuses, etc. — all of which live under the
+      // "workspace-options" query. Invalidate so the dashboard reflects the
+      // new labels immediately instead of showing stale defaults until a
+      // hard refresh.
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-options", currentWorkspaceId],
+      });
+
       // Fire-and-forget: the server returns 202 immediately and generates
       // the rows in the background. We intentionally don't await this — the
       // user shouldn't stare at a spinner while rows are bulk-inserted.
@@ -286,7 +298,7 @@ export default function OnboardingPage() {
     } finally {
       setIsApplying(false);
     }
-  }, [selectedTemplate, populateSamples]);
+  }, [selectedTemplate, populateSamples, queryClient, currentWorkspaceId]);
 
   const handleSkip = useCallback(async () => {
     try {

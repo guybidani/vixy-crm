@@ -60,6 +60,7 @@ import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions
 import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import { useAuth } from "../hooks/useAuth";
+import { useCanManageWorkspace } from "../hooks/useWorkspaceRole";
 import { timeAgo, avatarColor, handleMutationError } from "../lib/utils";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
@@ -131,6 +132,7 @@ function SlaCountdown({ ticket }: { ticket: Ticket }) {
 export default function TicketsPage() {
   const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const ticketsLabel = useModuleLabel("tickets");
+  const canManage = useCanManageWorkspace();
   const editLabelsMut = useEditLabelsMutation();
   const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
@@ -499,12 +501,12 @@ export default function TicketsPage() {
         toast.success("קישור הועתק");
       },
     },
-    { label: "", onClick: () => {}, divider: true },
     {
       label: "מחק",
       icon: <Trash2 size={14} />,
       onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק קריאה זו?" }),
       danger: true,
+      divider: true,
     },
   ];
 
@@ -628,8 +630,16 @@ export default function TicketsPage() {
         <BulkActionBar
           selectedCount={selectedIds.size}
           onClear={() => setSelectedIds(new Set())}
-          onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} קריאות?` })}
-          onMoveTo={(status) => handleBulkStatus(status)}
+          onDelete={
+            canManage
+              ? () =>
+                  setConfirmDelete({
+                    ids: Array.from(selectedIds),
+                    message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} קריאות?`,
+                  })
+              : undefined
+          }
+          onMoveTo={canManage ? (status) => handleBulkStatus(status) : undefined}
           moveToOptions={sortedEntries(ticketStatuses).map(([key, info]) => ({
             label: info.label,
             value: key,

@@ -173,6 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const selectWorkspace = useCallback((wsId: string) => {
     setWorkspaceId(wsId);
+    // Nuke every cached query — data from the previous workspace must not
+    // leak into the new one. React Query otherwise keeps stale data keyed on
+    // the old workspaceId visible until something explicitly refetches.
+    queryClient.clear();
     setState((prev) => ({ ...prev, currentWorkspaceId: wsId }));
   }, []);
 

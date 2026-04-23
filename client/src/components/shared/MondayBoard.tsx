@@ -2288,14 +2288,16 @@ export function MondayStatusCell({
                 ))}
               </div>
 
-              <div className="mt-3 pt-2 border-t border-[#E6E9EF] flex items-center justify-center">
-                <button
-                  onClick={enterEditMode}
-                  className="text-[12px] text-[#676879] cursor-pointer hover:text-[#0073EA] transition-colors"
-                >
-                  ✏️ ערוך תוויות
-                </button>
-              </div>
+              {onEditLabels && (
+                <div className="mt-3 pt-2 border-t border-[#E6E9EF] flex items-center justify-center">
+                  <button
+                    onClick={enterEditMode}
+                    className="text-[12px] text-[#676879] cursor-pointer hover:text-[#0073EA] transition-colors"
+                  >
+                    ✏️ ערוך תוויות
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -2413,8 +2415,7 @@ export function MondayStatusCell({
               <div className="flex items-center gap-2 mt-3 pt-2 border-t border-[#E6E9EF]">
                 <button
                   onClick={saveLabels}
-                  disabled={!onEditLabels}
-                  className="flex-1 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-40 text-white text-[12px] font-medium rounded-md transition-colors"
+                  className="flex-1 py-1.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[12px] font-medium rounded-md transition-colors"
                 >
                   שמור
                 </button>

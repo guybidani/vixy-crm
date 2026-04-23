@@ -46,6 +46,44 @@ export async function create(
   authorId: string,
   data: { entityType: string; entityId: string; content: string },
 ) {
+  // IDOR protection: verify the target entity lives in this workspace before
+  // attaching a note to it. Without this check, any authenticated member can
+  // create notes on arbitrary entityIds (cross-workspace or non-existent) —
+  // the Note table has no FK to the target entity.
+  let entityExists = false;
+  if (data.entityType === "contact") {
+    entityExists = !!(await prisma.contact.findFirst({
+      where: { id: data.entityId, workspaceId, deletedAt: null },
+      select: { id: true },
+    }));
+  } else if (data.entityType === "deal") {
+    entityExists = !!(await prisma.deal.findFirst({
+      where: { id: data.entityId, workspaceId, deletedAt: null },
+      select: { id: true },
+    }));
+  } else if (data.entityType === "company") {
+    entityExists = !!(await prisma.company.findFirst({
+      where: { id: data.entityId, workspaceId, deletedAt: null },
+      select: { id: true },
+    }));
+  } else if (data.entityType === "task") {
+    entityExists = !!(await prisma.task.findFirst({
+      where: { id: data.entityId, workspaceId, deletedAt: null },
+      select: { id: true },
+    }));
+  } else if (data.entityType === "ticket") {
+    // Ticket has no soft-delete column.
+    entityExists = !!(await prisma.ticket.findFirst({
+      where: { id: data.entityId, workspaceId },
+      select: { id: true },
+    }));
+  } else {
+    throw new AppError(400, "VALIDATION_ERROR", `Unsupported entityType: ${data.entityType}`);
+  }
+  if (!entityExists) {
+    throw new AppError(403, "FORBIDDEN", `Entity ${data.entityId} not found in workspace`);
+  }
+
   const note = await prisma.note.create({
     data: {
       workspaceId,

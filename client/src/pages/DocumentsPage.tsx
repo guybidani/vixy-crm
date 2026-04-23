@@ -325,14 +325,12 @@ export default function DocumentsPage() {
         },
       });
     }
-    items.push(
-      { label: "", onClick: () => {}, divider: true },
-      {
-        label: "מחק",
-        onClick: () => setDocToDelete(row.id),
-        danger: true,
-      },
-    );
+    items.push({
+      label: "מחק",
+      onClick: () => setDocToDelete(row.id),
+      danger: true,
+      divider: true,
+    });
     return items;
   };
 

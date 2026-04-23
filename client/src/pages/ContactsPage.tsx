@@ -44,6 +44,7 @@ import UndoToast from "../components/shared/UndoToast";
 import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useCanManageWorkspace } from "../hooks/useWorkspaceRole";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
@@ -53,6 +54,7 @@ import { type SavedView } from "../api/views";
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
   const contactsLabel = useModuleLabel("contacts");
+  const canManage = useCanManageWorkspace();
   const editLabelsMut = useEditLabelsMutation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -841,11 +843,13 @@ export default function ContactsPage() {
       <BulkActionBar
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
-        onDelete={() => setShowBulkDeleteConfirm(true)}
-        onDuplicate={() =>
-          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        onDelete={canManage ? () => setShowBulkDeleteConfirm(true) : undefined}
+        onDuplicate={
+          canManage
+            ? () => bulkDuplicateMut.mutate(Array.from(selectedIds))
+            : undefined
         }
-        onMoveTo={(status) => handleBulkStatus(status)}
+        onMoveTo={canManage ? (status) => handleBulkStatus(status) : undefined}
         moveToOptions={sortedEntries(contactStatuses).map(([key, info]) => ({
           label: info.label,
           value: key,
@@ -854,27 +858,31 @@ export default function ContactsPage() {
         moveToLabel="שנה סטטוס"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שייך לחברה"
-          disabled={bulkUpdateMutation.isPending}
-          searchable
-          options={[
-            { key: "__none__", label: "— הסר שיוך —" },
-            ...companyOptions.map((c) => ({ key: c.id, label: c.name })),
-          ]}
-          onSelect={handleBulkCompany}
-        />
-        <BulkActionDropdown
-          label="הוסף תגית"
-          disabled={bulkUpdateMutation.isPending}
-          searchable
-          options={allTags.map((t) => ({
-            key: t.id,
-            label: t.name,
-            color: t.color,
-          }))}
-          onSelect={handleBulkTag}
-        />
+        {canManage && (
+          <BulkActionDropdown
+            label="שייך לחברה"
+            disabled={bulkUpdateMutation.isPending}
+            searchable
+            options={[
+              { key: "__none__", label: "— הסר שיוך —" },
+              ...companyOptions.map((c) => ({ key: c.id, label: c.name })),
+            ]}
+            onSelect={handleBulkCompany}
+          />
+        )}
+        {canManage && (
+          <BulkActionDropdown
+            label="הוסף תגית"
+            disabled={bulkUpdateMutation.isPending}
+            searchable
+            options={allTags.map((t) => ({
+              key: t.id,
+              label: t.name,
+              color: t.color,
+            }))}
+            onSelect={handleBulkTag}
+          />
+        )}
       </BulkActionBar>
 
       <ConfirmDialog

@@ -31,6 +31,7 @@ import {
   type Company,
 } from "../api/companies";
 import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions";
+import { useCanManageWorkspace } from "../hooks/useWorkspaceRole";
 import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
@@ -59,6 +60,7 @@ function companyColor(name: string) {
 export default function CompaniesPage() {
   const { companyStatuses } = useWorkspaceOptions();
   const companiesLabel = useModuleLabel("companies");
+  const canManage = useCanManageWorkspace();
   const editLabelsMut = useEditLabelsMutation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -461,11 +463,21 @@ export default function CompaniesPage() {
       <BulkActionBar
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
-        onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} חברות?` })}
-        onDuplicate={() =>
-          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        onDelete={
+          canManage
+            ? () =>
+                setConfirmDelete({
+                  ids: Array.from(selectedIds),
+                  message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} חברות?`,
+                })
+            : undefined
         }
-        onMoveTo={(status) => handleBulkStatus(status)}
+        onDuplicate={
+          canManage
+            ? () => bulkDuplicateMut.mutate(Array.from(selectedIds))
+            : undefined
+        }
+        onMoveTo={canManage ? (status) => handleBulkStatus(status) : undefined}
         moveToOptions={sortedEntries(companyStatuses).map(([key, info]) => ({
           label: info.label,
           value: key,

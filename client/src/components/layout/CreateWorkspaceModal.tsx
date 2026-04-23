@@ -5,11 +5,29 @@ import toast from "react-hot-toast";
 import Modal from "../shared/Modal";
 import { createWorkspace } from "../../api/auth";
 import { setWorkspaceId } from "../../api/client";
-import { handleMutationError } from "../../lib/utils";
 
 interface CreateWorkspaceModalProps {
   open: boolean;
   onClose: () => void;
+}
+
+/**
+ * Robustly extract a human-readable message from an unknown error.
+ * The `api` client throws plain `{ code, message }` objects (not Error
+ * instances), so `err instanceof Error` misses them. Cover every shape.
+ */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "object") {
+    const e = err as { message?: unknown; error?: { message?: unknown } };
+    if (typeof e.message === "string" && e.message) return e.message;
+    if (e.error && typeof e.error.message === "string" && e.error.message) {
+      return e.error.message;
+    }
+  }
+  return fallback;
 }
 
 export default function CreateWorkspaceModal({
@@ -22,14 +40,27 @@ export default function CreateWorkspaceModal({
   useEffect(() => {
     if (open) {
       setName("");
-      // Focus input after modal opens
-      setTimeout(() => inputRef.current?.focus(), 50);
+      // Focus input after modal opens. Modal.tsx also auto-focuses the first
+      // focusable element via requestAnimationFrame, so use a slightly longer
+      // timeout to win the race and land focus on the input specifically.
+      const t = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
     }
   }, [open]);
 
   const createMut = useMutation({
-    mutationFn: (workspaceName: string) => createWorkspace(workspaceName),
+    mutationFn: (workspaceName: string) => {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[CreateWorkspaceModal] mutationFn firing", { workspaceName });
+      }
+      return createWorkspace(workspaceName);
+    },
     onSuccess: (ws) => {
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[CreateWorkspaceModal] onSuccess", ws);
+      }
       // Switch workspace context before redirect — localStorage is synchronous
       // so the new workspaceId is in place before the browser navigates.
       setWorkspaceId(ws.id);
@@ -39,11 +70,28 @@ export default function CreateWorkspaceModal({
       // workspace context, avoiding subtle race conditions.
       window.location.href = "/onboarding";
     },
-    onError: (err) => handleMutationError(err, "שגיאה ביצירת סביבת עבודה"),
+    onError: (err) => {
+      // IMPORTANT: our api client throws `{ code, message }` plain objects,
+      // NOT Error instances — so the shared `handleMutationError` helper
+      // was silently swallowing the real message. Use a shape-aware
+      // extractor instead so users see the actual server error.
+      // eslint-disable-next-line no-console
+      console.error("[CreateWorkspaceModal] createWorkspace failed:", err);
+      const message = extractErrorMessage(err, "שגיאה ביצירת סביבת עבודה");
+      toast.error(message);
+    },
   });
 
   function handleSubmit(e?: React.FormEvent | React.MouseEvent) {
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.log("[CreateWorkspaceModal] handleSubmit invoked", {
+        name,
+        isPending: createMut.isPending,
+      });
+    }
     e?.preventDefault();
+    e?.stopPropagation();
     const trimmed = name.trim();
     if (!trimmed) {
       toast.error("נא להזין שם סביבת עבודה");
@@ -132,10 +180,10 @@ export default function CreateWorkspaceModal({
               ביטול
             </button>
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={createMut.isPending}
               className="modal-btn-primary flex items-center gap-1.5"
+              style={{ pointerEvents: "auto" }}
             >
               {createMut.isPending ? (
                 <>

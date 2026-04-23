@@ -66,6 +66,7 @@ import UndoToast from "../components/shared/UndoToast";
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useCanManageWorkspace } from "../hooks/useWorkspaceRole";
 import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
@@ -76,6 +77,7 @@ type TableTab = "table" | "chart";
 export default function DealsPage() {
   const { dealStages, priorities } = useWorkspaceOptions();
   const dealsLabel = useModuleLabel("deals");
+  const canManage = useCanManageWorkspace();
   const editLabelsMut = useEditLabelsMutation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -771,11 +773,21 @@ export default function DealsPage() {
       <BulkActionBar
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
-        onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} עסקאות?` })}
-        onDuplicate={() =>
-          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        onDelete={
+          canManage
+            ? () =>
+                setConfirmDelete({
+                  ids: Array.from(selectedIds),
+                  message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} עסקאות?`,
+                })
+            : undefined
         }
-        onMoveTo={(stage) => handleBulkStage(stage)}
+        onDuplicate={
+          canManage
+            ? () => bulkDuplicateMut.mutate(Array.from(selectedIds))
+            : undefined
+        }
+        onMoveTo={canManage ? (stage) => handleBulkStage(stage) : undefined}
         moveToOptions={sortedEntries(dealStages).map(([key, info]) => ({
           label: info.label,
           value: key,
@@ -784,37 +796,43 @@ export default function DealsPage() {
         moveToLabel="שנה שלב"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שנה עדיפות"
-          disabled={bulkUpdateMutation.isPending}
-          options={sortedEntries(priorities).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-          }))}
-          onSelect={handleBulkPriority}
-        />
-        <BulkActionDropdown
-          label="שנה אחראי"
-          disabled={bulkUpdateMutation.isPending}
-          searchable
-          options={workspaceMembers.map((m) => ({
-            key: m.id,
-            label: m.name,
-          }))}
-          onSelect={handleBulkAssignee}
-        />
-        <BulkActionDropdown
-          label="הוסף תגית"
-          disabled={bulkUpdateMutation.isPending}
-          searchable
-          options={allTags.map((t) => ({
-            key: t.id,
-            label: t.name,
-            color: t.color,
-          }))}
-          onSelect={handleBulkTag}
-        />
+        {canManage && (
+          <BulkActionDropdown
+            label="שנה עדיפות"
+            disabled={bulkUpdateMutation.isPending}
+            options={sortedEntries(priorities).map(([key, info]) => ({
+              key,
+              label: info.label,
+              color: info.color,
+            }))}
+            onSelect={handleBulkPriority}
+          />
+        )}
+        {canManage && (
+          <BulkActionDropdown
+            label="שנה אחראי"
+            disabled={bulkUpdateMutation.isPending}
+            searchable
+            options={workspaceMembers.map((m) => ({
+              key: m.id,
+              label: m.name,
+            }))}
+            onSelect={handleBulkAssignee}
+          />
+        )}
+        {canManage && (
+          <BulkActionDropdown
+            label="הוסף תגית"
+            disabled={bulkUpdateMutation.isPending}
+            searchable
+            options={allTags.map((t) => ({
+              key: t.id,
+              label: t.name,
+              color: t.color,
+            }))}
+            onSelect={handleBulkTag}
+          />
+        )}
       </BulkActionBar>
 
       <ConfirmDialog

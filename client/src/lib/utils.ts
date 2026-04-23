@@ -85,8 +85,36 @@ export function timeAgo(dateStr: string): string {
 }
 
 // ── Mutation error handler ────────────────────────────────────
-/** Standard onError handler for react-query mutations. */
-export function handleMutationError(err: unknown, fallback = "שגיאה בביצוע הפעולה") {
-  const message = err instanceof Error ? err.message : fallback;
+/**
+ * Walk every error shape our code can produce and extract a displayable
+ * string message.
+ *
+ * Our api client (see src/api/client.ts) throws plain `{ code, message }`
+ * objects — NOT Error instances — so a naive `err instanceof Error` check
+ * misses the real server message. This helper handles:
+ *   - string
+ *   - Error instance
+ *   - `{ message }`
+ *   - `{ error: { message } }`
+ */
+export function extractErrorMessage(err: unknown, fallback: string): string {
+  if (!err) return fallback;
+  if (typeof err === "string") return err;
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "object") {
+    const e = err as { message?: unknown; error?: { message?: unknown } };
+    if (typeof e.message === "string" && e.message) return e.message;
+    if (e.error && typeof e.error.message === "string" && e.error.message) return e.error.message;
+  }
+  return fallback;
+}
+
+/**
+ * Standard onError handler for react-query mutations. Surfaces the real
+ * server error message to the user via toast, falling back to a generic
+ * Hebrew message if none can be extracted.
+ */
+export function handleMutationError(err: unknown, fallback = "שגיאה לא צפויה"): void {
+  const message = extractErrorMessage(err, fallback);
   toast.error(message);
 }

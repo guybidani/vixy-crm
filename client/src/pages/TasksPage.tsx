@@ -67,6 +67,7 @@ import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import { useAuth } from "../hooks/useAuth";
+import { useCanManageWorkspace } from "../hooks/useWorkspaceRole";
 import { useDebounce } from "../hooks/useDebounce";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -892,6 +893,7 @@ function TasksErrorState({ onRetry }: { onRetry: () => void }) {
 export default function TasksPage() {
   const { taskStatuses, priorities } = useWorkspaceOptions();
   const tasksLabel = useModuleLabel("tasks");
+  const canManage = useCanManageWorkspace();
   const { currentWorkspaceId, workspaces } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1474,11 +1476,13 @@ export default function TasksPage() {
       <BulkActionBar
         selectedCount={selectedTaskIds.size}
         onClear={clearSelection}
-        onDelete={handleBulkDelete}
-        onDuplicate={() =>
-          bulkDuplicateMut.mutate(Array.from(selectedTaskIds))
+        onDelete={canManage ? handleBulkDelete : undefined}
+        onDuplicate={
+          canManage
+            ? () => bulkDuplicateMut.mutate(Array.from(selectedTaskIds))
+            : undefined
         }
-        onMoveTo={(status) => handleBulkStatus(status)}
+        onMoveTo={canManage ? (status) => handleBulkStatus(status) : undefined}
         moveToOptions={sortedEntries(taskStatuses).map(([key, info]) => ({
           label: info.label,
           value: key,
@@ -1487,35 +1491,41 @@ export default function TasksPage() {
         moveToLabel="שנה סטטוס"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שנה עדיפות"
-          disabled={bulkUpdateMutation.isPending}
-          options={sortedEntries(priorities).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-          }))}
-          onSelect={handleBulkPriority}
-        />
-        <BulkActionDropdown
-          label="שנה אחראי"
-          disabled={bulkUpdateMutation.isPending}
-          searchable
-          options={workspaceMembers.map((m) => ({
-            key: m.id,
-            label: m.name,
-          }))}
-          onSelect={handleBulkAssignee}
-        />
-        <BulkActionDropdown
-          label="דחה"
-          disabled={bulkUpdateMutation.isPending}
-          options={snoozeOptions.map((o) => ({
-            key: `${o.special ?? ""}|${o.minutes}|${o.label}`,
-            label: o.label,
-          }))}
-          onSelect={handleBulkSnooze}
-        />
+        {canManage && (
+          <BulkActionDropdown
+            label="שנה עדיפות"
+            disabled={bulkUpdateMutation.isPending}
+            options={sortedEntries(priorities).map(([key, info]) => ({
+              key,
+              label: info.label,
+              color: info.color,
+            }))}
+            onSelect={handleBulkPriority}
+          />
+        )}
+        {canManage && (
+          <BulkActionDropdown
+            label="שנה אחראי"
+            disabled={bulkUpdateMutation.isPending}
+            searchable
+            options={workspaceMembers.map((m) => ({
+              key: m.id,
+              label: m.name,
+            }))}
+            onSelect={handleBulkAssignee}
+          />
+        )}
+        {canManage && (
+          <BulkActionDropdown
+            label="דחה"
+            disabled={bulkUpdateMutation.isPending}
+            options={snoozeOptions.map((o) => ({
+              key: `${o.special ?? ""}|${o.minutes}|${o.label}`,
+              label: o.label,
+            }))}
+            onSelect={handleBulkSnooze}
+          />
+        )}
       </BulkActionBar>
 
       <ConfirmDialog

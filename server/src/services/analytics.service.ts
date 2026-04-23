@@ -109,11 +109,14 @@ export async function getDealGrowth(
   dateFrom: Date,
   dateTo: Date,
 ) {
-  // Group by ISO week (Monday start) in SQL — avoids fetching all rows into memory
+  // Group by ISO week (Monday start) in SQL — avoids fetching all rows into memory.
+  // Filter out soft-deleted rows to match getContactGrowth and every other
+  // analytics query; otherwise deleted deals would inflate the growth chart.
   const rows = await prisma.$queryRaw<WeeklyCountRow[]>`
     SELECT date_trunc('week', created_at)::date AS week_start, COUNT(*) AS count
     FROM deals
     WHERE workspace_id = ${workspaceId}
+      AND deleted_at IS NULL
       AND created_at >= ${dateFrom}
       AND created_at <= ${dateTo}
     GROUP BY week_start
