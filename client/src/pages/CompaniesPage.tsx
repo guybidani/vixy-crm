@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Building2, Users, Handshake, RefreshCw, Mail, Phone, Clock } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import PageShell from "../components/layout/PageShell";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
@@ -132,7 +133,7 @@ export default function CompaniesPage() {
       queryClient.invalidateQueries({ queryKey: ["companies-board"] });
       toast.success("סטטוס עודכן");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   const deleteMutation = useMutation({
@@ -559,9 +560,7 @@ function CreateCompanyModal({
         onClose();
       }
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת חברה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת חברה"),
   });
 
   function handleSubmit(e: React.FormEvent) {

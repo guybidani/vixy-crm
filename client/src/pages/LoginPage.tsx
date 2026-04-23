@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import GoogleLoginButton from "../components/shared/GoogleLoginButton";
 
 export default function LoginPage() {
@@ -20,8 +21,8 @@ export default function LoginPage() {
       await login(email, password);
       toast.success("התחברת בהצלחה!");
       navigate("/dashboard");
-    } catch (err: any) {
-      toast.error(err?.message || "שגיאה בהתחברות");
+    } catch (err) {
+      handleMutationError(err, "שגיאה בהתחברות");
     } finally {
       setLoading(false);
     }
@@ -118,8 +119,8 @@ export default function LoginPage() {
               await googleLogin(idToken);
               toast.success("התחברת בהצלחה!");
               navigate("/dashboard");
-            } catch (err: any) {
-              toast.error(err?.message || "שגיאה בהתחברות עם Google");
+            } catch (err) {
+              handleMutationError(err, "שגיאה בהתחברות עם Google");
             }
           }}
           onError={(msg) => toast.error(msg)}

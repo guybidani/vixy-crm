@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import { PageCard } from "../components/layout/PageShell";
 import StatusBadge from "../components/shared/StatusBadge";
 import StatusDropdown from "../components/shared/StatusDropdown";
@@ -1309,9 +1310,7 @@ function EditContactModal({
       toast.success("איש קשר עודכן!");
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה בעדכון");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   function handleSubmit(e: React.FormEvent) {

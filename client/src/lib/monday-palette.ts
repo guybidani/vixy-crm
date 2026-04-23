@@ -37,16 +37,6 @@ export const MONDAY_COLORS = {
   softBlue: "#66CCFF",
 } as const;
 
-export type MondayColorName = keyof typeof MONDAY_COLORS;
-
-// ── Semantic tokens (Monday default statuses) ────────────
-
-export const MONDAY_SEMANTIC = {
-  workingOnIt: MONDAY_COLORS.yellow, // #FDAB3D
-  done: MONDAY_COLORS.green, // #00C875
-  stuck: MONDAY_COLORS.red, // #E2445C
-} as const;
-
 // ── Priority tokens ──────────────────────────────────────
 
 export const PRIORITY_COLORS = {

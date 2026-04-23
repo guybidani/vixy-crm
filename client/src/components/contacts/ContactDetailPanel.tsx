@@ -27,7 +27,7 @@ import {
   UserCircle2,
   Pencil,
 } from "lucide-react";
-import { avatarColor, timeAgo } from "../../lib/utils";
+import { avatarColor, timeAgo, handleMutationError } from "../../lib/utils";
 import toast from "react-hot-toast";
 import StatusBadge from "../shared/StatusBadge";
 import StatusDropdown from "../shared/StatusDropdown";
@@ -2004,9 +2004,7 @@ function EditContactModal({
       toast.success("איש קשר עודכן!");
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה בעדכון");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   function handleSubmit(e: React.FormEvent) {

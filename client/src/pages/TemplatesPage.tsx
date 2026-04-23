@@ -16,6 +16,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
@@ -93,9 +94,7 @@ export default function TemplatesPage() {
       queryClient.invalidateQueries({ queryKey: ["templates"] });
       toast.success("תבנית נמחקה");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה במחיקת תבנית");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה במחיקת תבנית"),
   });
 
   const filteredTemplates = useMemo(() => {
@@ -426,9 +425,7 @@ function TemplateFormModal({
       toast.success("תבנית נוצרה בהצלחה!");
       onSaved();
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה ביצירת תבנית");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת תבנית"),
   });
 
   const updateMut = useMutation({
@@ -444,9 +441,7 @@ function TemplateFormModal({
       toast.success("תבנית עודכנה בהצלחה!");
       onSaved();
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה בעדכון תבנית");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון תבנית"),
   });
 
   const isPending = createMut.isPending || updateMut.isPending;

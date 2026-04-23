@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import PageShell, { EmptyState } from "../components/layout/PageShell";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
@@ -389,9 +390,7 @@ function ArticleView({
       });
       toast.success("תודה על המשוב!");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה בשליחת משוב");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בשליחת משוב"),
   });
 
   return (
@@ -506,9 +505,7 @@ function ArticleEditor({
       toast.success("מאמר עודכן בהצלחה!");
       onSaved();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה בעדכון מאמר");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון מאמר"),
   });
 
   return (
@@ -607,9 +604,7 @@ function CreateCategoryModal({ onClose }: { onClose: () => void }) {
       toast.success("קטגוריה נוצרה!");
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת קטגוריה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת קטגוריה"),
   });
 
   return (
@@ -689,9 +684,7 @@ function CreateArticleModal({
       toast.success("מאמר נוצר בהצלחה!");
       onClose();
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת מאמר");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת מאמר"),
   });
 
   const setField = (key: string, value: string) =>

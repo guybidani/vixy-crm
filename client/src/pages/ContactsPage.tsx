@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { avatarColor } from "../lib/utils";
+import { avatarColor, handleMutationError } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, RefreshCw, Clock, Link2 } from "lucide-react";
@@ -160,7 +160,7 @@ export default function ContactsPage() {
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       toast.success("סטטוס עודכן");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   // Quick activity logging
@@ -1077,9 +1077,7 @@ function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose:
         onClose();
       }
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת איש קשר");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת איש קשר"),
   });
 
   function handleSubmit(e: React.FormEvent) {

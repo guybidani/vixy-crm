@@ -120,13 +120,3 @@ export function bulkDeleteContacts(ids: string[]) {
     body: JSON.stringify({ ids }),
   });
 }
-
-export function bulkUpdateContacts(
-  ids: string[],
-  data: { status?: string; tagId?: string },
-) {
-  return api<{ success: boolean }>("/contacts/bulk-update", {
-    method: "POST",
-    body: JSON.stringify({ ids, data }),
-  });
-}

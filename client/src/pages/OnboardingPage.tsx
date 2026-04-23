@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Check, ChevronLeft, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "../lib/utils";
-import * as settingsApi from "../api/settings";
-import { getIndustryTemplates } from "../api/settings";
-import type { IndustryTemplate } from "../api/settings";
-import toast from "react-hot-toast";
+import {
+  applyTemplate,
+  getIndustryTemplates,
+  populateDemoData,
+  skipOnboarding,
+  type IndustryTemplate,
+} from "../api/settings";
+import { handleMutationError } from "../lib/utils";
 
 // ─── Industry templates are fetched from the server's getIndustryTemplates() ───
 // The server is the source of truth (INDUSTRY_TEMPLATES in settings.service.ts).
@@ -262,13 +266,13 @@ export default function OnboardingPage() {
     if (!selectedTemplate) return;
     setIsApplying(true);
     try {
-      await settingsApi.applyTemplate(selectedTemplate);
+      await applyTemplate(selectedTemplate);
 
       // Fire-and-forget: the server returns 202 immediately and generates
       // the rows in the background. We intentionally don't await this — the
       // user shouldn't stare at a spinner while rows are bulk-inserted.
       if (populateSamples) {
-        settingsApi.populateDemoData(selectedTemplate).catch((err) => {
+        populateDemoData(selectedTemplate).catch((err) => {
           // Non-fatal: template was applied, just the samples failed.
           // eslint-disable-next-line no-console
           console.warn("populateDemoData failed", err);
@@ -277,8 +281,8 @@ export default function OnboardingPage() {
 
       setStep(2);
       setShowSuccess(true);
-    } catch (err: any) {
-      toast.error(err?.message || "שגיאה בהחלת התבנית");
+    } catch (err) {
+      handleMutationError(err, "שגיאה בהחלת התבנית");
     } finally {
       setIsApplying(false);
     }
@@ -286,10 +290,10 @@ export default function OnboardingPage() {
 
   const handleSkip = useCallback(async () => {
     try {
-      await settingsApi.skipOnboarding();
+      await skipOnboarding();
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      toast.error(err?.message || "שגיאה בדילוג");
+    } catch (err) {
+      handleMutationError(err, "שגיאה בדילוג");
     }
   }, [navigate]);
 

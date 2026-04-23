@@ -7,7 +7,15 @@ import {
   type ReactNode,
 } from "react";
 import { createElement } from "react";
-import * as authApi from "../api/auth";
+import {
+  getMe,
+  login as apiLogin,
+  googleLogin as apiGoogleLogin,
+  register as apiRegister,
+  logout as apiLogout,
+  type User,
+  type WorkspaceInfo,
+} from "../api/auth";
 import {
   setTokens,
   clearTokens,
@@ -21,8 +29,8 @@ import {
 import { queryClient } from "../lib/queryClient";
 
 interface AuthState {
-  user: authApi.User | null;
-  workspaces: authApi.WorkspaceInfo[];
+  user: User | null;
+  workspaces: WorkspaceInfo[];
   currentWorkspaceId: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -55,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const me = await authApi.getMe();
+      const me = await getMe();
       setState((prev) => ({
         ...prev,
         user: me,
@@ -87,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
+    const res = await apiLogin(email, password);
     setTokens(res.accessToken);
     markSession();
 
@@ -110,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const googleLogin = useCallback(async (idToken: string) => {
-    const res = await authApi.googleLogin(idToken);
+    const res = await apiGoogleLogin(idToken);
     setTokens(res.accessToken);
     markSession();
 
@@ -138,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: string;
       workspaceName: string;
     }) => {
-      const res = await authApi.register(data);
+      const res = await apiRegister(data);
       setTokens(res.accessToken);
       markSession();
       setWorkspaceId(res.workspace.id);
@@ -155,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    authApi.logout(); // Fire-and-forget: clears httpOnly cookie on server
+    apiLogout(); // Fire-and-forget: clears httpOnly cookie on server
     clearTokens();
     clearSession();
     clearWorkspaceId();

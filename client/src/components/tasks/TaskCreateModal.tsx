@@ -14,6 +14,7 @@ import {
   Layers,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import { createTask } from "../../api/tasks";
 import { listContacts, type Contact } from "../../api/contacts";
@@ -371,9 +372,7 @@ export default function TaskCreateModal({
       onClose();
       onCreated?.(task.id);
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת משימה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת משימה"),
   });
 
   function setField<K extends keyof FormState>(key: K, value: FormState[K]) {

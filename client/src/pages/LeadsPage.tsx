@@ -21,6 +21,7 @@ import {
   Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import PageShell from "../components/layout/PageShell";
 import EmptyState from "../components/shared/EmptyState";
 import { EmptyContacts, EmptySearch } from "../components/shared/illustrations";
@@ -167,8 +168,8 @@ export default function LeadsPage() {
       setQualifyingId(null);
       navigate(`/deals?open=${deal.id}`);
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה בהסמכת ליד");
+    onError: (err) => {
+      handleMutationError(err, "שגיאה בהסמכת ליד");
       setQualifyingId(null);
     },
   });
@@ -974,9 +975,7 @@ function CreateLeadModal({
         onClose();
       }
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת ליד");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת ליד"),
   });
 
   function handleSubmit(e: React.FormEvent) {

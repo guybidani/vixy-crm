@@ -30,6 +30,7 @@ import {
   AlignLeft,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../../lib/utils";
 import {
   getBoard,
   updateBoardItem,
@@ -815,7 +816,7 @@ export default function BoardItemDetailPanel({
       qc.invalidateQueries({ queryKey: ["board-item-files", boardId, itemId] });
       toast.success("הקובץ הועלה בהצלחה");
     },
-    onError: (e: any) => toast.error(e?.message || "שגיאה בהעלאת קובץ"),
+    onError: (e) => handleMutationError(e, "שגיאה בהעלאת קובץ"),
   });
 
   const deleteFileMut = useMutation({

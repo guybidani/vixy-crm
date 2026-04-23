@@ -32,6 +32,7 @@ import {
   Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../../lib/utils";
 import { getWhatsAppUrl, getTelUrl } from "../../utils/phone";
 import { getAvatarColor as avatarColor, getInitials } from "../../utils/avatar";
 import {
@@ -173,7 +174,7 @@ export default function DealDetailPanel({
       setEditingField(null);
       setEditingName(false);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון העסקה"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון העסקה"),
   });
 
   const deleteMut = useMutation({
@@ -185,7 +186,7 @@ export default function DealDetailPanel({
       onDeleted?.();
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה במחיקת העסקה"),
+    onError: (err) => handleMutationError(err, "שגיאה במחיקת העסקה"),
   });
 
   const taskToggleMut = useMutation({
@@ -196,7 +197,7 @@ export default function DealDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       toast.success(status === "DONE" ? "משימה הושלמה" : "משימה סומנה כפתוחה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון משימה"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון משימה"),
   });
 
   const createTaskMut = useMutation({

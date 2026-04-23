@@ -16,6 +16,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Eye, EyeOff, GripVertical, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../../lib/utils";
 import Modal from "../shared/Modal";
 import {
   type DashboardLayout,
@@ -109,8 +110,8 @@ export default function DashboardCustomizeModal({
       await onSave({ widgets: draft });
       toast.success("הדשבורד עודכן");
       onClose();
-    } catch (e: any) {
-      toast.error(e?.message || "שמירה נכשלה");
+    } catch (e) {
+      handleMutationError(e, "שמירה נכשלה");
     } finally {
       setSaving(false);
     }

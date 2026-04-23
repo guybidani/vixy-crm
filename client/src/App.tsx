@@ -18,7 +18,6 @@ import Header from "./components/layout/Header";
 import BrandingStyleInjector from "./components/layout/BrandingStyleInjector";
 import QuickAdd from "./components/shared/QuickAdd";
 import QuickAddModal from "./components/shared/QuickAddModal";
-import GlobalSearch from "./components/shared/GlobalSearch";
 import CommandPalette from "./components/shared/CommandPalette";
 import ShortcutsHelp from "./components/shared/ShortcutsHelp";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -208,7 +207,6 @@ function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
-  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [quickAddType, setQuickAddType] = useState<"task" | "contact" | "deal" | "ticket" | null>(null);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   // "+" button in header → QuickAddModal (tab-based)
@@ -220,8 +218,6 @@ function AppLayout() {
     setQuickAddOpen(true);
   }, []);
   // Ctrl+K → CommandPalette (full power-user palette).
-  // GlobalSearch remains mounted for backward compat but no longer wired to a hotkey;
-  // CommandPalette subsumes its functionality.
   const openCommandPalette = useCallback(() => {
     setCommandPaletteOpen(true);
   }, []);
@@ -287,10 +283,6 @@ function AppLayout() {
       <QuickAddModal
         open={quickAddModalOpen}
         onClose={() => setQuickAddModalOpen(false)}
-      />
-      <GlobalSearch
-        open={globalSearchOpen}
-        onClose={() => setGlobalSearchOpen(false)}
       />
       <CommandPalette
         open={commandPaletteOpen}

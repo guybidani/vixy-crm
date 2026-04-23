@@ -86,7 +86,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
     };
   }, [profileMenuOpen]);
 
-  // Ctrl+K = GlobalSearch, Ctrl+Shift+K = QuickAdd
+  // Ctrl+K = CommandPalette, Ctrl+Shift+K = QuickAdd
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {

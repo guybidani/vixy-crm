@@ -2098,54 +2098,25 @@ function ColumnMenu({
   );
 }
 
-/* ── Keyboard Shortcuts Tooltip ────────────────────── */
+/* ── Keyboard Shortcuts Button ─────────────────────── */
 
+/**
+ * Opens the global ShortcutsHelp dialog by dispatching `vixy:open-shortcuts`.
+ * The dialog is owned by AppLayout; this button is just a trigger so it lives
+ * naturally in the board toolbar without needing prop drilling.
+ */
 function KeyboardShortcutsButton() {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
-
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="קיצורי מקלדת"
-        title="קיצורי מקלדת"
-        className="flex items-center gap-1 px-2.5 py-[7px] text-[12px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors select-none"
-      >
-        <span className="font-mono text-[11px] border border-[#D0D4E4] rounded px-1 py-0.5 bg-white leading-none">?</span>
-      </button>
-
-      {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E6E9EF] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.15)] p-4 min-w-[240px]" dir="rtl">
-          <p className="text-[12px] font-semibold text-[#323338] mb-3">קיצורי מקלדת</p>
-          <div className="space-y-2">
-            {([
-              ["↑ / ↓", "ניווט בין שורות"],
-              ["Enter", "פתח פרטי פריט"],
-              ["Escape", "סגור פאנל / בטל בחירה"],
-              ["N", "פריט חדש"],
-              ["Tab / Shift+Tab", "תא הבא / הקודם"],
-            ] as const).map(([key, desc]) => (
-              <div key={key} className="flex items-center justify-between gap-4">
-                <span className="text-[12px] text-[#676879]">{desc}</span>
-                <kbd className="font-mono text-[11px] bg-[#F6F7FB] border border-[#D0D4E4] rounded px-1.5 py-0.5 text-[#323338] whitespace-nowrap flex-shrink-0">
-                  {key}
-                </kbd>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    <button
+      onClick={() => window.dispatchEvent(new Event("vixy:open-shortcuts"))}
+      aria-label="קיצורי מקלדת"
+      title="קיצורי מקלדת (?)"
+      className="flex items-center gap-1 px-2.5 py-[7px] text-[12px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors select-none"
+    >
+      <span className="font-mono text-[11px] border border-[#D0D4E4] rounded px-1 py-0.5 bg-white leading-none">
+        ?
+      </span>
+    </button>
   );
 }
 

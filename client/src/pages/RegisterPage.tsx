@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import GoogleLoginButton from "../components/shared/GoogleLoginButton";
 
 type PasswordStrength = "none" | "weak" | "medium" | "strong";
@@ -342,8 +343,8 @@ export default function RegisterPage() {
               await googleLogin(idToken);
               setShowSuccess(true);
               setTimeout(() => navigate("/dashboard"), 1500);
-            } catch (err: any) {
-              toast.error(err?.message || "שגיאה בהרשמה עם Google");
+            } catch (err) {
+              handleMutationError(err, "שגיאה בהרשמה עם Google");
             }
           }}
           onError={(msg) => toast.error(msg)}

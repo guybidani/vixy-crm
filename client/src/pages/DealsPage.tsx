@@ -20,6 +20,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import { getWhatsAppUrl } from "../utils/phone";
 import { getAvatarColor } from "../utils/avatar";
 import PageShell from "../components/layout/PageShell";
@@ -137,7 +138,7 @@ export default function DealsPage() {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success("עסקה נסגרה בהצלחה! 🎉");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   const lostMutation = useMutation({
@@ -151,7 +152,7 @@ export default function DealsPage() {
       setLossNote("");
       setLossReason("price");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   function handleLostSubmit() {
@@ -195,7 +196,7 @@ export default function DealsPage() {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       toast.success(`עסקה הועברה ל${dealStages[stage]?.label}`);
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
 
   const bulkDeleteMutation = useMutation({
@@ -1075,9 +1076,7 @@ function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreate
         onClose();
       }
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה ביצירת עסקה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת עסקה"),
   });
 
   function handleSubmit(e: React.FormEvent) {

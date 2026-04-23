@@ -307,7 +307,8 @@ export default function BoardPage() {
   });
   const handleViewModeChange = (mode: "kanban" | "table" | "calendar") => {
     setViewMode(mode);
-    try { localStorage.setItem(`board:${id}:viewMode`, mode); } catch {}
+    // localStorage can throw in private browsing / quota-exceeded — safe to ignore
+    try { localStorage.setItem(`board:${id}:viewMode`, mode); } catch { /* noop */ }
   };
 
   // ── Group by — persisted per board ──
@@ -319,7 +320,7 @@ export default function BoardPage() {
     try {
       if (key) localStorage.setItem(`board:${id}:groupBy`, key);
       else localStorage.removeItem(`board:${id}:groupBy`);
-    } catch {}
+    } catch { /* noop: localStorage may be unavailable */ }
   };
 
   // ── Active filters — persisted per board ──
@@ -331,7 +332,7 @@ export default function BoardPage() {
   });
   const handleFiltersChange = (filters: Array<{ column: string; values: string[] }>) => {
     setActiveFilters(filters);
-    try { localStorage.setItem(`board:${id}:filters`, JSON.stringify(filters)); } catch {}
+    try { localStorage.setItem(`board:${id}:filters`, JSON.stringify(filters)); } catch { /* noop */ }
   };
   const [editingCell, setEditingCell] = useState<{
     itemId: string;

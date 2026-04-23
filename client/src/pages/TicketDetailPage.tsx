@@ -21,6 +21,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { handleMutationError } from "../lib/utils";
 import StatusBadge from "../components/shared/StatusBadge";
 import UrgencyScoreBadge from "../components/shared/UrgencyScoreBadge";
 import EntityDocumentsSection from "../components/shared/EntityDocumentsSection";
@@ -67,7 +68,7 @@ export default function TicketDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("סטטוס עודכן");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון סטטוס"),
   });
 
   const priorityMutation = useMutation({
@@ -77,7 +78,7 @@ export default function TicketDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("עדיפות עודכנה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון עדיפות"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון עדיפות"),
   });
 
   const assignMutation = useMutation({
@@ -87,7 +88,7 @@ export default function TicketDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success(assigneeId ? "נציג שויך" : "שיוך נציג הוסר");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בשיוך נציג"),
+    onError: (err) => handleMutationError(err, "שגיאה בשיוך נציג"),
   });
 
   if (isLoading) {
@@ -835,9 +836,7 @@ function ReplyComposer({
       setBody("");
       toast.success(isInternal ? "הערה פנימית נוספה" : "תגובה נשלחה");
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה בשליחת הודעה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בשליחת הודעה"),
   });
 
   function handleSubmit(e: React.FormEvent) {

@@ -31,7 +31,7 @@ import {
   deleteWorkflow,
   type Workflow,
 } from "../api/automations";
-import { cn } from "../lib/utils";
+import { cn, handleMutationError } from "../lib/utils";
 
 // ─── Constants ───
 
@@ -583,9 +583,7 @@ export default function AutomationsPage() {
       setDialogOpen(false);
       toast.success("אוטומציה נוצרה בהצלחה!");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה ביצירת אוטומציה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת אוטומציה"),
   });
 
   const updateMut = useMutation({
@@ -606,9 +604,7 @@ export default function AutomationsPage() {
       setEditing(null);
       toast.success("אוטומציה עודכנה בהצלחה!");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה בעדכון אוטומציה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון אוטומציה"),
   });
 
   const toggleMut = useMutation({
@@ -618,9 +614,7 @@ export default function AutomationsPage() {
       qc.invalidateQueries({ queryKey: ["automations"] });
       toast.success(variables.isActive ? "אוטומציה הופעלה" : "אוטומציה כובתה");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה בשינוי סטטוס");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה בשינוי סטטוס"),
   });
 
   const deleteMut = useMutation({
@@ -629,9 +623,7 @@ export default function AutomationsPage() {
       qc.invalidateQueries({ queryKey: ["automations"] });
       toast.success("אוטומציה נמחקה");
     },
-    onError: (err: { message?: string }) => {
-      toast.error(err?.message || "שגיאה במחיקת אוטומציה");
-    },
+    onError: (err) => handleMutationError(err, "שגיאה במחיקת אוטומציה"),
   });
 
   const workflows = data?.data ?? [];

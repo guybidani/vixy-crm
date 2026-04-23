@@ -107,25 +107,6 @@ export const NAV_ITEMS = [
   },
 ] as const;
 
-// Legacy nav exports (keep for backward compat)
-export const SALES_NAV = [
-  { key: "dashboard", label: "דשבורד", icon: "LayoutDashboard", path: "/" },
-  { key: "contacts", label: "אנשי קשר", icon: "Users", path: "/contacts" },
-  { key: "companies", label: "חברות", icon: "Building2", path: "/companies" },
-  { key: "deals", label: "עסקאות", icon: "Handshake", path: "/deals" },
-  { key: "leads", label: "לידים", icon: "Inbox", path: "/leads" },
-  { key: "tasks", label: "משימות", icon: "CheckSquare", path: "/tasks" },
-] as const;
-
-export const SUPPORT_NAV = [
-  { key: "tickets", label: "פניות", icon: "Ticket", path: "/tickets" },
-  { key: "knowledge", label: "מאגר ידע", icon: "BookOpen", path: "/knowledge" },
-] as const;
-
-export const SETTINGS_NAV = [
-  { key: "settings", label: "הגדרות", icon: "Settings", path: "/settings" },
-] as const;
-
 // Deal stages - Monday-style vibrant colors
 export const DEAL_STAGES = {
   LEAD: { label: "ליד", color: "#C4C4C4" },

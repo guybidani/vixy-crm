@@ -57,7 +57,7 @@ import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import { useAuth } from "../hooks/useAuth";
-import { timeAgo, avatarColor } from "../lib/utils";
+import { timeAgo, avatarColor, handleMutationError } from "../lib/utils";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
 
@@ -274,7 +274,7 @@ export default function TicketsPage() {
       queryClient.invalidateQueries({ queryKey: ["ticket", selectedId] });
       toast.success("סטטוס עודכן");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון סטטוס"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון סטטוס"),
   });
 
   const deleteMutation = useMutation({
@@ -289,8 +289,8 @@ export default function TicketsPage() {
       setConfirmDelete(null);
       toast.success(`${data.deleted} קריאות נמחקו`);
     },
-    onError: (err: any) => {
-      toast.error(err?.message || "שגיאה במחיקת קריאות");
+    onError: (err) => {
+      handleMutationError(err, "שגיאה במחיקת קריאות");
       setConfirmDelete(null);
     },
   });
@@ -933,7 +933,7 @@ function TicketDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success("עדיפות עודכנה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון עדיפות"),
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון עדיפות"),
   });
 
   const assignMutation = useMutation({
@@ -943,7 +943,7 @@ function TicketDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
       toast.success(assigneeId ? "נציג שויך" : "שיוך נציג הוסר");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בשיוך נציג"),
+    onError: (err) => handleMutationError(err, "שגיאה בשיוך נציג"),
   });
 
   useEffect(() => {
@@ -1452,7 +1452,7 @@ function ReplyComposer({
       setBody("");
       toast.success(isInternal ? "הערה פנימית נוספה" : "תגובה נשלחה");
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה בשליחת הודעה"),
+    onError: (err) => handleMutationError(err, "שגיאה בשליחת הודעה"),
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -1615,7 +1615,7 @@ function CreateTicketModal({
       onCreated?.(ticket.id);
       onClose();
     },
-    onError: (err: any) => toast.error(err?.message || "שגיאה ביצירת קריאה"),
+    onError: (err) => handleMutationError(err, "שגיאה ביצירת קריאה"),
   });
 
   // Map priority → urgencyLevel so they stay in sync
