@@ -40,6 +40,7 @@ import { NAV_ITEMS } from "../../lib/constants";
 import { listBoards, updateBoard } from "../../api/boards";
 import { getNavPermissions } from "../../api/settings";
 import CreateBoardModal from "../boards/CreateBoardModal";
+import CreateWorkspaceModal from "./CreateWorkspaceModal";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -367,6 +368,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   });
 
   const [wsMenuOpen, setWsMenuOpen] = useState(false);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const wsMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -651,7 +653,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     role="menuitem"
                     onClick={() => {
                       setWsMenuOpen(false);
-                      navigate("/settings?tab=workspaces");
+                      setShowCreateWorkspace(true);
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#0073EA] hover:bg-[#F0F4FF] transition-colors text-right"
                   >
@@ -1095,6 +1097,12 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
       {/* Create Board Modal */}
       <CreateBoardModal open={createBoardOpen} onClose={() => setCreateBoardOpen(false)} />
+
+      {/* Create Workspace Modal */}
+      <CreateWorkspaceModal
+        open={showCreateWorkspace}
+        onClose={() => setShowCreateWorkspace(false)}
+      />
     </>
   );
 }
