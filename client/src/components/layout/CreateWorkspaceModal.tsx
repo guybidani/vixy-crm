@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Plus, Briefcase } from "lucide-react";
 import toast from "react-hot-toast";
 import Modal from "../shared/Modal";
 import { createWorkspace } from "../../api/auth";
+import { setWorkspaceId } from "../../api/client";
 import { handleMutationError } from "../../lib/utils";
-import { useAuth } from "../../hooks/useAuth";
 
 interface CreateWorkspaceModalProps {
   open: boolean;
@@ -17,8 +17,6 @@ export default function CreateWorkspaceModal({
   onClose,
 }: CreateWorkspaceModalProps) {
   const [name, setName] = useState("");
-  const queryClient = useQueryClient();
-  const { refreshUser, selectWorkspace } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,19 +29,15 @@ export default function CreateWorkspaceModal({
 
   const createMut = useMutation({
     mutationFn: (workspaceName: string) => createWorkspace(workspaceName),
-    onSuccess: async (ws) => {
+    onSuccess: (ws) => {
+      // Switch workspace context before redirect — localStorage is synchronous
+      // so the new workspaceId is in place before the browser navigates.
+      setWorkspaceId(ws.id);
       toast.success("סביבת עבודה נוצרה!");
-      // Refresh user data to get the updated workspaces list
-      await refreshUser();
-      // Switch to the new workspace
-      selectWorkspace(ws.id);
-      // Invalidate all queries — new workspace context
-      queryClient.invalidateQueries();
-      onClose();
-      // After a tick, navigate to onboarding so they can set it up
-      setTimeout(() => {
-        window.location.href = "/onboarding";
-      }, 300);
+      // Hard redirect to /onboarding — this guarantees all state (React
+      // Query cache, AuthProvider, etc.) is re-initialised with the new
+      // workspace context, avoiding subtle race conditions.
+      window.location.href = "/onboarding";
     },
     onError: (err) => handleMutationError(err, "שגיאה ביצירת סביבת עבודה"),
   });
