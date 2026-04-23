@@ -45,6 +45,7 @@ import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
 
@@ -52,6 +53,7 @@ import { type SavedView } from "../api/views";
 export default function ContactsPage() {
   const { contactStatuses } = useWorkspaceOptions();
   const contactsLabel = useModuleLabel("contacts");
+  const editLabelsMut = useEditLabelsMutation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -359,6 +361,9 @@ export default function ContactsPage() {
           value={row.status}
           options={contactStatuses}
           onChange={(status) => statusMutation.mutate({ id: row.id, status })}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "contactStatuses", updated })
+          }
         />
       ),
     },

@@ -66,6 +66,7 @@ import UndoToast from "../components/shared/UndoToast";
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
 
@@ -75,6 +76,7 @@ type TableTab = "table" | "chart";
 export default function DealsPage() {
   const { dealStages, priorities } = useWorkspaceOptions();
   const dealsLabel = useModuleLabel("deals");
+  const editLabelsMut = useEditLabelsMutation();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -425,6 +427,9 @@ export default function DealsPage() {
             inlineUpdate(row.id, { stage });
             toast.success(`עסקה הועברה ל${dealStages[stage]?.label}`);
           }}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "dealStages", updated })
+          }
         />
       ),
     },
@@ -439,6 +444,9 @@ export default function DealsPage() {
           value={row.priority}
           options={priorities}
           onChange={(priority) => inlineUpdate(row.id, { priority })}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "priorities", updated })
+          }
         />
       ),
     },

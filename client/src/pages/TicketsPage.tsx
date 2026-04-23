@@ -57,6 +57,7 @@ import { listContacts } from "../api/contacts";
 import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions";
+import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import { useAuth } from "../hooks/useAuth";
 import { timeAgo, avatarColor, handleMutationError } from "../lib/utils";
@@ -130,6 +131,7 @@ function SlaCountdown({ ticket }: { ticket: Ticket }) {
 export default function TicketsPage() {
   const { ticketStatuses, priorities, ticketChannels } = useWorkspaceOptions();
   const ticketsLabel = useModuleLabel("tickets");
+  const editLabelsMut = useEditLabelsMutation();
   const { currentWorkspaceId } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -384,6 +386,9 @@ export default function TicketsPage() {
             inlineUpdate(row.id, { priority });
             toast.success("עדיפות עודכנה");
           }}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "priorities", updated })
+          }
         />
       ),
     },
@@ -401,6 +406,9 @@ export default function TicketsPage() {
             inlineUpdate(row.id, { status });
             toast.success("סטטוס עודכן");
           }}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "ticketStatuses", updated })
+          }
         />
       ),
     },

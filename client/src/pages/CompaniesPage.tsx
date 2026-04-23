@@ -31,6 +31,7 @@ import {
   type Company,
 } from "../api/companies";
 import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions";
+import { useEditLabelsMutation } from "../hooks/useEditLabelsMutation";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
@@ -58,6 +59,7 @@ function companyColor(name: string) {
 export default function CompaniesPage() {
   const { companyStatuses } = useWorkspaceOptions();
   const companiesLabel = useModuleLabel("companies");
+  const editLabelsMut = useEditLabelsMutation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<"kanban" | "table">("table");
@@ -256,6 +258,9 @@ export default function CompaniesPage() {
             inlineUpdate(row.id, { status: status as Company["status"] });
             toast.success("סטטוס עודכן");
           }}
+          onEditLabels={(updated) =>
+            editLabelsMut.mutate({ key: "companyStatuses", updated })
+          }
         />
       ),
     },
