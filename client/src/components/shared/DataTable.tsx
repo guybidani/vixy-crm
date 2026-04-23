@@ -135,7 +135,7 @@ export default function DataTable<T extends { id: string }>({
               <>
                 {[1, 2, 3, 4, 5, 6].map((row) => (
                   <tr key={row} className="border-b border-[#F6F7FB]">
-                    {columns.map((col, ci) => (
+                    {columns.map((_col, ci) => (
                       <td key={ci} className="px-4 py-3">
                         <div className="animate-pulse">
                           <div

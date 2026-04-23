@@ -311,10 +311,10 @@ export default function BrandingTab() {
         <h2 className="text-base font-bold text-[#323338] mb-1">תצוגה מקדימה</h2>
         <p className="text-xs text-[#9699A6] mb-5">כך ייראה הסרגל הצדדי עם המיתוג שלך.</p>
 
-        <div className="bg-[#F6F7FB] rounded-xl p-4 border border-[#EEEFF3]" dir="rtl">
+        <div className="bg-[#F6F7FB] rounded-xl p-4 border border-[#E6E9EF]" dir="rtl">
           <div className="bg-white rounded-lg overflow-hidden shadow-sm max-w-[240px]">
             {/* Mini header */}
-            <div className="flex items-center gap-2.5 px-3 py-3 border-b border-[#EEEFF3]">
+            <div className="flex items-center gap-2.5 px-3 py-3 border-b border-[#E6E9EF]">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
                 style={{
@@ -354,7 +354,7 @@ export default function BrandingTab() {
             </div>
 
             {/* Mini CTA */}
-            <div className="border-t border-[#EEEFF3] p-3">
+            <div className="border-t border-[#E6E9EF] p-3">
               <button
                 className="w-full px-3 py-2 text-[12px] font-medium text-white rounded-[4px]"
                 style={{ backgroundColor: color }}

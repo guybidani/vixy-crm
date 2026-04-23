@@ -202,19 +202,43 @@ export default function TemplatesPage() {
           ))}
         </div>
       ) : filteredTemplates.length === 0 ? (
-        <EmptyState
-          icon={<FileText size={28} className="text-[#9699A6]" />}
-          title="אין תבניות"
-          description="צרו תבנית ראשונה כדי לחסוך זמן במשלוח הודעות."
-          action={
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md"
-            >
-              צור תבנית ראשונה
-            </button>
-          }
-        />
+        search.trim() || filterCategory || filterChannel ? (
+          <EmptyState
+            icon={<Search size={28} className="text-[#A25DDC]" />}
+            title={
+              search.trim()
+                ? `לא מצאנו תבניות ל-"${search.trim()}"`
+                : "אין תבניות תואמות"
+            }
+            description="נסו לשנות או לנקות את הסינונים."
+            action={
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setFilterCategory("");
+                  setFilterChannel("");
+                }}
+                className="px-4 py-2 bg-white border border-[#D0D4E4] hover:border-[#0073EA] hover:text-[#0073EA] text-[#676879] text-[13px] font-semibold rounded-[4px] transition-all"
+              >
+                נקה סינונים
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={<FileText size={28} className="text-[#9699A6]" />}
+            title="אין תבניות"
+            description="צרו תבנית ראשונה כדי לחסוך זמן במשלוח הודעות."
+            action={
+              <button
+                onClick={() => setShowCreate(true)}
+                className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md"
+              >
+                צור תבנית ראשונה
+              </button>
+            }
+          />
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredTemplates.map((template) => (

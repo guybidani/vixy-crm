@@ -970,44 +970,6 @@ export default function BoardPage() {
     handleCellEdit(itemId, colDef, toColumn);
   };
 
-  // ── Board name editing ──
-  const boardTitle = editingBoardName ? (
-    <input
-      autoFocus
-      className="text-xl font-bold bg-transparent outline-none border-b-2 border-[#0073EA] text-[#323338] py-0.5 min-w-[200px]"
-      value={boardNameValue}
-      onChange={(e) => setBoardNameValue(e.target.value)}
-      onBlur={() => {
-        if (boardNameValue.trim() && boardNameValue !== board?.name) {
-          updateBoardMut.mutate({ name: boardNameValue.trim() });
-        }
-        setEditingBoardName(false);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-        if (e.key === "Escape") setEditingBoardName(false);
-      }}
-    />
-  ) : (
-    <button
-      className="group cursor-pointer flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] rounded-sm"
-      onClick={() => {
-        setEditingBoardName(true);
-        setBoardNameValue(board?.name || "");
-      }}
-      title="לחץ לשינוי שם"
-    >
-      {board?.isPrivate && (
-        <Lock size={14} className="text-[#0073EA] flex-shrink-0" />
-      )}
-      {board?.name || "טוען..."}
-      <Pencil
-        size={14}
-        className="text-[#9699A6] opacity-0 group-hover:opacity-100 transition-opacity"
-      />
-    </button>
-  );
-
   return (
     <PageShell
       title={

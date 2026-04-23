@@ -106,7 +106,7 @@ export default function EmptyState({
             <button
               type="button"
               onClick={secondaryAction.onClick}
-              className="inline-flex items-center gap-2 px-5 py-2 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-semibold rounded-[6px] border border-[#D0D4E4] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-semibold rounded-[6px] border border-[#D0D4E4] transition-colors"
             >
               {secondaryAction.icon}
               {secondaryAction.label}

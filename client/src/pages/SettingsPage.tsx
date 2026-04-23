@@ -31,6 +31,7 @@ import {
   Building2,
   CheckCircle2,
   Type,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -201,7 +202,7 @@ function GeneralTab() {
       toast.success("הגדרות עודכנו");
       setEditingName(false);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   return (
@@ -245,13 +246,15 @@ function GeneralTab() {
                 <button
                   onClick={() => updateMut.mutate({ name })}
                   disabled={updateMut.isPending || !name.trim()}
-                  className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
                 >
-                  שמור
+                  {updateMut.isPending && <Loader2 size={13} className="animate-spin" />}
+                  {updateMut.isPending ? "שומר..." : "שמור"}
                 </button>
                 <button
                   onClick={() => { setName(currentWs?.name || ""); setEditingName(false); }}
-                  className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
+                  disabled={updateMut.isPending}
+                  className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border disabled:opacity-50 transition-colors"
                 >
                   ביטול
                 </button>
@@ -288,9 +291,10 @@ function GeneralTab() {
               <button
                 onClick={() => updateMut.mutate({ timezone })}
                 disabled={updateMut.isPending}
-                className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
               >
-                שמור
+                {updateMut.isPending && <Loader2 size={13} className="animate-spin" />}
+                {updateMut.isPending ? "שומר..." : "שמור"}
               </button>
             </div>
           </div>
@@ -316,7 +320,7 @@ function ProfileTab() {
       toast.success("פרופיל עודכן");
       setEditingName(false);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const avatarBg = avatarColor(user?.name || "");
@@ -354,13 +358,15 @@ function ProfileTab() {
                   <button
                     onClick={() => updateMut.mutate({ name })}
                     disabled={updateMut.isPending || !name.trim()}
-                    className="px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] text-white text-[13px] font-medium rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
                   >
-                    שמור
+                    {updateMut.isPending && <Loader2 size={13} className="animate-spin" />}
+                    {updateMut.isPending ? "שומר..." : "שמור"}
                   </button>
                   <button
                     onClick={() => { setName(user?.name || ""); setEditingName(false); }}
-                    className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
+                    disabled={updateMut.isPending}
+                    className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border disabled:opacity-50 transition-colors"
                   >
                     ביטול
                   </button>
@@ -500,14 +506,14 @@ function MembersTab() {
     enabled: !!currentWorkspaceId,
   });
 
-  const inviteMut = useMutation({
+  const inviteMut = useMutation<Awaited<ReturnType<typeof inviteMember>>, Error, void>({
     mutationFn: () => inviteMember(currentWorkspaceId!, inviteEmail, inviteRole),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workspace-members", currentWorkspaceId] });
       setInviteSent(true);
       setInviteEmail("");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const changeRoleMut = useMutation({
@@ -518,7 +524,7 @@ function MembersTab() {
       toast.success("תפקיד עודכן");
       setRoleDropdown(null);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const removeMut = useMutation({
@@ -527,7 +533,7 @@ function MembersTab() {
       queryClient.invalidateQueries({ queryKey: ["workspace-members", currentWorkspaceId] });
       toast.success("חבר צוות הוסר");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   function formatLastActive(date: string | undefined | null) {
@@ -794,7 +800,6 @@ function WorkspacePermissionsTab() {
   };
 
   const ALL_ROLES = ["OWNER", "ADMIN", "AGENT"] as const;
-  const ROLE_LABELS: Record<string, string> = { OWNER: "בעלים", ADMIN: "מנהל", AGENT: "נציג" };
 
   function togglePerm(perm: keyof typeof perms, role: string) {
     if (role === "OWNER") return; // OWNER always has all permissions
@@ -1030,7 +1035,7 @@ function CannedResponseForm({
     category: editing?.category || "",
   });
 
-  const createMut = useMutation({
+  const createMut = useMutation<Awaited<ReturnType<typeof createCannedResponse>>, Error, void>({
     mutationFn: () =>
       createCannedResponse({
         title: form.title,
@@ -1042,10 +1047,10 @@ function CannedResponseForm({
       toast.success("תגובה נוצרה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const updateMut = useMutation({
+  const updateMut = useMutation<Awaited<ReturnType<typeof updateCannedResponse>>, Error, void>({
     mutationFn: () =>
       updateCannedResponse(editing!.id, {
         title: form.title,
@@ -1057,7 +1062,7 @@ function CannedResponseForm({
       toast.success("תגובה עודכנה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -1160,7 +1165,7 @@ function SlaPoliciesTab() {
       queryClient.invalidateQueries({ queryKey: ["sla-policies"] });
       toast.success("מדיניות נמחקה");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   function formatMinutes(mins: number) {
@@ -1317,24 +1322,24 @@ function SlaPolicyForm({
     isDefault: editing?.isDefault ?? false,
   });
 
-  const createMut = useMutation({
+  const createMut = useMutation<Awaited<ReturnType<typeof createSlaPolicy>>, Error, void>({
     mutationFn: () => createSlaPolicy(form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sla-policies"] });
       toast.success("מדיניות נוצרה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const updateMut = useMutation({
+  const updateMut = useMutation<Awaited<ReturnType<typeof updateSlaPolicy>>, Error, void>({
     mutationFn: () => updateSlaPolicy(editing!.id, form),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sla-policies"] });
       toast.success("מדיניות עודכנה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   function handleSubmit(e: React.FormEvent) {

@@ -551,7 +551,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
       <aside
         className={cn(
-          "fixed top-0 right-0 h-screen bg-[#F5F6F8] z-50 flex flex-row overflow-hidden",
+          "fixed top-0 right-0 h-screen bg-[#F6F7FB] z-50 flex flex-row overflow-hidden",
           // Smooth width animation for expand/collapse (200ms ease)
           "transition-[width,transform] duration-200 ease-in-out",
           showPanel ? "w-[288px]" : "w-12",
@@ -564,7 +564,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         {/* ── Main Nav Panel (240px when expanded, 0px when collapsed) ── */}
         <div
           className={cn(
-            "flex flex-col min-w-0 bg-[#F5F6F8] overflow-hidden",
+            "flex flex-col min-w-0 bg-[#F6F7FB] overflow-hidden",
             // Subtle shadow separating panel from rail (RTL: shadow on the LEFT edge of panel, facing the rail)
             "shadow-[-1px_0_0_rgba(0,0,0,0.04),-4px_0_12px_-6px_rgba(0,0,0,0.06)]",
             "transition-[width,opacity] duration-200 ease-in-out",
@@ -573,7 +573,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           aria-hidden={!showPanel}
         >
           {/* Workspace switcher */}
-          <div className="px-2 pt-3 pb-2 border-b border-[#EEEFF3] relative" ref={wsMenuRef}>
+          <div className="px-2 pt-3 pb-2 border-b border-[#E6E9EF] relative" ref={wsMenuRef}>
             <button
               onClick={() => setWsMenuOpen((v) => !v)}
               className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-[6px] hover:bg-[#F6F7FB] transition-colors"
@@ -857,7 +857,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               <div className="relative pr-3 pl-1">
                 <div
                   aria-hidden="true"
-                  className="absolute top-0 bottom-0 right-[14px] w-px bg-[#EEEFF3]"
+                  className="absolute top-0 bottom-0 right-[14px] w-px bg-[#E6E9EF]"
                 />
                 {boards.length === 0 && (
                   <p className="px-2.5 py-2 text-[12px] text-[#9699A6]">אין בורדים עדיין</p>
@@ -881,7 +881,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                       className="flex-1"
                     />
                     {board.isPrivate && (
-                      <Lock size={11} className="flex-shrink-0 text-[#6161FF] opacity-60" />
+                      <Lock size={11} className="flex-shrink-0 text-[#0073EA] opacity-60" />
                     )}
                   </NavLink>
                 ))}
@@ -897,7 +897,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           </nav>
 
           {/* ── Bottom: Settings + User profile ── */}
-          <div className="border-t border-[#EEEFF3] p-1.5 space-y-0.5">
+          <div className="border-t border-[#E6E9EF] p-1.5 space-y-0.5">
             <NavLink
               to="/settings"
               onClick={onMobileClose}
@@ -988,7 +988,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                         setUserMenuOpen(false);
                         logout();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#E2445C] hover:bg-[#FFEEF0] transition-colors text-right"
                     >
                       <LogOut size={14} />
                       <span>יציאה</span>
@@ -1002,7 +1002,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
         {/* ── Product Rail (always visible, 48px) ── */}
         <div
-          className="w-12 flex flex-col items-center py-2 gap-1 flex-shrink-0 bg-[#F5F6F8] border-l border-[#EEEFF3]"
+          className="w-12 flex flex-col items-center py-2 gap-1 flex-shrink-0 bg-[#F6F7FB] border-l border-[#E6E9EF]"
           role="group"
           aria-label="בחירת מוצר"
         >
@@ -1038,7 +1038,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
             active={productMode === "boards"}
             label="Work"
             icon={LayoutGrid}
-            color="#6161FF"
+            color="#0073EA"
             onClick={() => switchProduct("boards")}
           />
           <ProductBtn

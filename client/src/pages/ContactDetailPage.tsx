@@ -198,8 +198,6 @@ export default function ContactDetailPage() {
     );
   }
 
-  const statusInfo = contactStatuses[contact.status];
-
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
@@ -621,7 +619,7 @@ export default function ContactDetailPage() {
                     <button
                       key={task.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#E6E9EF] transition-colors text-right"
                       onClick={() => navigate(`/tasks?selected=${task.id}`)}
                     >
                       <div className="flex items-center gap-2">

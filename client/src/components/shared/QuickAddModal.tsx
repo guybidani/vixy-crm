@@ -7,7 +7,7 @@ import { handleMutationError } from "../../lib/utils";
 import { createContact } from "../../api/contacts";
 import { createDeal } from "../../api/deals";
 import { createTask } from "../../api/tasks";
-import { listBoards, addBoardGroup, addBoardItem, type BoardSummary } from "../../api/boards";
+import { listBoards, addBoardItem, type BoardSummary } from "../../api/boards";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 
 type TabType = "contact" | "deal" | "task" | "board";
@@ -198,7 +198,7 @@ function ContactForm({
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ firstName: "", lastName: "", phone: "", email: "", company: "" });
 
-  const mut = useMutation({
+  const mut = useMutation<Awaited<ReturnType<typeof createContact>>, Error, void>({
     mutationFn: () =>
       createContact({
         firstName: form.firstName.trim(),
@@ -212,7 +212,7 @@ function ContactForm({
       onClose();
       navigate(`/contacts/${data.id}`);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   return (
@@ -297,7 +297,7 @@ function DealForm({
 
   const stageEntries = Object.entries(dealStages);
 
-  const mut = useMutation({
+  const mut = useMutation<Awaited<ReturnType<typeof createDeal>>, Error, void>({
     mutationFn: () =>
       createDeal({
         title: form.title.trim(),
@@ -310,7 +310,7 @@ function DealForm({
       onClose();
       navigate(`/deals?open=${data.id}`);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   return (
@@ -387,7 +387,7 @@ function TaskForm({
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ title: "", taskType: "TASK", dueDate: "", contact: "" });
 
-  const mut = useMutation({
+  const mut = useMutation<Awaited<ReturnType<typeof createTask>>, Error, void>({
     mutationFn: () =>
       createTask({
         title: form.title.trim(),
@@ -400,7 +400,7 @@ function TaskForm({
       onClose();
       navigate("/tasks");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   return (
@@ -481,9 +481,6 @@ function BoardItemForm({
     queryFn: listBoards,
   });
 
-  // When board selection changes, auto-select first group
-  const selectedBoard = boards?.find((b: BoardSummary) => b.id === boardId);
-
   // We need the full board with groups — use a separate query
   const { data: fullBoard } = useQuery({
     queryKey: ["board", boardId],
@@ -507,14 +504,14 @@ function BoardItemForm({
     }
   }, [fullBoard]);
 
-  const mut = useMutation({
+  const mut = useMutation<Awaited<ReturnType<typeof addBoardItem>>, Error, void>({
     mutationFn: () => addBoardItem(boardId, groupId, { name: itemName.trim() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board", boardId] });
       toast.success("פריט נוסף לבורד!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const canSubmit = !!boardId && !!groupId && !!itemName.trim();

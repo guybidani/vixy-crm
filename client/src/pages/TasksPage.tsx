@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect, useRef, type MouseEvent } from "react";
+﻿import { useState, useMemo, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -53,7 +54,7 @@ import {
 } from "../api/tasks";
 import BulkActionBar from "../components/shared/BulkActionBar";
 import EmptyState from "../components/shared/EmptyState";
-import { EmptyTasks, EmptyError } from "../components/shared/illustrations";
+import { EmptyTasks, EmptyError, EmptySearch } from "../components/shared/illustrations";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
@@ -190,7 +191,7 @@ function ContactAvatar({ name, id, onClick }: { name: string; id?: string; onCli
     .map((w) => w[0])
     .join("")
     .toUpperCase();
-  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (onClick) {
       onClick();
@@ -380,9 +381,10 @@ function InlineTaskCreate({ dueDate }: { dueDate?: string }) {
       <button
         onClick={() => { if (title.trim()) mutation.mutate(); }}
         disabled={!title.trim() || mutation.isPending}
-        className="px-3 py-1.5 bg-[#0073EA] text-white text-[12px] font-semibold rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0073EA] text-white text-[12px] font-semibold rounded-[4px] hover:bg-[#0060C2] disabled:opacity-50 transition-colors"
       >
-        {mutation.isPending ? "..." : "הוסף"}
+        {mutation.isPending && <Loader2 size={12} className="animate-spin" />}
+        {mutation.isPending ? "מוסיף..." : "הוסף"}
       </button>
       <button onClick={() => { setIsAdding(false); setTitle(""); }} className="p-1 rounded text-[#9699A6] hover:text-[#323338]">
         <X size={14} />
@@ -471,12 +473,13 @@ function TaskRow({
 
       {/* Title */}
       <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
-        <MondayTextCell
-          value={task.title}
-          onChange={(val) => inlineUpdate(task.id, { title: val })}
-          placeholder="כותרת משימה"
-          className={isDone ? "line-through text-[#9699A6]" : "font-semibold text-[#323338]"}
-        />
+        <div className={isDone ? "line-through text-[#9699A6]" : "font-semibold text-[#323338]"}>
+          <MondayTextCell
+            value={task.title}
+            onChange={(val) => inlineUpdate(task.id, { title: val })}
+            placeholder="כותרת משימה"
+          />
+        </div>
         {task.description && (
           <p className="text-xs text-[#9699A6] mt-0.5 truncate">{task.description}</p>
         )}
@@ -647,24 +650,6 @@ function DateGroupSection({
   );
 }
 
-// ─── Filter chip ─────────────────────────────────────────────────────────────
-
-function FilterChip({ label, color, active, onClick }: { label: string; color?: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${
-        active
-          ? "text-white shadow-sm"
-          : "bg-white border border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
-      }`}
-      style={active ? { backgroundColor: color || "#0073EA" } : undefined}
-    >
-      {label}
-    </button>
-  );
-}
-
 // ─── Priority filter dropdown ─────────────────────────────────────────────────
 
 const PRIORITY_OPTIONS = [
@@ -820,6 +805,41 @@ function StatsBar({ tasks }: { tasks: Task[] }) {
       <span className="text-[#676879]">
         הושלמו: <span className={`font-semibold ${completed > 0 ? "text-success" : "text-[#9699A6]"}`}>{completed}</span>
       </span>
+    </div>
+  );
+}
+
+// ─── Skeleton loader ──────────────────────────────────────────────────────────
+
+function TasksTableSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy="true" aria-label="טוען משימות">
+      {[1, 2, 3].map((section) => (
+        <div
+          key={section}
+          className="bg-white rounded-xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden"
+        >
+          {/* Section header */}
+          <div className="px-4 py-2.5 border-b border-[#E6E9EF] flex items-center gap-3">
+            <div className="h-4 w-24 bg-[#F6F7FB] rounded animate-pulse" />
+            <div className="h-4 w-10 bg-[#F6F7FB] rounded-full animate-pulse" />
+          </div>
+          {/* Rows */}
+          {[1, 2, 3].map((row) => (
+            <div
+              key={row}
+              className="flex items-center gap-3 px-4 py-3 border-b border-[#E6E9EF] last:border-b-0"
+              style={{ animationDelay: `${row * 40}ms` }}
+            >
+              <div className="w-4 h-4 rounded bg-[#F6F7FB] animate-pulse flex-shrink-0" />
+              <div className="flex-1 h-4 bg-[#F6F7FB] rounded animate-pulse" />
+              <div className="h-6 w-20 bg-[#F6F7FB] rounded-full animate-pulse hidden sm:block" />
+              <div className="h-6 w-16 bg-[#F6F7FB] rounded-full animate-pulse hidden md:block" />
+              <div className="w-8 h-8 rounded-full bg-[#F6F7FB] animate-pulse flex-shrink-0" />
+            </div>
+          ))}
+        </div>
+      ))}
     </div>
   );
 }
@@ -1256,20 +1276,48 @@ export default function TasksPage() {
           ) : isError ? (
             <TasksErrorState onRetry={() => refetch()} />
           ) : isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
+            <TasksTableSkeleton />
           ) : tasks.length === 0 ? (
-            <EmptyState
-              illustration={<EmptyTasks />}
-              title="כל המשימות יופיעו כאן"
-              description="צור משימה ראשונה כדי להתחיל לעקוב אחרי שיחות, פגישות ומעקבים במקום אחד."
-              action={{
-                label: "משימה חדשה",
-                onClick: () => setShowCreate(true),
-                icon: <Plus size={16} />,
-              }}
-            />
+            // Differentiate truly-empty vs filtered-empty state
+            searchQuery.trim() ||
+            priorityFilter ||
+            taskTypeFilter ||
+            contextFilter ||
+            myTasksOnly ||
+            dateFilter !== "all" ? (
+              <EmptyState
+                illustration={<EmptySearch color="#A25DDC" />}
+                title={
+                  searchQuery.trim()
+                    ? `לא מצאנו משימות ל-"${searchQuery.trim()}"`
+                    : "אין משימות תואמות"
+                }
+                description="נסו לשנות או לנקות את הסינונים כדי לראות עוד משימות."
+                secondaryAction={{
+                  label: "נקה סינונים",
+                  onClick: () => {
+                    setSearchRaw("");
+                    setPriorityFilter("");
+                    setTaskTypeFilter("");
+                    setContextFilter("");
+                    setMyTasksOnly(false);
+                    setDateFilter("all");
+                  },
+                }}
+                variant="filtered"
+              />
+            ) : (
+              <EmptyState
+                illustration={<EmptyTasks />}
+                title="כל המשימות יופיעו כאן"
+                description="צור משימה ראשונה כדי להתחיל לעקוב אחרי שיחות, פגישות ומעקבים במקום אחד."
+                action={{
+                  label: "משימה חדשה",
+                  onClick: () => setShowCreate(true),
+                  icon: <Plus size={16} />,
+                }}
+              />
+            )
           ) : (
             <div className="space-y-3">
               {DATE_GROUP_CONFIG.map((cfg) => {

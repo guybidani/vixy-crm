@@ -231,7 +231,7 @@ function QuickForm({
     dueDate: "",
   });
 
-  const contactMut = useMutation({
+  const contactMut = useMutation<Awaited<ReturnType<typeof createContact>>, Error, void>({
     mutationFn: () =>
       createContact({
         firstName: contactForm.firstName,
@@ -245,10 +245,10 @@ function QuickForm({
       onClose();
       navigate(`/contacts/${data.id}`);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const dealMut = useMutation({
+  const dealMut = useMutation<Awaited<ReturnType<typeof createDeal>>, Error, void>({
     mutationFn: () =>
       createDeal({
         title: dealForm.title,
@@ -262,10 +262,10 @@ function QuickForm({
       onClose();
       navigate(`/deals?open=${data.id}`);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const ticketMut = useMutation({
+  const ticketMut = useMutation<Awaited<ReturnType<typeof createTicket>>, Error, void>({
     mutationFn: () =>
       createTicket({
         subject: ticketForm.subject,
@@ -278,10 +278,10 @@ function QuickForm({
       onClose();
       navigate(`/tickets/${data.id}`);
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const taskMut = useMutation({
+  const taskMut = useMutation<Awaited<ReturnType<typeof createTask>>, Error, void>({
     mutationFn: () =>
       createTask({
         title: taskForm.title,
@@ -293,7 +293,7 @@ function QuickForm({
       onClose();
       navigate("/tasks");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const isPending =

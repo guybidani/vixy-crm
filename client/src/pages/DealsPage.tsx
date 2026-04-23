@@ -469,11 +469,6 @@ export default function DealsPage() {
   ];
 
   // Pipeline totals
-  const openStages = ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION"];
-  const totalPipelineValue =
-    pipelineData?.totals
-      .filter((t) => openStages.includes(t.stage))
-      .reduce((sum, t) => sum + t.totalValue, 0) || 0;
   const totalDeals =
     pipelineData?.totals.reduce((sum, t) => sum + t.count, 0) ||
     tableData?.pagination.total ||

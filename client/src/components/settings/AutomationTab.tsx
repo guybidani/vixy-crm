@@ -72,7 +72,7 @@ export default function AutomationTab() {
       queryClient.invalidateQueries({ queryKey: ["follow-up-sequences"] });
       toast.success("סדרה נמחקה");
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   const toggleMut = useMutation({
@@ -80,7 +80,7 @@ export default function AutomationTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["follow-up-sequences"] });
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   return (
@@ -365,7 +365,7 @@ function SequenceForm({
     ],
   );
 
-  const createMut = useMutation({
+  const createMut = useMutation<Awaited<ReturnType<typeof createSequence>>, Error, void>({
     mutationFn: () =>
       createSequence({
         name: form.name,
@@ -384,10 +384,10 @@ function SequenceForm({
       toast.success("סדרה נוצרה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
-  const updateMut = useMutation({
+  const updateMut = useMutation<Awaited<ReturnType<typeof updateSequence>>, Error, void>({
     mutationFn: () =>
       updateSequence(editing!.id, {
         name: form.name,
@@ -406,7 +406,7 @@ function SequenceForm({
       toast.success("סדרה עודכנה!");
       onClose();
     },
-    onError: handleMutationError,
+    onError: (err) => handleMutationError(err),
   });
 
   function addStep() {

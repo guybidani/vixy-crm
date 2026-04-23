@@ -27,7 +27,7 @@ interface AiAssistantPanelProps {
 
 type AiAction = "summarize" | "draft-email" | "suggest-action" | null;
 
-export default function AiAssistantPanel({ contactId, contactName }: AiAssistantPanelProps) {
+export default function AiAssistantPanel({ contactId }: AiAssistantPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [activeAction, setActiveAction] = useState<AiAction>(null);
   const [loading, setLoading] = useState(false);

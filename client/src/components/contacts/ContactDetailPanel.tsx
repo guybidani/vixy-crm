@@ -309,7 +309,7 @@ export default function ContactDetailPanel({
             href={getWhatsAppUrl(contact.phone)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98] border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/5"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm active:scale-[0.97] border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/5"
           >
             <span>💬</span>
             <span>WhatsApp</span>
@@ -438,7 +438,7 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[13px] font-semibold border transition-all hover:shadow-sm active:scale-[0.97]"
       style={{
         borderColor: `${color}40`,
         color,

@@ -603,7 +603,7 @@ export default function CompanyDetailPage() {
                     <button
                       key={contact.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#E6E9EF] transition-colors text-right"
                       onClick={() => navigate(`/contacts/${contact.id}`)}
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -687,7 +687,7 @@ export default function CompanyDetailPage() {
                     <button
                       key={deal.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#E6E9EF] transition-colors text-right"
                       onClick={() => navigate(`/deals?open=${deal.id}`)}
                     >
                       <div className="text-right">

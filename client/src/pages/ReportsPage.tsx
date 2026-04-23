@@ -92,7 +92,7 @@ function DealsTimeline() {
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#EEEFF3" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E6E9EF" />
             <XAxis
               dataKey="week"
               tick={{ fontSize: 11, fill: "#676879" }}
@@ -108,7 +108,7 @@ function DealsTimeline() {
             <Tooltip
               contentStyle={{
                 borderRadius: 8,
-                border: "1px solid #EEEFF3",
+                border: "1px solid #E6E9EF",
                 fontSize: 12,
               }}
             />
@@ -166,7 +166,7 @@ function PipelineByStage() {
     if (!active || !payload || payload.length === 0) return null;
     const entry = data.find((d) => d.name === label);
     return (
-      <div className="bg-white border border-[#EEEFF3] rounded-lg p-3 shadow-sm text-[13px]">
+      <div className="bg-white border border-[#E6E9EF] rounded-lg p-3 shadow-sm text-[13px]">
         <p className="font-semibold text-[#323338] mb-1">{label}</p>
         <p className="text-[#676879]">{payload[0].value} עסקאות</p>
         {entry && entry.ערך > 0 && (
@@ -208,7 +208,7 @@ function PipelineByStage() {
             data={data}
             margin={{ top: 0, right: 24, left: 0, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#EEEFF3" horizontal={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E6E9EF" horizontal={false} />
             <XAxis
               type="number"
               allowDecimals={false}
@@ -283,7 +283,7 @@ function TeamPerformance() {
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-[#EEEFF3]">
+              <tr className="border-b border-[#E6E9EF]">
                 <th className="text-right py-2 pr-1 font-semibold text-[#676879] text-[12px]">
                   נציג
                 </th>
@@ -479,7 +479,7 @@ function LeadSources() {
                 formatter={(value: number, name: string) => [value, name]}
                 contentStyle={{
                   borderRadius: 8,
-                  border: "1px solid #EEEFF3",
+                  border: "1px solid #E6E9EF",
                   fontSize: 12,
                 }}
               />

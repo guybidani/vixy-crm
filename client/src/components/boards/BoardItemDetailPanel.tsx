@@ -9,7 +9,6 @@ import {
   Send,
   ExternalLink,
   ChevronRight,
-  ChevronLeft,
   ChevronUp,
   ChevronDown,
   Pencil,
@@ -21,7 +20,6 @@ import {
   Square,
   Trash2,
   Upload,
-  FileText,
   Download,
   MoreHorizontal,
   Copy,
@@ -274,8 +272,6 @@ function CopyableField({
 
 function CommentItem({
   comment,
-  boardId,
-  itemId,
   onEdited,
   onDeleted,
   onReacted,
@@ -903,7 +899,7 @@ export default function BoardItemDetailPanel({
 
   // ── File helpers ──
 
-  function handleFilesDrop(e: React.DragEvent<HTMLDivElement>) {
+  function handleFilesDrop(e: React.DragEvent<HTMLLabelElement>) {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);

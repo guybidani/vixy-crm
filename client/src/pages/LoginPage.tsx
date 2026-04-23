@@ -90,7 +90,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-gradient-to-l from-[#0073EA] to-[#0060C2] hover:from-[#0060C2] hover:to-[#0073EA] text-white font-semibold rounded-xl shadow-sm hover:shadow-[0_4px_16px_rgba(0,115,234,0.3)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-gradient-to-l from-[#0073EA] to-[#0060C2] hover:from-[#0060C2] hover:to-[#0073EA] text-white font-semibold rounded-xl shadow-sm hover:shadow-[0_4px_16px_rgba(0,115,234,0.3)] active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm inline-flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

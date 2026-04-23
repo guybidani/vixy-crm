@@ -403,7 +403,6 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
     return a.dueTime.localeCompare(b.dueTime);
   });
 
-  const totalUrgent = overdueTasks.length + todayTasks.length;
   const isLoading = loadingPending || loadingDone;
 
   const completeMut = useMutation({

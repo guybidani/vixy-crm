@@ -386,7 +386,7 @@ export default function DealDetailPanel({
             <div className="flex-1 px-5 py-4 space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex gap-3">
-                  <div className="w-[34px] h-[34px] bg-[#E6E9EF] rounded-full flex-shrink-0" />
+                  <div className="w-8 h-8 bg-[#E6E9EF] rounded-full flex-shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="bg-[#F6F7FB] rounded-xl p-4 space-y-2">
                       <div className="flex items-center gap-2">
@@ -675,7 +675,7 @@ export default function DealDetailPanel({
                           )}
                           {/* Avatar / icon */}
                           <div
-                            className="w-[34px] h-[34px] rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10"
                             style={{ backgroundColor: (actType?.color || "#C4C4C4") + "20" }}
                           >
                             <Icon size={14} style={{ color: actType?.color || "#C4C4C4" }} />
