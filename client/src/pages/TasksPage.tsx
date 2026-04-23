@@ -1103,6 +1103,20 @@ export default function TasksPage() {
     onError: () => toast.error("שגיאה בשכפול"),
   });
 
+  const bulkDuplicateMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => duplicateTask(id)));
+      return { duplicated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      toast.success(`שוכפלו ${result.duplicated} פריטים`);
+      clearSelection();
+    },
+    onError: () => toast.error("שגיאה בשכפול"),
+  });
+
   const bulkDeleteMutation = useMutation({
     mutationFn: (ids: string[]) => bulkDeleteTasks(ids),
     onSuccess: (result) => {
@@ -1461,19 +1475,18 @@ export default function TasksPage() {
         selectedCount={selectedTaskIds.size}
         onClear={clearSelection}
         onDelete={handleBulkDelete}
+        onDuplicate={() =>
+          bulkDuplicateMut.mutate(Array.from(selectedTaskIds))
+        }
+        onMoveTo={(status) => handleBulkStatus(status)}
+        moveToOptions={sortedEntries(taskStatuses).map(([key, info]) => ({
+          label: info.label,
+          value: key,
+          color: info.color,
+        }))}
+        moveToLabel="שנה סטטוס"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שנה סטטוס"
-          icon={<CheckCircle2 size={14} />}
-          disabled={bulkUpdateMutation.isPending}
-          options={sortedEntries(taskStatuses).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-          }))}
-          onSelect={handleBulkStatus}
-        />
         <BulkActionDropdown
           label="שנה עדיפות"
           disabled={bulkUpdateMutation.isPending}

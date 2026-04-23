@@ -30,7 +30,7 @@ import {
   getCompaniesBoard,
   type Company,
 } from "../api/companies";
-import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
@@ -160,6 +160,47 @@ export default function CompaniesPage() {
     },
     onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
+
+  const bulkDuplicateMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => duplicateCompany(id)));
+      return { duplicated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+      toast.success(`שוכפלו ${result.duplicated} פריטים`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
+  });
+
+  // Companies API has no bulk-update endpoint, so we fan out per-id calls.
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({
+      ids,
+      data: updateData,
+    }: {
+      ids: string[];
+      data: Partial<Company>;
+    }) => {
+      await Promise.all(ids.map((id) => updateCompany(id, updateData)));
+      return { updated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+      toast.success(`הועברו ${result.updated} פריטים`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const handleBulkStatus = (status: string) =>
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedIds),
+      data: { status: status as Company["status"] },
+    });
 
   // Kanban columns
   const kanbanColumns: KanbanCol<Company>[] = Object.entries(
@@ -416,6 +457,16 @@ export default function CompaniesPage() {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} חברות?` })}
+        onDuplicate={() =>
+          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        }
+        onMoveTo={(status) => handleBulkStatus(status)}
+        moveToOptions={sortedEntries(companyStatuses).map(([key, info]) => ({
+          label: info.label,
+          value: key,
+          color: info.color,
+        }))}
+        moveToLabel="שנה סטטוס"
         deleting={deleteMutation.isPending}
       />
 

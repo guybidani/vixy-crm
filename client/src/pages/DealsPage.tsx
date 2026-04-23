@@ -174,6 +174,20 @@ export default function DealsPage() {
     onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
+  const bulkDuplicateMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => duplicateDeal(id)));
+      return { duplicated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      toast.success(`שוכפלו ${result.duplicated} פריטים`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
+  });
+
   function handleLostSubmit() {
     if (!lostModal) return;
     const reason = lossNote.trim() ? `${lossReason}: ${lossNote.trim()}` : lossReason;
@@ -750,18 +764,18 @@ export default function DealsPage() {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} עסקאות?` })}
+        onDuplicate={() =>
+          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        }
+        onMoveTo={(stage) => handleBulkStage(stage)}
+        moveToOptions={sortedEntries(dealStages).map(([key, info]) => ({
+          label: info.label,
+          value: key,
+          color: info.color,
+        }))}
+        moveToLabel="שנה שלב"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שנה שלב"
-          disabled={bulkUpdateMutation.isPending}
-          options={sortedEntries(dealStages).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-          }))}
-          onSelect={handleBulkStage}
-        />
         <BulkActionDropdown
           label="שנה עדיפות"
           disabled={bulkUpdateMutation.isPending}

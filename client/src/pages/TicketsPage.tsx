@@ -56,7 +56,7 @@ import {
 import { listContacts } from "../api/contacts";
 import { listCannedResponses, type CannedResponse } from "../api/canned";
 import { getWorkspaceMembers } from "../api/auth";
-import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
+import { useWorkspaceOptions, sortedEntries } from "../hooks/useWorkspaceOptions";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import { useAuth } from "../hooks/useAuth";
 import { timeAgo, avatarColor, handleMutationError } from "../lib/utils";
@@ -304,6 +304,32 @@ export default function TicketsPage() {
       setConfirmDelete(null);
     },
   });
+
+  // Tickets API has no bulk-update endpoint, so we fan out per-id calls.
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async ({
+      ids,
+      data: updateData,
+    }: {
+      ids: string[];
+      data: { status?: string; priority?: string; assigneeId?: string };
+    }) => {
+      await Promise.all(ids.map((id) => updateTicket(id, updateData)));
+      return { updated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      toast.success(`הועברו ${result.updated} פריטים`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const handleBulkStatus = (status: string) =>
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedIds),
+      data: { status },
+    });
 
   // ── Monday Board columns for table view ──
   const mondayColumns: MondayColumn<Ticket>[] = [
@@ -595,6 +621,14 @@ export default function TicketsPage() {
           selectedCount={selectedIds.size}
           onClear={() => setSelectedIds(new Set())}
           onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} קריאות?` })}
+          onMoveTo={(status) => handleBulkStatus(status)}
+          moveToOptions={sortedEntries(ticketStatuses).map(([key, info]) => ({
+            label: info.label,
+            value: key,
+            color: info.color,
+          }))}
+          moveToLabel="שנה סטטוס"
+          deleting={deleteMutation.isPending || bulkUpdateMutation.isPending}
         />
 
         <ConfirmDialog

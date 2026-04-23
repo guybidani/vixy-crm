@@ -219,6 +219,20 @@ export default function ContactsPage() {
     onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
+  const bulkDuplicateMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => duplicateContact(id)));
+      return { duplicated: ids.length };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      toast.success(`שוכפלו ${result.duplicated} פריטים`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
+  });
+
   // Load tags lazily (used only by bulk-add-tag dropdown)
   const { data: allTags = [] } = useQuery({
     queryKey: ["tags"],
@@ -823,18 +837,18 @@ export default function ContactsPage() {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         onDelete={() => setShowBulkDeleteConfirm(true)}
+        onDuplicate={() =>
+          bulkDuplicateMut.mutate(Array.from(selectedIds))
+        }
+        onMoveTo={(status) => handleBulkStatus(status)}
+        moveToOptions={sortedEntries(contactStatuses).map(([key, info]) => ({
+          label: info.label,
+          value: key,
+          color: info.color,
+        }))}
+        moveToLabel="שנה סטטוס"
         deleting={bulkDeleteMutation.isPending}
       >
-        <BulkActionDropdown
-          label="שנה סטטוס"
-          disabled={bulkUpdateMutation.isPending}
-          options={sortedEntries(contactStatuses).map(([key, info]) => ({
-            key,
-            label: info.label,
-            color: info.color,
-          }))}
-          onSelect={handleBulkStatus}
-        />
         <BulkActionDropdown
           label="שייך לחברה"
           disabled={bulkUpdateMutation.isPending}
