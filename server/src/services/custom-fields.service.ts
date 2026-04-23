@@ -258,7 +258,7 @@ export async function bulkUpdateValues(
   let entityExists = false;
   if (entityType === "contact") {
     entityExists = !!(await prisma.contact.findFirst({
-      where: { id: entityId, workspaceId },
+      where: { id: entityId, workspaceId, deletedAt: null },
       select: { id: true },
     }));
   } else if (entityType === "deal") {

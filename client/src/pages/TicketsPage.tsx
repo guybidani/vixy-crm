@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useDebounce } from "../hooks/useDebounce";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import {
   Plus,
   MessageSquare,
@@ -262,6 +263,14 @@ export default function TicketsPage() {
       setSelectedId(sortedRows[0].id);
     }
   }, [sortedRows.length, viewMode]);
+
+  // J/K navigation between tickets while the queue-view detail panel is open.
+  useDetailPanelNavigation<Ticket>({
+    items: sortedRows,
+    currentId: selectedId,
+    onSelect: setSelectedId,
+    enabled: viewMode === "queue" && !!selectedId,
+  });
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>

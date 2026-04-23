@@ -48,6 +48,7 @@ export async function globalSearch(
     prisma.contact.findMany({
       where: {
         workspaceId,
+        deletedAt: null,
         OR: [
           { firstName: { contains: safeQuery, mode: "insensitive" } },
           { lastName: { contains: safeQuery, mode: "insensitive" } },

@@ -105,7 +105,7 @@ export async function exportCsv(
 
   switch (entity) {
     case "contacts": {
-      const where: Prisma.ContactWhereInput = { workspaceId };
+      const where: Prisma.ContactWhereInput = { workspaceId, deletedAt: null };
       if (filters?.status) where.status = filters.status as any;
       if (safeSearch) {
         where.OR = [

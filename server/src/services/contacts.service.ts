@@ -26,6 +26,7 @@ interface ListParams {
   sortBy?: string;
   sortDir?: "asc" | "desc";
   needsFollowUp?: boolean;
+  includeDeleted?: boolean;
 }
 
 export async function list(params: ListParams) {
@@ -39,6 +40,7 @@ export async function list(params: ListParams) {
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
     needsFollowUp,
+    includeDeleted = false,
   } = params;
   // Clamp page/limit to valid positive ranges — negative page causes negative
   // skip (Prisma error), and limit<=0 silently returns empty results.
@@ -48,7 +50,12 @@ export async function list(params: ListParams) {
     ? rawSortBy
     : "createdAt";
 
+  // Soft-delete: exclude tombstoned contacts by default. Admin UIs can opt in
+  // via includeDeleted=true to view/restore them.
   const where: Prisma.ContactWhereInput = { workspaceId };
+  if (!includeDeleted) {
+    where.deletedAt = null;
+  }
 
   if (search) {
     // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
@@ -126,7 +133,7 @@ export async function list(params: ListParams) {
 
 export async function getById(workspaceId: string, id: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       company: true,
       tags: { include: { tag: true } },
@@ -251,7 +258,7 @@ export async function update(
 ) {
   // Fetch contact and verify companyId ownership in parallel — independent queries
   const [existing, companyRef] = await Promise.all([
-    prisma.contact.findFirst({ where: { id, workspaceId } }),
+    prisma.contact.findFirst({ where: { id, workspaceId, deletedAt: null } }),
     data.companyId
       ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
       : null,
@@ -298,14 +305,14 @@ export async function update(
   // gap between the findFirst check and the actual write), then re-fetch.
   // Same pattern already applied to deals, tickets, and tasks services.
   const updateResult = await prisma.contact.updateMany({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     data: updateData,
   });
   if (updateResult.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
   const updated = await prisma.contact.findFirstOrThrow({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       company: { select: { id: true, name: true } },
       tags: { include: { tag: true } },
@@ -348,23 +355,37 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
-  // wrapped in a transaction to prevent orphaned notes if the entity delete
-  // fails or vice-versa (race condition fix).
-  const [, deleteResult] = await prisma.$transaction([
-    prisma.note.deleteMany({ where: { workspaceId, entityType: "contact", entityId: id } }),
-    prisma.contact.deleteMany({ where: { id, workspaceId } }),
-  ]);
-  if (deleteResult.count === 0) {
+  // Soft delete — stamps deletedAt so the row can be restored. Activities,
+  // tasks, deals, and tickets keep their FK to the contact so timeline stays
+  // intact for audit; those relations continue to work since deletedAt doesn't
+  // affect FK integrity, only list/read queries that opt to hide tombstones.
+  const result = await prisma.contact.updateMany({
+    where: { id, workspaceId, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Contact not found");
   }
   return { deleted: true };
 }
 
+export async function restore(workspaceId: string, id: string) {
+  // Restore a soft-deleted contact by clearing deletedAt. Only matches rows
+  // where deletedAt IS NOT NULL to distinguish "not deleted" from "not found".
+  const result = await prisma.contact.updateMany({
+    where: { id, workspaceId, deletedAt: { not: null } },
+    data: { deletedAt: null },
+  });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Deleted contact not found");
+  }
+  return { restored: true };
+}
+
 export async function getTimeline(workspaceId: string, contactId: string) {
   // Verify contact belongs to workspace (return 404 instead of silent empty results)
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, workspaceId },
+    where: { id: contactId, workspaceId, deletedAt: null },
     select: { id: true },
   });
   if (!contact) {
@@ -397,7 +418,7 @@ export async function getTimeline(workspaceId: string, contactId: string) {
 
 export async function board(workspaceId: string) {
   const contacts = await prisma.contact.findMany({
-    where: { workspaceId },
+    where: { workspaceId, deletedAt: null },
     include: {
       company: { select: { id: true, name: true } },
       tags: { include: { tag: true } },

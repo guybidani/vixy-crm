@@ -122,7 +122,7 @@ export async function* chatCompletionStream(messages: ChatMessage[]): AsyncGener
 
 export async function summarizeContact(workspaceId: string, contactId: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, workspaceId },
+    where: { id: contactId, workspaceId, deletedAt: null },
     include: {
       company: { select: { name: true, industry: true } },
       deals: {
@@ -240,7 +240,7 @@ export async function scoreDeal(workspaceId: string, dealId: string) {
 
 export async function draftEmail(workspaceId: string, contactId: string, context?: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, workspaceId },
+    where: { id: contactId, workspaceId, deletedAt: null },
     include: {
       company: { select: { name: true } },
       deals: {
@@ -290,7 +290,7 @@ export async function draftEmail(workspaceId: string, contactId: string, context
 
 export async function suggestAction(workspaceId: string, contactId: string) {
   const contact = await prisma.contact.findFirst({
-    where: { id: contactId, workspaceId },
+    where: { id: contactId, workspaceId, deletedAt: null },
     include: {
       company: { select: { name: true } },
       deals: {

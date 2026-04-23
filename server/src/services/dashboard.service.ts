@@ -114,11 +114,11 @@ export async function getDashboardStats(workspaceId: string) {
     rottingDeals,
   ] = await Promise.all([
     // Total contacts
-    prisma.contact.count({ where: { workspaceId } }),
+    prisma.contact.count({ where: { workspaceId, deletedAt: null } }),
 
     // New contacts this week
     prisma.contact.count({
-      where: { workspaceId, createdAt: { gte: weekAgo } },
+      where: { workspaceId, deletedAt: null, createdAt: { gte: weekAgo } },
     }),
 
     // Open deals aggregate (not WON or LOST)

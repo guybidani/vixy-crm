@@ -102,7 +102,7 @@ export async function getById(workspaceId: string, id: string) {
       },
     }),
     prisma.contact.findMany({
-      where: { workspaceId, companyId: id },
+      where: { workspaceId, companyId: id, deletedAt: null },
       include: {
         tags: { include: { tag: true } },
       },

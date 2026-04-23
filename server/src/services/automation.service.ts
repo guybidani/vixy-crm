@@ -436,7 +436,7 @@ async function executeAction(action: any, ctx: TriggerContext) {
       // (prevents cross-workspace writes if entityId was ever corrupted)
       if (ctx.entityType === "contact") {
         await prisma.contact.updateMany({
-          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId, deletedAt: null },
           data: { [field]: value },
         });
       } else if (ctx.entityType === "deal") {

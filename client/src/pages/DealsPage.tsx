@@ -4,6 +4,7 @@ import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import {
   Plus,
   Clock,
@@ -474,6 +475,22 @@ export default function DealsPage() {
     pipelineData?.totals.reduce((sum, t) => sum + t.count, 0) ||
     tableData?.pagination.total ||
     0;
+
+  // J/K navigation between deals while the detail panel is open.
+  // In kanban view we walk the pipeline stage-by-stage (same order the user
+  // sees); otherwise we walk the table rows.
+  const navigableDeals: Deal[] =
+    viewMode === "kanban"
+      ? Object.keys(dealStages).flatMap(
+          (stageKey) => pipelineData?.stages[stageKey] || [],
+        )
+      : tableData?.data || [];
+  useDetailPanelNavigation<Deal>({
+    items: navigableDeals,
+    currentId: selectedDealId,
+    onSelect: setSelectedDealId,
+    enabled: !!selectedDealId,
+  });
 
   return (
     <PageShell

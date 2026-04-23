@@ -232,7 +232,7 @@ export async function importContacts(
     );
     if (emails.length > 0) {
       const existing = await prisma.contact.findMany({
-        where: { workspaceId, email: { in: emails } },
+        where: { workspaceId, deletedAt: null, email: { in: emails } },
         select: { id: true, email: true },
       });
       for (const c of existing) {
@@ -605,7 +605,7 @@ export async function importDeals(
     );
     if (emails.length > 0) {
       const contacts = await prisma.contact.findMany({
-        where: { workspaceId, email: { in: emails } },
+        where: { workspaceId, deletedAt: null, email: { in: emails } },
         select: { id: true, email: true },
       });
       for (const c of contacts) {
@@ -684,6 +684,20 @@ export async function importDeals(
 
 // ─── Unified dispatcher ───
 
+// TODO(async-imports): This runs synchronously and blocks the HTTP request for
+// the duration of the import (up to IMPORT_MAX_ROWS = 10k rows). For large
+// files this can tie up a request for tens of seconds. When we need to scale
+// beyond that:
+//   1. Add an `ImportJob` model to Prisma (id, workspaceId, entityType,
+//      status, progress, result, failedRows).
+//   2. Create `queue/import.queue.ts` mirroring automation.queue.ts (BullMQ is
+//      already wired via redisConnection).
+//   3. Route `/import/execute` pushes a job and returns { jobId }; worker calls
+//      the same executeImport() below and persists result/progress.
+//   4. Add GET /import/jobs/:id for the UI to poll.
+// Not blocking deploys today because:
+//   - Requests cap at 10k rows (hard limit) and typical usage is <500.
+//   - Single-container deployment (no horizontal scaling pressure).
 export async function executeImport(
   workspaceId: string,
   memberId: string,

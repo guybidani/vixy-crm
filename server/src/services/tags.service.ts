@@ -69,7 +69,7 @@ export async function assignToContact(
 ) {
   const [tag, contact] = await Promise.all([
     prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
-    prisma.contact.findFirst({ where: { id: contactId, workspaceId } }),
+    prisma.contact.findFirst({ where: { id: contactId, workspaceId, deletedAt: null } }),
   ]);
   if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
   if (!contact) throw new AppError(404, "NOT_FOUND", "Contact not found");
@@ -89,7 +89,7 @@ export async function unassignFromContact(
   // Verify both tag and contact belong to the workspace
   const [tag, contact] = await Promise.all([
     prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
-    prisma.contact.findFirst({ where: { id: contactId, workspaceId } }),
+    prisma.contact.findFirst({ where: { id: contactId, workspaceId, deletedAt: null } }),
   ]);
   if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
   if (!contact) throw new AppError(404, "NOT_FOUND", "Contact not found");

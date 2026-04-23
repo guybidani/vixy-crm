@@ -62,7 +62,7 @@ export async function getRecentContacts(
   // Steps 2 & 3: Fetch contact details and last activities in parallel
   const [contacts, lastActivities] = await Promise.all([
     prisma.contact.findMany({
-      where: { id: { in: contactIds }, workspaceId },
+      where: { id: { in: contactIds }, workspaceId, deletedAt: null },
       select: { id: true, firstName: true, lastName: true, phone: true, email: true },
     }),
     prisma.activity.findMany({
@@ -168,7 +168,7 @@ export async function create(
   // Verify foreign key references belong to this workspace — parallel queries
   const [contactRef, dealRef, ticketRef] = await Promise.all([
     data.contactId
-      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.dealId
       ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId }, select: { id: true } })

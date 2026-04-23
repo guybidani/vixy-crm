@@ -88,6 +88,7 @@ export async function getContactGrowth(
     SELECT date_trunc('week', created_at)::date AS week_start, COUNT(*) AS count
     FROM contacts
     WHERE workspace_id = ${workspaceId}
+      AND deleted_at IS NULL
       AND created_at >= ${dateFrom}
       AND created_at <= ${dateTo}
     GROUP BY week_start
@@ -125,7 +126,7 @@ export async function getDealGrowth(
 export async function getLeadSources(workspaceId: string) {
   const grouped = await prisma.contact.groupBy({
     by: ["source"],
-    where: { workspaceId },
+    where: { workspaceId, deletedAt: null },
     _count: { id: true },
   });
 

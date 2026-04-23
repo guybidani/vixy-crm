@@ -444,7 +444,7 @@ export async function create(
   // Verify foreign key references in parallel — independent queries
   const [contactRef, companyRef] = await Promise.all([
     data.contactId
-      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.companyId
       ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
@@ -519,7 +519,7 @@ export async function update(
   const [existing, contactRef, companyRef, assigneeRef] = await Promise.all([
     prisma.deal.findFirst({ where: { id, workspaceId } }),
     data.contactId
-      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.companyId
       ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })

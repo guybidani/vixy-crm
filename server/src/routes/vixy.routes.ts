@@ -95,7 +95,7 @@ vixyRouter.post(
       // Validate FK references belong to this workspace (prevent BOLA)
       const [contactRef, dealRef] = await Promise.all([
         req.body.contactId
-          ? prisma.contact.findFirst({ where: { id: req.body.contactId, workspaceId: req.workspaceId! }, select: { id: true } })
+          ? prisma.contact.findFirst({ where: { id: req.body.contactId, workspaceId: req.workspaceId!, deletedAt: null }, select: { id: true } })
           : null,
         req.body.dealId
           ? prisma.deal.findFirst({ where: { id: req.body.dealId, workspaceId: req.workspaceId! }, select: { id: true } })

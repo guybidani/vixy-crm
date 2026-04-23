@@ -38,6 +38,7 @@ contactsRouter.get("/", async (req, res, next) => {
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
       needsFollowUp: req.query.needsFollowUp === "true",
+      includeDeleted: req.query.includeDeleted === "true",
     });
     res.json(result);
   } catch (err) {
@@ -67,8 +68,15 @@ contactsRouter.post(
   async (req, res, next) => {
     try {
       const { ids } = req.body;
-      const result = await prisma.contact.deleteMany({
-        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      // Soft delete — consistent with single-contact delete so bulk actions
+      // are undo-able. Only touches rows not already tombstoned.
+      const result = await prisma.contact.updateMany({
+        where: {
+          id: { in: ids },
+          workspaceId: req.workspaceId!,
+          deletedAt: null,
+        },
+        data: { deletedAt: new Date() },
       });
       res.json({ deleted: result.count });
     } catch (err) {
@@ -98,7 +106,11 @@ contactsRouter.post(
 
       if (data.status) {
         await prisma.contact.updateMany({
-          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          where: {
+            id: { in: ids },
+            workspaceId: req.workspaceId!,
+            deletedAt: null,
+          },
           data: { status: data.status },
         });
       }
@@ -115,7 +127,11 @@ contactsRouter.post(
         // Verify all contacts belong to this workspace before tagging —
         // prevents BOLA: attacker submitting foreign contact IDs to attach tags
         const ownedContacts = await prisma.contact.findMany({
-          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          where: {
+            id: { in: ids },
+            workspaceId: req.workspaceId!,
+            deletedAt: null,
+          },
           select: { id: true },
         });
         const ownedIds = ownedContacts.map((c) => c.id);
@@ -191,7 +207,7 @@ contactsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   }
 });
 
-// DELETE /api/v1/contacts/:id
+// DELETE /api/v1/contacts/:id (soft delete)
 contactsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await contactsService.remove(req.workspaceId!, req.params.id as string);
@@ -200,3 +216,17 @@ contactsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, ne
     next(err);
   }
 });
+
+// POST /api/v1/contacts/:id/restore — un-tombstone a soft-deleted contact
+contactsRouter.post(
+  "/:id/restore",
+  requireRole("OWNER", "ADMIN"),
+  async (req, res, next) => {
+    try {
+      await contactsService.restore(req.workspaceId!, req.params.id as string);
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);

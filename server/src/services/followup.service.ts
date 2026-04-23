@@ -169,7 +169,7 @@ export async function startExecution(
   // adding an extra round-trip.
   const [contactRef, sequence, existing] = await Promise.all([
     prisma.contact.findFirst({
-      where: { id: data.contactId, workspaceId },
+      where: { id: data.contactId, workspaceId, deletedAt: null },
       select: { id: true },
     }),
     prisma.followUpSequence.findFirst({

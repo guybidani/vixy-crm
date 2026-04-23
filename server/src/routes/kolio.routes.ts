@@ -119,6 +119,7 @@ kolioWebhookRouter.post("/", async (req, res, next) => {
       const contact = await prisma.contact.findFirst({
         where: {
           workspaceId,
+          deletedAt: null,
           phone: { contains: normalizedPhone.slice(-9) }, // Match last 9 digits
         },
       });

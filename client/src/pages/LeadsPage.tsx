@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -193,6 +194,14 @@ export default function LeadsPage() {
   });
 
   const leads = data?.data || [];
+
+  // J/K navigation between leads while the detail panel is open.
+  useDetailPanelNavigation<Contact>({
+    items: leads,
+    currentId: selectedContactId,
+    onSelect: setSelectedContactId,
+    enabled: !!selectedContactId,
+  });
 
   // Group leads by score range for pipeline view
   const pipelineData = PIPELINE_STAGES.map((stage) => ({

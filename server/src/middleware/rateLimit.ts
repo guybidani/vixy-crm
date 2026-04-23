@@ -1,5 +1,12 @@
 import rateLimit from "express-rate-limit";
 
+// NOTE(single-instance): These limiters use the default in-memory store. Each
+// replica tracks its own counters, so horizontally scaling past one container
+// would let a client multiply its allowance by the replica count. We deploy as
+// a single Coolify container today so this is acceptable. If we scale out, add
+// `rate-limit-redis` and back the store with `redisConnection` from
+// queue/connection.ts — the Redis/ioredis connection is already available.
+
 /**
  * Strict rate limit for authentication endpoints (login, register, refresh).
  * Prevents brute-force attacks and credential stuffing.

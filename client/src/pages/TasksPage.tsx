@@ -58,6 +58,7 @@ import { EmptyTasks, EmptyError, EmptySearch } from "../components/shared/illust
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
+import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import { useAuth } from "../hooks/useAuth";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -1101,6 +1102,20 @@ export default function TasksPage() {
   ];
 
   const allTasks = data?.data || [];
+
+  // J/K navigation between tasks while the detail panel is open.
+  // In table view we walk the filtered `tasks` list (same order the user sees
+  // grouped by date); in kanban view we flatten the columns in status order.
+  const navigableTasks: Task[] =
+    viewMode === "kanban"
+      ? kanbanColumns.flatMap((col) => col.items)
+      : tasks;
+  useDetailPanelNavigation<Task>({
+    items: navigableTasks,
+    currentId: selectedTaskId,
+    onSelect: setSelectedTaskId,
+    enabled: !!selectedTaskId,
+  });
 
   return (
     <div className="flex h-full">

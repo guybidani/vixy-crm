@@ -216,7 +216,7 @@ export async function create(
   // Verify FK references belong to this workspace in parallel (prevent BOLA)
   const [contactRef, assigneeRef, defaultSla] = await Promise.all([
     data.contactId
-      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId }, select: { id: true } })
+      ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.assigneeId
       ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
