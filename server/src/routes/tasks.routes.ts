@@ -81,6 +81,7 @@ tasksRouter.get("/", async (req, res, next) => {
       dueTodayOnly: req.query.dueTodayOnly === "true",
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
+      includeDeleted: req.query.includeDeleted === "true",
     });
     res.json(result);
   } catch (err) {
@@ -127,8 +128,15 @@ tasksRouter.post(
       for (const id of ids) {
         cancelTaskReminder(id).catch(() => {});
       }
-      const result = await prisma.task.deleteMany({
-        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      // Soft delete — consistent with single-task delete so bulk actions
+      // are undo-able. Only touches rows not already tombstoned.
+      const result = await prisma.task.updateMany({
+        where: {
+          id: { in: ids },
+          workspaceId: req.workspaceId!,
+          deletedAt: null,
+        },
+        data: { deletedAt: new Date() },
       });
       res.json({ deleted: result.count });
     } catch (err) {
@@ -182,7 +190,7 @@ tasksRouter.post(
       }
 
       const result = await prisma.task.updateMany({
-        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+        where: { id: { in: ids }, workspaceId: req.workspaceId!, deletedAt: null },
         data: updateData,
       });
 
@@ -251,7 +259,7 @@ tasksRouter.get("/:id/comments", async (req, res, next) => {
     const taskId = req.params.id as string;
     // Verify task belongs to workspace
     const task = await prisma.task.findFirst({
-      where: { id: taskId, workspaceId: req.workspaceId! },
+      where: { id: taskId, workspaceId: req.workspaceId!, deletedAt: null },
     });
     if (!task) {
       return res.status(404).json({ error: { code: "NOT_FOUND", message: "Task not found" } });
@@ -288,7 +296,7 @@ tasksRouter.post("/:id/comments", validate(commentSchema), async (req, res, next
   try {
     const taskId = req.params.id as string;
     const task = await prisma.task.findFirst({
-      where: { id: taskId, workspaceId: req.workspaceId! },
+      where: { id: taskId, workspaceId: req.workspaceId!, deletedAt: null },
     });
     if (!task) {
       return res.status(404).json({ error: { code: "NOT_FOUND", message: "Task not found" } });
@@ -330,7 +338,7 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
     // Previously only taskId+commentId were checked — an attacker with a valid
     // memberId in two workspaces could delete comments on tasks from the other.
     const task = await prisma.task.findFirst({
-      where: { id: taskId, workspaceId: req.workspaceId! },
+      where: { id: taskId, workspaceId: req.workspaceId!, deletedAt: null },
       select: { id: true },
     });
     if (!task) {
@@ -352,6 +360,7 @@ tasksRouter.delete("/:id/comments/:commentId", async (req, res, next) => {
   }
 });
 
+// DELETE /api/v1/tasks/:id (soft delete)
 tasksRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     const taskId = req.params.id as string;
@@ -362,3 +371,17 @@ tasksRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next)
     next(err);
   }
 });
+
+// POST /api/v1/tasks/:id/restore — un-tombstone a soft-deleted task
+tasksRouter.post(
+  "/:id/restore",
+  requireRole("OWNER", "ADMIN"),
+  async (req, res, next) => {
+    try {
+      await tasksService.restore(req.workspaceId!, req.params.id as string);
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);

@@ -171,7 +171,7 @@ export async function summarizeContact(workspaceId: string, contactId: string) {
 
 export async function scoreDeal(workspaceId: string, dealId: string) {
   const deal = await prisma.deal.findFirst({
-    where: { id: dealId, workspaceId },
+    where: { id: dealId, workspaceId, deletedAt: null },
     include: {
       contact: {
         select: { firstName: true, lastName: true, status: true, leadScore: true, leadHeat: true },
@@ -182,6 +182,7 @@ export async function scoreDeal(workspaceId: string, dealId: string) {
         take: 15,
       },
       tasks: {
+        where: { deletedAt: null },
         select: { title: true, status: true, dueDate: true },
         orderBy: { createdAt: "desc" },
         take: 10,

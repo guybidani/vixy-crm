@@ -126,6 +126,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+        deletedAt: null,
       },
       _count: { id: true },
       _sum: { value: true },
@@ -137,6 +138,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+        deletedAt: null,
       },
       _count: { id: true },
       _sum: { value: true },
@@ -165,6 +167,7 @@ export async function getDashboardStats(workspaceId: string) {
         workspaceId,
         status: { notIn: ["DONE", "CANCELLED"] },
         dueDate: { lte: todayEnd },
+        deletedAt: null,
       },
     }),
 
@@ -174,6 +177,7 @@ export async function getDashboardStats(workspaceId: string) {
         workspaceId,
         status: { notIn: ["DONE", "CANCELLED"] },
         dueDate: { lt: todayStart },
+        deletedAt: null,
       },
     }),
 
@@ -194,6 +198,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         status: { notIn: ["DONE", "CANCELLED"] },
+        deletedAt: null,
       },
       include: {
         contact: { select: { id: true, firstName: true, lastName: true } },
@@ -209,6 +214,7 @@ export async function getDashboardStats(workspaceId: string) {
         workspaceId,
         status: "DONE",
         completedAt: { gte: weekAgo },
+        deletedAt: null,
       },
     }),
 
@@ -226,6 +232,7 @@ export async function getDashboardStats(workspaceId: string) {
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+        deletedAt: null,
         OR: [
           { lastActivityAt: { lt: fourteenDaysAgo } },
           { lastActivityAt: null, createdAt: { lt: fourteenDaysAgo } },

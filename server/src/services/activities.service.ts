@@ -171,7 +171,7 @@ export async function create(
       ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.dealId
-      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId }, select: { id: true } })
+      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.ticketId
       ? prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId }, select: { id: true } })

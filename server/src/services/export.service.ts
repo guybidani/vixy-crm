@@ -144,7 +144,7 @@ export async function exportCsv(
     }
 
     case "deals": {
-      const where: Prisma.DealWhereInput = { workspaceId };
+      const where: Prisma.DealWhereInput = { workspaceId, deletedAt: null };
       if (filters?.status) where.stage = filters.status as any;
       if (safeSearch) {
         where.title = { contains: safeSearch, mode: "insensitive" };
@@ -179,7 +179,7 @@ export async function exportCsv(
     }
 
     case "companies": {
-      const where: Prisma.CompanyWhereInput = { workspaceId };
+      const where: Prisma.CompanyWhereInput = { workspaceId, deletedAt: null };
       if (filters?.status) where.status = filters.status as any;
       if (safeSearch) {
         where.name = { contains: safeSearch, mode: "insensitive" };
@@ -207,7 +207,7 @@ export async function exportCsv(
     }
 
     case "tasks": {
-      const where: Prisma.TaskWhereInput = { workspaceId };
+      const where: Prisma.TaskWhereInput = { workspaceId, deletedAt: null };
       if (filters?.status) where.status = filters.status as any;
       if (safeSearch) {
         where.title = { contains: safeSearch, mode: "insensitive" };

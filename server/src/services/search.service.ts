@@ -69,6 +69,7 @@ export async function globalSearch(
       where: {
         workspaceId,
         title: { contains: safeQuery, mode: "insensitive" },
+        deletedAt: null,
       },
       select: { id: true, title: true, value: true, stage: true },
       take: safeLim,
@@ -77,6 +78,7 @@ export async function globalSearch(
       where: {
         workspaceId,
         name: { contains: safeQuery, mode: "insensitive" },
+        deletedAt: null,
       },
       select: { id: true, name: true, industry: true },
       take: safeLim,

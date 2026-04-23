@@ -204,6 +204,7 @@ model Company {
   industry    String?
   size        String?
   notes       String?
+  deletedAt   DateTime? @map("deleted_at")
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
@@ -212,6 +213,7 @@ model Company {
   documents DocumentLink[]
 
   @@index([workspaceId])
+  @@index([workspaceId, deletedAt])
   @@map("companies")
 }
 
@@ -240,6 +242,7 @@ model Deal {
   lastActivityAt DateTime? @map("last_activity_at")
   notes         String?   @db.Text
   bantData      Json?     @map("bant_data")
+  deletedAt     DateTime? @map("deleted_at")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -253,6 +256,7 @@ model Deal {
   @@index([workspaceId, createdAt])
   @@index([workspaceId, assigneeId])
   @@index([workspaceId, updatedAt])
+  @@index([workspaceId, deletedAt])
   @@map("deals")
 }
 
@@ -372,6 +376,7 @@ model Task {
   parentTaskId      String?    @map("parent_task_id")
   parentTask        Task?      @relation("RecurringTask", fields: [parentTaskId], references: [id])
   childTasks        Task[]     @relation("RecurringTask")
+  deletedAt              DateTime?  @map("deleted_at")
   createdAt              DateTime   @default(now()) @map("created_at")
   updatedAt              DateTime   @updatedAt @map("updated_at")
 
@@ -382,6 +387,7 @@ model Task {
   @@index([workspaceId, taskType])
   @@index([workspaceId, dueDate])
   @@index([workspaceId, completedAt])
+  @@index([workspaceId, deletedAt])
   @@index([parentTaskId])
   @@map("tasks")
 }

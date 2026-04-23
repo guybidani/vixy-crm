@@ -70,6 +70,7 @@ dealsRouter.get("/", async (req, res, next) => {
       contactId: req.query.contactId as string,
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
+      includeDeleted: req.query.includeDeleted === "true",
     });
     res.json(result);
   } catch (err) {
@@ -99,8 +100,15 @@ dealsRouter.post(
   async (req, res, next) => {
     try {
       const { ids } = req.body;
-      const result = await prisma.deal.deleteMany({
-        where: { id: { in: ids }, workspaceId: req.workspaceId! },
+      // Soft delete — consistent with single-deal delete so bulk actions
+      // are undo-able. Only touches rows not already tombstoned.
+      const result = await prisma.deal.updateMany({
+        where: {
+          id: { in: ids },
+          workspaceId: req.workspaceId!,
+          deletedAt: null,
+        },
+        data: { deletedAt: new Date() },
       });
       res.json({ deleted: result.count });
     } catch (err) {
@@ -163,7 +171,7 @@ dealsRouter.post(
 
       if (Object.keys(updateData).length > 0) {
         await prisma.deal.updateMany({
-          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          where: { id: { in: ids }, workspaceId: req.workspaceId!, deletedAt: null },
           data: updateData,
         });
       }
@@ -180,7 +188,7 @@ dealsRouter.post(
         // Verify all deals belong to this workspace before tagging —
         // prevents BOLA: attacker submitting foreign deal IDs to attach tags
         const ownedDeals = await prisma.deal.findMany({
-          where: { id: { in: ids }, workspaceId: req.workspaceId! },
+          where: { id: { in: ids }, workspaceId: req.workspaceId!, deletedAt: null },
           select: { id: true },
         });
         const ownedIds = ownedDeals.map((d) => d.id);
@@ -244,7 +252,7 @@ dealsRouter.patch("/:id", validate(updateSchema), async (req, res, next) => {
   }
 });
 
-// DELETE /api/v1/deals/:id
+// DELETE /api/v1/deals/:id (soft delete)
 dealsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await dealsService.remove(req.workspaceId!, req.params.id as string);
@@ -253,3 +261,17 @@ dealsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next)
     next(err);
   }
 });
+
+// POST /api/v1/deals/:id/restore — un-tombstone a soft-deleted deal
+dealsRouter.post(
+  "/:id/restore",
+  requireRole("OWNER", "ADMIN"),
+  async (req, res, next) => {
+    try {
+      await dealsService.restore(req.workspaceId!, req.params.id as string);
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);

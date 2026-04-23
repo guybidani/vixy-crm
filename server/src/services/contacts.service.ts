@@ -138,6 +138,7 @@ export async function getById(workspaceId: string, id: string) {
       company: true,
       tags: { include: { tag: true } },
       deals: {
+        where: { deletedAt: null },
         include: {
           assignee: { include: { user: { select: { name: true } } } },
         },
@@ -156,6 +157,7 @@ export async function getById(workspaceId: string, id: string) {
         take: 20,
       },
       tasks: {
+        where: { deletedAt: null },
         include: {
           assignee: { include: { user: { select: { name: true } } } },
         },
@@ -194,7 +196,7 @@ export async function create(
   // Verify companyId belongs to this workspace (prevent cross-workspace BOLA)
   if (data.companyId) {
     const companyRef = await prisma.company.findFirst({
-      where: { id: data.companyId, workspaceId },
+      where: { id: data.companyId, workspaceId, deletedAt: null },
       select: { id: true },
     });
     if (!companyRef)
@@ -260,7 +262,7 @@ export async function update(
   const [existing, companyRef] = await Promise.all([
     prisma.contact.findFirst({ where: { id, workspaceId, deletedAt: null } }),
     data.companyId
-      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
   ]);
   if (!existing) {
@@ -402,7 +404,7 @@ export async function getTimeline(workspaceId: string, contactId: string) {
       take: 50,
     }),
     prisma.deal.findMany({
-      where: { workspaceId, contactId },
+      where: { workspaceId, contactId, deletedAt: null },
       orderBy: { createdAt: "desc" },
       take: 50,
     }),

@@ -15,6 +15,7 @@ interface ListParams {
   contactId?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+  includeDeleted?: boolean;
 }
 
 // Stage-gated task templates: auto-created when a deal moves to a new stage
@@ -77,6 +78,7 @@ export async function list(params: ListParams) {
     contactId,
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
+    includeDeleted = false,
   } = params;
   // Clamp page/limit to valid positive ranges — negative page causes negative
   // skip (Prisma error), and limit<=0 silently returns empty results.
@@ -86,7 +88,12 @@ export async function list(params: ListParams) {
     ? rawSortBy
     : "createdAt";
 
+  // Soft-delete: exclude tombstoned deals by default. Admin UIs can opt in
+  // via includeDeleted=true to view/restore them.
   const where: Prisma.DealWhereInput = { workspaceId };
+  if (!includeDeleted) {
+    where.deletedAt = null;
+  }
 
   if (search) {
     // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
@@ -116,7 +123,7 @@ export async function list(params: ListParams) {
         assignee: { include: { user: { select: { name: true } } } },
         tags: { include: { tag: true } },
         tasks: {
-          where: { status: { not: "DONE" } },
+          where: { status: { not: "DONE" }, deletedAt: null },
           select: { id: true },
         },
         activities: {
@@ -204,7 +211,7 @@ export async function pipeline(workspaceId: string) {
     assignee: { include: { user: { select: { name: true } } } },
     tags: { include: { tag: true } },
     tasks: {
-      where: { status: { not: "DONE" as const } },
+      where: { status: { not: "DONE" as const }, deletedAt: null },
       orderBy: { dueDate: "asc" as const },
       take: 1,
     },
@@ -223,6 +230,7 @@ export async function pipeline(workspaceId: string) {
       where: {
         workspaceId,
         stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+        deletedAt: null,
       },
       include: dealInclude,
       orderBy: { createdAt: "asc" },
@@ -233,6 +241,7 @@ export async function pipeline(workspaceId: string) {
         workspaceId,
         stage: { in: ["CLOSED_WON", "CLOSED_LOST"] },
         closedAt: { gte: startOfMonth },
+        deletedAt: null,
       },
       include: dealInclude,
       orderBy: { closedAt: "desc" },
@@ -361,7 +370,7 @@ export async function pipeline(workspaceId: string) {
 
 export async function getById(workspaceId: string, id: string) {
   const deal = await prisma.deal.findFirst({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       contact: {
         select: {
@@ -383,6 +392,7 @@ export async function getById(workspaceId: string, id: string) {
         take: 20,
       },
       tasks: {
+        where: { deletedAt: null },
         include: {
           assignee: { include: { user: { select: { name: true } } } },
         },
@@ -447,7 +457,7 @@ export async function create(
       ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.companyId
-      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
   ]);
   if (data.contactId && !contactRef)
@@ -517,12 +527,12 @@ export async function update(
 ) {
   // Fetch deal + FK references in parallel — all independent queries
   const [existing, contactRef, companyRef, assigneeRef] = await Promise.all([
-    prisma.deal.findFirst({ where: { id, workspaceId } }),
+    prisma.deal.findFirst({ where: { id, workspaceId, deletedAt: null } }),
     data.contactId
       ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.companyId
-      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId }, select: { id: true } })
+      ? prisma.company.findFirst({ where: { id: data.companyId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.assigneeId
       ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
@@ -587,14 +597,14 @@ export async function update(
   // gap where the deal could be reassigned between the findFirst check and the
   // actual write), then re-fetch with includes.
   const updateResult = await prisma.deal.updateMany({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     data: updateData,
   });
   if (updateResult.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
   }
   const updated = await prisma.deal.findFirstOrThrow({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       contact: { select: { id: true, firstName: true, lastName: true, phone: true } },
       company: { select: { id: true, name: true } },
@@ -682,15 +692,29 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
-  // wrapped in a transaction to prevent orphaned notes if the entity delete
-  // fails or vice-versa (race condition fix).
-  const [, deleteResult] = await prisma.$transaction([
-    prisma.note.deleteMany({ where: { workspaceId, entityType: "deal", entityId: id } }),
-    prisma.deal.deleteMany({ where: { id, workspaceId } }),
-  ]);
-  if (deleteResult.count === 0) {
+  // Soft delete — stamps deletedAt so the deal can be restored. Revenue data
+  // shouldn't be hard-deleted; activities, tasks, and notes keep their FK to
+  // the deal so timeline and audit trail stay intact. Only list/get/count
+  // queries that opt to hide tombstones will filter it out.
+  const result = await prisma.deal.updateMany({
+    where: { id, workspaceId, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (result.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Deal not found");
   }
   return { deleted: true };
+}
+
+export async function restore(workspaceId: string, id: string) {
+  // Restore a soft-deleted deal by clearing deletedAt. Only matches rows where
+  // deletedAt IS NOT NULL to distinguish "not deleted" from "not found".
+  const result = await prisma.deal.updateMany({
+    where: { id, workspaceId, deletedAt: { not: null } },
+    data: { deletedAt: null },
+  });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Deleted deal not found");
+  }
+  return { restored: true };
 }

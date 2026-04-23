@@ -212,7 +212,7 @@ export async function syncTaskToCalendar(
     const [integration, task] = await Promise.all([
       prisma.calendarIntegration.findUnique({ where: { memberId } }),
       prisma.task.findFirst({
-        where: { id: taskId, workspaceId },
+        where: { id: taskId, workspaceId, deletedAt: null },
         include: {
           assignee: { include: { user: { select: { email: true } } } },
         },
@@ -299,7 +299,7 @@ export async function updateCalendarEvent(
   const [accessToken, taskWithAssignee] = await Promise.all([
     getAccessToken(integration),
     prisma.task.findFirst({
-      where: { id: task.id, workspaceId: integration.workspaceId },
+      where: { id: task.id, workspaceId: integration.workspaceId, deletedAt: null },
       include: { assignee: { include: { user: { select: { email: true } } } } },
     }),
   ]);

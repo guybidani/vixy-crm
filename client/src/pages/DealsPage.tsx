@@ -52,9 +52,11 @@ import {
   createDeal,
   updateDeal,
   bulkDeleteDeals,
+  restoreDeal,
   type Deal,
   type PipelineResponse,
 } from "../api/deals";
+import UndoToast from "../components/shared/UndoToast";
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
@@ -201,11 +203,46 @@ export default function DealsPage() {
   });
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: (ids?: string[]) => bulkDeleteDeals(ids ?? Array.from(selectedIds)),
+    mutationFn: async (ids?: string[]) => {
+      const resolved = ids ?? Array.from(selectedIds);
+      const res = await bulkDeleteDeals(resolved);
+      return { ...res, ids: resolved };
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
-      toast.success(`${data.deleted} עסקאות נמחקו`);
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
       setSelectedIds(new Set());
+
+      const message =
+        data.ids.length === 1
+          ? "עסקה נמחקה"
+          : `${data.deleted} עסקאות נמחקו`;
+
+      const UNDO_DURATION = 5000;
+      toast.custom(
+        (t) => (
+          <UndoToast
+            message={message}
+            duration={UNDO_DURATION}
+            onDismiss={() => toast.dismiss(t.id)}
+            onUndo={async () => {
+              try {
+                await Promise.all(data.ids.map((id) => restoreDeal(id)));
+                toast.dismiss(t.id);
+                toast.success(
+                  data.ids.length === 1 ? "שוחזר" : `${data.ids.length} שוחזרו`,
+                );
+                queryClient.invalidateQueries({ queryKey: ["deals"] });
+                queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+              } catch {
+                toast.dismiss(t.id);
+                toast.error("שגיאה בשחזור");
+              }
+            }}
+          />
+        ),
+        { duration: UNDO_DURATION },
+      );
     },
     onError: () => toast.error("שגיאה במחיקה"),
   });

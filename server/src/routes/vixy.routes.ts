@@ -98,7 +98,7 @@ vixyRouter.post(
           ? prisma.contact.findFirst({ where: { id: req.body.contactId, workspaceId: req.workspaceId!, deletedAt: null }, select: { id: true } })
           : null,
         req.body.dealId
-          ? prisma.deal.findFirst({ where: { id: req.body.dealId, workspaceId: req.workspaceId! }, select: { id: true } })
+          ? prisma.deal.findFirst({ where: { id: req.body.dealId, workspaceId: req.workspaceId!, deletedAt: null }, select: { id: true } })
           : null,
       ]);
       if (req.body.contactId && !contactRef) {

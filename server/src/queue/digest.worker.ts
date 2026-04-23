@@ -90,6 +90,7 @@ async function processMemberDigest(
           assigneeId: memberId,
           status: { notIn: ["DONE", "CANCELLED"] },
           dueDate: { gte: todayStart, lte: todayEnd },
+          deletedAt: null,
         },
       }),
 
@@ -100,6 +101,7 @@ async function processMemberDigest(
           assigneeId: memberId,
           status: { notIn: ["DONE", "CANCELLED"] },
           dueDate: { lt: todayStart },
+          deletedAt: null,
         },
       }),
 
@@ -109,6 +111,7 @@ async function processMemberDigest(
           workspaceId,
           assigneeId: memberId,
           stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] },
+          deletedAt: null,
           OR: [
             { lastActivityAt: { lt: sevenDaysAgo } },
             { lastActivityAt: null, updatedAt: { lt: sevenDaysAgo } },
@@ -123,6 +126,7 @@ async function processMemberDigest(
           assigneeId: memberId,
           status: { notIn: ["DONE", "CANCELLED"] },
           dueDate: { gte: todayStart, lte: todayEnd },
+          deletedAt: null,
         },
         orderBy: [{ dueTime: "asc" }, { dueDate: "asc" }],
         select: { title: true, dueTime: true },

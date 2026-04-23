@@ -108,7 +108,7 @@ export async function assignToDeal(
 ) {
   const [tag, deal] = await Promise.all([
     prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
-    prisma.deal.findFirst({ where: { id: dealId, workspaceId } }),
+    prisma.deal.findFirst({ where: { id: dealId, workspaceId, deletedAt: null } }),
   ]);
   if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
   if (!deal) throw new AppError(404, "NOT_FOUND", "Deal not found");
@@ -128,7 +128,7 @@ export async function unassignFromDeal(
   // Verify both tag and deal belong to the workspace
   const [tag, deal] = await Promise.all([
     prisma.tag.findFirst({ where: { id: tagId, workspaceId } }),
-    prisma.deal.findFirst({ where: { id: dealId, workspaceId } }),
+    prisma.deal.findFirst({ where: { id: dealId, workspaceId, deletedAt: null } }),
   ]);
   if (!tag) throw new AppError(404, "NOT_FOUND", "Tag not found");
   if (!deal) throw new AppError(404, "NOT_FOUND", "Deal not found");

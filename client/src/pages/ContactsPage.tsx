@@ -31,8 +31,10 @@ import {
   updateContact,
   getContactsBoard,
   bulkDeleteContacts,
+  restoreContact,
   type Contact,
 } from "../api/contacts";
+import UndoToast from "../components/shared/UndoToast";
 import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
@@ -142,12 +144,50 @@ export default function ContactsPage() {
   );
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: (ids?: string[]) => bulkDeleteContacts(ids ?? Array.from(selectedIds)),
+    mutationFn: async (ids?: string[]) => {
+      // Resolve IDs eagerly so the UndoToast has a concrete list even after
+      // selection is cleared on success.
+      const resolved = ids ?? Array.from(selectedIds);
+      const res = await bulkDeleteContacts(resolved);
+      return { ...res, ids: resolved };
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
-      toast.success(`${data.deleted} אנשי קשר נמחקו`);
       setSelectedIds(new Set());
+
+      const message =
+        data.ids.length === 1
+          ? "איש קשר נמחק"
+          : `${data.deleted} אנשי קשר נמחקו`;
+
+      const UNDO_DURATION = 5000;
+      toast.custom(
+        (t) => (
+          <UndoToast
+            message={message}
+            duration={UNDO_DURATION}
+            onDismiss={() => toast.dismiss(t.id)}
+            onUndo={async () => {
+              try {
+                // No bulk-restore endpoint — loop single restores. Parallel is
+                // fine; the endpoint is idempotent per-id.
+                await Promise.all(data.ids.map((id) => restoreContact(id)));
+                toast.dismiss(t.id);
+                toast.success(
+                  data.ids.length === 1 ? "שוחזר" : `${data.ids.length} שוחזרו`,
+                );
+                queryClient.invalidateQueries({ queryKey: ["contacts"] });
+                queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+              } catch {
+                toast.dismiss(t.id);
+                toast.error("שגיאה בשחזור");
+              }
+            }}
+          />
+        ),
+        { duration: UNDO_DURATION },
+      );
     },
     onError: () => toast.error("שגיאה במחיקה"),
   });

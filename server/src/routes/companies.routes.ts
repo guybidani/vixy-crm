@@ -33,6 +33,7 @@ companiesRouter.get("/", async (req, res, next) => {
       search: req.query.search as string,
       sortBy: (req.query.sortBy as string) || "createdAt",
       sortDir: (req.query.sortDir as "asc" | "desc") || "desc",
+      includeDeleted: req.query.includeDeleted === "true",
     });
     res.json(result);
   } catch (err) {
@@ -91,7 +92,7 @@ companiesRouter.patch(
   },
 );
 
-// DELETE /api/v1/companies/:id
+// DELETE /api/v1/companies/:id (soft delete)
 companiesRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next) => {
   try {
     await companiesService.remove(req.workspaceId!, req.params.id as string);
@@ -100,3 +101,17 @@ companiesRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, n
     next(err);
   }
 });
+
+// POST /api/v1/companies/:id/restore — un-tombstone a soft-deleted company
+companiesRouter.post(
+  "/:id/restore",
+  requireRole("OWNER", "ADMIN"),
+  async (req, res, next) => {
+    try {
+      await companiesService.restore(req.workspaceId!, req.params.id as string);
+      res.json({ success: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);

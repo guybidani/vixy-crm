@@ -30,6 +30,7 @@ export async function getDealConversionFunnel(
     where: {
       workspaceId,
       createdAt: { gte: dateFrom, lte: dateTo },
+      deletedAt: null,
     },
     _count: { id: true },
     _sum: { value: true },
@@ -52,6 +53,7 @@ export async function getTaskCompletionRate(
       where: {
         workspaceId,
         createdAt: { gte: dateFrom, lte: dateTo },
+        deletedAt: null,
       },
     }),
     prisma.task.count({
@@ -59,6 +61,7 @@ export async function getTaskCompletionRate(
         workspaceId,
         createdAt: { gte: dateFrom, lte: dateTo },
         status: "DONE",
+        deletedAt: null,
       },
     }),
   ]);

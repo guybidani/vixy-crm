@@ -441,7 +441,7 @@ async function executeAction(action: any, ctx: TriggerContext) {
         });
       } else if (ctx.entityType === "deal") {
         await prisma.deal.updateMany({
-          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId, deletedAt: null },
           data: { [field]: value },
         });
       } else if (ctx.entityType === "ticket") {
@@ -475,7 +475,7 @@ async function executeAction(action: any, ctx: TriggerContext) {
           }
         }
         await prisma.deal.updateMany({
-          where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
+          where: { id: ctx.entityId, workspaceId: ctx.workspaceId, deletedAt: null },
           data: stageData,
         });
       }
@@ -499,7 +499,7 @@ async function executeAction(action: any, ctx: TriggerContext) {
 
         if (ctx.entityType === "deal") {
           await prisma.deal.updateMany({
-            where: { id: ctx.entityId, workspaceId: ctx.workspaceId },
+            where: { id: ctx.entityId, workspaceId: ctx.workspaceId, deletedAt: null },
             data: { assigneeId: config.assigneeId },
           });
         } else if (ctx.entityType === "ticket") {

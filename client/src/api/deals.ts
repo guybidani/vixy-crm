@@ -175,6 +175,12 @@ export function deleteDeal(id: string) {
   return api(`/deals/${id}`, { method: "DELETE" });
 }
 
+// Server soft-deletes deals, so restore is a simple un-tombstone.
+// No /bulk-restore endpoint exists — callers restoring many IDs should loop.
+export function restoreDeal(id: string) {
+  return api<{ success: true }>(`/deals/${id}/restore`, { method: "POST" });
+}
+
 export function bulkDeleteDeals(ids: string[]) {
   return api<{ deleted: number }>("/deals/bulk-delete", {
     method: "POST",

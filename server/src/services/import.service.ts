@@ -257,7 +257,7 @@ export async function importContacts(
     );
     if (names.length > 0) {
       const companies = await prisma.company.findMany({
-        where: { workspaceId, name: { in: names } },
+        where: { workspaceId, name: { in: names }, deletedAt: null },
         select: { id: true, name: true },
       });
       for (const c of companies) {
@@ -452,7 +452,7 @@ export async function importCompanies(
     );
     if (names.length > 0) {
       const existing = await prisma.company.findMany({
-        where: { workspaceId, name: { in: names } },
+        where: { workspaceId, name: { in: names }, deletedAt: null },
         select: { id: true, name: true },
       });
       for (const c of existing) existingByName.set(c.name.toLowerCase(), c.id);

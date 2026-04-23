@@ -105,6 +105,12 @@ export function deleteContact(id: string) {
   return api(`/contacts/${id}`, { method: "DELETE" });
 }
 
+// Server soft-deletes contacts, so restore is a simple un-tombstone.
+// No /bulk-restore endpoint exists — callers restoring many IDs should loop.
+export function restoreContact(id: string) {
+  return api<{ success: true }>(`/contacts/${id}/restore`, { method: "POST" });
+}
+
 export interface BoardResponse<T> {
   statuses: Record<string, T[]>;
   totals: Array<{ status: string; count: number }>;

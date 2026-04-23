@@ -263,12 +263,12 @@ export async function bulkUpdateValues(
     }));
   } else if (entityType === "deal") {
     entityExists = !!(await prisma.deal.findFirst({
-      where: { id: entityId, workspaceId },
+      where: { id: entityId, workspaceId, deletedAt: null },
       select: { id: true },
     }));
   } else if (entityType === "company") {
     entityExists = !!(await prisma.company.findFirst({
-      where: { id: entityId, workspaceId },
+      where: { id: entityId, workspaceId, deletedAt: null },
       select: { id: true },
     }));
   }

@@ -26,6 +26,7 @@ interface ListParams {
   dueTodayOnly?: boolean;
   sortBy?: string;
   sortDir?: "asc" | "desc";
+  includeDeleted?: boolean;
 }
 
 const SORTABLE_FIELDS = [
@@ -54,6 +55,7 @@ export async function list(params: ListParams) {
     dueTodayOnly,
     sortBy: rawSortBy = "createdAt",
     sortDir = "desc",
+    includeDeleted = false,
   } = params;
   // Clamp page/limit to valid positive ranges — negative page causes negative
   // skip (Prisma error), and limit<=0 silently returns empty results.
@@ -63,7 +65,12 @@ export async function list(params: ListParams) {
     ? rawSortBy
     : "createdAt";
 
+  // Soft-delete: exclude tombstoned tasks by default. Admin UIs can opt in
+  // via includeDeleted=true to view/restore them.
   const where: Prisma.TaskWhereInput = { workspaceId };
+  if (!includeDeleted) {
+    where.deletedAt = null;
+  }
 
   if (search) {
     // Sanitize LIKE wildcards so user input like "%" or "_" doesn't match
@@ -139,7 +146,7 @@ export async function list(params: ListParams) {
 
 export async function getById(workspaceId: string, id: string) {
   const task = await prisma.task.findFirst({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       assignee: { include: { user: { select: { name: true } } } },
       contact: { select: { id: true, firstName: true, lastName: true } },
@@ -210,7 +217,7 @@ export async function create(
       ? prisma.contact.findFirst({ where: { id: data.contactId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.dealId
-      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId }, select: { id: true } })
+      ? prisma.deal.findFirst({ where: { id: data.dealId, workspaceId, deletedAt: null }, select: { id: true } })
       : null,
     data.ticketId
       ? prisma.ticket.findFirst({ where: { id: data.ticketId, workspaceId }, select: { id: true } })
@@ -336,7 +343,7 @@ export async function create(
  * When a recurring task is marked DONE, create the next occurrence.
  */
 export async function createNextRecurrence(taskId: string, workspaceId: string) {
-  const task = await prisma.task.findFirst({ where: { id: taskId, workspaceId } });
+  const task = await prisma.task.findFirst({ where: { id: taskId, workspaceId, deletedAt: null } });
   if (!task || !task.isRecurring || !task.recurrenceType) return null;
 
   // Don't create if recurrence end date has passed
@@ -438,7 +445,7 @@ export async function update(
 ) {
   // Fetch task and validate assigneeId ownership in parallel
   const [existing, assigneeRef] = await Promise.all([
-    prisma.task.findFirst({ where: { id, workspaceId } }),
+    prisma.task.findFirst({ where: { id, workspaceId, deletedAt: null } }),
     data.assigneeId
       ? prisma.workspaceMember.findFirst({ where: { id: data.assigneeId, workspaceId }, select: { id: true } })
       : null,
@@ -479,14 +486,14 @@ export async function update(
   // Use updateMany with workspaceId for defense-in-depth (prevents a TOCTOU
   // gap between the findFirst check and the actual write), then re-fetch.
   const updateResult = await prisma.task.updateMany({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     data: updateData,
   });
   if (updateResult.count === 0) {
     throw new AppError(404, "NOT_FOUND", "Task not found");
   }
   const updated = await prisma.task.findFirstOrThrow({
-    where: { id, workspaceId },
+    where: { id, workspaceId, deletedAt: null },
     include: {
       assignee: { include: { user: { select: { name: true } } } },
       contact: { select: { id: true, firstName: true, lastName: true } },
@@ -608,20 +615,33 @@ export async function update(
 }
 
 export async function remove(workspaceId: string, id: string) {
-  // Delete notes FIRST (polymorphic relation, no FK cascade) then the entity,
-  // wrapped in a transaction to prevent orphaned notes if the entity delete
-  // fails or vice-versa (race condition fix).
-  const [, deleteResult] = await prisma.$transaction([
-    prisma.note.deleteMany({ where: { workspaceId, entityType: "task", entityId: id } }),
-    prisma.task.deleteMany({ where: { id, workspaceId } }),
-  ]);
-  if (deleteResult.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
+  // Soft delete — stamps deletedAt so the task can be restored. Activities
+  // and notes keep their FK to the task so timeline and audit trail stay
+  // intact; only list/get/count queries that opt to hide tombstones filter it.
+  const result = await prisma.task.updateMany({
+    where: { id, workspaceId, deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+  if (result.count === 0) throw new AppError(404, "NOT_FOUND", "Task not found");
   return { deleted: true };
+}
+
+export async function restore(workspaceId: string, id: string) {
+  // Restore a soft-deleted task by clearing deletedAt. Only matches rows where
+  // deletedAt IS NOT NULL to distinguish "not deleted" from "not found".
+  const result = await prisma.task.updateMany({
+    where: { id, workspaceId, deletedAt: { not: null } },
+    data: { deletedAt: null },
+  });
+  if (result.count === 0) {
+    throw new AppError(404, "NOT_FOUND", "Deleted task not found");
+  }
+  return { restored: true };
 }
 
 export async function board(workspaceId: string) {
   const tasks = await prisma.task.findMany({
-    where: { workspaceId },
+    where: { workspaceId, deletedAt: null },
     include: {
       assignee: { include: { user: { select: { name: true } } } },
       contact: { select: { id: true, firstName: true, lastName: true } },
@@ -684,6 +704,7 @@ export async function checkOverdueTasks(workspaceId: string) {
       workspaceId,
       status: { notIn: ["DONE", "CANCELLED"] },
       dueDate: { lt: now },
+      deletedAt: null,
     },
     include: {
       assignee: { select: { id: true, userId: true } },
@@ -722,7 +743,7 @@ export async function getStats(workspaceId: string, memberId?: string) {
   todayEnd.setHours(23, 59, 59, 999);
   const weekAgo = new Date(now.getTime() - SEVEN_DAYS_MS);
 
-  const baseWhere: Prisma.TaskWhereInput = { workspaceId };
+  const baseWhere: Prisma.TaskWhereInput = { workspaceId, deletedAt: null };
   if (memberId) baseWhere.assigneeId = memberId;
 
   const [overdueCount, dueTodayCount, completedThisWeek] = await Promise.all([

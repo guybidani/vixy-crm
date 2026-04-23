@@ -39,9 +39,11 @@ import {
   getDeal,
   updateDeal,
   deleteDeal,
+  restoreDeal,
 } from "../../api/deals";
 import type { BantData, DealHealth } from "../../api/deals";
 import TagSelector from "../shared/TagSelector";
+import UndoToast from "../shared/UndoToast";
 import MondayPersonCell, {
   type PersonOption,
 } from "../shared/MondayPersonCell";
@@ -182,7 +184,30 @@ export default function DealDetailPanel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
-      toast.success("עסקה נמחקה");
+
+      const UNDO_DURATION = 5000;
+      toast.custom(
+        (t) => (
+          <UndoToast
+            message="עסקה נמחקה"
+            duration={UNDO_DURATION}
+            onDismiss={() => toast.dismiss(t.id)}
+            onUndo={async () => {
+              try {
+                await restoreDeal(dealId);
+                toast.dismiss(t.id);
+                toast.success("שוחזר");
+                queryClient.invalidateQueries({ queryKey: ["deals"] });
+                queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+              } catch {
+                toast.dismiss(t.id);
+                toast.error("שגיאה בשחזור");
+              }
+            }}
+          />
+        ),
+        { duration: UNDO_DURATION },
+      );
       onDeleted?.();
       onClose();
     },

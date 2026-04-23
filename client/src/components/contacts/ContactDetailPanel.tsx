@@ -36,7 +36,8 @@ import TagSelector from "../shared/TagSelector";
 import MondayPersonCell, {
   type PersonOption,
 } from "../shared/MondayPersonCell";
-import { getContact, updateContact, deleteContact } from "../../api/contacts";
+import { getContact, updateContact, deleteContact, restoreContact } from "../../api/contacts";
+import UndoToast from "../shared/UndoToast";
 import { listCompanies } from "../../api/companies";
 import { createActivity, updateActivity, deleteActivity } from "../../api/activities";
 import { createTask, type TaskType } from "../../api/tasks";
@@ -113,7 +114,34 @@ export default function ContactDetailPanel({
       queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["companies-board"] });
-      toast.success("איש קשר נמחק");
+
+      // Panel closes immediately — the UndoToast hangs around on the page
+      // behind it, so the user can still restore after navigating away.
+      const UNDO_DURATION = 5000;
+      toast.custom(
+        (t) => (
+          <UndoToast
+            message="איש קשר נמחק"
+            duration={UNDO_DURATION}
+            onDismiss={() => toast.dismiss(t.id)}
+            onUndo={async () => {
+              try {
+                await restoreContact(contactId);
+                toast.dismiss(t.id);
+                toast.success("שוחזר");
+                queryClient.invalidateQueries({ queryKey: ["contacts"] });
+                queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+                queryClient.invalidateQueries({ queryKey: ["companies"] });
+                queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+              } catch {
+                toast.dismiss(t.id);
+                toast.error("שגיאה בשחזור");
+              }
+            }}
+          />
+        ),
+        { duration: UNDO_DURATION },
+      );
       onClose();
     },
     onError: () => toast.error("שגיאה במחיקת איש הקשר"),
