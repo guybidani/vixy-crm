@@ -639,6 +639,46 @@ export async function restore(workspaceId: string, id: string) {
   return { restored: true };
 }
 
+export async function duplicate(
+  workspaceId: string,
+  memberId: string,
+  id: string,
+) {
+  const source = await prisma.task.findFirst({
+    where: { id, workspaceId, deletedAt: null },
+  });
+  if (!source) {
+    throw new AppError(404, "NOT_FOUND", "Task not found");
+  }
+
+  // Copies start as fresh TODOs — we don't replicate completedAt/outcomeNote
+  // or recurrence schedule. Recurrence would clone a live series and cause
+  // duplicate follow-ups, which is almost never what the user wants.
+  const created = await prisma.task.create({
+    data: {
+      workspaceId,
+      createdById: memberId,
+      title: `${source.title} (העתק)`,
+      description: source.description,
+      priority: source.priority,
+      taskType: source.taskType,
+      taskContext: source.taskContext,
+      dueDate: source.dueDate,
+      contactId: source.contactId,
+      dealId: source.dealId,
+      ticketId: source.ticketId,
+      assigneeId: source.assigneeId,
+    },
+    include: {
+      assignee: { include: { user: { select: { name: true } } } },
+      contact: { select: { id: true, firstName: true, lastName: true } },
+      deal: { select: { id: true, title: true } },
+    },
+  });
+
+  return created;
+}
+
 export async function board(workspaceId: string) {
   const tasks = await prisma.task.findMany({
     where: { workspaceId, deletedAt: null },

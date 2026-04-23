@@ -244,6 +244,20 @@ contactsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, ne
   }
 });
 
+// POST /api/v1/contacts/:id/duplicate — available to all workspace members
+contactsRouter.post("/:id/duplicate", async (req, res, next) => {
+  try {
+    const contact = await contactsService.duplicate(
+      req.workspaceId!,
+      req.memberId!,
+      req.params.id as string,
+    );
+    res.status(201).json(contact);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/contacts/:id/restore — un-tombstone a soft-deleted contact
 contactsRouter.post(
   "/:id/restore",

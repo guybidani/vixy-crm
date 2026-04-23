@@ -371,6 +371,51 @@ export async function remove(workspaceId: string, id: string) {
   return { deleted: true };
 }
 
+export async function duplicate(
+  workspaceId: string,
+  memberId: string,
+  id: string,
+) {
+  // Fetch source contact with tag relations so we can replicate them on the copy
+  const source = await prisma.contact.findFirst({
+    where: { id, workspaceId, deletedAt: null },
+    include: { tags: { select: { tagId: true } } },
+  });
+  if (!source) {
+    throw new AppError(404, "NOT_FOUND", "Contact not found");
+  }
+
+  // Suffix lastName so the "(העתק)" marker still appears at the end of fullName
+  // (UI composes `${firstName} ${lastName}`). Tags are replicated via nested
+  // create so the copy carries the same classification as the original.
+  const created = await prisma.contact.create({
+    data: {
+      workspaceId,
+      createdById: memberId,
+      firstName: source.firstName,
+      lastName: `${source.lastName} (העתק)`,
+      email: source.email,
+      phone: source.phone,
+      companyId: source.companyId,
+      position: source.position,
+      source: source.source,
+      status: source.status,
+      tags:
+        source.tags.length > 0
+          ? {
+              create: source.tags.map((t) => ({ tagId: t.tagId })),
+            }
+          : undefined,
+    },
+    include: {
+      company: { select: { id: true, name: true } },
+      tags: { include: { tag: true } },
+    },
+  });
+
+  return created;
+}
+
 export async function restore(workspaceId: string, id: string) {
   // Restore a soft-deleted contact by clearing deletedAt. Only matches rows
   // where deletedAt IS NOT NULL to distinguish "not deleted" from "not found".

@@ -7,7 +7,6 @@ import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useDetailPanelNavigation } from "../hooks/useDetailPanelNavigation";
 import {
   Plus,
-  Clock,
   Building2,
   AlertTriangle,
   Table2,
@@ -38,7 +37,7 @@ import MondayBoard, {
   type MondayGroup,
   type MondayColumn,
 } from "../components/shared/MondayBoard";
-import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import { buildRowContextItems } from "../components/shared/RowContextMenu";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayNumberCell from "../components/shared/MondayNumberCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
@@ -56,6 +55,7 @@ import {
   bulkDeleteDeals,
   bulkUpdateDeals,
   restoreDeal,
+  duplicateDeal,
   type Deal,
   type PipelineResponse,
 } from "../api/deals";
@@ -162,6 +162,16 @@ export default function DealsPage() {
       setLossReason("price");
     },
     onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const duplicateMut = useMutation({
+    mutationFn: duplicateDeal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      toast.success("שוכפל בהצלחה");
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
   function handleLostSubmit() {
@@ -712,22 +722,18 @@ export default function DealsPage() {
           sortDirection={boardSortDir}
           onSortColumnChange={setBoardSortBy}
           onSortDirectionChange={setBoardSortDir}
-          contextMenuItems={(row: Deal) => {
-            const items: ContextMenuItem[] = [
-              {
-                label: "פתח עסקה",
-                icon: <Clock size={14} />,
-                onClick: () => setSelectedDealId(row.id),
-              },
-              { label: "", onClick: () => {}, divider: true },
-              {
-                label: "מחק",
-                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק עסקה זו?" }),
-                danger: true,
-              },
-            ];
-            return items;
-          }}
+          contextMenuItems={(row: Deal) =>
+            buildRowContextItems({
+              row,
+              onOpen: () => setSelectedDealId(row.id),
+              onDuplicate: () => duplicateMut.mutate(row.id),
+              onDelete: () =>
+                setConfirmDelete({
+                  ids: [row.id],
+                  message: "האם אתה בטוח שברצונך למחוק עסקה זו?",
+                }),
+            })
+          }
         />
       )}
 

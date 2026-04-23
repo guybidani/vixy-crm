@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor, handleMutationError } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, RefreshCw, Clock, Link2 } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, RefreshCw } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -21,7 +21,7 @@ import MondayBoard, {
   type MondayGroup,
   type MondayColumn,
 } from "../components/shared/MondayBoard";
-import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import { buildRowContextItems } from "../components/shared/RowContextMenu";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import EmptyState from "../components/shared/EmptyState";
@@ -35,6 +35,7 @@ import {
   bulkDeleteContacts,
   bulkUpdateContacts,
   restoreContact,
+  duplicateContact,
   type Contact,
 } from "../api/contacts";
 import { listTags } from "../api/tags";
@@ -206,6 +207,16 @@ export default function ContactsPage() {
       toast.success("סטטוס עודכן");
     },
     onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const duplicateMut = useMutation({
+    mutationFn: duplicateContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      toast.success("שוכפל בהצלחה");
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
   // Load tags lazily (used only by bulk-add-tag dropdown)
@@ -789,30 +800,18 @@ export default function ContactsPage() {
           sortDirection={boardSortDir}
           onSortColumnChange={setBoardSortBy}
           onSortDirectionChange={setBoardSortDir}
-          contextMenuItems={(row: Contact) => {
-            const items: ContextMenuItem[] = [
-              {
-                label: "פתח איש קשר",
-                icon: <Clock size={14} />,
-                onClick: () => navigate(`/contacts/${row.id}`),
-              },
-              {
-                label: "העתק קישור",
-                icon: <Link2 size={14} />,
-                onClick: () => {
-                  navigator.clipboard.writeText(`${window.location.origin}/contacts/${row.id}`);
-                  toast.success("קישור הועתק");
-                },
-              },
-              { label: "", onClick: () => {}, divider: true },
-              {
-                label: "מחק",
-                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק איש קשר זה?" }),
-                danger: true,
-              },
-            ];
-            return items;
-          }}
+          contextMenuItems={(row: Contact) =>
+            buildRowContextItems({
+              row,
+              onOpen: () => navigate(`/contacts/${row.id}`),
+              onDuplicate: () => duplicateMut.mutate(row.id),
+              onDelete: () =>
+                setConfirmDelete({
+                  ids: [row.id],
+                  message: "האם אתה בטוח שברצונך למחוק איש קשר זה?",
+                }),
+            })
+          }
         />
       )}
 

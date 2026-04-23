@@ -718,3 +718,44 @@ export async function restore(workspaceId: string, id: string) {
   }
   return { restored: true };
 }
+
+export async function duplicate(
+  workspaceId: string,
+  memberId: string,
+  id: string,
+) {
+  // Fetch source deal — value is Decimal so we re-use it directly
+  const source = await prisma.deal.findFirst({
+    where: { id, workspaceId, deletedAt: null },
+  });
+  if (!source) {
+    throw new AppError(404, "NOT_FOUND", "Deal not found");
+  }
+
+  // Copies start fresh at LEAD stage with recalibrated probability so they
+  // don't pollute forecasts with phantom CLOSED_WON duplicates.
+  const created = await prisma.deal.create({
+    data: {
+      workspaceId,
+      title: `${source.title} (העתק)`,
+      value: source.value,
+      currency: source.currency,
+      stage: "LEAD",
+      priority: source.priority,
+      contactId: source.contactId,
+      companyId: source.companyId,
+      // Assign the copy to the duplicating member so it lands in their queue
+      assigneeId: memberId,
+      probability: STAGE_PROBABILITY["LEAD"] ?? 10,
+    },
+    include: {
+      contact: {
+        select: { id: true, firstName: true, lastName: true, phone: true },
+      },
+      company: { select: { id: true, name: true } },
+      assignee: { include: { user: { select: { name: true } } } },
+    },
+  });
+
+  return created;
+}

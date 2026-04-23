@@ -18,8 +18,6 @@ import {
   RefreshCw,
   ChevronRight,
   ChevronLeft,
-  Trash2,
-  Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { handleMutationError } from "../lib/utils";
@@ -36,13 +34,17 @@ import MondayBoard, {
   type MondayGroup,
   type MondayColumn,
 } from "../components/shared/MondayBoard";
-import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import {
+  type ContextMenuItem,
+  buildRowContextItems,
+} from "../components/shared/RowContextMenu";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import {
   listContacts,
   createContact,
   updateContact,
   bulkDeleteContacts,
+  duplicateContact,
   type Contact,
 } from "../api/contacts";
 import { createDeal } from "../api/deals";
@@ -191,6 +193,16 @@ export default function LeadsPage() {
       setSelectedIds(new Set());
     },
     onError: () => toast.error("שגיאה במחיקה"),
+  });
+
+  const duplicateMut = useMutation({
+    mutationFn: duplicateContact,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("שוכפל בהצלחה");
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
   const leads = data?.data || [];
@@ -352,14 +364,21 @@ export default function LeadsPage() {
     ),
   }));
 
-  // Context menu for table rows
-  const contextMenuItems = (row: Contact): ContextMenuItem[] => [
-    {
-      label: "פתח פרטים",
-      icon: <Eye size={14} />,
-      onClick: () => setSelectedContactId(row.id),
-    },
-    {
+  // Context menu for table rows. buildRowContextItems gives us the standard
+  // open/copy-link/duplicate/delete set; we splice in the lead-specific
+  // "הסמך ליד" action right after the Open item so it stays prominent.
+  const contextMenuItems = (row: Contact): ContextMenuItem[] => {
+    const items = buildRowContextItems({
+      row,
+      onOpen: () => setSelectedContactId(row.id),
+      onDuplicate: () => duplicateMut.mutate(row.id),
+      onDelete: () =>
+        setConfirmDelete({
+          ids: [row.id],
+          message: "האם אתה בטוח שברצונך למחוק ליד זה?",
+        }),
+    });
+    items.splice(1, 0, {
       label: "הסמך ליד",
       icon: <Sparkles size={14} />,
       onClick: () => {
@@ -368,15 +387,9 @@ export default function LeadsPage() {
           qualifyMutation.mutate(row);
         }
       },
-    },
-    { label: "", onClick: () => {}, divider: true },
-    {
-      label: "מחק",
-      icon: <Trash2 size={14} />,
-      onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק ליד זה?" }),
-      danger: true,
-    },
-  ];
+    });
+    return items;
+  };
 
   return (
     <PageShell

@@ -64,6 +64,10 @@ export function deleteCompany(id: string) {
   return api(`/companies/${id}`, { method: "DELETE" });
 }
 
+export function duplicateCompany(id: string) {
+  return api<Company>(`/companies/${id}/duplicate`, { method: "POST" });
+}
+
 export function getCompaniesBoard() {
   return api<import("./contacts").BoardResponse<Company>>("/companies/board");
 }

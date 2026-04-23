@@ -102,6 +102,19 @@ companiesRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, n
   }
 });
 
+// POST /api/v1/companies/:id/duplicate — available to all workspace members
+companiesRouter.post("/:id/duplicate", async (req, res, next) => {
+  try {
+    const company = await companiesService.duplicate(
+      req.workspaceId!,
+      req.params.id as string,
+    );
+    res.status(201).json(company);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/companies/:id/restore — un-tombstone a soft-deleted company
 companiesRouter.post(
   "/:id/restore",

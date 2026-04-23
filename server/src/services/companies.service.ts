@@ -256,6 +256,34 @@ export async function restore(workspaceId: string, id: string) {
   return { restored: true };
 }
 
+export async function duplicate(workspaceId: string, id: string) {
+  // Fetch source company — the create() service ignores memberId for companies
+  // (there's no createdBy column), so we match that signature here too.
+  const source = await prisma.company.findFirst({
+    where: { id, workspaceId, deletedAt: null },
+  });
+  if (!source) {
+    throw new AppError(404, "NOT_FOUND", "Company not found");
+  }
+
+  const created = await prisma.company.create({
+    data: {
+      workspaceId,
+      name: `${source.name} (העתק)`,
+      status: source.status,
+      website: source.website,
+      phone: source.phone,
+      email: source.email,
+      address: source.address,
+      industry: source.industry,
+      size: source.size,
+      notes: source.notes,
+    },
+  });
+
+  return created;
+}
+
 export async function board(workspaceId: string) {
   const companies = await prisma.company.findMany({
     where: { workspaceId, deletedAt: null },

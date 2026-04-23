@@ -29,6 +29,7 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Copy,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -47,6 +48,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  duplicateTask,
   bulkDeleteTasks,
   bulkUpdateTasks,
   getTasksBoard,
@@ -278,10 +280,12 @@ function DueDateCell({ dueDate, dueTime, status }: { dueDate: string | null; due
 function TaskDotMenu({
   task,
   onEdit,
+  onDuplicate,
   onDelete,
 }: {
   task: Task;
   onEdit: () => void;
+  onDuplicate?: () => void;
   onDelete: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -325,6 +329,16 @@ function TaskDotMenu({
             עריכה
           </button>
           <SnoozeDropdown taskId={task.id} onSnoozed={() => setOpen(false)} />
+          {onDuplicate && (
+            <button
+              role="menuitem"
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); setOpen(false); }}
+              className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#F6F7FB] flex items-center gap-2 transition-colors text-[#323338]"
+            >
+              <Copy size={13} className="text-[#9699A6]" />
+              שכפל
+            </button>
+          )}
           <div className="border-t border-[#E6E9EF] my-1" />
           <button
             role="menuitem"
@@ -405,6 +419,7 @@ function TaskRow({
   task,
   onComplete,
   onDelete,
+  onDuplicate,
   onEdit,
   inlineUpdate,
   memberOptions,
@@ -416,6 +431,7 @@ function TaskRow({
   task: Task;
   onComplete: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
   onEdit: () => void;
   inlineUpdate: (id: string, data: Record<string, unknown>) => void;
   memberOptions: { id: string; name: string }[];
@@ -533,7 +549,7 @@ function TaskRow({
         />
 
         {/* Dot menu */}
-        <TaskDotMenu task={task} onEdit={onEdit} onDelete={onDelete} />
+        <TaskDotMenu task={task} onEdit={onEdit} onDuplicate={onDuplicate} onDelete={onDelete} />
       </div>
     </div>
   );
@@ -546,6 +562,7 @@ function DateGroupSection({
   tasks,
   onComplete,
   onDelete,
+  onDuplicate,
   onEdit,
   inlineUpdate,
   memberOptions,
@@ -559,6 +576,7 @@ function DateGroupSection({
   tasks: Task[];
   onComplete: (task: Task) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (id: string) => void;
   onEdit: (task: Task) => void;
   inlineUpdate: (id: string, data: Record<string, unknown>) => void;
   memberOptions: { id: string; name: string }[];
@@ -638,6 +656,7 @@ function DateGroupSection({
                 task={task}
                 onComplete={() => onComplete(task)}
                 onDelete={() => onDelete(task.id)}
+                onDuplicate={onDuplicate ? () => onDuplicate(task.id) : undefined}
                 onEdit={() => onEdit(task)}
                 inlineUpdate={inlineUpdate}
                 memberOptions={memberOptions}
@@ -1074,6 +1093,16 @@ export default function TasksPage() {
     onError: () => toast.error("שגיאה במחיקת משימה"),
   });
 
+  const duplicateMut = useMutation({
+    mutationFn: duplicateTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
+      toast.success("שוכפל בהצלחה");
+    },
+    onError: () => toast.error("שגיאה בשכפול"),
+  });
+
   const bulkDeleteMutation = useMutation({
     mutationFn: (ids: string[]) => bulkDeleteTasks(ids),
     onSuccess: (result) => {
@@ -1386,6 +1415,7 @@ export default function TasksPage() {
                       toggleMutation.mutate({ id: task.id, status: newStatus });
                     }}
                     onDelete={(id) => setTaskToDelete(id)}
+                    onDuplicate={(id) => duplicateMut.mutate(id)}
                     onEdit={(task) => setSelectedTaskId(task.id)}
                     inlineUpdate={inlineUpdate}
                     memberOptions={memberOptions}

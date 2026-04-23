@@ -377,6 +377,20 @@ tasksRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next)
   }
 });
 
+// POST /api/v1/tasks/:id/duplicate — available to all workspace members
+tasksRouter.post("/:id/duplicate", async (req, res, next) => {
+  try {
+    const task = await tasksService.duplicate(
+      req.workspaceId!,
+      req.memberId!,
+      req.params.id as string,
+    );
+    res.status(201).json(task);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/tasks/:id/restore — un-tombstone a soft-deleted task
 tasksRouter.post(
   "/:id/restore",

@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Building2, Users, Handshake, RefreshCw, Mail, Phone, Clock } from "lucide-react";
+import { Plus, Building2, Users, Handshake, RefreshCw, Mail, Phone } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import { handleMutationError } from "../lib/utils";
@@ -15,7 +15,7 @@ import MondayBoard, {
   type MondayGroup,
   type MondayColumn,
 } from "../components/shared/MondayBoard";
-import { type ContextMenuItem } from "../components/shared/RowContextMenu";
+import { buildRowContextItems } from "../components/shared/RowContextMenu";
 import BulkActionBar from "../components/shared/BulkActionBar";
 import KanbanBoard, {
   type KanbanColumn as KanbanCol,
@@ -26,6 +26,7 @@ import {
   createCompany,
   updateCompany,
   deleteCompany,
+  duplicateCompany,
   getCompaniesBoard,
   type Company,
 } from "../api/companies";
@@ -148,6 +149,16 @@ export default function CompaniesPage() {
       setSelectedIds(new Set());
     },
     onError: () => toast.error("שגיאה במחיקה"),
+  });
+
+  const duplicateMut = useMutation({
+    mutationFn: duplicateCompany,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+      queryClient.invalidateQueries({ queryKey: ["companies-board"] });
+      toast.success("שוכפל בהצלחה");
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בשכפול"),
   });
 
   // Kanban columns
@@ -386,22 +397,18 @@ export default function CompaniesPage() {
           sortDirection={boardSortDir}
           onSortColumnChange={setBoardSortBy}
           onSortDirectionChange={setBoardSortDir}
-          contextMenuItems={(row: Company) => {
-            const items: ContextMenuItem[] = [
-              {
-                label: "פתח חברה",
-                icon: <Clock size={14} />,
-                onClick: () => navigate(`/companies/${row.id}`),
-              },
-              { label: "", onClick: () => {}, divider: true },
-              {
-                label: "מחק",
-                onClick: () => setConfirmDelete({ ids: [row.id], message: "האם אתה בטוח שברצונך למחוק חברה זו?" }),
-                danger: true,
-              },
-            ];
-            return items;
-          }}
+          contextMenuItems={(row: Company) =>
+            buildRowContextItems({
+              row,
+              onOpen: () => navigate(`/companies/${row.id}`),
+              onDuplicate: () => duplicateMut.mutate(row.id),
+              onDelete: () =>
+                setConfirmDelete({
+                  ids: [row.id],
+                  message: "האם אתה בטוח שברצונך למחוק חברה זו?",
+                }),
+            })
+          }
         />
       )}
 

@@ -279,6 +279,20 @@ dealsRouter.delete("/:id", requireRole("OWNER", "ADMIN"), async (req, res, next)
   }
 });
 
+// POST /api/v1/deals/:id/duplicate — available to all workspace members
+dealsRouter.post("/:id/duplicate", async (req, res, next) => {
+  try {
+    const deal = await dealsService.duplicate(
+      req.workspaceId!,
+      req.memberId!,
+      req.params.id as string,
+    );
+    res.status(201).json(deal);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/v1/deals/:id/restore — un-tombstone a soft-deleted deal
 dealsRouter.post(
   "/:id/restore",

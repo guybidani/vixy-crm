@@ -105,6 +105,10 @@ export function deleteContact(id: string) {
   return api(`/contacts/${id}`, { method: "DELETE" });
 }
 
+export function duplicateContact(id: string) {
+  return api<Contact>(`/contacts/${id}/duplicate`, { method: "POST" });
+}
+
 // Server soft-deletes contacts, so restore is a simple un-tombstone.
 // No /bulk-restore endpoint exists — callers restoring many IDs should loop.
 export function restoreContact(id: string) {

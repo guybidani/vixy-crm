@@ -149,6 +149,10 @@ export function deleteTask(id: string) {
   return api(`/tasks/${id}`, { method: "DELETE" });
 }
 
+export function duplicateTask(id: string) {
+  return api<Task>(`/tasks/${id}/duplicate`, { method: "POST" });
+}
+
 export function getTasksBoard() {
   return api<import("./contacts").BoardResponse<Task>>("/tasks/board");
 }
