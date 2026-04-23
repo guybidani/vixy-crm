@@ -46,6 +46,7 @@ import DealDetailPanel from "../components/deals/DealDetailPanel";
 import DealsChartView from "../components/deals/DealsChartView";
 import DealHealthBadge from "../components/deals/DealHealthBadge";
 import EmptyState from "../components/shared/EmptyState";
+import Tooltip from "../components/shared/Tooltip";
 import { EmptyDeals, EmptyError } from "../components/shared/illustrations";
 import {
   getDealsPipeline,
@@ -586,13 +587,15 @@ export default function DealsPage() {
       actions={
         <div className="flex items-center gap-2">
           <ExportButton entity="deals" filters={{ search: debouncedSearch }} />
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
-          >
-            <Plus size={15} strokeWidth={2.5} />
-            עסקה חדשה
-          </button>
+          <Tooltip content={<span>עסקה חדשה · <kbd className="font-mono opacity-80">N D</kbd></span>}>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              עסקה חדשה
+            </button>
+          </Tooltip>
         </div>
       }
     >

@@ -58,6 +58,7 @@ import { useSnoozeOptions, resolveSnoozeDate } from "../hooks/useSnoozeOptions";
 import { sortedEntries } from "../hooks/useWorkspaceOptions";
 import { listMentionableMembers } from "../api/auth";
 import EmptyState from "../components/shared/EmptyState";
+import Tooltip from "../components/shared/Tooltip";
 import { EmptyTasks, EmptyError, EmptySearch } from "../components/shared/illustrations";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
@@ -978,7 +979,31 @@ export default function TasksPage() {
 
   const toggleMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateTask(id, { status }),
-    onSuccess: () => {
+    // Optimistic update — flip status immediately so the check feels instant.
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["tasks"] });
+      await queryClient.cancelQueries({ queryKey: ["tasks-board"] });
+      const prevTasks = queryClient.getQueriesData<{ data: Task[] } | undefined>({ queryKey: ["tasks"] });
+      const prevBoard = queryClient.getQueryData(["tasks-board"]);
+      // Patch every matching ["tasks", ...] query
+      prevTasks.forEach(([key, value]) => {
+        if (!value) return;
+        queryClient.setQueryData(key, {
+          ...value,
+          data: value.data.map((t) =>
+            t.id === id ? ({ ...t, status: status as Task["status"] }) : t,
+          ),
+        });
+      });
+      return { prevTasks, prevBoard };
+    },
+    onError: (_err, _vars, ctx) => {
+      // Roll back on failure
+      ctx?.prevTasks?.forEach(([key, value]) => queryClient.setQueryData(key, value));
+      if (ctx?.prevBoard !== undefined) queryClient.setQueryData(["tasks-board"], ctx.prevBoard);
+      toast.error("לא הצלחנו לעדכן את המשימה");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
     },
@@ -1185,13 +1210,15 @@ export default function TasksPage() {
                 )}
               </div>
               <ExportButton entity="tasks" filters={{}} />
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
-              >
-                <Plus size={15} strokeWidth={2.5} />
-                משימה חדשה
-              </button>
+              <Tooltip content={<span>משימה חדשה · <kbd className="font-mono opacity-80">N T</kbd></span>}>
+                <button
+                  onClick={() => setShowCreate(true)}
+                  className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+                >
+                  <Plus size={15} strokeWidth={2.5} />
+                  משימה חדשה
+                </button>
+              </Tooltip>
             </div>
           }
         >

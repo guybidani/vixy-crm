@@ -135,6 +135,7 @@ function ContactCard({ item }: { item: RecentContact }) {
 
 export default function HistoryPage() {
   const historyLabel = useModuleLabel("history");
+  const navigate = useNavigate();
   const [typeFilter, setTypeFilter] = useState("");
   const { data: recentContacts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["recent-contacts"],
@@ -224,6 +225,23 @@ export default function HistoryPage() {
           icon={<Clock size={32} className="text-[#9699A6]" />}
           title={typeFilter ? "אין תוצאות לסינון זה" : "אין היסטוריה עדיין"}
           description={typeFilter ? "נסו לשנות את סוג הפעילות או להסיר את הסינון" : "התחל לתקשר עם לקוחות — שיחות, אימיילים, פגישות וווטסאפ יופיעו כאן"}
+          action={
+            typeFilter ? (
+              <button
+                onClick={() => setTypeFilter("")}
+                className="px-4 py-2 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-semibold rounded-[4px] border border-[#D0D4E4] transition-colors"
+              >
+                הסר סינון
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/contacts")}
+                className="px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md"
+              >
+                עבור לאנשי קשר
+              </button>
+            )
+          }
         />
       ) : (
         <div className="space-y-2">

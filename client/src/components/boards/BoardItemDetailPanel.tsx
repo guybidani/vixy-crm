@@ -565,7 +565,7 @@ export default function BoardItemDetailPanel({
 
   // ── Queries ──
 
-  const { data: board, isLoading } = useQuery({
+  const { data: board, isLoading, isError, refetch } = useQuery({
     queryKey: ["board", boardId],
     queryFn: () => getBoard(boardId),
   });
@@ -1119,6 +1119,30 @@ export default function BoardItemDetailPanel({
   }
 
   // ── Render ──
+
+  if (isError) {
+    return (
+      <>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} />
+        <div className="fixed top-0 right-0 h-full w-full md:max-w-[900px] bg-white shadow-2xl z-50 flex flex-col items-center justify-center gap-2 px-6 text-center">
+          <p className="text-[#E44258] font-semibold">שגיאה בטעינת הפריט</p>
+          <p className="text-[13px] text-[#9699A6]">לא ניתן לטעון את הלוח.</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-1 text-[13px] text-[#0073EA] hover:underline font-medium"
+          >
+            נסה שוב
+          </button>
+          <button
+            onClick={handleClose}
+            className="mt-1 text-[12px] text-[#9699A6] hover:text-[#676879]"
+          >
+            סגור
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

@@ -40,6 +40,7 @@ import { type ContextMenuItem } from "../components/shared/RowContextMenu";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import BulkActionBar from "../components/shared/BulkActionBar";
 import EmptyState from "../components/shared/EmptyState";
+import Tooltip from "../components/shared/Tooltip";
 import { EmptyTickets, EmptySearch } from "../components/shared/illustrations";
 import {
   listTickets,
@@ -514,13 +515,15 @@ export default function TicketsPage() {
               <h2 className="text-[18px] font-bold text-[#323338]">{ticketsLabel}</h2>
               {viewToggle}
             </div>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
-            >
-              <Plus size={15} strokeWidth={2.5} />
-              קריאה חדשה
-            </button>
+            <Tooltip content={<span>קריאה חדשה · <kbd className="font-mono opacity-80">N K</kbd></span>}>
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+              >
+                <Plus size={15} strokeWidth={2.5} />
+                קריאה חדשה
+              </button>
+            </Tooltip>
           </div>
         </div>
 

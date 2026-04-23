@@ -25,6 +25,7 @@ import { type ContextMenuItem } from "../components/shared/RowContextMenu";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import EmptyState from "../components/shared/EmptyState";
+import Tooltip from "../components/shared/Tooltip";
 import { EmptyContacts, EmptyError, EmptySearch } from "../components/shared/illustrations";
 import {
   listContacts,
@@ -535,13 +536,15 @@ export default function ContactsPage() {
             entity="contacts"
             filters={{ status: statusFilter, search: debouncedSearch }}
           />
-          <button
-            onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
-          >
-            <Plus size={15} strokeWidth={2.5} />
-            איש קשר חדש
-          </button>
+          <Tooltip content={<span>איש קשר חדש · <kbd className="font-mono opacity-80">N C</kbd></span>}>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="flex items-center gap-1.5 px-3 py-[6px] bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-medium rounded-[4px] transition-colors"
+            >
+              <Plus size={15} strokeWidth={2.5} />
+              איש קשר חדש
+            </button>
+          </Tooltip>
         </div>
       }
     >
