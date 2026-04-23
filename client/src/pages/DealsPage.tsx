@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,9 +17,7 @@ import {
   TrendingUp,
   CheckCircle2,
   Layers,
-  AlertCircle,
   RefreshCw,
-  Handshake,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getWhatsAppUrl } from "../utils/phone";
@@ -44,6 +42,8 @@ import MondayPersonCell from "../components/shared/MondayPersonCell";
 import DealDetailPanel from "../components/deals/DealDetailPanel";
 import DealsChartView from "../components/deals/DealsChartView";
 import DealHealthBadge from "../components/deals/DealHealthBadge";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyDeals, EmptyError } from "../components/shared/illustrations";
 import {
   getDealsPipeline,
   listDeals,
@@ -302,6 +302,7 @@ export default function DealsPage() {
       label: "סטטוס",
       width: "150px",
       sortable: true,
+      noPadding: true,
       render: (row) => (
         <MondayStatusCell
           value={row.stage}
@@ -326,6 +327,7 @@ export default function DealsPage() {
       label: "עדיפות",
       width: "120px",
       sortable: true,
+      noPadding: true,
       render: (row) => (
         <MondayStatusCell
           value={row.priority}
@@ -390,14 +392,14 @@ export default function DealsPage() {
               <AlertTriangle
                 size={12}
                 className={
-                  isSevere ? "text-[#FB275D] animate-pulse" : "text-[#FDAB3D]"
+                  isSevere ? "text-[#E2445C] animate-pulse" : "text-[#FDAB3D]"
                 }
               />
             )}
             <span
               className={`font-semibold text-[13px] ${
                 isSevere
-                  ? "text-[#FB275D]"
+                  ? "text-[#E2445C]"
                   : isRotting
                     ? "text-[#FDAB3D]"
                     : "text-[#676879]"
@@ -436,8 +438,8 @@ export default function DealsPage() {
         const isOverdue = row.stage !== "CLOSED_WON" && row.stage !== "CLOSED_LOST" && date < new Date();
         return (
           <div className="flex items-center gap-1">
-            <Calendar size={12} className={isOverdue ? "text-[#FB275D]" : "text-[#9699A6]"} />
-            <span className={`text-[13px] ${isOverdue ? "text-[#FB275D] font-semibold" : "text-[#676879]"}`}>
+            <Calendar size={12} className={isOverdue ? "text-[#E2445C]" : "text-[#9699A6]"} />
+            <span className={`text-[13px] ${isOverdue ? "text-[#E2445C] font-semibold" : "text-[#676879]"}`}>
               {date.toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
             </span>
           </div>
@@ -561,20 +563,7 @@ export default function DealsPage() {
         <DealsEmptyState onAdd={() => setShowCreate(true)} />
       ) : viewMode === "kanban" ? (
         pipelineError ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-              <AlertCircle size={28} className="text-[#E44258]" />
-            </div>
-            <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת עסקאות</h2>
-            <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-            <button
-              onClick={() => refetchPipeline()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-            >
-              <RefreshCw size={14} />
-              נסה שוב
-            </button>
-          </div>
+          <DealsErrorState onRetry={() => refetchPipeline()} />
         ) : (
           <KanbanBoard<Deal>
             columns={kanbanColumns}
@@ -595,20 +584,7 @@ export default function DealsPage() {
       ) : tableTab === "chart" ? (
         <DealsChartView />
       ) : tableError ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-            <AlertCircle size={28} className="text-[#E44258]" />
-          </div>
-          <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת עסקאות</h2>
-          <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-          <button
-            onClick={() => refetchTable()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-          >
-            <RefreshCw size={14} />
-            נסה שוב
-          </button>
-        </div>
+        <DealsErrorState onRetry={() => refetchTable()} />
       ) : (
         <MondayBoard<Deal>
           groups={mondayGroups}
@@ -737,7 +713,7 @@ export default function DealsPage() {
               <button
                 type="button"
                 onClick={() => setLostModal(null)}
-                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+                className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>
@@ -783,10 +759,10 @@ function DealCard({
   );
   const ageColor =
     dealAgeDays < 30
-      ? "text-[#00CA72]"
+      ? "text-[#00C875]"
       : dealAgeDays < 60
         ? "text-[#FDAB3D]"
-        : "text-[#FB275D]";
+        : "text-[#E2445C]";
   const stageInfo = dealStages[deal.stage];
 
   // Format expected close date
@@ -803,7 +779,7 @@ function DealCard({
         isDragging
           ? "shadow-2xl rotate-1 scale-105 opacity-95 border-[#0073EA]/40"
           : isSeverelyRotting && !isClosedStage
-            ? "shadow-sm border-[#FB275D]/30 hover:shadow-md"
+            ? "shadow-sm border-[#E2445C]/30 hover:shadow-md"
             : isRotting && !isClosedStage
               ? "shadow-sm border-[#FDAB3D]/40 hover:shadow-md"
               : "shadow-sm border-[#E6E9EF] hover:shadow-md hover:border-[#C5C7D0]"
@@ -898,12 +874,12 @@ function DealCard({
           {!isClosedStage && isRotting && (
             <AlertTriangle
               size={11}
-              className={`flex-shrink-0 ${isSeverelyRotting ? "text-[#FB275D] animate-pulse" : "text-[#FDAB3D]"}`}
+              className={`flex-shrink-0 ${isSeverelyRotting ? "text-[#E2445C] animate-pulse" : "text-[#FDAB3D]"}`}
             />
           )}
 
           {closeDate && (
-            <div className={`flex items-center gap-0.5 text-[10px] font-medium ${isOverdue ? "text-[#FB275D]" : "text-[#676879]"}`}>
+            <div className={`flex items-center gap-0.5 text-[10px] font-medium ${isOverdue ? "text-[#E2445C]" : "text-[#676879]"}`}>
               <Calendar size={10} className="flex-shrink-0" />
               <span>{closeDate}</span>
             </div>
@@ -938,7 +914,7 @@ function DealCard({
           {onWon && (
             <button
               onClick={() => onWon(deal.id)}
-              className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold rounded-md bg-[#E8F9F0] text-[#037F4C] hover:bg-[#00CA72] hover:text-white transition-colors"
+              className="flex-1 flex items-center justify-center gap-1 py-1 text-[10px] font-semibold rounded-md bg-[#E8F9F0] text-[#037F4C] hover:bg-[#00C875] hover:text-white transition-colors"
               title="סגור כזכייה"
             >
               <span>✓</span>
@@ -1027,28 +1003,32 @@ function ForecastBar({
 
 function DealsEmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="mb-6">
-        <div className="w-20 h-20 rounded-full bg-[#E3EFFE] flex items-center justify-center">
-          <Handshake size={36} className="text-[#0073EA]" />
-        </div>
-      </div>
+    <EmptyState
+      illustration={<EmptyDeals />}
+      title="צור את העסקה הראשונה שלך"
+      description="עקוב אחרי כל ההתקדמות בצינור המכירות במקום אחד, עם תחזית הכנסות ותזכורות אוטומטיות."
+      action={{
+        label: "עסקה חדשה",
+        onClick: onAdd,
+        icon: <Plus size={16} />,
+      }}
+    />
+  );
+}
 
-      <h3 className="text-[18px] font-semibold text-[#323338] mb-2">
-        אין עסקאות
-      </h3>
-      <p className="text-[14px] text-[#676879] max-w-xs mb-6 leading-relaxed">
-        צור את העסקה הראשונה שלך ועקוב אחרי ההתקדמות בצינור המכירות.
-      </p>
-
-      <button
-        onClick={onAdd}
-        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors"
-      >
-        <Plus size={16} />
-        עסקה חדשה
-      </button>
-    </div>
+function DealsErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <EmptyState
+      illustration={<EmptyError />}
+      title="משהו השתבש"
+      description="לא הצלחנו לטעון את העסקאות. נסו שוב בעוד רגע."
+      action={{
+        label: "נסה שוב",
+        onClick: onRetry,
+        icon: <RefreshCw size={14} />,
+      }}
+      variant="error"
+    />
   );
 }
 
@@ -1246,7 +1226,7 @@ function CreateDealModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

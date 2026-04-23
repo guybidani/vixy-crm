@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -34,7 +34,7 @@ import { handleMutationError } from "../../lib/utils";
 
 const ENTITY_TYPES = [
   { key: "contact", label: "אנשי קשר", icon: Users, color: "#0073EA" },
-  { key: "deal", label: "עסקאות", icon: Handshake, color: "#00CA72" },
+  { key: "deal", label: "עסקאות", icon: Handshake, color: "#00C875" },
   { key: "company", label: "חברות", icon: Building2, color: "#A25DDC" },
 ] as const;
 
@@ -50,8 +50,8 @@ const FIELD_TYPES = [
 ] as const;
 
 const OPTION_COLORS = [
-  "#0073EA", "#579BFC", "#66CCFF", "#00CA72", "#25D366",
-  "#CAB641", "#FDAB3D", "#FF642E", "#FB275D", "#A25DDC",
+  "#0073EA", "#579BFC", "#66CCFF", "#00C875", "#25D366",
+  "#CAB641", "#FDAB3D", "#FF642E", "#E2445C", "#A25DDC",
   "#FF7EB3", "#C4C4C4",
 ];
 
@@ -150,7 +150,7 @@ export default function CustomFieldsTab() {
                 className={`flex items-center gap-1.5 px-5 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px ${
                   isActive
                     ? "border-[#0073EA] text-[#0073EA]"
-                    : "border-transparent text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8]"
+                    : "border-transparent text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB]"
                 }`}
               >
                 <et.icon size={14} />
@@ -179,7 +179,7 @@ export default function CustomFieldsTab() {
                   onDragStart={() => handleDragStart(idx)}
                   onDragOver={(e) => handleDragOver(e, idx)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center gap-3 px-5 py-3 hover:bg-[#F5F6F8] transition-colors group cursor-grab active:cursor-grabbing ${
+                  className={`flex items-center gap-3 px-5 py-3 hover:bg-[#F6F7FB] transition-colors group cursor-grab active:cursor-grabbing ${
                     dragIdx === idx ? "bg-[#F0F4FF] opacity-70" : ""
                   }`}
                 >
@@ -478,7 +478,7 @@ function CustomFieldForm({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

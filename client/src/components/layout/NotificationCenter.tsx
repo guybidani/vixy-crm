@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -317,7 +317,7 @@ export default function NotificationCenter() {
       {/* Bell button */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879]"
+        className="relative p-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#676879]"
         title="התראות"
         aria-label={unreadCount > 0 ? `התראות (${unreadCount} חדשות)` : "התראות"}
         aria-expanded={open}
@@ -365,7 +365,7 @@ export default function NotificationCenter() {
               <button
                 ref={closeButtonRef}
                 onClick={() => setOpen(false)}
-                className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6]"
+                className="p-1 rounded-[4px] hover:bg-[#F6F7FB] text-[#9699A6]"
                 aria-label="סגור התראות"
               >
                 <X size={14} />
@@ -385,7 +385,7 @@ export default function NotificationCenter() {
                 {/* Unread group */}
                 {unread.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F5F6F8] border-b border-[#E6E9EF]">
+                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F6F7FB] border-b border-[#E6E9EF]">
                       חדש
                     </div>
                     {unread.map((n) => (
@@ -402,7 +402,7 @@ export default function NotificationCenter() {
                 {/* Read group */}
                 {read.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F5F6F8] border-b border-[#E6E9EF]">
+                    <div className="px-4 py-2 text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide bg-[#F6F7FB] border-b border-[#E6E9EF]">
                       קודם
                     </div>
                     {read.map((n) => (

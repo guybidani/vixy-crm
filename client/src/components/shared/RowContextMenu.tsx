@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import {
   ExternalLink,
   Copy,
@@ -124,8 +124,8 @@ export default function RowContextMenu({
             onMouseEnter={() => setFocusedIndex(i)}
             className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-right transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA] ${
               item.danger
-                ? "text-[#FB275D] hover:bg-[#FFF0F0]"
-                : "text-[#323338] hover:bg-[#F5F6F8]"
+                ? "text-[#E2445C] hover:bg-[#FFF0F0]"
+                : "text-[#323338] hover:bg-[#F6F7FB]"
             }`}
           >
             {item.icon && (

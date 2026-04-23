@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronLeft, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -30,11 +30,11 @@ const TEMPLATE_ORDER = [
 const STAGE_COLORS = [
   "#579BFC",
   "#A25DDC",
-  "#6161FF",
+  "#0073EA",
   "#FDAB3D",
   "#FF642E",
-  "#00CA72",
-  "#FB275D",
+  "#00C875",
+  "#E2445C",
   "#C4C4C4",
 ];
 
@@ -49,9 +49,9 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
           className={cn(
             "h-2 rounded-full transition-all duration-500",
             i === current
-              ? "w-8 bg-[#6161FF]"
+              ? "w-8 bg-[#0073EA]"
               : i < current
-                ? "w-2 bg-[#6161FF]"
+                ? "w-2 bg-[#0073EA]"
                 : "w-2 bg-gray-200",
           )}
         />
@@ -88,12 +88,12 @@ function TemplateCard({
         "hover:shadow-lg hover:-translate-y-0.5",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2",
         selected
-          ? "border-[#6161FF] bg-[#F0F0FF] shadow-md"
-          : "border-gray-200 bg-white hover:border-[#6161FF]/40",
+          ? "border-[#0073EA] bg-[#CCE5FF] shadow-md"
+          : "border-gray-200 bg-white hover:border-[#0073EA]/40",
       )}
     >
       {selected && (
-        <div className="absolute top-3 left-3 w-6 h-6 bg-[#6161FF] rounded-full flex items-center justify-center">
+        <div className="absolute top-3 left-3 w-6 h-6 bg-[#0073EA] rounded-full flex items-center justify-center">
           <Check className="w-4 h-4 text-white" />
         </div>
       )}
@@ -120,7 +120,7 @@ function PreviewSection({
   const colors =
     type === "stages"
       ? STAGE_COLORS
-      : ["#579BFC", "#A25DDC", "#00CA72", "#FB275D", "#C4C4C4"];
+      : ["#579BFC", "#A25DDC", "#00C875", "#E2445C", "#C4C4C4"];
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -159,9 +159,9 @@ function ModulePreview({ labels }: { labels: Record<string, string> }) {
         {Object.entries(labels).map(([key, label]) => (
           <div
             key={key}
-            className="flex items-center gap-2 p-2 rounded-lg bg-[#F5F6F8]"
+            className="flex items-center gap-2 p-2 rounded-lg bg-[#F6F7FB]"
           >
-            <div className="w-2 h-2 rounded-full bg-[#6161FF]" />
+            <div className="w-2 h-2 rounded-full bg-[#0073EA]" />
             <span className="text-[13px] text-[#323338]">{label}</span>
           </div>
         ))}
@@ -173,7 +173,7 @@ function ModulePreview({ labels }: { labels: Record<string, string> }) {
 // ─── Confetti ───
 
 function createConfetti(container: HTMLElement) {
-  const colors = ["#6161FF", "#0073EA", "#00CA72", "#FDAB3D", "#FB275D", "#A25DDC"];
+  const colors = ["#0073EA", "#0073EA", "#00C875", "#FDAB3D", "#E2445C", "#A25DDC"];
   const count = 80;
 
   for (let i = 0; i < count; i++) {
@@ -361,7 +361,7 @@ export default function OnboardingPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-[#F5F6F8] via-white to-[#EEF0FF] flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-[#F6F7FB] via-white to-[#EEF0FF] flex items-center justify-center p-4"
       dir="rtl"
     >
       <div id="confetti-container" className="fixed inset-0 pointer-events-none z-50" aria-hidden="true" />
@@ -369,7 +369,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-3xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-[#6161FF] rounded-2xl mb-4 shadow-lg shadow-[#6161FF]/20">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-[#0073EA] rounded-2xl mb-4 shadow-lg shadow-[#0073EA]/20">
             <span className="text-white text-2xl font-bold">V</span>
           </div>
         </div>
@@ -398,14 +398,14 @@ export default function OnboardingPage() {
                 aria-label="טוען תבניות"
                 className="flex items-center justify-center py-16 mb-8"
               >
-                <span className="w-8 h-8 border-2 border-[#6161FF]/20 border-t-[#6161FF] rounded-full animate-spin" />
+                <span className="w-8 h-8 border-2 border-[#0073EA]/20 border-t-[#0073EA] rounded-full animate-spin" />
               </div>
             ) : templatesError ? (
               <div
                 role="alert"
-                className="mb-8 p-4 rounded-xl border border-[#FB275D]/30 bg-[#FFF0F3] text-center"
+                className="mb-8 p-4 rounded-xl border border-[#E2445C]/30 bg-[#FFF0F3] text-center"
               >
-                <p className="text-[14px] font-bold text-[#FB275D] mb-1">
+                <p className="text-[14px] font-bold text-[#E2445C] mb-1">
                   שגיאה בטעינת התבניות
                 </p>
                 <p className="text-[13px] text-[#676879]">
@@ -454,7 +454,7 @@ export default function OnboardingPage() {
                   "px-8 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200",
                   "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2",
                   selectedTemplate
-                    ? "bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-md shadow-[#6161FF]/20"
+                    ? "bg-[#0073EA] text-white hover:bg-[#0060C2] shadow-md shadow-[#0073EA]/20"
                     : "bg-gray-200 text-gray-400 cursor-not-allowed",
                 )}
               >
@@ -502,15 +502,15 @@ export default function OnboardingPage() {
               className={cn(
                 "flex items-start gap-3 p-4 mb-6 rounded-xl border-2 cursor-pointer transition-all duration-200",
                 populateSamples
-                  ? "border-[#6161FF] bg-[#F0F0FF]"
-                  : "border-gray-200 bg-white hover:border-[#6161FF]/40",
+                  ? "border-[#0073EA] bg-[#CCE5FF]"
+                  : "border-gray-200 bg-white hover:border-[#0073EA]/40",
               )}
             >
               <input
                 type="checkbox"
                 checked={populateSamples}
                 onChange={(e) => setPopulateSamples(e.target.checked)}
-                className="mt-0.5 w-5 h-5 accent-[#6161FF] cursor-pointer"
+                className="mt-0.5 w-5 h-5 accent-[#0073EA] cursor-pointer"
               />
               <div className="flex-1 text-right">
                 <div className="text-[14px] font-bold text-[#323338] mb-0.5">
@@ -540,7 +540,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleApply}
                   disabled={isApplying}
-                  className="px-8 py-2.5 rounded-lg text-[14px] font-medium bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-md shadow-[#6161FF]/20 transition-all duration-200 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
+                  className="px-8 py-2.5 rounded-lg text-[14px] font-medium bg-[#0073EA] text-white hover:bg-[#0060C2] shadow-md shadow-[#0073EA]/20 transition-all duration-200 disabled:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
                 >
                   {isApplying ? (
                     <span className="flex items-center gap-2">
@@ -565,7 +565,7 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div className="animate-fadeIn text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-[#E8FFE8] rounded-full mb-6">
-              <div className="w-14 h-14 bg-[#00CA72] rounded-full flex items-center justify-center shadow-lg shadow-[#00CA72]/30">
+              <div className="w-14 h-14 bg-[#00C875] rounded-full flex items-center justify-center shadow-lg shadow-[#00C875]/30">
                 <Check className="w-8 h-8 text-white" strokeWidth={3} />
               </div>
             </div>
@@ -590,7 +590,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={handleFinish}
-              className="inline-flex items-center gap-2 px-10 py-3 rounded-xl text-[15px] font-bold bg-[#6161FF] text-white hover:bg-[#5050DD] shadow-lg shadow-[#6161FF]/25 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 px-10 py-3 rounded-xl text-[15px] font-bold bg-[#0073EA] text-white hover:bg-[#0060C2] shadow-lg shadow-[#0073EA]/25 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2"
             >
               <Sparkles className="w-5 h-5" />
               התחל לעבוד

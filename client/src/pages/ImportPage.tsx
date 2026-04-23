@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+﻿import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -371,7 +371,7 @@ export default function ImportPage() {
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                     step >= s.num
                       ? "bg-[#0073EA] text-white"
-                      : "bg-[#F5F6F8] text-[#9699A6]"
+                      : "bg-[#F6F7FB] text-[#9699A6]"
                   }`}
                 >
                   {step > s.num ? <CheckCircle2 size={16} /> : s.num}
@@ -427,7 +427,7 @@ export default function ImportPage() {
               className={`border-2 border-dashed rounded-xl p-12 flex flex-col items-center gap-4 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-2 ${
                 dragOver
                   ? "border-[#0073EA] bg-[#0073EA]/5"
-                  : "border-[#E6E9EF] bg-white hover:border-[#0073EA]/50 hover:bg-[#F5F6F8]"
+                  : "border-[#E6E9EF] bg-white hover:border-[#0073EA]/50 hover:bg-[#F6F7FB]"
               }`}
             >
               <Upload
@@ -538,7 +538,7 @@ export default function ImportPage() {
                   <div className="flex items-start gap-3 mb-2">
                     <div
                       className={`p-2 rounded-lg ${
-                        entityType === value ? "bg-[#0073EA]" : "bg-[#F5F6F8]"
+                        entityType === value ? "bg-[#0073EA]" : "bg-[#F6F7FB]"
                       }`}
                     >
                       <Icon
@@ -612,7 +612,7 @@ export default function ImportPage() {
                   return (
                     <div
                       key={header}
-                      className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-center p-3 rounded-lg hover:bg-[#F5F6F8] transition-colors"
+                      className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-center p-3 rounded-lg hover:bg-[#F6F7FB] transition-colors"
                     >
                       <div className="min-w-0">
                         <div className="text-[13px] font-medium text-[#323338] truncate">
@@ -670,7 +670,7 @@ export default function ImportPage() {
               <div className="overflow-x-auto border border-[#E6E9EF] rounded-lg">
                 <table className="w-full text-[13px]">
                   <thead>
-                    <tr className="bg-[#F5F6F8]">
+                    <tr className="bg-[#F6F7FB]">
                       {preview.headers.map((h) => {
                         const mapped = mapping[h];
                         const mappedLabel = allFields.find(
@@ -703,7 +703,7 @@ export default function ImportPage() {
                             className="px-3 py-2 text-[#323338] whitespace-nowrap max-w-[200px] truncate border-l border-[#E6E9EF] last:border-l-0"
                           >
                             {row[ci] || (
-                              <span className="text-[#C3C6D4]">—</span>
+                              <span className="text-[#9699A6]">—</span>
                             )}
                           </td>
                         ))}
@@ -759,7 +759,7 @@ export default function ImportPage() {
               </h2>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-[#F5F6F8] rounded-lg p-4">
+                <div className="bg-[#F6F7FB] rounded-lg p-4">
                   <div className="text-[12px] text-[#9699A6] mb-1">
                     סוג נתונים
                   </div>
@@ -767,7 +767,7 @@ export default function ImportPage() {
                     {entityLabel}
                   </div>
                 </div>
-                <div className="bg-[#F5F6F8] rounded-lg p-4">
+                <div className="bg-[#F6F7FB] rounded-lg p-4">
                   <div className="text-[12px] text-[#9699A6] mb-1">
                     שורות לייבוא
                   </div>
@@ -775,7 +775,7 @@ export default function ImportPage() {
                     {preview.totalRows.toLocaleString()}
                   </div>
                 </div>
-                <div className="bg-[#F5F6F8] rounded-lg p-4">
+                <div className="bg-[#F6F7FB] rounded-lg p-4">
                   <div className="text-[12px] text-[#9699A6] mb-1">
                     שדות ממופים
                   </div>
@@ -871,7 +871,7 @@ export default function ImportPage() {
                     מעבד ושומר במסד הנתונים...
                   </span>
                 </div>
-                <div className="h-2 bg-[#F5F6F8] rounded-full overflow-hidden">
+                <div className="h-2 bg-[#F6F7FB] rounded-full overflow-hidden">
                   <div className="h-full bg-[#0073EA] animate-pulse w-full" />
                 </div>
               </div>
@@ -916,7 +916,7 @@ export default function ImportPage() {
                   </div>
                 </div>
                 <div
-                  className={`${result.failed.length > 0 ? "bg-red-50 border-red-200" : "bg-[#F5F6F8] border-[#E6E9EF]"} border rounded-xl p-5 text-center`}
+                  className={`${result.failed.length > 0 ? "bg-red-50 border-red-200" : "bg-[#F6F7FB] border-[#E6E9EF]"} border rounded-xl p-5 text-center`}
                 >
                   <AlertCircle
                     size={24}
@@ -937,7 +937,7 @@ export default function ImportPage() {
 
               {result.failed.length > 0 && (
                 <div className="border border-[#E6E9EF] rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between p-3 bg-[#F5F6F8] border-b border-[#E6E9EF]">
+                  <div className="flex items-center justify-between p-3 bg-[#F6F7FB] border-b border-[#E6E9EF]">
                     <h4 className="text-[13px] font-semibold text-[#323338]">
                       שורות שנכשלו
                     </h4>
@@ -962,7 +962,7 @@ export default function ImportPage() {
                       </div>
                     ))}
                     {result.failed.length > 100 && (
-                      <div className="px-3 py-2 text-[12px] text-[#9699A6] text-center bg-[#F5F6F8]">
+                      <div className="px-3 py-2 text-[12px] text-[#9699A6] text-center bg-[#F6F7FB]">
                         ו-{result.failed.length - 100} שגיאות נוספות — הורד
                         CSV לרשימה מלאה
                       </div>
@@ -975,7 +975,7 @@ export default function ImportPage() {
             <div className="flex items-center gap-3 justify-end">
               <button
                 onClick={resetAll}
-                className="px-5 py-2.5 bg-white border border-[#E6E9EF] hover:bg-[#F5F6F8] text-[#323338] font-medium rounded-lg text-[13px] transition-colors"
+                className="px-5 py-2.5 bg-white border border-[#E6E9EF] hover:bg-[#F6F7FB] text-[#323338] font-medium rounded-lg text-[13px] transition-colors"
               >
                 ייבא קובץ נוסף
               </button>

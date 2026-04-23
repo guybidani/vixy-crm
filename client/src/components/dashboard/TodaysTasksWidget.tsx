@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -28,18 +28,18 @@ const TASK_TYPE_ICON: Record<string, React.ReactNode> = {
 };
 
 const TASK_TYPE_COLOR: Record<string, string> = {
-  CALL: "#00CA72",
+  CALL: "#00C875",
   EMAIL: "#579BFC",
   MEETING: "#A25DDC",
   WHATSAPP: "#25D366",
   FOLLOW_UP: "#FDAB3D",
-  TASK: "#6161FF",
+  TASK: "#0073EA",
 };
 
 const PRIORITY_COLOR: Record<string, string> = {
   URGENT: "#FF4D4F",
   HIGH: "#FDAB3D",
-  MEDIUM: "#6161FF",
+  MEDIUM: "#0073EA",
   LOW: "#C4C4C4",
 };
 
@@ -126,9 +126,9 @@ export default function TodaysTasksWidget() {
   if (isLoading) {
     return (
       <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-5">
-        <div className="h-5 w-32 bg-[#F5F6F8] rounded-[4px] animate-pulse mb-4" />
+        <div className="h-5 w-32 bg-[#F6F7FB] rounded-[4px] animate-pulse mb-4" />
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-11 bg-[#F5F6F8] rounded-[4px] animate-pulse mb-2" />
+          <div key={i} className="h-11 bg-[#F6F7FB] rounded-[4px] animate-pulse mb-2" />
         ))}
       </div>
     );
@@ -294,7 +294,7 @@ interface TaskRowProps {
 function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
   const navigate = useNavigate();
   const time = formatTime(task);
-  const typeColor = TASK_TYPE_COLOR[task.taskType] ?? "#6161FF";
+  const typeColor = TASK_TYPE_COLOR[task.taskType] ?? "#0073EA";
   const priorityColor = PRIORITY_COLOR[task.priority] ?? "#C4C4C4";
 
   function handleOpenTask() {
@@ -302,7 +302,7 @@ function TaskRow({ task, accent, onDone, doneMutPending }: TaskRowProps) {
   }
 
   return (
-    <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors ${accent === "danger" ? "bg-[#E44258]/5" : ""}`}>
+    <div className={`group relative flex items-center gap-2.5 py-2 px-2.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors ${accent === "danger" ? "bg-[#E44258]/5" : ""}`}>
       {/* Left border accent */}
       <div
         className="absolute left-0 top-1 bottom-1 w-0.5 rounded-full opacity-60"

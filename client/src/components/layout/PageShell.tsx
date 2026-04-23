@@ -1,4 +1,4 @@
-import { cn } from "../../lib/utils";
+﻿import { cn } from "../../lib/utils";
 import { Star, MoreHorizontal, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
@@ -49,14 +49,14 @@ export default function PageShell({
                 aria-label={starred ? "הסר מועדפים" : "הוסף למועדפים"}
                 className={cn(
                   "p-1 rounded transition-colors flex-shrink-0",
-                  starred ? "text-[#FDAB3D]" : "text-[#C3C6D4] hover:text-[#9699A6]"
+                  starred ? "text-[#FDAB3D]" : "text-[#9699A6] hover:text-[#9699A6]"
                 )}
               >
                 <Star size={16} fill={starred ? "currentColor" : "none"} strokeWidth={1.5} />
               </button>
               <button
                 aria-label="אפשרויות לוח"
-                className="p-1 rounded text-[#C3C6D4] hover:text-[#9699A6] transition-colors flex-shrink-0"
+                className="p-1 rounded text-[#9699A6] hover:text-[#9699A6] transition-colors flex-shrink-0"
               >
                 <MoreHorizontal size={16} />
               </button>
@@ -82,7 +82,7 @@ export default function PageShell({
                     "flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap",
                     activeView === view.key
                       ? "text-[#0073EA] border-[#0073EA]"
-                      : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
+                      : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F6F7FB]"
                   )}
                 >
                   {view.icon}
@@ -91,7 +91,7 @@ export default function PageShell({
               ))}
               <span
                 aria-hidden="true"
-                className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#C3C6D4] select-none"
+                className="flex items-center gap-1 px-3 py-2.5 text-[13px] text-[#9699A6] select-none"
                 title="בקרוב"
               >
                 <span>+</span>
@@ -146,6 +146,12 @@ export function PageCard({
   );
 }
 
+/**
+ * Legacy EmptyState — kept for backward-compatibility with pages that still
+ * import it from PageShell (KnowledgeBasePage, HistoryPage, TemplatesPage).
+ * New code should use the richer `components/shared/EmptyState` which supports
+ * illustrations, CTA buttons and semantic variants.
+ */
 export function EmptyState({
   icon,
   title,
@@ -158,12 +164,10 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 bg-[#F5F6F8] rounded-2xl flex items-center justify-center mb-4">
-        {icon}
-      </div>
-      <h3 className="font-bold text-[#323338] mb-1">{title}</h3>
-      <p className="text-[13px] text-[#676879] max-w-md mb-4">{description}</p>
+    <div className="flex flex-col items-center justify-center py-20 px-6 text-center animate-empty-in">
+      <div className="mb-5 animate-empty-float">{icon}</div>
+      <h3 className="text-[20px] font-semibold text-[#323338] mb-1.5 tracking-tight">{title}</h3>
+      <p className="text-[14px] leading-relaxed text-[#676879] max-w-[400px] mb-6">{description}</p>
       {action}
     </div>
   );

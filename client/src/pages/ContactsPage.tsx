@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { avatarColor } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, AlertCircle, RefreshCw, Users, Clock, Link2 } from "lucide-react";
+import { Plus, Building2, Tag, Calendar, AlertTriangle, Phone, Mail, MessageSquare, ChevronRight, ChevronLeft, RefreshCw, Clock, Link2 } from "lucide-react";
 import LeadHeatBadge, { heatFromScore } from "../components/shared/LeadHeatBadge";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
@@ -23,6 +23,8 @@ import MondayBoard, {
 import { type ContextMenuItem } from "../components/shared/RowContextMenu";
 import MondayTextCell from "../components/shared/MondayTextCell";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyContacts, EmptyError, EmptySearch } from "../components/shared/illustrations";
 import {
   listContacts,
   createContact,
@@ -163,7 +165,7 @@ export default function ContactsPage() {
 
   // Quick activity logging
   const quickActivityTypes = [
-    { type: "CALL" as const, icon: Phone, color: "#00CA72", label: "שיחה", subject: (n: string) => `שיחה עם ${n}`, toast: "שיחה נרשמה ✓", tooltip: "רשום שיחה" },
+    { type: "CALL" as const, icon: Phone, color: "#00C875", label: "שיחה", subject: (n: string) => `שיחה עם ${n}`, toast: "שיחה נרשמה ✓", tooltip: "רשום שיחה" },
     { type: "EMAIL" as const, icon: Mail, color: "#579BFC", label: "אימייל", subject: (n: string) => `אימייל ל-${n}`, toast: "אימייל נרשם ✓", tooltip: "רשום אימייל" },
     { type: "MEETING" as const, icon: Calendar, color: "#A25DDC", label: "פגישה", subject: (n: string) => `פגישה עם ${n}`, toast: "פגישה נרשמה ✓", tooltip: "רשום פגישה" },
     { type: "WHATSAPP" as const, icon: MessageSquare, color: "#25D366", label: "ווטסאפ", subject: (n: string) => `ווטסאפ ל-${n}`, toast: "ווטסאפ נרשם ✓", tooltip: "רשום ווטסאפ" },
@@ -325,7 +327,7 @@ export default function ContactsPage() {
               </span>
             ))}
             {row.tags.length > 2 && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
                 +{row.tags.length - 2}
               </span>
             )}
@@ -565,8 +567,41 @@ export default function ContactsPage() {
                   />
                 ))}
                 {(data?.data || []).length === 0 && (
-                  <div className="col-span-full text-center py-20 text-[#9699A6] text-sm">
-                    לא נמצאו אנשי קשר
+                  <div className="col-span-full">
+                    {debouncedSearch ? (
+                      <EmptyState
+                        illustration={<EmptySearch />}
+                        title={`לא מצאנו תוצאות ל-"${debouncedSearch}"`}
+                        description="נסו מונחי חיפוש אחרים או בדקו איות."
+                        secondaryAction={{ label: "נקה חיפוש", onClick: () => setSearch("") }}
+                        variant="search"
+                      />
+                    ) : statusFilter || needsFollowUp ? (
+                      <EmptyState
+                        illustration={<EmptySearch color="#A25DDC" />}
+                        title="אין תוצאות לסינון הנוכחי"
+                        description="נסו לשנות או לנקות את הסינונים כדי לראות עוד אנשי קשר."
+                        secondaryAction={{
+                          label: "נקה סינונים",
+                          onClick: () => {
+                            setStatusFilter("");
+                            setNeedsFollowUp(false);
+                          },
+                        }}
+                        variant="filtered"
+                      />
+                    ) : (
+                      <EmptyState
+                        illustration={<EmptyContacts />}
+                        title="התחל לבנות את הצוות שלך"
+                        description="הוסף את איש הקשר הראשון שלך כדי לעקוב אחרי שיחות, עסקאות ומשימות."
+                        action={{
+                          label: "הוסף איש קשר ראשון",
+                          onClick: () => setShowCreate(true),
+                          icon: <Plus size={16} />,
+                        }}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -579,7 +614,7 @@ export default function ContactsPage() {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={data.pagination.page <= 1}
-                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       aria-label="עמוד קודם"
                     >
                       <ChevronRight size={16} />
@@ -604,7 +639,7 @@ export default function ContactsPage() {
                           className={`min-w-[30px] h-[30px] px-2 rounded-[4px] text-[13px] font-medium transition-colors ${
                             currentPage === pageNum
                               ? "bg-[#0073EA] text-white"
-                              : "text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338]"
+                              : "text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338]"
                           }`}
                         >
                           {pageNum}
@@ -614,7 +649,7 @@ export default function ContactsPage() {
                     <button
                       onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
                       disabled={data.pagination.page >= data.pagination.totalPages}
-                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       aria-label="עמוד הבא"
                     >
                       <ChevronLeft size={16} />
@@ -745,7 +780,7 @@ function ContactCard({
 }) {
   const score = contact.leadScore;
   const barColor =
-    score >= 70 ? "#00CA72" : score >= 40 ? "#FDAB3D" : "#C4C4C4";
+    score >= 70 ? "#00C875" : score >= 40 ? "#FDAB3D" : "#C4C4C4";
 
   return (
     <div
@@ -811,7 +846,7 @@ function ContactCard({
       <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-[#E6E9EF]">
         {/* Lead score bar */}
         <div className="flex items-center gap-1.5 flex-1">
-          <div className="flex-1 h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden max-w-[60px]">
+          <div className="flex-1 h-1.5 bg-[#F6F7FB] rounded-full overflow-hidden max-w-[60px]">
             <div
               className="h-full rounded-full"
               style={{ width: `${score}%`, backgroundColor: barColor }}
@@ -923,7 +958,7 @@ function ContactCRMCard({
             </span>
           ))}
           {contact.tags.length > 2 && (
-            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
               +{contact.tags.length - 2}
             </span>
           )}
@@ -947,28 +982,16 @@ function ContactCRMCard({
 // ──────────────────────────────────────────────────────────────
 function ContactsEmptyState({ onAdd }: { onAdd: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="mb-6">
-        <div className="w-20 h-20 rounded-full bg-[#E3EFFE] flex items-center justify-center">
-          <Users size={36} className="text-[#0073EA]" />
-        </div>
-      </div>
-
-      <h3 className="text-[18px] font-semibold text-[#323338] mb-2">
-        אין אנשי קשר
-      </h3>
-      <p className="text-[14px] text-[#676879] max-w-xs mb-6 leading-relaxed">
-        הוסף את איש הקשר הראשון שלך כדי לעקוב אחרי שיחות, עסקאות ומשימות.
-      </p>
-
-      <button
-        onClick={onAdd}
-        className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors"
-      >
-        <Plus size={16} />
-        הוסף איש קשר
-      </button>
-    </div>
+    <EmptyState
+      illustration={<EmptyContacts />}
+      title="התחל לבנות את הצוות שלך"
+      description="הוסף את איש הקשר הראשון שלך כדי לעקוב אחרי שיחות, עסקאות ומשימות."
+      action={{
+        label: "הוסף איש קשר ראשון",
+        onClick: onAdd,
+        icon: <Plus size={16} />,
+      }}
+    />
   );
 }
 
@@ -1000,20 +1023,17 @@ function FilterChip({
 
 function ContactsErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-        <AlertCircle size={28} className="text-[#E44258]" />
-      </div>
-      <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת אנשי קשר</h2>
-      <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-      <button
-        onClick={onRetry}
-        className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-      >
-        <RefreshCw size={14} />
-        נסה שוב
-      </button>
-    </div>
+    <EmptyState
+      illustration={<EmptyError />}
+      title="משהו השתבש"
+      description="לא הצלחנו לטעון את אנשי הקשר. נסו שוב בעוד רגע."
+      action={{
+        label: "נסה שוב",
+        onClick: onRetry,
+        icon: <RefreshCw size={14} />,
+      }}
+      variant="error"
+    />
   );
 }
 
@@ -1180,7 +1200,7 @@ function CreateContactModal({ onClose, onCreated, defaultCompanyId }: { onClose:
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

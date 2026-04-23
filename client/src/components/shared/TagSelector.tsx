@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
@@ -11,12 +11,12 @@ import {
 } from "../../api/tags";
 
 const TAG_COLORS = [
-  "#6161FF",
+  "#0073EA",
   "#579BFC",
-  "#00CA72",
+  "#00C875",
   "#FDAB3D",
   "#FF642E",
-  "#FB275D",
+  "#E2445C",
   "#A25DDC",
   "#FF7EB3",
   "#323338",
@@ -182,7 +182,7 @@ export default function TagSelector({
               placeholder="חיפוש תגיות..."
               autoFocus
               aria-label="חיפוש תגיות"
-              className="w-full text-xs px-2 py-1.5 bg-[#F5F6F8] rounded border-none outline-none placeholder:text-[#9699A6]"
+              className="w-full text-xs px-2 py-1.5 bg-[#F6F7FB] rounded border-none outline-none placeholder:text-[#9699A6]"
             />
           </div>
 
@@ -195,8 +195,8 @@ export default function TagSelector({
                 aria-selected={currentTagIds.has(tag.id)}
                 onClick={() => toggleTag(tag.id)}
                 onMouseEnter={() => setHighlightIndex(i)}
-                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#F5F6F8]/50 text-right transition-colors ${
-                  highlightIndex === i ? "bg-[#F5F6F8]" : ""
+                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#F6F7FB]/50 text-right transition-colors ${
+                  highlightIndex === i ? "bg-[#F6F7FB]" : ""
                 }`}
               >
                 <span

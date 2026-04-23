@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useDebounce } from "../hooks/useDebounce";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,9 @@ import {
   Eye,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import PageShell, { EmptyState } from "../components/layout/PageShell";
+import PageShell from "../components/layout/PageShell";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyContacts, EmptySearch } from "../components/shared/illustrations";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import Modal from "../components/shared/Modal";
 import SidePanel from "../components/shared/SidePanel";
@@ -53,12 +55,12 @@ const PIPELINE_STAGES = [
   { key: "cold", label: "קר", color: "#C4C4C4", minScore: 0, maxScore: 29 },
   { key: "warm", label: "פושר", color: "#FDAB3D", minScore: 30, maxScore: 59 },
   { key: "hot", label: "חם", color: "#FF642E", minScore: 60, maxScore: 79 },
-  { key: "ready", label: "מוכן להסמכה", color: "#00CA72", minScore: 80, maxScore: 100 },
+  { key: "ready", label: "מוכן להסמכה", color: "#00C875", minScore: 80, maxScore: 100 },
 ];
 
 // Score-based colors — aligned with pipeline stage thresholds
 function scoreColor(score: number) {
-  if (score >= 80) return "#00CA72";
+  if (score >= 80) return "#00C875";
   if (score >= 60) return "#FF642E";
   if (score >= 30) return "#FDAB3D";
   return "#C4C4C4";
@@ -311,7 +313,7 @@ export default function LeadsPage() {
         const date = new Date(row.nextFollowUpDate);
         const isOverdue = date < new Date();
         return (
-          <span className={`text-[13px] ${isOverdue ? "text-[#FB275D] font-semibold" : "text-[#676879]"}`}>
+          <span className={`text-[13px] ${isOverdue ? "text-[#E2445C] font-semibold" : "text-[#676879]"}`}>
             {date.toLocaleDateString("he-IL", { day: "numeric", month: "short" })}
           </span>
         );
@@ -457,41 +459,43 @@ export default function LeadsPage() {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="space-y-2 flex-1">
-                  <div className="h-4 bg-[#F5F6F8] rounded w-2/3" />
-                  <div className="h-3 bg-[#F5F6F8] rounded w-1/3" />
+                  <div className="h-4 bg-[#F6F7FB] rounded w-2/3" />
+                  <div className="h-3 bg-[#F6F7FB] rounded w-1/3" />
                 </div>
-                <div className="w-11 h-11 rounded-full bg-[#F5F6F8] mr-3" />
+                <div className="w-11 h-11 rounded-full bg-[#F6F7FB] mr-3" />
               </div>
               <div className="space-y-2 mb-4">
-                <div className="h-3 bg-[#F5F6F8] rounded w-3/4" />
-                <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
+                <div className="h-3 bg-[#F6F7FB] rounded w-3/4" />
+                <div className="h-3 bg-[#F6F7FB] rounded w-1/2" />
               </div>
               <div className="flex gap-2.5 pt-3 border-t border-[#E6E9EF]">
-                <div className="flex-1 h-9 bg-[#F5F6F8] rounded-[4px]" />
-                <div className="flex-1 h-9 bg-[#F5F6F8] rounded-[4px]" />
+                <div className="flex-1 h-9 bg-[#F6F7FB] rounded-[4px]" />
+                <div className="flex-1 h-9 bg-[#F6F7FB] rounded-[4px]" />
               </div>
             </div>
           ))}
         </div>
       ) : leads.length === 0 ? (
-        <EmptyState
-          icon={
-            <div className="w-16 h-16 rounded-2xl bg-[#0073EA]/10 flex items-center justify-center mb-2">
-              <Inbox size={28} className="text-[#0073EA]" />
-            </div>
-          }
-          title="אין לידים חדשים"
-          description="לידים חדשים יופיעו כאן. הוסיפו ליד ידנית או חכו ללידים מ-Vixy."
-          action={
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-5 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-all hover:shadow-md active:scale-[0.97] flex items-center gap-2"
-            >
-              <Plus size={16} />
-              הוסף ליד ראשון
-            </button>
-          }
-        />
+        debouncedSearch ? (
+          <EmptyState
+            illustration={<EmptySearch />}
+            title={`לא מצאנו תוצאות ל-"${debouncedSearch}"`}
+            description="נסו מונחי חיפוש אחרים או בדקו איות."
+            secondaryAction={{ label: "נקה חיפוש", onClick: () => setSearch("") }}
+            variant="search"
+          />
+        ) : (
+          <EmptyState
+            illustration={<EmptyContacts />}
+            title="אין לידים חדשים"
+            description="לידים חדשים יופיעו כאן. הוסיפו ליד ידנית או חכו לכניסת לידים מקמפיינים."
+            action={{
+              label: "הוסף ליד ראשון",
+              onClick: () => setShowCreate(true),
+              icon: <Plus size={16} />,
+            }}
+          />
+        )
       ) : viewMode === "table" ? (
         /* Monday-style Table View */
         <MondayBoard<Contact>
@@ -539,12 +543,12 @@ export default function LeadsPage() {
                 <span className="text-[13px] font-bold text-[#323338]">
                   {stage.label}
                 </span>
-                <span className="text-[12px] text-[#9699A6] bg-[#F5F6F8] rounded-full px-2 py-0.5">
+                <span className="text-[12px] text-[#9699A6] bg-[#F6F7FB] rounded-full px-2 py-0.5">
                   {stage.leads.length}
                 </span>
               </div>
               {/* Column body */}
-              <div className="space-y-2.5 min-h-[200px] bg-[#F5F6F8]/40 rounded-xl p-2.5">
+              <div className="space-y-2.5 min-h-[200px] bg-[#F6F7FB]/40 rounded-xl p-2.5">
                 {stage.leads.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-[#9699A6]">
                     <Inbox size={20} className="mb-1.5 opacity-40" />
@@ -596,7 +600,7 @@ export default function LeadsPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={data.pagination.page <= 1}
-              className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               aria-label="עמוד קודם"
             >
               <ChevronRight size={16} />
@@ -621,7 +625,7 @@ export default function LeadsPage() {
                   className={`min-w-[30px] h-[30px] px-2 rounded-[4px] text-[13px] font-medium transition-colors ${
                     currentPage === pageNum
                       ? "bg-[#0073EA] text-white"
-                      : "text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338]"
+                      : "text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338]"
                   }`}
                 >
                   {pageNum}
@@ -631,7 +635,7 @@ export default function LeadsPage() {
             <button
               onClick={() => setPage((p) => Math.min(data.pagination.totalPages, p + 1))}
               disabled={data.pagination.page >= data.pagination.totalPages}
-              className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F5F6F8] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-[4px] text-[#676879] hover:bg-[#F6F7FB] hover:text-[#323338] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               aria-label="עמוד הבא"
             >
               <ChevronLeft size={16} />
@@ -835,7 +839,7 @@ function LeadCard({
       <div className="flex gap-2.5">
         <button
           onClick={(e) => { e.stopPropagation(); onClick(); }}
-          className="flex-1 py-2.5 text-[12px] font-semibold text-[#676879] bg-[#F5F6F8] hover:bg-surface-tertiary hover:text-[#323338] rounded-[4px] transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-[#E6E9EF]"
+          className="flex-1 py-2.5 text-[12px] font-semibold text-[#676879] bg-[#F6F7FB] hover:bg-surface-tertiary hover:text-[#323338] rounded-[4px] transition-all flex items-center justify-center gap-1.5 border border-transparent hover:border-[#E6E9EF]"
         >
           פרטים
         </button>
@@ -845,7 +849,7 @@ function LeadCard({
             onQualify();
           }}
           disabled={isQualifying}
-          className="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#00CA72] hover:bg-[#00B865] rounded-[4px] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-md active:scale-[0.97]"
+          className="flex-1 py-2.5 text-[12px] font-bold text-white bg-[#00C875] hover:bg-[#00B865] rounded-[4px] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 hover:shadow-md active:scale-[0.97]"
         >
           {isQualifying ? (
             <>
@@ -918,7 +922,7 @@ function PipelineCard({
             onQualify();
           }}
           disabled={isQualifying}
-          className="w-full mt-1 py-1.5 text-[11px] font-semibold text-[#00CA72] bg-green-50 hover:bg-green-100 hover:text-[#00B865] rounded-md transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+          className="w-full mt-1 py-1.5 text-[11px] font-semibold text-[#00C875] bg-green-50 hover:bg-green-100 hover:text-[#00B865] rounded-md transition-all flex items-center justify-center gap-1 disabled:opacity-50"
         >
           <Sparkles size={10} />
           {isQualifying ? "מעביר..." : "הסמך"}

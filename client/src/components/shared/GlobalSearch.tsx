@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -63,8 +63,8 @@ function buildSections(
         title: c.fullName,
         subtitle: c.email || c.phone || "",
         icon: <Users size={15} />,
-        iconColor: "#6161FF",
-        iconBg: "#E8E8FF",
+        iconColor: "#0073EA",
+        iconBg: "#CCE5FF",
         path: `/contacts/${c.id}`,
       })),
     });
@@ -80,7 +80,7 @@ function buildSections(
           ? `₪${d.value.toLocaleString()}`
           : STAGE_LABELS[d.stage] || d.stage,
         icon: <Handshake size={15} />,
-        iconColor: "#00CA72",
+        iconColor: "#00C875",
         iconBg: "#D6F5E8",
         path: `/deals?open=${d.id}`,
       })),
@@ -243,7 +243,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="חפש אנשי קשר, עסקאות, חברות, פניות..."
-              className="w-full pr-10 pl-4 py-2.5 bg-[#F5F6F8] rounded-xl text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
+              className="w-full pr-10 pl-4 py-2.5 bg-[#F6F7FB] rounded-xl text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
               autoComplete="off"
               spellCheck={false}
               aria-label="חיפוש גלובלי"
@@ -258,7 +258,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9699A6] hover:text-[#323338] transition-colors"
                 aria-label="נקה חיפוש"
               >
-                <span className="text-xs font-mono bg-[#F5F6F8] px-1.5 py-0.5 rounded border border-[#E6E9EF]">
+                <span className="text-xs font-mono bg-[#F6F7FB] px-1.5 py-0.5 rounded border border-[#E6E9EF]">
                   Esc
                 </span>
               </button>
@@ -279,11 +279,11 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
               <Search size={28} className="mb-2 opacity-30" />
               <span className="text-sm">התחל להקליד כדי לחפש</span>
               <div className="flex items-center gap-2 mt-3 text-[11px]">
-                <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] font-mono">
+                <kbd className="px-1.5 py-0.5 bg-[#F6F7FB] rounded border border-[#E6E9EF] font-mono">
                   Ctrl+K
                 </kbd>
                 <span>פתיחה</span>
-                <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] font-mono mr-2">
+                <kbd className="px-1.5 py-0.5 bg-[#F6F7FB] rounded border border-[#E6E9EF] font-mono mr-2">
                   Esc
                 </kbd>
                 <span>סגירה</span>
@@ -319,7 +319,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
             sections.map((section) => (
               <div key={section.label}>
                 {/* Section header */}
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-[#F5F6F8]/50 border-b border-[#E6E9EF]/50 sticky top-0" role="presentation">
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-[#F6F7FB]/50 border-b border-[#E6E9EF]/50 sticky top-0" role="presentation">
                   <span className="text-[10px] font-bold text-[#9699A6] uppercase tracking-wide">
                     {section.label}
                   </span>
@@ -345,7 +345,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors ${
                         isSelected
                           ? "bg-[#0073EA]/5"
-                          : "hover:bg-[#F5F6F8]/50"
+                          : "hover:bg-[#F6F7FB]/50"
                       }`}
                     >
                       {/* Icon */}
@@ -373,7 +373,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
 
                       {/* Enter hint on selected */}
                       {isSelected && (
-                        <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
+                        <kbd className="px-1.5 py-0.5 bg-[#F6F7FB] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
                           Enter
                         </kbd>
                       )}
@@ -385,7 +385,7 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-[#E6E9EF] flex items-center gap-4 text-[10px] text-[#9699A6] bg-[#F5F6F8]/30">
+        <div className="px-4 py-2 border-t border-[#E6E9EF] flex items-center gap-4 text-[10px] text-[#9699A6] bg-[#F6F7FB]/30">
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] font-mono shadow-sm">↑↓</kbd>
             ניווט

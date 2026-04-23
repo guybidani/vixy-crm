@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useCustomFields, useCustomFieldValues } from "../../hooks/useCustomFields";
 import { updateCustomFieldValues } from "../../api/custom-fields";
@@ -65,7 +65,7 @@ function FieldRow({
   onSave: (val: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors group min-h-[34px]">
+    <div className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors group min-h-[34px]">
       <span className="text-[12px] font-medium text-[#676879] w-[120px] flex-shrink-0 truncate">
         {field.name}
         {field.required && <span className="text-[#E44258] mr-0.5">*</span>}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
@@ -375,7 +375,7 @@ export default function SavedViewsBar({
           className={`px-4 py-2 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap ${
             activeViewId === null
               ? "text-[#0073EA] border-[#0073EA]"
-              : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
+              : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F6F7FB]"
           }`}
         >
           הכל
@@ -393,7 +393,7 @@ export default function SavedViewsBar({
               className={`px-4 py-2 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap flex items-center gap-1.5 group/tab ${
                 isActive
                   ? "text-[#0073EA] border-[#0073EA]"
-                  : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
+                  : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F6F7FB]"
               }`}
             >
               {view.isDefault && (
@@ -412,7 +412,7 @@ export default function SavedViewsBar({
                   className={`text-[10px] font-semibold rounded-full px-1.5 py-[1px] ${
                     isActive
                       ? "bg-[#0073EA]/10 text-[#0073EA]"
-                      : "bg-[#F5F6F8] text-[#676879]"
+                      : "bg-[#F6F7FB] text-[#676879]"
                   }`}
                   title={`${count} הגדרות פעילות`}
                 >
@@ -452,7 +452,7 @@ export default function SavedViewsBar({
         {/* Save-current / new view button */}
         <button
           onClick={() => setShowSaveDialog(true)}
-          className="px-3 py-2 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors flex items-center gap-1 border-b-[2px] border-transparent -mb-px whitespace-nowrap"
+          className="px-3 py-2 text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] transition-colors flex items-center gap-1 border-b-[2px] border-transparent -mb-px whitespace-nowrap"
           title={hasActiveFilters ? "שמור תצוגה נוכחית" : "שמור תצוגה חדשה"}
         >
           <Plus size={13} />
@@ -464,7 +464,7 @@ export default function SavedViewsBar({
           <div className="flex items-center gap-1 pe-2 ms-auto">
             <button
               onClick={handleRestore}
-              className="flex items-center gap-1 px-2.5 py-1 text-[12px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors whitespace-nowrap"
+              className="flex items-center gap-1 px-2.5 py-1 text-[12px] text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors whitespace-nowrap"
               title="שחזר את התצוגה השמורה"
             >
               <Undo2 size={12} />
@@ -498,7 +498,7 @@ export default function SavedViewsBar({
               updateFiltersMutation.mutate(contextMenuView.id);
             }}
             disabled={!hasActiveFilters && currentCount === 0}
-            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F5F6F8] text-[#323338] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F6F7FB] text-[#323338] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <RefreshCw size={14} className="text-[#676879]" />
             עדכן מסננים נוכחיים
@@ -509,7 +509,7 @@ export default function SavedViewsBar({
               setRenameViewId(contextMenuView.id);
               setContextMenu(null);
             }}
-            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F5F6F8] text-[#323338] transition-colors"
+            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F6F7FB] text-[#323338] transition-colors"
           >
             <Pencil size={14} className="text-[#676879]" />
             שנה שם
@@ -518,7 +518,7 @@ export default function SavedViewsBar({
             role="menuitem"
             onClick={() => setDefaultMutation.mutate(contextMenuView.id)}
             disabled={contextMenuView.isDefault}
-            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F5F6F8] text-[#323338] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 text-[13px] text-right flex items-center gap-2 hover:bg-[#F6F7FB] text-[#323338] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Star
               size={14}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -48,8 +48,8 @@ import ItemUpdatesTab from "../shared/ItemUpdatesTab";
 import CustomFieldsEditor from "../shared/CustomFieldsEditor";
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  NOTE: "#6161FF",
-  CALL: "#00CA72",
+  NOTE: "#0073EA",
+  CALL: "#00C875",
   EMAIL: "#579BFC",
   MEETING: "#A25DDC",
   WHATSAPP: "#25D366",
@@ -171,7 +171,7 @@ export default function ContactDetailPanel({
 
   const scoreColor =
     contact.leadScore >= 70
-      ? "#00CA72"
+      ? "#00C875"
       : contact.leadScore >= 40
         ? "#FDAB3D"
         : "#C4C4C4";
@@ -218,7 +218,7 @@ export default function ContactDetailPanel({
             />
           ) : (
             <button
-              className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8] rounded-[4px] px-1 -mx-1 transition-colors leading-snug text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+              className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F6F7FB] rounded-[4px] px-1 -mx-1 transition-colors leading-snug text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
               onClick={() => {
                 setNameValue(`${contact.firstName} ${contact.lastName}`);
                 setEditingName(true);
@@ -270,7 +270,7 @@ export default function ContactDetailPanel({
           </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] transition-colors"
             title="סגור"
           >
             <X size={18} />
@@ -283,7 +283,7 @@ export default function ContactDetailPanel({
         <ActionButton
           icon="📞"
           label="שיחה"
-          color="#00CA72"
+          color="#00C875"
           onClick={() =>
             quickLogMutation.mutate({
               type: "CALL",
@@ -487,7 +487,7 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
   return (
     <div className="space-y-3">
       {/* Contact details card */}
-      <div className="bg-[#F5F6F8] rounded-xl p-3 space-y-2">
+      <div className="bg-[#F6F7FB] rounded-xl p-3 space-y-2">
         <EditableInfoRow
           icon={<Phone size={13} />}
           label="טלפון"
@@ -550,7 +550,7 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
       <FollowUpCard contactId={contact.id} />
 
       {/* Tags */}
-      <div className="bg-[#F5F6F8] rounded-xl p-3">
+      <div className="bg-[#F6F7FB] rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <Tag size={12} className="text-[#9699A6]" />
@@ -586,7 +586,7 @@ function ContactFieldsPanel({ contact }: { contact: any }) {
 
       {/* Assigned to / last activity */}
       {contact.lastActivityAt && (
-        <div className="bg-[#F5F6F8] rounded-xl p-3">
+        <div className="bg-[#F6F7FB] rounded-xl p-3">
           <div className="flex items-center gap-1.5">
             <UserCircle2 size={13} className="text-[#9699A6]" />
             <span className="text-xs text-[#9699A6]">פעילות אחרונה</span>
@@ -638,8 +638,8 @@ type ComposeTab = "NOTE" | "CALL" | "EMAIL" | "MEETING";
 type FilterType = "ALL" | "CALL" | "EMAIL" | "NOTE" | "MEETING";
 
 const COMPOSE_TABS: { id: ComposeTab; label: string; emoji: string; color: string }[] = [
-  { id: "NOTE",    label: "הערה",   emoji: "📝", color: "#6161FF" },
-  { id: "CALL",    label: "שיחה",   emoji: "📞", color: "#00CA72" },
+  { id: "NOTE",    label: "הערה",   emoji: "📝", color: "#0073EA" },
+  { id: "CALL",    label: "שיחה",   emoji: "📞", color: "#00C875" },
   { id: "EMAIL",   label: "אימייל", emoji: "✉️", color: "#579BFC" },
   { id: "MEETING", label: "פגישה",  emoji: "📅", color: "#A25DDC" },
 ];
@@ -893,15 +893,15 @@ function TimelineTab({ contact }: { contact: any }) {
     <div className="space-y-3">
       {/* ── Next action banner ─────────────────────────────────────── */}
       {nextTask && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#6161FF]/8 border border-[#6161FF]/20">
-          <Clock size={13} className="text-[#6161FF] flex-shrink-0" />
-          <span className="text-xs font-semibold text-[#6161FF]">משימה הבאה:</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0073EA]/8 border border-[#0073EA]/20">
+          <Clock size={13} className="text-[#0073EA] flex-shrink-0" />
+          <span className="text-xs font-semibold text-[#0073EA]">משימה הבאה:</span>
           <span className="text-xs text-[#323338] font-medium truncate flex-1">{nextTask.title}</span>
           <span
             className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
               isOverdue(new Date(nextTask.dueDate))
                 ? "bg-[#E44258]/10 text-[#E44258]"
-                : "bg-[#6161FF]/10 text-[#6161FF]"
+                : "bg-[#0073EA]/10 text-[#0073EA]"
             }`}
           >
             {formatDueDateLabel(new Date(nextTask.dueDate))}
@@ -920,7 +920,7 @@ function TimelineTab({ contact }: { contact: any }) {
               className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-all ${
                 activeTab === tab.id
                   ? "border-b-2 text-[#323338]"
-                  : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F5F6F8]"
+                  : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F6F7FB]"
               }`}
               style={activeTab === tab.id ? { borderBottomColor: tab.color } : {}}
             >
@@ -933,7 +933,7 @@ function TimelineTab({ contact }: { contact: any }) {
             className={`flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all border-r border-[#E6E9EF] ${
               showTaskCompose
                 ? "bg-[#E8F3FF] text-[#0073EA] border-b-2 border-b-[#0073EA]"
-                : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F5F6F8]"
+                : "text-[#9699A6] hover:text-[#676879] hover:bg-[#F6F7FB]"
             }`}
           >
             <CheckSquare size={12} />
@@ -949,33 +949,33 @@ function TimelineTab({ contact }: { contact: any }) {
               value={taskTitle}
               onChange={(e) => setTaskTitle(e.target.value)}
               placeholder="כותרת המשימה *"
-              className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
+              className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
             />
             <textarea
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
               placeholder="פרטים נוספים..."
               rows={2}
-              className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
+              className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
             />
             <div className="flex flex-wrap gap-1">
               {([{ key: "1h", label: "עוד שעה" }, { key: "3h", label: "עוד 3 שעות" }, { key: "tomorrow9", label: "מחר 9:00" }, { key: "1w", label: "עוד שבוע" }] as const).map((p) => (
                 <button key={p.key} type="button" onClick={() => applyDuePreset(p.key)}
-                  className="px-2 py-1 text-[10px] font-semibold rounded-md bg-[#F5F6F8] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] hover:border-[#0073EA]/30 transition-colors">
+                  className="px-2 py-1 text-[10px] font-semibold rounded-md bg-[#F6F7FB] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] hover:border-[#0073EA]/30 transition-colors">
                   {p.label}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
               <input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)}
-                className="flex-1 bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
+                className="flex-1 bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
               <input type="time" value={taskDueTime} onChange={(e) => setTaskDueTime(e.target.value)}
-                className="w-24 bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
+                className="w-24 bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20" />
             </div>
             <div className="flex flex-wrap gap-1">
               {TASK_TYPE_OPTIONS.map((opt) => (
                 <button key={opt.value} type="button" onClick={() => setTaskType(opt.value)}
-                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${taskType === opt.value ? "bg-[#0073EA] text-white" : "bg-[#F5F6F8] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10"}`}>
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-md transition-colors ${taskType === opt.value ? "bg-[#0073EA] text-white" : "bg-[#F6F7FB] border border-[#E6E9EF] text-[#676879] hover:bg-[#0060C2]/10"}`}>
                   {opt.label}
                 </button>
               ))}
@@ -1000,7 +1000,7 @@ function TimelineTab({ contact }: { contact: any }) {
                 onKeyDown={handleKeyDown}
                 placeholder="כתוב הערה..."
                 rows={3}
-                className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
+                className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] transition-colors"
               />
             )}
             {activeTab === "CALL" && (
@@ -1011,7 +1011,7 @@ function TimelineTab({ contact }: { contact: any }) {
                     <select
                       value={callOutcome}
                       onChange={(e) => setCallOutcome(e.target.value)}
-                      className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                      className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                     >
                       {CALL_OUTCOMES.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
@@ -1026,7 +1026,7 @@ function TimelineTab({ contact }: { contact: any }) {
                       value={callDuration}
                       onChange={(e) => setCallDuration(e.target.value)}
                       placeholder="0"
-                      className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                      className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-2 py-1.5 text-[12px] text-[#323338] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                     />
                   </div>
                 </div>
@@ -1036,7 +1036,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="הערות שיחה..."
                   rows={2}
-                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                  className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
@@ -1047,7 +1047,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
                   placeholder="נושא *"
-                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                  className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
                 <textarea
                   value={emailBody}
@@ -1055,7 +1055,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="תוכן האימייל (אופציונלי)..."
                   rows={2}
-                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                  className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
@@ -1066,7 +1066,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   value={meetingAttendees}
                   onChange={(e) => setMeetingAttendees(e.target.value)}
                   placeholder="משתתפים (אופציונלי)..."
-                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                  className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
                 <textarea
                   value={meetingNotes}
@@ -1074,7 +1074,7 @@ function TimelineTab({ contact }: { contact: any }) {
                   onKeyDown={handleKeyDown}
                   placeholder="סיכום פגישה..."
                   rows={2}
-                  className="w-full bg-[#F5F6F8]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
+                  className="w-full bg-[#F6F7FB]/40 border border-[#E6E9EF] rounded-[4px] px-3 py-2 text-[13px] text-[#323338] placeholder:text-[#9699A6] resize-none focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20"
                 />
               </div>
             )}
@@ -1103,7 +1103,7 @@ function TimelineTab({ contact }: { contact: any }) {
               className={`px-2.5 py-1 text-[11px] font-semibold rounded-full transition-all ${
                 filter === chip.id
                   ? "bg-[#0073EA] text-white"
-                  : "bg-[#F5F6F8] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] border border-[#E6E9EF]"
+                  : "bg-[#F6F7FB] text-[#676879] hover:bg-[#0060C2]/10 hover:text-[#0073EA] border border-[#E6E9EF]"
               }`}
             >
               {chip.label}
@@ -1138,7 +1138,7 @@ function TimelineTab({ contact }: { contact: any }) {
                 return (
                   <div
                     key={`activity-${activity.id as string}`}
-                    className="group/item flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F5F6F8]/40 transition-colors"
+                    className="group/item flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F6F7FB]/40 transition-colors"
                   >
                     {/* Type icon circle */}
                     <div
@@ -1163,7 +1163,7 @@ function TimelineTab({ contact }: { contact: any }) {
                         </span>
                         {/* Call outcome badge */}
                         {outcome && (
-                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/10 text-[#00CA72]">
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00C875]/10 text-[#00C875]">
                             {CALL_OUTCOMES.find((o) => o.value === outcome)?.label || outcome}
                           </span>
                         )}
@@ -1205,7 +1205,7 @@ function TimelineTab({ contact }: { contact: any }) {
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="px-3 py-1 bg-[#F5F6F8] text-[#676879] text-xs font-semibold rounded-[4px] hover:bg-[#E6E9EF] transition-colors"
+                              className="px-3 py-1 bg-[#F6F7FB] text-[#676879] text-xs font-semibold rounded-[4px] hover:bg-[#E6E9EF] transition-colors"
                             >
                               ביטול
                             </button>
@@ -1281,9 +1281,9 @@ function TimelineTab({ contact }: { contact: any }) {
               return (
                 <div
                   key={`task-done-${task.id as string}`}
-                  className="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F5F6F8]/40 transition-colors"
+                  className="flex items-start gap-3 py-3 px-2 rounded-xl hover:bg-[#F6F7FB]/40 transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00CA72] shadow-sm">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white mt-0.5 bg-[#00C875] shadow-sm">
                     <CheckCircle2 size={13} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1291,7 +1291,7 @@ function TimelineTab({ contact }: { contact: any }) {
                       <span className="text-sm font-semibold text-[#9699A6] line-through">
                         {task.title}
                       </span>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00CA72]/15 text-[#00CA72]">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#00C875]/15 text-[#00C875]">
                         הושלמה
                       </span>
                       {task.assignee?.user?.name && (
@@ -1357,7 +1357,7 @@ function RelatedTab({
       {/* Deals */}
       <div>
         <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
-          <Handshake size={16} className="text-[#00CA72]" />
+          <Handshake size={16} className="text-[#00C875]" />
           עסקאות ({contact.deals?.length || 0})
         </h3>
         {contact.deals && contact.deals.length > 0 ? (
@@ -1367,7 +1367,7 @@ function RelatedTab({
               return (
                 <button
                   key={deal.id}
-                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
+                  className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
                   onClick={() => navigate(`/deals?open=${deal.id}`)}
                 >
                   <div>
@@ -1393,7 +1393,7 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
+          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F6F7FB]/30 rounded-xl">
             אין עסקאות
           </p>
         )}
@@ -1402,7 +1402,7 @@ function RelatedTab({
       {/* Tickets */}
       <div>
         <h3 className="font-bold text-[#323338] text-sm mb-3 flex items-center gap-2">
-          <Ticket size={16} className="text-[#FB275D]" />
+          <Ticket size={16} className="text-[#E2445C]" />
           פניות ({contact.tickets?.length || 0})
         </h3>
         {contact.tickets && contact.tickets.length > 0 ? (
@@ -1413,7 +1413,7 @@ function RelatedTab({
               return (
                 <button
                   key={ticket.id}
-                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
+                  className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
                   onClick={() => navigate(`/tickets/${ticket.id}`)}
                 >
                   <span className="font-medium text-sm text-[#323338]">
@@ -1435,7 +1435,7 @@ function RelatedTab({
             })}
           </div>
         ) : (
-          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F5F6F8]/30 rounded-xl">
+          <p className="text-sm text-[#9699A6] text-center py-3 bg-[#F6F7FB]/30 rounded-xl">
             אין פניות
           </p>
         )}
@@ -1445,7 +1445,7 @@ function RelatedTab({
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold text-[#323338] text-sm flex items-center gap-2">
-            <CheckSquare size={16} className="text-[#00CA72]" />
+            <CheckSquare size={16} className="text-[#00C875]" />
             משימות ({contact.tasks?.length || 0})
           </h3>
           {!addingTask && (
@@ -1468,7 +1468,7 @@ function RelatedTab({
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               placeholder="כותרת משימה..."
-              className="w-full text-[13px] text-[#323338] bg-transparent outline-none placeholder:text-[#C3C6D4]"
+              className="w-full text-[13px] text-[#323338] bg-transparent outline-none placeholder:text-[#9699A6]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && newTaskTitle.trim()) {
                   createTaskMut.mutate({ title: newTaskTitle.trim(), dueDate: newTaskDueDate || undefined });
@@ -1523,14 +1523,14 @@ function RelatedTab({
               return (
                 <button
                   key={task.id}
-                  className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
+                  className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-xl hover:bg-[#ECEDF0] transition-colors text-right"
                   onClick={() => navigate(`/tasks?selected=${task.id}`)}
                 >
                   <div className="flex items-center gap-2">
                     <div
                       className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                         task.status === "DONE"
-                          ? "bg-[#00CA72] border-[#00CA72]"
+                          ? "bg-[#00C875] border-[#00C875]"
                           : "border-[#E6E9EF]"
                       }`}
                     >
@@ -1567,7 +1567,7 @@ function RelatedTab({
           </div>
         ) : (
           !addingTask && (
-            <div className="text-center py-4 bg-[#F5F6F8]/30 rounded-xl">
+            <div className="text-center py-4 bg-[#F6F7FB]/30 rounded-xl">
               <p className="text-sm text-[#9699A6]">אין משימות</p>
               <p className="text-[11px] text-[#9699A6] mt-0.5 opacity-70">לחץ "הוסף משימה" למעלה</p>
             </div>
@@ -1659,7 +1659,7 @@ function FollowUpDateField({ contact }: { contact: any }) {
   };
 
   return (
-    <div className="bg-[#F5F6F8] rounded-xl p-4">
+    <div className="bg-[#F6F7FB] rounded-xl p-4">
       <div className="flex items-center justify-between mb-2">
         <h3 className="font-bold text-[#323338] text-sm flex items-center gap-1.5">
           <Calendar size={14} className="text-[#0073EA]" />
@@ -1816,7 +1816,7 @@ function EditableInfoRow({
               ? "text-[#0073EA] cursor-pointer hover:underline"
               : "text-[#323338]"
             : "text-[#9699A6]"
-        } ${!readOnly ? "cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]" : ""}`}
+        } ${!readOnly ? "cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]" : ""}`}
         dir={dir}
         onClick={() => {
           if (onClick) {
@@ -1907,7 +1907,7 @@ function LeadScoreRing({
           <path
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
             fill="none"
-            stroke="#E8E8FF"
+            stroke="#CCE5FF"
             strokeWidth="3"
           />
           <path
@@ -2027,7 +2027,7 @@ function EditContactModal({
           <h2 className="text-lg font-bold text-[#323338]">עריכת איש קשר</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
           >
             <X size={18} className="text-[#9699A6]" />
           </button>
@@ -2178,7 +2178,7 @@ function EditContactModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+              className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
             >
               ביטול
             </button>

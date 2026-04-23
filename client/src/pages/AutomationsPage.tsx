@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -246,7 +246,7 @@ function WorkflowDialog({
                   "text-right p-3 rounded-[4px] border transition-all text-[13px]",
                   form.trigger === key
                     ? "border-[#0073EA] bg-[#0073EA]/5 ring-1 ring-[#0073EA]/20"
-                    : "border-[#E6E9EF] hover:border-[#0073EA]/30 hover:bg-[#F5F6F8]",
+                    : "border-[#E6E9EF] hover:border-[#0073EA]/30 hover:bg-[#F6F7FB]",
                 )}
               >
                 <div className="font-medium text-[#323338]">{label}</div>
@@ -281,7 +281,7 @@ function WorkflowDialog({
               {form.conditions.map((cond, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 p-2 bg-[#F5F6F8] rounded-[4px]"
+                  className="flex items-center gap-2 p-2 bg-[#F6F7FB] rounded-[4px]"
                 >
                   <input
                     type="text"
@@ -675,11 +675,11 @@ export default function AutomationsPage() {
           {[1, 2, 3].map((i) => (
             <PageCard key={i} className="!p-0 overflow-hidden">
               <div className="flex items-center gap-4 px-5 py-4 animate-pulse">
-                <div className="w-7 h-5 bg-[#F5F6F8] rounded" />
-                <div className="w-10 h-10 rounded-xl bg-[#F5F6F8]" />
+                <div className="w-7 h-5 bg-[#F6F7FB] rounded" />
+                <div className="w-10 h-10 rounded-xl bg-[#F6F7FB]" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-[#F5F6F8] rounded w-1/3" />
-                  <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
+                  <div className="h-4 bg-[#F6F7FB] rounded w-1/3" />
+                  <div className="h-3 bg-[#F6F7FB] rounded w-1/2" />
                 </div>
               </div>
             </PageCard>
@@ -768,7 +768,7 @@ export default function AutomationsPage() {
                         setEditing(w);
                         setDialogOpen(true);
                       }}
-                      className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
+                      className="p-2 rounded-[4px] hover:bg-[#F6F7FB] text-[#9699A6] transition-colors"
                       title="ערוך"
                       aria-label={`ערוך — ${w.name}`}
                     >
@@ -784,7 +784,7 @@ export default function AutomationsPage() {
                     </button>
                     <button
                       onClick={() => setExpandedId(isExpanded ? null : w.id)}
-                      className="p-2 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] transition-colors"
+                      className="p-2 rounded-[4px] hover:bg-[#F6F7FB] text-[#9699A6] transition-colors"
                       aria-expanded={isExpanded}
                       aria-label={isExpanded ? "סגור פרטים" : "הצג פרטים"}
                     >
@@ -841,7 +841,7 @@ export default function AutomationsPage() {
                           {w.actions.map((a, i) => (
                             <div
                               key={a.id || i}
-                              className="flex items-center gap-2 text-[12px] text-[#676879] bg-[#F5F6F8] px-3 py-1.5 rounded-[4px]"
+                              className="flex items-center gap-2 text-[12px] text-[#676879] bg-[#F6F7FB] px-3 py-1.5 rounded-[4px]"
                             >
                               <span className="font-medium text-[#323338]">
                                 {i + 1}.

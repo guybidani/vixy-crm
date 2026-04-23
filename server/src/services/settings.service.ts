@@ -1,4 +1,4 @@
-import { prisma } from "../db/client";
+﻿import { prisma } from "../db/client";
 import { AppError } from "../middleware/errorHandler";
 
 // ─── Shared helper ───
@@ -80,46 +80,47 @@ export const DEFAULT_OPTIONS = {
   dealStages: {
     LEAD: { label: "ליד", color: "#C4C4C4", order: 0 },
     QUALIFIED: { label: "מוסמך", color: "#A25DDC", order: 1 },
-    PROPOSAL: { label: "הצעת מחיר", color: "#6161FF", order: 2 },
+    PROPOSAL: { label: "הצעת מחיר", color: "#0073EA", order: 2 },
     NEGOTIATION: { label: "משא ומתן", color: "#FDAB3D", order: 3 },
-    CLOSED_WON: { label: "נסגר - הצלחה", color: "#00CA72", order: 4 },
-    CLOSED_LOST: { label: "נסגר - הפסד", color: "#FB275D", order: 5 },
+    CLOSED_WON: { label: "נסגר - הצלחה", color: "#00C875", order: 4 },
+    CLOSED_LOST: { label: "נסגר - הפסד", color: "#E2445C", order: 5 },
   },
   priorities: {
-    LOW: { label: "נמוך", color: "#66CCFF", order: 0 },
-    MEDIUM: { label: "בינוני", color: "#6161FF", order: 1 },
-    HIGH: { label: "גבוה", color: "#FDAB3D", order: 2 },
-    URGENT: { label: "דחוף", color: "#FB275D", order: 3 },
+    // Monday-exact palette: Low=gray, Medium=dark blue, High=orange, Urgent=red
+    LOW: { label: "נמוך", color: "#C5C7D0", order: 0 },
+    MEDIUM: { label: "בינוני", color: "#579BFC", order: 1 },
+    HIGH: { label: "גבוה", color: "#FF642E", order: 2 },
+    URGENT: { label: "דחוף", color: "#E2445C", order: 3 },
   },
   ticketStatuses: {
     NEW: { label: "חדש", color: "#579BFC", order: 0 },
     OPEN: { label: "פתוח", color: "#FDAB3D", order: 1 },
     PENDING: { label: "ממתין", color: "#FF642E", order: 2 },
-    RESOLVED: { label: "נפתר", color: "#00CA72", order: 3 },
+    RESOLVED: { label: "נפתר", color: "#00C875", order: 3 },
     CLOSED: { label: "סגור", color: "#C4C4C4", order: 4 },
   },
   taskStatuses: {
     TODO: { label: "לביצוע", color: "#579BFC", order: 0 },
     IN_PROGRESS: { label: "בתהליך", color: "#FDAB3D", order: 1 },
-    DONE: { label: "הושלם", color: "#00CA72", order: 2 },
+    DONE: { label: "הושלם", color: "#00C875", order: 2 },
     CANCELLED: { label: "בוטל", color: "#C4C4C4", order: 3 },
   },
   contactStatuses: {
     LEAD: { label: "ליד", color: "#579BFC", order: 0 },
     QUALIFIED: { label: "מוסמך", color: "#A25DDC", order: 1 },
-    CUSTOMER: { label: "לקוח", color: "#00CA72", order: 2 },
-    CHURNED: { label: "נטש", color: "#FB275D", order: 3 },
+    CUSTOMER: { label: "לקוח", color: "#00C875", order: 2 },
+    CHURNED: { label: "נטש", color: "#E2445C", order: 3 },
     INACTIVE: { label: "לא פעיל", color: "#C4C4C4", order: 4 },
   },
   companyStatuses: {
     PROSPECT: { label: "פוטנציאלי", color: "#579BFC", order: 0 },
-    ACTIVE: { label: "פעיל", color: "#00CA72", order: 1 },
+    ACTIVE: { label: "פעיל", color: "#00C875", order: 1 },
     INACTIVE: { label: "לא פעיל", color: "#C4C4C4", order: 2 },
-    CHURNED: { label: "נטש", color: "#FB275D", order: 3 },
+    CHURNED: { label: "נטש", color: "#E2445C", order: 3 },
   },
   activityTypes: {
-    NOTE: { label: "הערה", icon: "StickyNote", color: "#6161FF" },
-    CALL: { label: "שיחה", icon: "Phone", color: "#00CA72" },
+    NOTE: { label: "הערה", icon: "StickyNote", color: "#0073EA" },
+    CALL: { label: "שיחה", icon: "Phone", color: "#00C875" },
     EMAIL: { label: "אימייל", icon: "Mail", color: "#579BFC" },
     MEETING: { label: "פגישה", icon: "Calendar", color: "#A25DDC" },
     WHATSAPP: { label: "ווטסאפ", icon: "MessageCircle", color: "#25D366" },
@@ -134,7 +135,7 @@ export const DEFAULT_OPTIONS = {
   ticketChannels: {
     email: { label: "אימייל", color: "#579BFC" },
     whatsapp: { label: "ווטסאפ", color: "#25D366" },
-    chat: { label: "צ׳אט", color: "#6161FF" },
+    chat: { label: "צ׳אט", color: "#0073EA" },
     phone: { label: "טלפון", color: "#FDAB3D" },
     portal: { label: "פורטל", color: "#A25DDC" },
   },
@@ -367,8 +368,8 @@ export const INDUSTRY_TEMPLATES: Record<string, IndustryTemplate> = {
 };
 
 /** Colors to assign to deal stages and contact statuses. */
-const STAGE_COLORS = ["#579BFC", "#A25DDC", "#6161FF", "#FDAB3D", "#FF642E", "#00CA72", "#FB275D", "#C4C4C4"];
-const STATUS_COLORS = ["#579BFC", "#A25DDC", "#00CA72", "#FB275D", "#C4C4C4"];
+const STAGE_COLORS = ["#579BFC", "#A25DDC", "#0073EA", "#FDAB3D", "#FF642E", "#00C875", "#E2445C", "#C4C4C4"];
+const STATUS_COLORS = ["#579BFC", "#A25DDC", "#00C875", "#E2445C", "#C4C4C4"];
 
 function buildStageOptions(labels: string[]) {
   const result: Record<string, { label: string; color: string; order: number }> = {};

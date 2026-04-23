@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+﻿import { useState, useCallback, useRef, useEffect } from "react";
 import {
   Sparkles,
   FileText,
@@ -111,7 +111,7 @@ export default function AiAssistantPanel({ contactId, contactName }: AiAssistant
       {/* Header - always visible */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-between p-4 hover:bg-[#F5F6F8]/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-[#F6F7FB]/50 transition-colors"
       >
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-gradient-to-br from-[#6C5CE7] to-[#A855F7] rounded-full flex items-center justify-center">
@@ -191,14 +191,14 @@ export default function AiAssistantPanel({ contactId, contactName }: AiAssistant
                     }}
                     placeholder="הקשר נוסף למייל (אופציונלי)..."
                     rows={2}
-                    className="w-full px-3 py-2 text-[12px] bg-[#F5F6F8] border border-[#E6E9EF] rounded-lg outline-none focus:ring-2 focus:ring-[#6C5CE7]/20 focus:border-[#6C5CE7] resize-none"
+                    className="w-full px-3 py-2 text-[12px] bg-[#F6F7FB] border border-[#E6E9EF] rounded-lg outline-none focus:ring-2 focus:ring-[#6C5CE7]/20 focus:border-[#6C5CE7] resize-none"
                   />
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-[#9699A6]">Ctrl+Enter לשליחה</span>
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setShowEmailInput(false)}
-                        className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F5F6F8] rounded transition-colors"
+                        className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F6F7FB] rounded transition-colors"
                       >
                         ביטול
                       </button>
@@ -224,7 +224,7 @@ export default function AiAssistantPanel({ contactId, contactName }: AiAssistant
                         setError("");
                         setActiveAction(null);
                       }}
-                      className="absolute top-2 left-2 p-1 rounded-full hover:bg-[#F5F6F8] text-[#9699A6] hover:text-[#676879] transition-colors z-10"
+                      className="absolute top-2 left-2 p-1 rounded-full hover:bg-[#F6F7FB] text-[#9699A6] hover:text-[#676879] transition-colors z-10"
                     >
                       <X size={12} />
                     </button>
@@ -232,7 +232,7 @@ export default function AiAssistantPanel({ contactId, contactName }: AiAssistant
 
                   <div
                     ref={resultRef}
-                    className="bg-gradient-to-br from-[#F8F7FF] to-[#F5F6F8] rounded-lg p-3 max-h-[300px] overflow-y-auto"
+                    className="bg-gradient-to-br from-[#F8F7FF] to-[#F6F7FB] rounded-lg p-3 max-h-[300px] overflow-y-auto"
                   >
                     {error ? (
                       <div className="flex items-center gap-2 text-[#E44258]">
@@ -314,7 +314,7 @@ function ActionButton({
       className={`w-full flex items-center gap-3 p-2.5 rounded-lg text-right transition-all ${
         active
           ? "bg-[#6C5CE7]/10 border border-[#6C5CE7]/30"
-          : "bg-[#F5F6F8] hover:bg-[#ECEDF0] border border-transparent"
+          : "bg-[#F6F7FB] hover:bg-[#ECEDF0] border border-transparent"
       } ${disabled && !active ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       <div

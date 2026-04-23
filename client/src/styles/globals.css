@@ -1,6 +1,46 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ───────────────────────────────────────────────
+   Monday.com design tokens (CSS vars)
+   ─────────────────────────────────────────────── */
+:root {
+  /* Primary (Monday blue) */
+  --primary: #0073EA;
+  --primary-hover: #0060C2;
+  --primary-active: #0060C2;
+  --primary-selected: #CCE5FF;
+
+  /* Surfaces */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F6F7FB;
+  --bg-tertiary: #E6E9EF;
+
+  /* Text */
+  --text-primary: #323338;
+  --text-secondary: #676879;
+  --text-tertiary: #9699A6;
+  --text-placeholder: #C5C7D0;
+
+  /* Borders */
+  --border: #E6E9EF;
+  --border-hover: #D0D4E4;
+  --border-focus: #0073EA;
+
+  /* Status */
+  --success: #00C875;
+  --warning: #FDAB3D;
+  --danger: #E2445C;
+  --danger-hover: #D62A41;
+  --info: #579BFC;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-popover: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
 
 @layer base {
   * {
@@ -11,16 +51,23 @@
 
   body {
     font-family:
+      "Figtree",
+      "Rubik",
       "Poppins",
       "Inter",
       system-ui,
       -apple-system,
       sans-serif;
-    color: #323338;
-    background-color: #f5f6f8;
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: -0.01em;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-placeholder);
   }
 
   /* Smooth scrollbar */
@@ -54,9 +101,299 @@
   a {
     transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
   }
+
+  /* Monday.com-style global button press: scale to 0.97 on active.
+     Opt out with `.no-press` for buttons whose active state is handled
+     separately (drag handles, status pills, etc). */
+  button:not(:disabled):not(.no-press):active {
+    transform: scale(0.97);
+    transition-duration: 0.1s;
+  }
 }
 
 @layer components {
+  /* ═══════════════════════════════════════════════════════════════
+     Monday.com-style FORM ELEMENTS (inputs, selects, textareas,
+     labels, help text, checkbox/radio, modal buttons).
+     ─────────────────────────────────────────────────────────── */
+
+  /* Base input (also used by textarea via .textarea below) */
+  .input {
+    @apply w-full h-9 px-2.5 text-[14px] border border-[#C5C7D0] rounded-[4px] bg-white text-[#323338] placeholder:text-[#9699A6];
+    transition: border-color 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+  }
+  .input:hover:not(:focus):not(:disabled):not(.input-error) {
+    border-color: #9699A6;
+  }
+  .input:focus,
+  .input:focus-visible {
+    outline: none;
+    border-color: #0073EA;
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+  }
+  .input-error,
+  .input.input-error {
+    border-color: #E2445C !important;
+    background-color: #FFF5F5;
+  }
+  .input-error:focus {
+    box-shadow: 0 0 0 3px rgba(226, 68, 92, 0.1);
+  }
+  .input:disabled {
+    background-color: #F6F7FB;
+    color: #9699A6;
+    cursor: not-allowed;
+  }
+
+  /* Select — same treatment as input */
+  .select {
+    @apply w-full h-9 px-2.5 text-[14px] border border-[#C5C7D0] rounded-[4px] bg-white text-[#323338];
+    transition: border-color 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+  }
+  .select:hover:not(:focus):not(:disabled) {
+    border-color: #9699A6;
+  }
+  .select:focus,
+  .select:focus-visible {
+    outline: none;
+    border-color: #0073EA;
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+  }
+  .select:disabled {
+    background-color: #F6F7FB;
+    color: #9699A6;
+    cursor: not-allowed;
+  }
+
+  /* Textarea — matches input but with auto height + vertical resize */
+  .textarea {
+    @apply w-full px-2.5 py-2 text-[14px] border border-[#C5C7D0] rounded-[4px] bg-white text-[#323338] placeholder:text-[#9699A6];
+    min-height: 80px;
+    resize: vertical;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease, background-color 0.1s ease;
+  }
+  .textarea:hover:not(:focus):not(:disabled):not(.input-error) {
+    border-color: #9699A6;
+  }
+  .textarea:focus,
+  .textarea:focus-visible {
+    outline: none;
+    border-color: #0073EA;
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+  }
+  .textarea:disabled {
+    background-color: #F6F7FB;
+    color: #9699A6;
+    cursor: not-allowed;
+  }
+
+  /* Labels */
+  .form-label {
+    @apply block text-[12px] font-medium text-[#676879];
+    margin-bottom: 4px;
+  }
+  .form-label .required,
+  .form-required {
+    color: #E2445C;
+    margin-inline-start: 2px;
+  }
+
+  /* Help text + error message */
+  .help-text {
+    @apply text-[12px] text-[#9699A6];
+    margin-top: 4px;
+  }
+  .error-text {
+    @apply flex items-center gap-1 text-[12px] text-[#E2445C];
+    margin-top: 4px;
+  }
+
+  /* Checkbox (apply to <input type="checkbox" class="checkbox">) */
+  .checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #C5C7D0;
+    border-radius: 3px;
+    background-color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
+    flex-shrink: 0;
+  }
+  .checkbox:hover:not(:disabled) {
+    border-color: #0073EA;
+  }
+  .checkbox:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+  }
+  .checkbox:checked {
+    background-color: #0073EA;
+    border-color: #0073EA;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3.5 8.5 6.5 11.5 12.5 5'/%3E%3C/svg%3E");
+    background-size: 12px 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .checkbox:disabled {
+    background-color: #F6F7FB;
+    border-color: #E6E9EF;
+    cursor: not-allowed;
+  }
+
+  /* Radio (apply to <input type="radio" class="radio">) */
+  .radio {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #C5C7D0;
+    border-radius: 50%;
+    background-color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
+    flex-shrink: 0;
+  }
+  .radio:hover:not(:disabled) {
+    border-color: #0073EA;
+  }
+  .radio:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 115, 234, 0.1);
+  }
+  .radio:checked {
+    border-color: #0073EA;
+    border-width: 5px;
+  }
+  .radio:disabled {
+    background-color: #F6F7FB;
+    border-color: #E6E9EF;
+    cursor: not-allowed;
+  }
+
+  /* ─────────── Monday.com button variants ───────────
+     Canonical `.btn` primitives — use for any standalone button.
+     Size variants: .btn-sm (30px), .btn-lg (42px).                */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2;
+    height: 36px;
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.15px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
+  }
+  .btn:focus-visible {
+    outline: none;
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px rgba(0, 115, 234, 0.25);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .btn-primary {
+    background-color: var(--primary);
+    color: #FFFFFF;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+  }
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--primary-active);
+  }
+  .btn-secondary {
+    background-color: #FFFFFF;
+    color: var(--text-primary);
+    border-color: #C5C7D0;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--bg-secondary);
+  }
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--text-primary);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--bg-secondary);
+  }
+  .btn-danger {
+    background-color: var(--danger);
+    color: #FFFFFF;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--danger-hover);
+  }
+  .btn-sm {
+    height: 30px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+  .btn-lg {
+    height: 42px;
+    padding: 0 24px;
+    font-size: 15px;
+  }
+
+  /* Modal buttons — 36px tall, Monday look */
+  .modal-btn {
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-4 text-[14px] font-medium rounded-[4px];
+    transition: background-color 0.1s ease, border-color 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
+  }
+  .modal-btn-secondary {
+    @apply modal-btn bg-white border border-[#C5C7D0] text-[#323338];
+  }
+  .modal-btn-secondary:hover:not(:disabled) {
+    background-color: #F6F7FB;
+    border-color: #9699A6;
+  }
+  .modal-btn-primary {
+    @apply modal-btn bg-[#0073EA] text-white border border-[#0073EA];
+  }
+  .modal-btn-primary:hover:not(:disabled) {
+    background-color: #0060C2;
+    border-color: #0060C2;
+  }
+  .modal-btn-danger {
+    @apply modal-btn bg-[#E2445C] text-white border border-[#E2445C];
+  }
+  .modal-btn-danger:hover:not(:disabled) {
+    background-color: #C93048;
+    border-color: #C93048;
+  }
+  .modal-btn-warning {
+    @apply modal-btn bg-[#FDAB3D] text-white border border-[#FDAB3D];
+  }
+  .modal-btn-warning:hover:not(:disabled) {
+    background-color: #E09232;
+    border-color: #E09232;
+  }
+  .modal-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Native-select caret that matches Monday look (optional utility) */
+  .select-native {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239699A6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 10px center;
+    padding-inline-start: 10px;
+    padding-inline-end: 28px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
   /* Monday-style solid color pills */
   .pill-success {
     @apply bg-success text-white font-semibold text-xs px-3 py-1 rounded-full min-w-[60px] text-center;
@@ -115,15 +452,50 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* RTL-aware shimmer: sweep from right to left, matching reading direction */
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  0%   { background-position: 400px 0; }
+  100% { background-position: -400px 0; }
 }
 
 @keyframes checkbox-pop {
   0%   { transform: scale(0.6); opacity: 0; }
   60%  { transform: scale(1.25); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* Empty-state entrance + gentle float for illustration */
+@keyframes empty-state-in {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes empty-state-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+.animate-empty-in {
+  animation: empty-state-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-empty-float {
+  animation: empty-state-float 3.5s ease-in-out infinite;
+}
+
+/* Modal spring open animation */
+@keyframes modal-spring-in {
+  0%   { opacity: 0; transform: scale(0.96); }
+  60%  { opacity: 1; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes modal-backdrop-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-modal-spring {
+  animation: modal-spring-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-modal-backdrop {
+  animation: modal-backdrop-in 0.2s ease-out both;
 }
 
 .animate-status-flash {
@@ -135,9 +507,163 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, #F5F6F8 25%, #EBEDF2 50%, #F5F6F8 75%);
+  background: linear-gradient(90deg, #F6F7FB 25%, #EBEDF2 50%, #F6F7FB 75%);
   background-size: 800px 100%;
   animation: shimmer 1.4s infinite linear;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Micro-interactions — Monday.com-style polish.
+   These polyfill tailwindcss-animate-style classes (we don't have the
+   plugin installed), and add route/tab/drag/toast transitions.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@keyframes vx-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes vx-zoom-in-95 {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes vx-slide-down-fade {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes vx-slide-in-from-top-1 {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vx-slide-in-from-bottom-2 {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vx-slide-in-from-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vx-slide-in-from-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes vx-page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vx-tab-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* .animate-in envelope — lets existing code like
+   `animate-in fade-in zoom-in-95 duration-150` keep working even without
+   the tailwindcss-animate plugin. Most specific compounds must come first. */
+.animate-in {
+  animation-duration: 150ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+.animate-in.fade-in.zoom-in-95          { animation-name: vx-zoom-in-95; }
+.animate-in.fade-in.slide-in-from-top-1 { animation-name: vx-slide-down-fade; }
+.animate-in.fade-in                     { animation-name: vx-fade-in; }
+.animate-in.zoom-in-95                  { animation-name: vx-zoom-in-95; }
+.animate-in.slide-in-from-top-1         { animation-name: vx-slide-in-from-top-1; }
+.animate-in.slide-in-from-left          { animation-name: vx-slide-in-from-left; }
+.animate-in.slide-in-from-right         { animation-name: vx-slide-in-from-right; }
+.animate-in.slide-in-from-bottom-2      { animation-name: vx-slide-in-from-bottom-2; }
+
+/* Tailwind's `.duration-*` utilities only target transition-duration by default.
+   Duplicating here so they also govern our animation-duration inside `.animate-in`. */
+.animate-in.duration-100 { animation-duration: 100ms; }
+.animate-in.duration-150 { animation-duration: 150ms; }
+.animate-in.duration-200 { animation-duration: 200ms; }
+.animate-in.duration-250 { animation-duration: 250ms; }
+.animate-in.duration-300 { animation-duration: 300ms; }
+
+/* Page transition on route change */
+.page-enter {
+  animation: vx-page-enter 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Tab content cross-fade */
+.tab-content-enter {
+  animation: vx-tab-fade-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Dropdown / popover entrance — 150ms slide-down + fade + subtle scale */
+.popover-enter {
+  animation: vx-slide-down-fade 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top center;
+}
+
+/* Table row hover — smooth background change + subtle elevation */
+.row-hoverable {
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+  position: relative;
+}
+.row-hoverable:hover {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+}
+
+/* Drag lift — applied to the DragOverlay / dragged card */
+.drag-lift {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  transform: scale(1.02);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Drop-zone highlight — dashed blue outline on active drop targets */
+.drop-zone-active {
+  outline: 2px dashed #0073EA;
+  outline-offset: -4px;
+  background-color: rgba(0, 115, 234, 0.05) !important;
+  transition:
+    outline-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+/* Toast styling (react-hot-toast) — colored 4px left border by type,
+   slide in from the left (RTL top-left position). */
+.vx-toast {
+  position: relative;
+  padding-left: 16px !important;
+  border-left: 4px solid #0073EA;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  animation: vx-slide-in-from-left 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.vx-toast--success { border-left-color: #00C875; }
+.vx-toast--error   { border-left-color: #E2445C; }
+.vx-toast--loading { border-left-color: #0073EA; }
+
+/* Animated tab underline (opt-in via .tab-underline + data-active="true") */
+.tab-underline {
+  position: relative;
+}
+.tab-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background-color: #0073EA;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tab-underline[data-active="true"]::after {
+  transform: scaleX(1);
 }
 
 /* Accessibility: respect reduced motion preferences */
@@ -148,5 +674,9 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  button:not(:disabled):active {
+    transform: none;
   }
 }

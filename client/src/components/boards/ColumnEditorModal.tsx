@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+﻿import { type ReactNode, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Hash } from "lucide-react";
 import toast from "react-hot-toast";
@@ -29,12 +29,12 @@ const COLUMN_TYPES: ColumnTypeEntry[] = [
 ];
 
 const DEFAULT_COLORS = [
-  "#00CA72",
+  "#00C875",
   "#FDAB3D",
-  "#FB275D",
+  "#E2445C",
   "#579BFC",
   "#A25DDC",
-  "#6161FF",
+  "#0073EA",
   "#FF642E",
   "#66CCFF",
   "#C4C4C4",
@@ -59,16 +59,16 @@ export default function ColumnEditorModal({
   const STATUS_DEFAULTS = [
     { key: "todo", label: "לביצוע", color: "#579BFC" },
     { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-    { key: "done", label: "הושלם", color: "#00CA72" },
-    { key: "stuck", label: "תקוע", color: "#FB275D" },
+    { key: "done", label: "הושלם", color: "#00C875" },
+    { key: "stuck", label: "תקוע", color: "#E2445C" },
     { key: "waiting", label: "בהמתנה", color: "#9D99B9" },
     { key: "not_relevant", label: "לא רלוונטי", color: "#C4C4C4" },
   ];
   const PRIORITY_DEFAULTS = [
     { key: "low", label: "נמוך", color: "#66CCFF" },
-    { key: "medium", label: "בינוני", color: "#6161FF" },
+    { key: "medium", label: "בינוני", color: "#0073EA" },
     { key: "high", label: "גבוה", color: "#FDAB3D" },
-    { key: "urgent", label: "דחוף", color: "#FB275D" },
+    { key: "urgent", label: "דחוף", color: "#E2445C" },
   ];
 
   function handleTypeChange(newType: string) {
@@ -131,17 +131,17 @@ export default function ColumnEditorModal({
       open={open}
       onClose={onClose}
       title="הוסף עמודה"
-      maxWidth="max-w-[520px]"
+      maxWidth="wide"
     >
       <div className="p-6 space-y-5">
         {/* Column Name */}
         <div>
-          <label className="block text-sm font-medium text-[#323338] mb-1.5">
-            שם העמודה
+          <label className="form-label">
+            שם העמודה<span className="form-required">*</span>
           </label>
           <input
             autoFocus
-            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
+            className="input"
             placeholder="לדוגמה: סטטוס"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
@@ -150,9 +150,7 @@ export default function ColumnEditorModal({
 
         {/* Column Type — icon card grid */}
         <div>
-          <label className="block text-sm font-medium text-[#323338] mb-2">
-            סוג עמודה
-          </label>
+          <label className="form-label">סוג עמודה</label>
           <div className="grid grid-cols-3 gap-2">
             {COLUMN_TYPES.map((ct) => {
               const selected = type === ct.value;
@@ -166,7 +164,7 @@ export default function ColumnEditorModal({
                     "flex flex-col items-center gap-1.5 px-3 py-3 rounded-xl border-2 transition-all text-center hover:shadow-sm",
                     selected
                       ? "border-[#0073EA] bg-[#EEF4FF] shadow-sm"
-                      : "border-[#E6E9EF] bg-white hover:border-[#C3C6D4]",
+                      : "border-[#E6E9EF] bg-white hover:border-[#9699A6]",
                   )}
                 >
                   <span
@@ -179,8 +177,8 @@ export default function ColumnEditorModal({
                         ? isEmoji ? "" : "text-[#0073EA]"
                         : isEmoji ? "" : "text-[#676879]",
                       !isEmoji && selected && "bg-[#0073EA]/10",
-                      !isEmoji && !isLucide && !selected && "bg-[#F5F6F8]",
-                      isLucide && !selected && "bg-[#F5F6F8]",
+                      !isEmoji && !isLucide && !selected && "bg-[#F6F7FB]",
+                      isLucide && !selected && "bg-[#F6F7FB]",
                       isLucide && selected && "bg-[#0073EA]/10",
                     )}
                   >
@@ -203,9 +201,7 @@ export default function ColumnEditorModal({
         {/* Status/Priority Options */}
         {showOptions && (
           <div>
-            <label className="block text-sm font-medium text-[#323338] mb-2">
-              אפשרויות סטטוס
-            </label>
+            <label className="form-label">אפשרויות סטטוס</label>
             <div className="space-y-1.5">
               {options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2 group/opt">
@@ -259,7 +255,7 @@ export default function ColumnEditorModal({
                   {options.length > 1 && (
                     <button
                       onClick={() => setOptions(options.filter((_, j) => j !== i))}
-                      className="p-1 text-[#C3C6D4] hover:text-[#FB275D] transition-colors opacity-0 group-hover/opt:opacity-100"
+                      className="p-1 text-[#9699A6] hover:text-[#E2445C] transition-colors opacity-0 group-hover/opt:opacity-100"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -287,14 +283,24 @@ export default function ColumnEditorModal({
           </div>
         )}
 
-        {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={!label.trim() || addMut.isPending}
-          className="w-full py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-[4px] transition-colors"
-        >
-          {addMut.isPending ? "מוסיף..." : "הוסף עמודה"}
-        </button>
+        {/* Footer — RTL: cancel first, primary at end */}
+        <div className="flex items-center justify-start gap-2 pt-4 border-t border-[#E6E9EF]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="modal-btn-secondary"
+          >
+            ביטול
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!label.trim() || addMut.isPending}
+            className="modal-btn-primary"
+          >
+            {addMut.isPending ? "מוסיף..." : "הוסף עמודה"}
+          </button>
+        </div>
       </div>
     </Modal>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { handleMutationError } from "../../lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -23,14 +23,14 @@ const QUICK_TYPES: {
     key: "contact",
     label: "איש קשר",
     icon: <Users size={20} />,
-    color: "#6161FF",
-    bg: "#E8E8FF",
+    color: "#0073EA",
+    bg: "#CCE5FF",
   },
   {
     key: "deal",
     label: "עסקה",
     icon: <Handshake size={20} />,
-    color: "#00CA72",
+    color: "#00C875",
     bg: "#D6F5E8",
   },
   {
@@ -128,7 +128,7 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="מה ברצונך ליצור?"
-                  className="w-full pr-9 pl-4 py-2.5 bg-[#F5F6F8] rounded-[4px] text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
+                  className="w-full pr-9 pl-4 py-2.5 bg-[#F6F7FB] rounded-[4px] text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
                   autoFocus
                 />
               </div>
@@ -163,7 +163,7 @@ export default function QuickAdd({ open, onClose, initialType }: QuickAddProps) 
                 </p>
               )}
             </div>
-            <div className="px-4 py-2.5 border-t border-[#E6E9EF] flex items-center gap-3 text-[10px] text-[#9699A6] bg-[#F5F6F8]/50">
+            <div className="px-4 py-2.5 border-t border-[#E6E9EF] flex items-center gap-3 text-[10px] text-[#9699A6] bg-[#F6F7FB]/50">
               <kbd className="px-1.5 py-0.5 bg-white rounded border border-[#E6E9EF] text-[10px] font-mono shadow-sm">
                 Ctrl+K
               </kbd>
@@ -342,7 +342,7 @@ function QuickForm({
         <button
           type="button"
           onClick={onClose}
-          className="mr-auto p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+          className="mr-auto p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
           aria-label="סגור"
         >
           <X size={16} className="text-[#9699A6]" />
@@ -515,7 +515,7 @@ function QuickForm({
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+          className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
         >
           ביטול
         </button>

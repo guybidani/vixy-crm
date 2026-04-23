@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
   useEffect,
   useRef,
@@ -116,8 +116,8 @@ const RECENT_MAX = 5;
 
 // Icon palette per entity/module (kept aligned with rest of app).
 const C = {
-  blue: { fg: "#6161FF", bg: "#E8E8FF" },
-  green: { fg: "#00CA72", bg: "#D6F5E8" },
+  blue: { fg: "#0073EA", bg: "#CCE5FF" },
+  green: { fg: "#00C875", bg: "#D6F5E8" },
   purple: { fg: "#A25DDC", bg: "#EDE1F5" },
   orange: { fg: "#FDAB3D", bg: "#FEF0D8" },
   teal: { fg: "#037F4C", bg: "#D6F5E8" },
@@ -980,7 +980,7 @@ export default function CommandPalette({
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="חפש, נווט או הרץ פעולה..."
-              className="w-full pr-10 pl-28 py-2.5 bg-[#F5F6F8] rounded-xl text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
+              className="w-full pr-10 pl-28 py-2.5 bg-[#F6F7FB] rounded-xl text-sm text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:bg-white transition-colors"
               aria-label="חיפוש ופעולות"
               aria-controls="command-palette-list"
               aria-activedescendant={
@@ -1065,7 +1065,7 @@ export default function CommandPalette({
             groups.map((group) => (
               <div key={group.label}>
                 {/* Sticky category header */}
-                <div className="sticky top-0 z-[1] flex items-center gap-2 px-4 py-1.5 bg-[#F5F6F8]/95 backdrop-blur-sm border-b border-[#E6E9EF]/60">
+                <div className="sticky top-0 z-[1] flex items-center gap-2 px-4 py-1.5 bg-[#F6F7FB]/95 backdrop-blur-sm border-b border-[#E6E9EF]/60">
                   <span className="text-[10px] font-bold text-[#9699A6] uppercase tracking-wide">
                     {group.label}
                   </span>
@@ -1091,7 +1091,7 @@ export default function CommandPalette({
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors ${
                         isSelected
                           ? "bg-[#0073EA]/8"
-                          : "hover:bg-[#F5F6F8]/60"
+                          : "hover:bg-[#F6F7FB]/60"
                       }`}
                     >
                       {/* Icon */}
@@ -1143,7 +1143,7 @@ export default function CommandPalette({
         </div>
 
         {/* ── Footer ────────────────────────────────────────────────── */}
-        <div className="px-4 py-2 border-t border-[#E6E9EF] flex items-center gap-4 text-[10px] text-[#9699A6] bg-[#F5F6F8]/30" dir="ltr">
+        <div className="px-4 py-2 border-t border-[#E6E9EF] flex items-center gap-4 text-[10px] text-[#9699A6] bg-[#F6F7FB]/30" dir="ltr">
           <span className="flex items-center gap-1">
             <Kbd>↑↓</Kbd>
             <span className="text-[#676879]">navigate</span>
@@ -1200,7 +1200,7 @@ function ShortcutBadge({
           className={
             highlighted
               ? "px-1.5 py-0.5 bg-white rounded border border-[#0073EA]/30 text-[10px] font-mono text-[#0073EA] shadow-[0_1px_0_rgba(0,0,0,0.04)] min-w-[18px] inline-flex items-center justify-center"
-              : "px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#676879] min-w-[18px] inline-flex items-center justify-center"
+              : "px-1.5 py-0.5 bg-[#F6F7FB] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#676879] min-w-[18px] inline-flex items-center justify-center"
           }
         >
           {p}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, RefreshCw, Unlink, ExternalLink } from "lucide-react";
 import toast from "react-hot-toast";
@@ -70,7 +70,7 @@ export default function CalendarTab() {
             className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{
               backgroundColor: connected ? "#D6F5E8" : "#F0F0F0",
-              color: connected ? "#00CA72" : "#676879",
+              color: connected ? "#00C875" : "#676879",
             }}
           >
             <Calendar size={20} />
@@ -95,7 +95,7 @@ export default function CalendarTab() {
         {!connected ? (
           /* Disconnected state */
           <div className="text-center py-6">
-            <div className="w-16 h-16 mx-auto mb-4 bg-[#F5F6F8] rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-[#F6F7FB] rounded-2xl flex items-center justify-center">
               <Calendar size={28} className="text-[#9699A6]" />
             </div>
             <p className="text-sm text-[#676879] mb-4">
@@ -116,7 +116,7 @@ export default function CalendarTab() {
           /* Connected state */
           <div className="space-y-4">
             {/* Account info */}
-            <div className="bg-[#F5F6F8]/50 rounded-[4px] p-4 space-y-3">
+            <div className="bg-[#F6F7FB]/50 rounded-[4px] p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[#676879]">
                   חשבון מחובר
@@ -199,7 +199,7 @@ export default function CalendarTab() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDisconnectConfirm(false)}
-                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+                className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
               >
                 ביטול
               </button>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart2,
@@ -67,12 +67,12 @@ function DealsTimeline() {
   return (
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
-        <TrendingUp size={18} className="text-[#6161FF]" />
+        <TrendingUp size={18} className="text-[#0073EA]" />
         <h3 className="font-semibold text-[#323338]">עסקאות לאורך זמן</h3>
         <span className="text-[12px] text-[#9699A6] mr-auto">8 שבועות אחרונים</span>
       </div>
       {q.isLoading ? (
-        <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
+        <div className="animate-pulse h-48 bg-[#F6F7FB] rounded-lg" />
       ) : q.isError ? (
         <div className="flex flex-col items-center gap-2 justify-center py-12">
           <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
@@ -81,7 +81,7 @@ function DealsTimeline() {
           </div>
           <button
             onClick={() => q.refetch()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
           >
             <RefreshCw size={12} />
             נסה שוב
@@ -115,9 +115,9 @@ function DealsTimeline() {
             <Line
               type="monotone"
               dataKey="עסקאות"
-              stroke="#6161FF"
+              stroke="#0073EA"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: "#6161FF", strokeWidth: 0 }}
+              dot={{ r: 4, fill: "#0073EA", strokeWidth: 0 }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
@@ -179,12 +179,12 @@ function PipelineByStage() {
   return (
     <PageCard>
       <div className="flex items-center gap-2 mb-5">
-        <BarChart2 size={18} className="text-[#00CA72]" />
+        <BarChart2 size={18} className="text-[#00C875]" />
         <h3 className="font-semibold text-[#323338]">פייפליין לפי שלב</h3>
         <span className="text-[12px] text-[#9699A6] mr-auto">החודש</span>
       </div>
       {q.isLoading ? (
-        <div className="animate-pulse h-48 bg-[#F5F6F8] rounded-lg" />
+        <div className="animate-pulse h-48 bg-[#F6F7FB] rounded-lg" />
       ) : q.isError ? (
         <div className="flex flex-col items-center gap-2 justify-center py-12">
           <div className="flex items-center gap-2 text-[13px] text-[#E44258]">
@@ -193,7 +193,7 @@ function PipelineByStage() {
           </div>
           <button
             onClick={() => q.refetch()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
           >
             <RefreshCw size={12} />
             נסה שוב
@@ -260,7 +260,7 @@ function TeamPerformance() {
       {q.isLoading ? (
         <div className="animate-pulse space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
+            <div key={i} className="h-10 bg-[#F6F7FB] rounded" />
           ))}
         </div>
       ) : q.isError ? (
@@ -271,7 +271,7 @@ function TeamPerformance() {
           </div>
           <button
             onClick={() => q.refetch()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
           >
             <RefreshCw size={12} />
             נסה שוב
@@ -305,7 +305,7 @@ function TeamPerformance() {
               {sorted.map((member, idx) => (
                 <tr
                   key={member.memberId}
-                  className={`border-b border-[#F5F6F8] ${idx % 2 === 0 ? "" : "bg-[#FAFBFC]"}`}
+                  className={`border-b border-[#F6F7FB] ${idx % 2 === 0 ? "" : "bg-[#FAFBFC]"}`}
                 >
                   <td className="py-2.5 pr-1">
                     <div className="flex items-center gap-2">
@@ -321,7 +321,7 @@ function TeamPerformance() {
                     <span
                       className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold ${
                         member.dealsWon > 0
-                          ? "bg-[#E6FBF1] text-[#00CA72]"
+                          ? "bg-[#E6FBF1] text-[#00C875]"
                           : "text-[#9699A6]"
                       }`}
                     >
@@ -364,13 +364,13 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const SOURCE_COLORS = [
-  "#6161FF",
-  "#00CA72",
+  "#0073EA",
+  "#00C875",
   "#FDAB3D",
   "#579BFC",
   "#A25DDC",
   "#FF642E",
-  "#FB275D",
+  "#E2445C",
   "#66CCFF",
   "#C4C4C4",
 ];
@@ -438,7 +438,7 @@ function LeadSources() {
       </div>
       {q.isLoading ? (
         <div className="flex justify-center py-8">
-          <div className="w-40 h-40 rounded-full bg-[#F5F6F8] animate-pulse" />
+          <div className="w-40 h-40 rounded-full bg-[#F6F7FB] animate-pulse" />
         </div>
       ) : q.isError ? (
         <div className="flex flex-col items-center gap-2 justify-center py-12">
@@ -448,7 +448,7 @@ function LeadSources() {
           </div>
           <button
             onClick={() => q.refetch()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
           >
             <RefreshCw size={12} />
             נסה שוב

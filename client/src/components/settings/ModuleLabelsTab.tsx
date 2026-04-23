@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RotateCcw, Save, Type } from "lucide-react";
 import toast from "react-hot-toast";
@@ -91,7 +91,7 @@ export default function ModuleLabelsTab() {
             </div>
             <button
               onClick={resetAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#676879] border border-[#D0D4E4] rounded-[4px] hover:border-[#FB275D] hover:text-[#FB275D] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#676879] border border-[#D0D4E4] rounded-[4px] hover:border-[#E2445C] hover:text-[#E2445C] transition-colors"
             >
               <RotateCcw size={12} />
               אפס הכל
@@ -149,7 +149,7 @@ export default function ModuleLabelsTab() {
                   >
                     <RotateCcw
                       size={13}
-                      className="text-[#9699A6] group-hover:text-[#FB275D] transition-colors"
+                      className="text-[#9699A6] group-hover:text-[#E2445C] transition-colors"
                     />
                   </button>
                 )}
@@ -161,7 +161,7 @@ export default function ModuleLabelsTab() {
 
         {/* Save bar */}
         {hasChanges && (
-          <div className="px-6 py-4 bg-[#F5F6F8] border-t border-[#E6E9EF] flex items-center justify-between">
+          <div className="px-6 py-4 bg-[#F6F7FB] border-t border-[#E6E9EF] flex items-center justify-between">
             <p className="text-xs text-[#676879]">
               יש שינויים שלא נשמרו
             </p>

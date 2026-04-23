@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -100,7 +100,7 @@ function EditableInfoRow({
             <span
               role="button"
               tabIndex={0}
-              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
               dir={dir}
               onClick={() => {
                 setEditVal(value);
@@ -132,7 +132,7 @@ function EditableInfoRow({
         <span
           role="button"
           tabIndex={0}
-          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
           onClick={() => {
             setEditVal("");
             setEditing(true);
@@ -308,7 +308,7 @@ export default function CompanyDetailPage() {
               <div className="h-5 w-36 bg-[#E6E9EF] rounded animate-pulse mb-3" />
               <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-12 bg-[#F5F6F8] rounded animate-pulse" />
+                  <div key={i} className="h-12 bg-[#F6F7FB] rounded animate-pulse" />
                 ))}
               </div>
             </div>
@@ -392,7 +392,7 @@ export default function CompanyDetailPage() {
                   tabIndex={0}
                   role="button"
                   aria-label="לחץ לעריכת שם חברה"
-                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                   onClick={() => {
                     setNameVal(company.name);
                     setEditingName(true);
@@ -519,7 +519,7 @@ export default function CompanyDetailPage() {
                 role="button"
                 tabIndex={0}
                 aria-label="לחץ לעריכת הערות"
-                className="text-sm text-[#323338] whitespace-pre-wrap cursor-text hover:bg-[#F5F6F8]/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+                className="text-sm text-[#323338] whitespace-pre-wrap cursor-text hover:bg-[#F6F7FB]/80 rounded px-2 py-1 -mx-1 transition-colors min-h-[40px] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                 onClick={() => {
                   setNotesVal(company.notes || "");
                   setEditingNotes(true);
@@ -545,14 +545,14 @@ export default function CompanyDetailPage() {
           <PageCard>
             <h3 className="font-bold text-[#323338] mb-3">סיכום</h3>
             <div className="grid grid-cols-2 gap-3">
-              <div className="text-center p-3 bg-[#F5F6F8] rounded-[4px]">
+              <div className="text-center p-3 bg-[#F6F7FB] rounded-[4px]">
                 <Users size={18} className="mx-auto text-[#0073EA] mb-1" />
                 <p className="text-lg font-bold text-[#323338]">
                   {company.contacts?.length || 0}
                 </p>
                 <p className="text-[12px] text-[#9699A6]">אנשי קשר</p>
               </div>
-              <div className="text-center p-3 bg-[#F5F6F8] rounded-[4px]">
+              <div className="text-center p-3 bg-[#F6F7FB] rounded-[4px]">
                 <Handshake size={18} className="mx-auto text-success mb-1" />
                 <p className="text-lg font-bold text-[#323338]">
                   {company.deals?.length || 0}
@@ -561,7 +561,7 @@ export default function CompanyDetailPage() {
               </div>
             </div>
             {company.deals && company.deals.length > 0 && (
-              <div className="mt-3 p-3 bg-[#F5F6F8] rounded-[4px] text-center">
+              <div className="mt-3 p-3 bg-[#F6F7FB] rounded-[4px] text-center">
                 <p className="text-lg font-bold text-[#323338]">
                   ₪{company.deals.reduce((sum: number, d: any) => sum + (d.value || 0), 0).toLocaleString()}
                 </p>
@@ -603,7 +603,7 @@ export default function CompanyDetailPage() {
                     <button
                       key={contact.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
                       onClick={() => navigate(`/contacts/${contact.id}`)}
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -687,7 +687,7 @@ export default function CompanyDetailPage() {
                     <button
                       key={deal.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
                       onClick={() => navigate(`/deals?open=${deal.id}`)}
                     >
                       <div className="text-right">
@@ -750,11 +750,11 @@ export default function CompanyDetailPage() {
 
             {/* Inline log form */}
             {showLogActivity && (
-              <div className="mb-4 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
+              <div className="mb-4 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
                 <div className="flex gap-1 flex-wrap">
                   {([
-                    { key: "NOTE", label: "הערה", color: "#6161FF" },
-                    { key: "CALL", label: "שיחה", color: "#00CA72" },
+                    { key: "NOTE", label: "הערה", color: "#0073EA" },
+                    { key: "CALL", label: "שיחה", color: "#00C875" },
                     { key: "EMAIL", label: "מייל", color: "#579BFC" },
                     { key: "MEETING", label: "פגישה", color: "#A25DDC" },
                     { key: "WHATSAPP", label: "ווטסאפ", color: "#25D366" },
@@ -841,7 +841,7 @@ export default function CompanyDetailPage() {
                             )}
                             {activity.deal && (
                               <button
-                                className="text-[11px] text-[#00CA72] hover:underline"
+                                className="text-[11px] text-[#00C875] hover:underline"
                                 onClick={() => navigate(`/deals?open=${activity.deal.id}`)}
                               >
                                 {activity.deal.title}
@@ -897,7 +897,7 @@ export default function CompanyDetailPage() {
                                 <div className="flex gap-1.5">
                                   <button
                                     onClick={() => setEditingActivityId(null)}
-                                    className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F5F6F8] rounded transition-colors"
+                                    className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F6F7FB] rounded transition-colors"
                                   >
                                     ביטול
                                   </button>

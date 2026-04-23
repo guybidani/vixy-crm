@@ -17,14 +17,33 @@ createRoot(document.getElementById("root")!).render(
           <WorkspaceOptionsProvider>
             <App />
           </WorkspaceOptionsProvider>
+          {/* Monday.com-style toasts — top-left (RTL), 3s auto-dismiss,
+              colored 4px left border per type, slide in from the left. */}
           <Toaster
             position="top-left"
             toastOptions={{
               duration: 3000,
+              className: "vx-toast",
               style: {
                 borderRadius: "8px",
-                background: "#323338",
-                color: "#fff",
+                background: "#fff",
+                color: "#323338",
+                fontSize: "14px",
+                fontWeight: 500,
+                padding: "12px 16px",
+                maxWidth: "420px",
+              },
+              success: {
+                className: "vx-toast vx-toast--success",
+                iconTheme: { primary: "#00C875", secondary: "#fff" },
+              },
+              error: {
+                className: "vx-toast vx-toast--error",
+                iconTheme: { primary: "#E2445C", secondary: "#fff" },
+              },
+              loading: {
+                className: "vx-toast vx-toast--loading",
+                iconTheme: { primary: "#0073EA", secondary: "#fff" },
               },
             }}
           />

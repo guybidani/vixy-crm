@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,7 +65,7 @@ export default function IntegrationsTab() {
             <h3 className="text-[13px] font-bold text-[#323338]">Zapier / Make / n8n</h3>
             <p className="text-[12px] text-[#676879] mt-0.5">בקרוב — חיבור לכלי אוטומציה חיצוניים</p>
           </div>
-          <span className="mr-auto text-[10px] font-bold px-2 py-1 bg-[#F5F6F8] text-[#9699A6] rounded-full">
+          <span className="mr-auto text-[10px] font-bold px-2 py-1 bg-[#F6F7FB] text-[#9699A6] rounded-full">
             בקרוב
           </span>
         </div>
@@ -83,7 +83,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-[#F5F6F8] transition-colors"
+      className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-[#F6F7FB] transition-colors"
       title="העתק"
     >
       {copied ? <Check size={12} className="text-success" /> : <Copy size={12} className="text-[#9699A6]" />}
@@ -126,7 +126,7 @@ function KolioCard() {
         ].map(({ label, value }) => (
           <div key={label} className="flex items-center gap-3">
             <span className="text-[12px] text-[#676879] w-28 flex-shrink-0">{label}</span>
-            <div className="flex-1 flex items-center gap-1 bg-[#F5F6F8] rounded-[4px] px-3 py-1.5 min-w-0">
+            <div className="flex-1 flex items-center gap-1 bg-[#F6F7FB] rounded-[4px] px-3 py-1.5 min-w-0">
               <code className="text-[12px] font-mono text-[#323338] truncate flex-1" dir="ltr">
                 {value}
               </code>
@@ -217,7 +217,7 @@ function GoogleCalendarCard() {
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[12px] font-semibold ${
                   connected
                     ? "bg-success-light text-success"
-                    : "bg-[#F5F6F8] text-[#676879]"
+                    : "bg-[#F6F7FB] text-[#676879]"
                 }`}
               >
                 {connected ? (
@@ -246,7 +246,7 @@ function GoogleCalendarCard() {
       ) : connected ? (
         /* Connected state */
         <div className="space-y-4">
-          <div className="bg-[#F5F6F8] rounded-[4px] p-4 space-y-2.5">
+          <div className="bg-[#F6F7FB] rounded-[4px] p-4 space-y-2.5">
             {status?.email && (
               <div className="flex items-center justify-between gap-4">
                 <span className="text-[12px] text-[#676879] flex-shrink-0">

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface CalendarPopoverProps {
@@ -184,7 +184,7 @@ export default function CalendarPopover({
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#E6E9EF]">
         <button
           onClick={goToday}
-          className="text-[12px] text-[#323338] hover:text-[#0073EA] font-medium px-2 py-1 rounded hover:bg-[#F5F6F8] transition-colors"
+          className="text-[12px] text-[#323338] hover:text-[#0073EA] font-medium px-2 py-1 rounded hover:bg-[#F6F7FB] transition-colors"
         >
           היום
         </button>
@@ -199,7 +199,7 @@ export default function CalendarPopover({
             if (e.key === "Enter") handleTextSubmit();
           }}
           placeholder="YYYY-MM-DD"
-          className="w-full text-[13px] text-[#323338] border border-[#C3C6D4] rounded px-2 py-1.5 outline-none focus:border-[#0073EA] text-center font-mono"
+          className="w-full text-[13px] text-[#323338] border border-[#9699A6] rounded px-2 py-1.5 outline-none focus:border-[#0073EA] text-center font-mono"
           dir="ltr"
         />
       </div>
@@ -217,14 +217,14 @@ export default function CalendarPopover({
         <div className="flex items-center gap-1">
           <button
             onClick={prevMonth}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[#F5F6F8] text-[#676879] hover:text-[#323338] transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[#F6F7FB] text-[#676879] hover:text-[#323338] transition-colors"
             aria-label="חודש קודם"
           >
             <ChevronRight size={14} />
           </button>
           <button
             onClick={nextMonth}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[#F5F6F8] text-[#676879] hover:text-[#323338] transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded hover:bg-[#F6F7FB] text-[#676879] hover:text-[#323338] transition-colors"
             aria-label="חודש הבא"
           >
             <ChevronLeft size={14} />
@@ -268,11 +268,11 @@ export default function CalendarPopover({
               aria-selected={isSelected || undefined}
               className={`
                 w-8 h-8 flex items-center justify-center rounded-full text-[12px] transition-all
-                ${!cell.isCurrentMonth ? "text-[#C3C6D4]" : "text-[#323338]"}
+                ${!cell.isCurrentMonth ? "text-[#9699A6]" : "text-[#323338]"}
                 ${isSelected ? "bg-[#0073EA] text-white font-bold" : ""}
                 ${isToday && !isSelected ? "ring-2 ring-[#0073EA] ring-inset font-bold text-[#0073EA]" : ""}
                 ${!isSelected && cell.isCurrentMonth ? "hover:bg-[#DCE9F5]" : ""}
-                ${!isSelected && !cell.isCurrentMonth ? "hover:bg-[#F5F6F8]" : ""}
+                ${!isSelected && !cell.isCurrentMonth ? "hover:bg-[#F6F7FB]" : ""}
               `}
             >
               {cell.day}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 
 interface MondayNumberCellProps {
   value: number | null;
@@ -109,7 +109,7 @@ export default function MondayNumberCell({
       {value !== null && value !== undefined ? (
         formatDisplay()
       ) : (
-        <span className="text-[#C3C6D4]">—</span>
+        <span className="text-[#9699A6]">—</span>
       )}
     </span>
   );

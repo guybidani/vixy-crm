@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
   Bar,
@@ -43,7 +43,7 @@ export default function DealsChartView() {
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-white rounded-xl p-5 shadow-sm border border-[#E6E9EF]">
               <div className="h-4 w-28 bg-[#E6E9EF] rounded mb-4" />
-              <div className="h-[260px] bg-[#F5F6F8] rounded-lg" />
+              <div className="h-[260px] bg-[#F6F7FB] rounded-lg" />
             </div>
           ))}
         </div>
@@ -140,20 +140,20 @@ export default function DealsChartView() {
         <KpiCard
           label="שווי צינור"
           value={`₪${totalPipelineValue.toLocaleString()}`}
-          color="#6161FF"
+          color="#0073EA"
         />
         <KpiCard
           label="סגירות מוצלחות"
           value={`₪${wonValue.toLocaleString()}`}
           sub={`${wonCount} עסקאות`}
-          color="#00CA72"
+          color="#00C875"
         />
         <KpiCard
           label="שיעור סגירה"
           value={`${winRate}%`}
           sub={`${wonCount}/${closedTotal}`}
           color={
-            winRate >= 50 ? "#00CA72" : winRate >= 30 ? "#FDAB3D" : "#FB275D"
+            winRate >= 50 ? "#00C875" : winRate >= 30 ? "#FDAB3D" : "#E2445C"
           }
         />
       </div>
@@ -240,7 +240,7 @@ export default function DealsChartView() {
                     <span className="text-[12px] text-[#676879] w-20 text-left">
                       {d.name}
                     </span>
-                    <div className="flex-1 h-8 bg-[#F5F6F8] rounded-lg overflow-hidden relative">
+                    <div className="flex-1 h-8 bg-[#F6F7FB] rounded-lg overflow-hidden relative">
                       <div
                         className="h-full rounded-lg transition-all flex items-center justify-end px-2"
                         style={{

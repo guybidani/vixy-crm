@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { avatarColor, handleMutationError } from "../lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -80,11 +80,11 @@ interface SettingsTab {
 }
 
 const BASE_TABS: SettingsTab[] = [
-  { key: "general", label: "כללי", icon: Settings2, color: "#6161FF", adminOnly: true },
-  { key: "branding", label: "מיתוג", icon: Palette, color: "#6161FF", adminOnly: true },
-  { key: "profile", label: "פרופיל", icon: User, color: "#6161FF" },
-  { key: "members", label: "חברי צוות", icon: Users, color: "#00CA72", adminOnly: true },
-  { key: "permissions", label: "הרשאות", icon: Lock, color: "#FB275D", adminOnly: true },
+  { key: "general", label: "כללי", icon: Settings2, color: "#0073EA", adminOnly: true },
+  { key: "branding", label: "מיתוג", icon: Palette, color: "#0073EA", adminOnly: true },
+  { key: "profile", label: "פרופיל", icon: User, color: "#0073EA" },
+  { key: "members", label: "חברי צוות", icon: Users, color: "#00C875", adminOnly: true },
+  { key: "permissions", label: "הרשאות", icon: Lock, color: "#E2445C", adminOnly: true },
   { key: "canned", label: "תגובות מוכנות", icon: Zap, color: "#FDAB3D" },
   { key: "sla", label: "מדיניות SLA", icon: Shield, color: "#A25DDC" },
   { key: "automation", label: "אוטומציה", icon: Workflow, color: "#FF642E" },
@@ -94,8 +94,8 @@ const BASE_TABS: SettingsTab[] = [
   { key: "tags", label: "תגיות", icon: Tag, color: "#579BFC" },
   { key: "calendar", label: "Google Calendar", icon: Calendar, color: "#4285F4" },
   { key: "snooze", label: "הגדרות דחייה", icon: AlarmClock, color: "#FF642E", adminOnly: true },
-  { key: "integrations", label: "אינטגרציות", icon: Plug2, color: "#00CA72" },
-  { key: "nav-permissions", label: "הרשאות ניווט", icon: Navigation, color: "#FB275D", adminOnly: true },
+  { key: "integrations", label: "אינטגרציות", icon: Plug2, color: "#00C875" },
+  { key: "nav-permissions", label: "הרשאות ניווט", icon: Navigation, color: "#E2445C", adminOnly: true },
 ];
 
 type Tab = string;
@@ -140,7 +140,7 @@ export default function SettingsPage() {
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-[13px] font-medium transition-colors border-b-[2px] -mb-px whitespace-nowrap ${
                   isActive
                     ? "text-[#0073EA] border-[#0073EA]"
-                    : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F5F6F8]"
+                    : "text-[#676879] border-transparent hover:text-[#323338] hover:bg-[#F6F7FB]"
                 }`}
               >
                 <t.icon size={14} />
@@ -217,7 +217,7 @@ function GeneralTab() {
         <div className="flex items-center gap-4 mb-6">
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm text-white text-2xl font-bold"
-            style={{ backgroundColor: "#6161FF" }}
+            style={{ backgroundColor: "#0073EA" }}
           >
             {(name || currentWs?.name || "W").charAt(0).toUpperCase()}
           </div>
@@ -251,7 +251,7 @@ function GeneralTab() {
                 </button>
                 <button
                   onClick={() => { setName(currentWs?.name || ""); setEditingName(false); }}
-                  className="px-3 py-2 bg-[#F5F6F8] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
+                  className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
                 >
                   ביטול
                 </button>
@@ -360,7 +360,7 @@ function ProfileTab() {
                   </button>
                   <button
                     onClick={() => { setName(user?.name || ""); setEditingName(false); }}
-                    className="px-3 py-2 bg-[#F5F6F8] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
+                    className="px-3 py-2 bg-[#F6F7FB] text-[#676879] text-[13px] font-medium rounded-[4px] hover:bg-border transition-colors"
                   >
                     ביטול
                   </button>
@@ -452,7 +452,7 @@ function ProfileTab() {
 function RoleBadge({ role }: { role: string }) {
   const ROLE_META: Record<string, { color: string; label: string }> = {
     OWNER: { color: "#FDAB3D", label: "בעלים" },
-    ADMIN: { color: "#6161FF", label: "מנהל" },
+    ADMIN: { color: "#0073EA", label: "מנהל" },
     AGENT: { color: "#C4C4C4", label: "נציג" },
     MEMBER: { color: "#579BFC", label: "חבר" },
     VIEWER: { color: "#C4C4C4", label: "צופה" },
@@ -577,7 +577,7 @@ function MembersTab() {
       ) : (
         <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-5 py-2.5 bg-[#F5F6F8] border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide">
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 px-5 py-2.5 bg-[#F6F7FB] border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6] uppercase tracking-wide">
             <span>חבר</span>
             <span>פעיל לאחרונה</span>
             <span>תפקיד</span>
@@ -731,7 +731,7 @@ function MembersTab() {
               <button
                 type="button"
                 onClick={() => setShowInvite(false)}
-                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+                className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>
@@ -856,7 +856,7 @@ function WorkspacePermissionsTab() {
         </div>
 
         {!isOwnerOrAdmin && (
-          <p className="mt-4 text-xs text-[#9699A6] bg-[#F5F6F8] rounded-lg p-3 flex items-center gap-2">
+          <p className="mt-4 text-xs text-[#9699A6] bg-[#F6F7FB] rounded-lg p-3 flex items-center gap-2">
             <Lock size={12} />
             רק בעלים ומנהלים יכולים לשנות הרשאות
           </p>
@@ -895,7 +895,7 @@ function CannedResponsesTab() {
     grouped[cat].push(r);
   });
 
-  const groupColors = ["#6161FF", "#00CA72", "#FDAB3D", "#A25DDC", "#579BFC"];
+  const groupColors = ["#0073EA", "#00C875", "#FDAB3D", "#A25DDC", "#579BFC"];
 
   return (
     <div className="space-y-4">
@@ -973,7 +973,7 @@ function CannedResponsesTab() {
                           setEditing(r);
                           setShowForm(true);
                         }}
-                        className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[#F6F7FB] transition-colors"
                       >
                         <Pencil size={14} className="text-[#9699A6]" />
                       </button>
@@ -1124,7 +1124,7 @@ function CannedResponseForm({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>
@@ -1250,10 +1250,10 @@ function SlaPoliciesTab() {
                     <Clock size={12} className="text-success" />
                     <span>פתרון: {formatMinutes(p.resolutionMinutes)}</span>
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
                     {p.businessHoursOnly ? "שעות עבודה" : "24/7"}
                   </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
                     {p._count.tickets} פניות
                   </span>
                 </div>
@@ -1264,7 +1264,7 @@ function SlaPoliciesTab() {
                     setEditing(p);
                     setShowForm(true);
                   }}
-                  className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
+                  className="p-1.5 rounded-md hover:bg-[#F6F7FB] transition-colors"
                 >
                   <Pencil size={14} className="text-[#9699A6]" />
                 </button>
@@ -1436,7 +1436,7 @@ function SlaPolicyForm({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

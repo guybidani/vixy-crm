@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -458,7 +458,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors mt-0.5"
+              className="p-1.5 text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors mt-0.5"
               aria-label="סגור"
             >
               <X size={17} />
@@ -493,7 +493,7 @@ export default function TodayTasksPanel({ onClose }: TodayTasksPanelProps) {
                 className={`flex-1 flex flex-col items-center py-2 px-3 rounded-xl border ${
                   overdueTasks.length > 0
                     ? "bg-[#FFF5F5] border-[#D83A52]/20"
-                    : "bg-[#F5F6F8] border-transparent"
+                    : "bg-[#F6F7FB] border-transparent"
                 }`}
               >
                 <span

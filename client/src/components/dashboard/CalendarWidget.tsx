@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getCalendarStatus, getUpcomingEvents } from "../../api/calendar";
 
-const EVENT_COLORS = ["#6161FF", "#00CA72", "#FDAB3D", "#A25DDC", "#579BFC"];
+const EVENT_COLORS = ["#0073EA", "#00C875", "#FDAB3D", "#A25DDC", "#579BFC"];
 
 export default function CalendarWidget() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function CalendarWidget() {
         </h2>
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#E8E8FF", color: "#6161FF" }}
+          style={{ backgroundColor: "#CCE5FF", color: "#0073EA" }}
         >
           <Calendar size={16} />
         </div>
@@ -53,7 +53,7 @@ export default function CalendarWidget() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="h-12 bg-[#F5F6F8] rounded-[4px] animate-pulse"
+              className="h-12 bg-[#F6F7FB] rounded-[4px] animate-pulse"
             />
           ))}
         </div>
@@ -70,7 +70,7 @@ export default function CalendarWidget() {
             return (
               <div
                 key={event.id}
-                className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+                className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
               >
                 <div
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"

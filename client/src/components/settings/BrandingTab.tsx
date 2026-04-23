@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
@@ -28,10 +28,10 @@ const HEX_REGEX = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 /** Preset colors matching the Monday.com-style palette already used in the app. */
 const PRESET_COLORS = [
   "#0073EA", // default primary blue
-  "#6161FF", // indigo
-  "#00CA72", // success green
+  "#0073EA", // indigo
+  "#00C875", // success green
   "#FDAB3D", // warning orange
-  "#FB275D", // danger pink
+  "#E2445C", // danger pink
   "#A25DDC", // purple
   "#FF642E", // deep orange
   "#579BFC", // sky blue
@@ -244,7 +244,7 @@ export default function BrandingTab() {
       {/* Brand color */}
       <div className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6">
         <h2 className="text-base font-bold text-[#323338] mb-1 flex items-center gap-2">
-          <Palette size={16} className="text-[#6161FF]" />
+          <Palette size={16} className="text-[#0073EA]" />
           צבע מותג ראשי
         </h2>
         <p className="text-xs text-[#9699A6] mb-5">
@@ -311,7 +311,7 @@ export default function BrandingTab() {
         <h2 className="text-base font-bold text-[#323338] mb-1">תצוגה מקדימה</h2>
         <p className="text-xs text-[#9699A6] mb-5">כך ייראה הסרגל הצדדי עם המיתוג שלך.</p>
 
-        <div className="bg-[#F5F6F8] rounded-xl p-4 border border-[#EEEFF3]" dir="rtl">
+        <div className="bg-[#F6F7FB] rounded-xl p-4 border border-[#EEEFF3]" dir="rtl">
           <div className="bg-white rounded-lg overflow-hidden shadow-sm max-w-[240px]">
             {/* Mini header */}
             <div className="flex items-center gap-2.5 px-3 py-3 border-b border-[#EEEFF3]">

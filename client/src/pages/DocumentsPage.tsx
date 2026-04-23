@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo } from "react";
 import { handleMutationError } from "../lib/utils";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,6 @@ import {
   Upload,
   Trash2,
   Download,
-  AlertCircle,
   RefreshCw,
   Eye,
 } from "lucide-react";
@@ -21,6 +20,8 @@ import toast from "react-hot-toast";
 import { useDebounce } from "../hooks/useDebounce";
 import Modal from "../components/shared/Modal";
 import PageShell from "../components/layout/PageShell";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyError } from "../components/shared/illustrations";
 import { useModuleLabel } from "../hooks/useModuleLabel";
 import SidePanel from "../components/shared/SidePanel";
 import RichTextEditor from "../components/shared/RichTextEditor";
@@ -43,11 +44,11 @@ import {
 function getFileIcon(mimeType: string | null) {
   if (!mimeType) return <File size={16} />;
   if (mimeType.startsWith("image/"))
-    return <Image size={16} className="text-[#00CA72]" />;
+    return <Image size={16} className="text-[#00C875]" />;
   if (mimeType.includes("pdf"))
-    return <FileText size={16} className="text-[#FB275D]" />;
+    return <FileText size={16} className="text-[#E2445C]" />;
   if (mimeType.includes("spreadsheet") || mimeType.includes("excel"))
-    return <FileSpreadsheet size={16} className="text-[#00CA72]" />;
+    return <FileSpreadsheet size={16} className="text-[#00C875]" />;
   if (mimeType.includes("presentation") || mimeType.includes("powerpoint"))
     return <Presentation size={16} className="text-[#FDAB3D]" />;
   if (mimeType.includes("word") || mimeType.includes("document"))
@@ -170,7 +171,7 @@ export default function DocumentsPage() {
       groups.push({
         key: "rich-text",
         label: "מסמכי טקסט",
-        color: "#6161FF",
+        color: "#0073EA",
         items: richTexts,
       });
     }
@@ -188,7 +189,7 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-2">
             <span className="flex-shrink-0">
               {row.type === "RICH_TEXT" ? (
-                <FileText size={16} className="text-[#6161FF]" />
+                <FileText size={16} className="text-[#0073EA]" />
               ) : (
                 getFileIcon(row.mimeType)
               )}
@@ -211,7 +212,7 @@ export default function DocumentsPage() {
             className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
               row.type === "FILE"
                 ? "bg-[#579BFC]/10 text-[#579BFC]"
-                : "bg-[#6161FF]/10 text-[#6161FF]"
+                : "bg-[#0073EA]/10 text-[#0073EA]"
             }`}
           >
             {row.type === "FILE" ? "קובץ" : "טקסט"}
@@ -282,7 +283,7 @@ export default function DocumentsPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] text-[#9699A6] hover:text-[#579BFC] transition-colors"
+                className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] text-[#9699A6] hover:text-[#579BFC] transition-colors"
                 title="הורדה"
                 aria-label={`הורד ${row.title}`}
               >
@@ -369,7 +370,7 @@ export default function DocumentsPage() {
                     setShowMenu(false);
                     fileInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                 >
                   <Upload size={15} className="text-[#9699A6]" />
                   העלה קובץ
@@ -380,7 +381,7 @@ export default function DocumentsPage() {
                     setShowMenu(false);
                     setShowCreate("rich-text");
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                 >
                   <FileText size={15} className="text-[#9699A6]" />
                   מסמך טקסט חדש
@@ -399,24 +400,17 @@ export default function DocumentsPage() {
       }
     >
       {isError ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-            <AlertCircle size={28} className="text-[#E44258]" />
-          </div>
-          <h2 className="text-base font-bold text-[#323338] mb-1">
-            שגיאה בטעינת מסמכים
-          </h2>
-          <p className="text-[13px] text-[#676879] mb-4">
-            לא הצלחנו לטעון את הנתונים. נסו שוב.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-          >
-            <RefreshCw size={14} />
-            נסה שוב
-          </button>
-        </div>
+        <EmptyState
+          illustration={<EmptyError />}
+          title="משהו השתבש"
+          description="לא הצלחנו לטעון את המסמכים. נסו שוב בעוד רגע."
+          action={{
+            label: "נסה שוב",
+            onClick: () => refetch(),
+            icon: <RefreshCw size={14} />,
+          }}
+          variant="error"
+        />
       ) : (
         <MondayBoard<Document>
           groups={mondayGroups}
@@ -535,9 +529,9 @@ function DocumentDetailPanel({
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#F5F6F8] flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-[#F6F7FB] flex items-center justify-center">
             {doc.type === "RICH_TEXT" ? (
-              <FileText size={24} className="text-[#6161FF]" />
+              <FileText size={24} className="text-[#0073EA]" />
             ) : (
               getFileIcon(doc.mimeType)
             )}
@@ -562,7 +556,7 @@ function DocumentDetailPanel({
 
         {/* File info or Rich text content */}
         {doc.type === "FILE" ? (
-          <div className="bg-[#F5F6F8] rounded-xl p-4 space-y-2">
+          <div className="bg-[#F6F7FB] rounded-xl p-4 space-y-2">
             <p className="text-[13px] text-[#676879]">
               <span className="font-medium">שם קובץ:</span> {doc.fileName}
             </p>
@@ -627,7 +621,7 @@ function DocumentDetailPanel({
                 return (
                   <span
                     key={link.id}
-                    className="text-[12px] px-2 py-1 bg-[#F5F6F8] rounded-full text-[#676879]"
+                    className="text-[12px] px-2 py-1 bg-[#F6F7FB] rounded-full text-[#676879]"
                   >
                     {type}: {name}
                   </span>

@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
   useRef,
   useEffect,
@@ -420,7 +420,7 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
                 className="w-full flex items-center gap-2 px-3 py-2 text-right transition-colors"
                 style={{
                   background:
-                    idx === selectedIndex ? "#F5F6F8" : "transparent",
+                    idx === selectedIndex ? "#F6F7FB" : "transparent",
                 }}
               >
                 <div
@@ -447,7 +447,7 @@ export const MentionInput = forwardRef<MentionInputHandle, MentionInputProps>(
                   <span
                     className="text-[10px] px-1.5 py-0.5 rounded flex-shrink-0"
                     style={{
-                      background: "#F5F6F8",
+                      background: "#F6F7FB",
                       color: "#676879",
                     }}
                   >

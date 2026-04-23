@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -14,24 +14,10 @@ import toast from "react-hot-toast";
 import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { useAuth } from "../../hooks/useAuth";
 import { updateWorkspaceOptions } from "../../api/settings";
+import { MONDAY_PALETTE } from "../../lib/monday-palette";
 
-// Preset color palette (Monday-style)
-const COLOR_PRESETS = [
-  "#6161FF",
-  "#579BFC",
-  "#66CCFF",
-  "#00CA72",
-  "#25D366",
-  "#CAB641",
-  "#FDAB3D",
-  "#FF642E",
-  "#FB275D",
-  "#A25DDC",
-  "#FF7EB3",
-  "#C4C4C4",
-  "#323338",
-  "#676879",
-];
+// Canonical Monday.com palette (single source: lib/monday-palette.ts)
+const COLOR_PRESETS = MONDAY_PALETTE;
 
 interface CategoryConfig {
   title: string;
@@ -185,7 +171,7 @@ export default function OptionsTab() {
               onClick={() =>
                 setExpandedCategory(isExpanded ? null : cat.settingsKey)
               }
-              className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F5F6F8] transition-colors"
+              className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F6F7FB] transition-colors"
             >
               <div className="flex items-center gap-2">
                 <h3 className="text-[13px] font-semibold text-[#323338]">
@@ -207,7 +193,7 @@ export default function OptionsTab() {
                 {entries.map(([key, opt]: [string, any]) => (
                   <div
                     key={key}
-                    className="flex items-center gap-3 py-2 px-3 rounded-[4px] hover:bg-[#F5F6F8] group"
+                    className="flex items-center gap-3 py-2 px-3 rounded-[4px] hover:bg-[#F6F7FB] group"
                   >
                     {/* Color */}
                     <div className="relative">
@@ -219,12 +205,12 @@ export default function OptionsTab() {
                               : `${cat.settingsKey}-${key}`,
                           )
                         }
-                        className="w-7 h-7 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform"
+                        className="w-7 h-7 rounded-[4px] border border-black/10 shadow-sm hover:scale-110 transition-transform"
                         style={{ backgroundColor: opt.color }}
                         aria-label={`צבע ${opt.label}`}
                       />
                       {colorPickerOpen === `${cat.settingsKey}-${key}` && (
-                        <div className="absolute top-9 right-0 z-30 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-2 grid grid-cols-7 gap-1.5 min-w-[180px]">
+                        <div className="absolute top-9 right-0 z-30 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-2 grid grid-cols-6 gap-1.5 min-w-[180px]">
                           {COLOR_PRESETS.map((c) => (
                             <button
                               key={c}
@@ -232,7 +218,7 @@ export default function OptionsTab() {
                                 updateOption(cat.settingsKey, key, "color", c);
                                 setColorPickerOpen(null);
                               }}
-                              className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${
+                              className={`w-6 h-6 rounded-[4px] border-2 hover:scale-110 transition-transform ${
                                 opt.color === c
                                   ? "border-[#323338]"
                                   : "border-transparent"
@@ -260,7 +246,7 @@ export default function OptionsTab() {
                     />
 
                     {/* Key badge */}
-                    <span className="text-[10px] text-[#9699A6] bg-[#F5F6F8] px-2 py-0.5 rounded-[4px] font-mono">
+                    <span className="text-[10px] text-[#9699A6] bg-[#F6F7FB] px-2 py-0.5 rounded-[4px] font-mono">
                       {key}
                     </span>
 
@@ -302,7 +288,7 @@ export default function OptionsTab() {
               expandedCategory === "leadSources" ? null : "leadSources",
             )
           }
-          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F5F6F8] transition-colors"
+          className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-[#F6F7FB] transition-colors"
         >
           <div className="flex items-center gap-2">
             <h3 className="text-[13px] font-semibold text-[#323338]">

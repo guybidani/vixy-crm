@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
   useCallback,
   useEffect,
@@ -115,7 +115,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
             <span className="text-[#0073EA] text-xl font-bold">V</span>
@@ -148,7 +148,7 @@ function HomeRoute() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
             <span className="text-[#0073EA] text-xl font-bold">V</span>
@@ -184,7 +184,7 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-[#F5F6F8] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F6F7FB] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 bg-[#E8F3FF] rounded-xl flex items-center justify-center mx-auto mb-3 animate-pulse">
             <span className="text-[#0073EA] text-xl font-bold">V</span>
@@ -203,6 +203,7 @@ function OnboardingGuard({ children }: { children: React.ReactNode }) {
 }
 
 function AppLayout() {
+  const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -251,7 +252,7 @@ function AppLayout() {
   useTaskReminders();
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8]" dir="rtl">
+    <div className="min-h-screen bg-[#F6F7FB]" dir="rtl">
       <BrandingStyleInjector />
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -269,10 +270,12 @@ function AppLayout() {
         className={cn(
           "pt-14 transition-all duration-200 min-h-screen",
           // Mobile: no margin. Desktop: sidebar margin
-          sidebarCollapsed ? "md:mr-12" : "md:mr-[220px]",
+          sidebarCollapsed ? "md:mr-12" : "md:mr-[288px]",
         )}
       >
-        <div className="p-3 sm:p-6">
+        {/* `key` on pathname re-triggers the CSS animation on every route change:
+             subtle fade + 10px upward motion (~220ms). */}
+        <div key={location.pathname} className="p-3 sm:p-6 page-enter">
           <Outlet />
         </div>
       </main>
@@ -321,7 +324,7 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div
-          className="min-h-screen bg-[#F5F6F8] flex items-center justify-center"
+          className="min-h-screen bg-[#F6F7FB] flex items-center justify-center"
           dir="rtl"
         >
           <div className="text-center max-w-md">

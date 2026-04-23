@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -160,7 +160,7 @@ export default function ContactDetailPage() {
                 <div className="h-5 w-32 bg-[#E6E9EF] rounded animate-pulse mb-3" />
                 <div className="space-y-2">
                   {[...Array(2)].map((_, j) => (
-                    <div key={j} className="h-12 bg-[#F5F6F8] rounded animate-pulse" />
+                    <div key={j} className="h-12 bg-[#F6F7FB] rounded animate-pulse" />
                   ))}
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function ContactDetailPage() {
                   tabIndex={0}
                   role="button"
                   aria-label="לחץ לעריכת שם"
-                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+                  className="text-xl font-bold text-[#323338] cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
                   onClick={() => {
                     setNameVal(`${contact.firstName} ${contact.lastName}`);
                     setEditingName(true);
@@ -440,7 +440,7 @@ export default function ContactDetailPage() {
                   </span>
                 </div>
               </button>
-              <div className="bg-[#F5F6F8] rounded-[4px] p-2.5">
+              <div className="bg-[#F6F7FB] rounded-[4px] p-2.5">
                 <p className="text-[10px] text-[#9699A6] text-center">
                   אין שיחות מנותחות עדיין
                 </p>
@@ -495,7 +495,7 @@ export default function ContactDetailPage() {
                   return (
                     <button
                       key={deal.id}
-                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
                       onClick={() => navigate(`/deals?open=${deal.id}`)}
                     >
                       <div>
@@ -560,7 +560,7 @@ export default function ContactDetailPage() {
                   return (
                     <button
                       key={ticket.id}
-                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#ECEDF0] transition-colors text-right"
                       onClick={() => navigate(`/tickets/${ticket.id}`)}
                     >
                       <span className="font-medium text-sm text-[#323338]">
@@ -621,7 +621,7 @@ export default function ContactDetailPage() {
                     <button
                       key={task.id}
                       type="button"
-                      className="w-full flex items-center justify-between p-3 bg-[#F5F6F8] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
+                      className="w-full flex items-center justify-between p-3 bg-[#F6F7FB] rounded-[4px] hover:bg-[#EEEFF3] transition-colors text-right"
                       onClick={() => navigate(`/tasks?selected=${task.id}`)}
                     >
                       <div className="flex items-center gap-2">
@@ -699,11 +699,11 @@ export default function ContactDetailPage() {
 
             {/* Inline log form */}
             {showLogActivity && (
-              <div className="mb-4 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
+              <div className="mb-4 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF] p-3 space-y-2">
                 <div className="flex gap-1 flex-wrap">
                   {([
-                    { key: "NOTE", label: "הערה", color: "#6161FF" },
-                    { key: "CALL", label: "שיחה", color: "#00CA72" },
+                    { key: "NOTE", label: "הערה", color: "#0073EA" },
+                    { key: "CALL", label: "שיחה", color: "#00C875" },
                     { key: "EMAIL", label: "מייל", color: "#579BFC" },
                     { key: "MEETING", label: "פגישה", color: "#A25DDC" },
                     { key: "WHATSAPP", label: "ווטסאפ", color: "#25D366" },
@@ -833,7 +833,7 @@ export default function ContactDetailPage() {
                                 <div className="flex gap-1.5">
                                   <button
                                     onClick={() => setEditingActivityId(null)}
-                                    className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F5F6F8] rounded transition-colors"
+                                    className="px-2 py-0.5 text-[11px] text-[#676879] hover:bg-[#F6F7FB] rounded transition-colors"
                                   >
                                     ביטול
                                   </button>
@@ -960,7 +960,7 @@ function CompanyInfoRow({
           <span
             role="button"
             tabIndex={0}
-            className="text-sm text-[#9699A6] cursor-pointer hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            className="text-sm text-[#9699A6] cursor-pointer hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
             onClick={() => setPicking(true)}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -986,7 +986,7 @@ function CompanyInfoRow({
                 onChange(null);
                 setPicking(false);
               }}
-              className="w-full text-right px-3 py-2 text-sm text-[#9699A6] hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF]"
+              className="w-full text-right px-3 py-2 text-sm text-[#9699A6] hover:bg-[#F6F7FB] transition-colors border-b border-[#E6E9EF]"
             >
               ללא חברה
             </button>
@@ -997,7 +997,7 @@ function CompanyInfoRow({
                   onChange(c.id);
                   setPicking(false);
                 }}
-                className={`w-full text-right px-3 py-2 text-sm hover:bg-[#F5F6F8] transition-colors ${
+                className={`w-full text-right px-3 py-2 text-sm hover:bg-[#F6F7FB] transition-colors ${
                   company?.id === c.id ? "text-[#0073EA] font-semibold" : "text-[#323338]"
                 }`}
               >
@@ -1172,7 +1172,7 @@ function EditableInfoRow({
             <span
               role="button"
               tabIndex={0}
-              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+              className="text-sm text-[#323338] truncate cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
               dir={dir}
               onClick={() => {
                 setEditVal(value);
@@ -1204,7 +1204,7 @@ function EditableInfoRow({
         <span
           role="button"
           tabIndex={0}
-          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F5F6F8]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+          className="text-sm text-[#9699A6] cursor-text hover:bg-[#F6F7FB]/80 rounded px-1 -mx-1 transition-colors flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
           onClick={() => {
             setEditVal("");
             setEditing(true);
@@ -1482,7 +1482,7 @@ function EditContactModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

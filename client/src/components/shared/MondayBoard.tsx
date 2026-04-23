@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
   useRef,
   useEffect,
@@ -61,11 +61,11 @@ export interface MondayGroup<T> {
 
 const GROUP_COLORS = [
   "#579BFC",
-  "#00CA72",
+  "#00C875",
   "#FDAB3D",
-  "#FB275D",
+  "#E2445C",
   "#A25DDC",
-  "#6161FF",
+  "#0073EA",
   "#FF642E",
   "#66CCFF",
   "#C4C4C4",
@@ -805,7 +805,7 @@ export default function MondayBoard<T extends { id: string }>({
               value={search || ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="pr-8 pl-3 py-[7px] text-[13px] border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#C3C6D4] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 w-[200px]"
+              className="pr-8 pl-3 py-[7px] text-[13px] border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 w-[200px]"
             />
           </div>
         )}
@@ -821,7 +821,7 @@ export default function MondayBoard<T extends { id: string }>({
               "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
               activeFilters.length > 0
                 ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
-                : "text-[#323338] hover:bg-[#F5F6F8]",
+                : "text-[#323338] hover:bg-[#F6F7FB]",
             )}
           >
             <Filter
@@ -848,7 +848,7 @@ export default function MondayBoard<T extends { id: string }>({
                 {activeFilters.length > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="text-[11px] text-[#FB275D] hover:underline"
+                    className="text-[11px] text-[#E2445C] hover:underline"
                   >
                     נקה הכל
                   </button>
@@ -871,7 +871,7 @@ export default function MondayBoard<T extends { id: string }>({
                         <button
                           key={col.key}
                           onClick={() => setFilterColKey(col.key)}
-                          className="w-full flex items-center justify-between px-3 py-2.5 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                          className="w-full flex items-center justify-between px-3 py-2.5 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                         >
                           <span>{col.label}</span>
                           <div className="flex items-center gap-2">
@@ -898,7 +898,7 @@ export default function MondayBoard<T extends { id: string }>({
                 <div>
                   <button
                     onClick={() => setFilterColKey(null)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] text-[#0073EA] hover:bg-[#F5F6F8] w-full border-b border-[#E6E9EF]"
+                    className="flex items-center gap-1.5 px-3 py-2 text-[12px] text-[#0073EA] hover:bg-[#F6F7FB] w-full border-b border-[#E6E9EF]"
                   >
                     <ChevronDown size={14} className="rotate-90" />
                     {columns.find((c) => c.key === filterColKey)?.label}
@@ -918,7 +918,7 @@ export default function MondayBoard<T extends { id: string }>({
                         return (
                           <label
                             key={val}
-                            className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F6F8] cursor-pointer transition-colors"
+                            className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F6F7FB] cursor-pointer transition-colors"
                           >
                             <input
                               type="checkbox"
@@ -968,7 +968,7 @@ export default function MondayBoard<T extends { id: string }>({
                 "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
                 sortColumn
                   ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
-                  : "text-[#323338] hover:bg-[#F5F6F8]",
+                  : "text-[#323338] hover:bg-[#F6F7FB]",
               )}
             >
               <ArrowUpDown
@@ -999,7 +999,7 @@ export default function MondayBoard<T extends { id: string }>({
               "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
               hiddenColumns.size > 0
                 ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
-                : "text-[#323338] hover:bg-[#F5F6F8]",
+                : "text-[#323338] hover:bg-[#F6F7FB]",
             )}
           >
             {hiddenColumns.size > 0 ? (
@@ -1042,7 +1042,7 @@ export default function MondayBoard<T extends { id: string }>({
                 "flex items-center gap-1.5 px-3 py-[7px] text-[13px] rounded-[4px] transition-colors",
                 groupByKey
                   ? "bg-[#E6F4FF] text-[#0073EA] border border-[#0073EA]/30"
-                  : "text-[#323338] hover:bg-[#F5F6F8]",
+                  : "text-[#323338] hover:bg-[#F6F7FB]",
               )}
             >
               <Layers
@@ -1079,7 +1079,7 @@ export default function MondayBoard<T extends { id: string }>({
 
         <button
           aria-label="אפשרויות נוספות"
-          className="p-[7px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          className="p-[7px] text-[#676879] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
         >
           <MoreHorizontal size={16} />
         </button>
@@ -1113,7 +1113,7 @@ export default function MondayBoard<T extends { id: string }>({
           })}
           <button
             onClick={clearAllFilters}
-            className="text-[11px] text-[#676879] hover:text-[#FB275D] transition-colors"
+            className="text-[11px] text-[#676879] hover:text-[#E2445C] transition-colors"
           >
             נקה הכל
           </button>
@@ -1284,7 +1284,7 @@ export default function MondayBoard<T extends { id: string }>({
                         <input
                           type="checkbox"
                           aria-label="בחר הכל"
-                          className="w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA]"
+                          className="w-[15px] h-[15px] rounded-[3px] border-[#9699A6] accent-[#0073EA]"
                           checked={
                             selectedIds !== undefined &&
                             group.items.length > 0 &&
@@ -1345,7 +1345,7 @@ export default function MondayBoard<T extends { id: string }>({
                             i < visibleColumns.length - 1 &&
                               "border-l border-[#E6E9EF]",
                             i === 0 && "sticky right-[42px] z-10 after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-[#E6E9EF]",
-                            col.key === "__add_col" && onAddColumn && "cursor-pointer hover:bg-[#F5F6F8] transition-colors",
+                            col.key === "__add_col" && onAddColumn && "cursor-pointer hover:bg-[#F6F7FB] transition-colors",
                             col.key !== "__add_col" && "cursor-grab",
                             dragOverCol === col.key && "bg-[#EEF4FF] border-r-2 border-r-[#0073EA]",
                           )}
@@ -1412,7 +1412,7 @@ export default function MondayBoard<T extends { id: string }>({
                                   </span>
                                 )}
                                 {col.sortable && sortColumn !== col.key && (
-                                  <span className="text-[#C3C6D4] opacity-0 group-hover/col:opacity-100 transition-opacity">
+                                  <span className="text-[#9699A6] opacity-0 group-hover/col:opacity-100 transition-opacity">
                                     <ArrowUpDown size={11} />
                                   </span>
                                 )}
@@ -1428,7 +1428,7 @@ export default function MondayBoard<T extends { id: string }>({
                                       );
                                     }}
                                     aria-label={`תפריט עמודה ${col.label}`}
-                                    className="p-0.5 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/col:opacity-100 transition-all text-[#9699A6] hover:text-[#323338]"
+                                    className="p-0.5 rounded hover:bg-[#F6F7FB] opacity-0 group-hover/col:opacity-100 transition-all text-[#9699A6] hover:text-[#323338]"
                                   >
                                     <ChevronDown size={12} />
                                   </button>
@@ -1503,7 +1503,7 @@ export default function MondayBoard<T extends { id: string }>({
                       setDragItemId(null);
                       setDragOverGroupKey(null);
                     }}
-                    className={cn(dragOverGroupKey === group.key && dragItemId && "bg-[#EEF4FF]")}
+                    className={cn(dragOverGroupKey === group.key && dragItemId && "drop-zone-active")}
                   >
                     {group.items.length === 0 ? (
                       <tr>
@@ -1534,10 +1534,10 @@ export default function MondayBoard<T extends { id: string }>({
                             onRowClick?.(row);
                           }}
                           className={cn(
-                            "group/row border-b border-[#E6E9EF] transition-colors h-[36px]",
+                            "group/row row-hoverable border-b border-[#E6E9EF] h-[36px]",
                             selectedIds?.has(row.id) ? "bg-[#E6F4FF] hover:bg-[#DCF0FF]" : "hover:bg-[#F0F3FF]",
                             newItemId === row.id && "animate-row-slide-in",
-                            dragItemId === row.id && "opacity-40",
+                            dragItemId === row.id && "opacity-40 drag-lift",
                             onRowClick && "cursor-pointer",
                           )}
                           onContextMenu={(e) => {
@@ -1559,7 +1559,7 @@ export default function MondayBoard<T extends { id: string }>({
                           {/* Drag handle */}
                           {onMoveItem && (
                             <td className="w-[20px] p-0 bg-inherit">
-                              <span className="flex items-center justify-center text-[#C3C6D4] opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
+                              <span className="flex items-center justify-center text-[#9699A6] opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
                                 <GripVertical size={13} />
                               </span>
                             </td>
@@ -1570,7 +1570,7 @@ export default function MondayBoard<T extends { id: string }>({
                               type="checkbox"
                               aria-label="בחר פריט"
                               className={cn(
-                                "w-[15px] h-[15px] rounded-[3px] border-[#C3C6D4] accent-[#0073EA] transition-opacity cursor-pointer",
+                                "w-[15px] h-[15px] rounded-[3px] border-[#9699A6] accent-[#0073EA] transition-opacity cursor-pointer",
                                 selectedIds?.has(row.id)
                                   ? "opacity-100"
                                   : "opacity-0 group-hover/row:opacity-100",
@@ -1631,7 +1631,7 @@ export default function MondayBoard<T extends { id: string }>({
                                   onDeleteItem(row);
                                 }}
                                 aria-label="מחק פריט"
-                                className="p-1 rounded hover:bg-[#FFEEF0] text-transparent group-hover/row:text-[#C3C6D4] hover:!text-[#FB275D] transition-all"
+                                className="p-1 rounded hover:bg-[#FFEEF0] text-transparent group-hover/row:text-[#9699A6] hover:!text-[#E2445C] transition-all"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1677,7 +1677,7 @@ export default function MondayBoard<T extends { id: string }>({
                       (c) => c.summary && c.summary !== "none",
                     ) &&
                       group.items.length > 0 && (
-                        <tr className="bg-[#F5F6F8] border-t border-[#D0D4E4]">
+                        <tr className="bg-[#F6F7FB] border-t border-[#D0D4E4]">
                           <td
                             className="w-[6px] p-0"
                             style={{
@@ -1774,7 +1774,7 @@ export default function MondayBoard<T extends { id: string }>({
       {onAddGroup && !loading && (
         <button
           onClick={onAddGroup}
-          className="flex items-center gap-1.5 px-3 py-2 mt-1 text-[13px] text-[#676879] hover:text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors w-fit"
+          className="flex items-center gap-1.5 px-3 py-2 mt-1 text-[13px] text-[#676879] hover:text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors w-fit"
         >
           <Plus size={15} strokeWidth={2} />
           הוסף קבוצה
@@ -1802,14 +1802,14 @@ export default function MondayBoard<T extends { id: string }>({
             <button
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed"
             >
               הקודם
             </button>
             <button
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed"
             >
               הבא
             </button>
@@ -1883,7 +1883,7 @@ function NewItemButton({
                 item.onClick();
                 setOpen(false);
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
             >
               {item.icon}
               {item.label}
@@ -1934,7 +1934,7 @@ function GroupMenu({
       {onRename && (
         <button
           onClick={onRename}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
         >
           <Pencil size={14} className="text-[#676879]" />
           שנה שם
@@ -1944,7 +1944,7 @@ function GroupMenu({
         <div className="relative">
           <button
             onClick={onToggleColorPicker}
-            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
           >
             <Palette size={14} className="text-[#676879]" />
             שנה צבע
@@ -1973,7 +1973,7 @@ function GroupMenu({
       {onDelete && (
         <button
           onClick={onDelete}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#E2445C] hover:bg-[#FFEEF0] transition-colors text-right"
         >
           <Trash2 size={14} />
           מחק קבוצה
@@ -2031,7 +2031,7 @@ function ColumnMenu({
             onSort();
             onClose();
           }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
         >
           {isSorted ? (
             sortDirection === "asc" ? (
@@ -2055,7 +2055,7 @@ function ColumnMenu({
             onFilter();
             onClose();
           }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
         >
           <Filter size={13} className="text-[#676879]" />
           סנן לפי עמודה
@@ -2067,7 +2067,7 @@ function ColumnMenu({
             onHide();
             onClose();
           }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
         >
           <EyeOff size={13} className="text-[#676879]" />
           הסתר עמודה
@@ -2079,7 +2079,7 @@ function ColumnMenu({
       {onRename && (
         <button
           onClick={onRename}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right"
         >
           <Pencil size={13} className="text-[#676879]" />
           שנה שם
@@ -2088,7 +2088,7 @@ function ColumnMenu({
       {onDelete && colKey !== "name" && (
         <button
           onClick={onDelete}
-          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right"
+          className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-[#E2445C] hover:bg-[#FFEEF0] transition-colors text-right"
         >
           <Trash2 size={13} />
           מחק עמודה
@@ -2119,7 +2119,7 @@ function KeyboardShortcutsButton() {
         onClick={() => setOpen((v) => !v)}
         aria-label="קיצורי מקלדת"
         title="קיצורי מקלדת"
-        className="flex items-center gap-1 px-2.5 py-[7px] text-[12px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors select-none"
+        className="flex items-center gap-1 px-2.5 py-[7px] text-[12px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors select-none"
       >
         <span className="font-mono text-[11px] border border-[#D0D4E4] rounded px-1 py-0.5 bg-white leading-none">?</span>
       </button>
@@ -2137,7 +2137,7 @@ function KeyboardShortcutsButton() {
             ] as const).map(([key, desc]) => (
               <div key={key} className="flex items-center justify-between gap-4">
                 <span className="text-[12px] text-[#676879]">{desc}</span>
-                <kbd className="font-mono text-[11px] bg-[#F5F6F8] border border-[#D0D4E4] rounded px-1.5 py-0.5 text-[#323338] whitespace-nowrap flex-shrink-0">
+                <kbd className="font-mono text-[11px] bg-[#F6F7FB] border border-[#D0D4E4] rounded px-1.5 py-0.5 text-[#323338] whitespace-nowrap flex-shrink-0">
                   {key}
                 </kbd>
               </div>
@@ -2151,22 +2151,26 @@ function KeyboardShortcutsButton() {
 
 /* ── Monday-style Status Cell ──────────────────────── */
 
+// Monday.com canonical label palette. Keep in sync with client/src/lib/monday-palette.ts
+// and OptionsTab's COLOR_PRESETS so every color picker shows the same swatches.
 const LABEL_COLORS = [
-  "#00CA72",
-  "#FDAB3D",
-  "#FB275D",
-  "#579BFC",
-  "#A25DDC",
-  "#6161FF",
-  "#FF642E",
-  "#66CCFF",
-  "#C4C4C4",
-  "#333333",
-  "#9D99B9",
-  "#9AADBD",
-  "#D974B0",
-  "#4ECCC6",
-  "#CAB641",
+  "#00C875", // Green
+  "#037F4C", // Dark green
+  "#9CD326", // Olive
+  "#76E4A5", // Mint
+  "#FDAB3D", // Yellow / "Working on it"
+  "#FF642E", // Orange
+  "#E2445C", // Red / "Stuck"
+  "#FF158A", // Lipstick
+  "#CF5DE1", // Pink
+  "#A25DDC", // Purple
+  "#784BD1", // Lavender
+  "#579BFC", // Dark blue
+  "#225091", // Chili blue
+  "#2EBCFB", // Teal
+  "#5DDBBE", // Aquamarine
+  "#8C9B6F", // Brown
+  "#808080", // Gray
 ];
 
 export function MondayStatusCell({
@@ -2245,19 +2249,20 @@ export function MondayStatusCell({
     <div className="relative" ref={ref}>
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
-        className="w-full h-full min-h-[36px] flex items-center justify-center bg-[#C4C4C4] text-white text-[11px] font-semibold hover:opacity-85 transition-opacity"
+        className="w-full h-full min-h-[36px] flex items-center justify-center bg-[#C4C4C4] text-white text-[12px] font-medium hover:brightness-95 transition-[filter] cursor-pointer"
       >
         לא הוגדר
       </button>
       {open && !editing && (
-        <div className="absolute top-full left-0 z-50 bg-white rounded-[8px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] py-1.5 min-w-[160px]">
+        <div className="absolute top-full left-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] p-1.5 min-w-[180px]">
           {Object.entries(options).map(([key, opt]) => (
             <button
               key={key}
               onClick={(e) => { e.stopPropagation(); onChange?.(key); setOpen(false); }}
-              className="w-full px-2 py-1 hover:bg-[#F5F6F8] flex items-center gap-2 text-[13px] text-[#323338]"
+              className="w-full mb-1 last:mb-0 rounded-[3px] py-[7px] px-3 text-white text-[12px] font-medium text-center transition-[filter] hover:brightness-95"
+              style={{ backgroundColor: opt.color }}
             >
-              <span className="inline-block w-full py-0.5 rounded-[4px] text-white text-[12px] font-semibold text-center" style={{ backgroundColor: opt.color }}>{opt.label}</span>
+              {opt.label}
             </button>
           ))}
         </div>
@@ -2274,8 +2279,8 @@ export function MondayStatusCell({
           if (onChange) setOpen(!open);
         }}
         className={cn(
-          "w-full h-full min-h-[36px] px-2 text-[13px] font-medium text-white text-center transition-opacity select-none flex items-center justify-center",
-          onChange && "cursor-pointer hover:opacity-85",
+          "w-full h-full min-h-[36px] px-2 text-[13px] font-medium text-white text-center transition-[filter] select-none flex items-center justify-center leading-tight",
+          onChange && "cursor-pointer hover:brightness-95 active:brightness-90",
           flashing && "animate-status-flash",
         )}
         style={{ backgroundColor: current.color }}
@@ -2302,7 +2307,7 @@ export function MondayStatusCell({
                       setOpen(false);
                     }}
                     className={cn(
-                      "py-[7px] px-2 text-[12px] font-medium text-white rounded-[3px] transition-all hover:opacity-85 hover:scale-[1.03] text-center truncate",
+                      "py-[7px] px-2 text-[12px] font-medium text-white rounded-[3px] transition-[filter,transform] hover:brightness-95 active:brightness-90 text-center truncate",
                       key === value && "ring-2 ring-offset-1 ring-[#323338]",
                     )}
                     style={{ backgroundColor: opt.color }}
@@ -2381,7 +2386,7 @@ export function MondayStatusCell({
                           setEditOptions(editOptions.filter((_, j) => j !== i))
                         }
                         aria-label={`מחק תווית ${opt.label || "חדשה"}`}
-                        className="p-1 text-[#C3C6D4] hover:text-[#FB275D] transition-colors flex-shrink-0"
+                        className="p-1 text-[#9699A6] hover:text-[#E2445C] transition-colors flex-shrink-0"
                       >
                         <svg
                           width="12"
@@ -2447,7 +2452,7 @@ export function MondayStatusCell({
                     setEditing(false);
                     setColorPickerIdx(null);
                   }}
-                  className="flex-1 py-1.5 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#323338] text-[12px] font-medium rounded-md transition-colors"
+                  className="flex-1 py-1.5 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#323338] text-[12px] font-medium rounded-md transition-colors"
                 >
                   ביטול
                 </button>
@@ -2687,7 +2692,7 @@ function HideColumnsDropdown<T>({
         {toggleable.map((col) => (
           <label
             key={col.key}
-            className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F5F6F8] cursor-pointer transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2 hover:bg-[#F6F7FB] cursor-pointer transition-colors"
           >
             <input
               type="checkbox"
@@ -2697,7 +2702,7 @@ function HideColumnsDropdown<T>({
             />
             <span className="text-[13px] text-[#323338]">{col.label}</span>
             {hiddenColumns.has(col.key) && (
-              <EyeOff size={12} className="text-[#C3C6D4] mr-auto" />
+              <EyeOff size={12} className="text-[#9699A6] mr-auto" />
             )}
           </label>
         ))}
@@ -2758,7 +2763,7 @@ function GroupByDropdown({
               "w-full flex items-center justify-between px-3 py-2.5 text-[13px] transition-colors text-right",
               activeGroupBy === col.key
                 ? "bg-[#E6F4FF] text-[#0073EA] font-medium"
-                : "text-[#323338] hover:bg-[#F5F6F8]",
+                : "text-[#323338] hover:bg-[#F6F7FB]",
             )}
           >
             <span>{col.label}</span>

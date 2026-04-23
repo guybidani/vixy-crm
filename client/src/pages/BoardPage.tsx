@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+﻿import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Lock, Shield, PanelRightOpen, Link2, CalendarDays, Zap } from "lucide-react";
@@ -42,8 +42,8 @@ import { getWorkspaceMembers } from "../api/auth";
 
 function hashColor(name: string): string {
   const palette = [
-    "#0073EA", "#00CA72", "#A25DDC", "#FF642E", "#FDAB3D",
-    "#6161FF", "#FB275D", "#579BFC", "#33D391", "#FF7575",
+    "#0073EA", "#00C875", "#A25DDC", "#FF642E", "#FDAB3D",
+    "#0073EA", "#E2445C", "#579BFC", "#33D391", "#FF7575",
   ];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
@@ -108,7 +108,7 @@ function PersonCell({ value, members, onChange }: PersonCellProps) {
         title="שנה אחראי"
       >
         {selectedMembers.length === 0 ? (
-          <span className={`${avatarSize} rounded-full border-2 border-dashed border-[#C3C6D4] flex items-center justify-center text-[#C3C6D4] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors`}>
+          <span className={`${avatarSize} rounded-full border-2 border-dashed border-[#9699A6] flex items-center justify-center text-[#9699A6] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors`}>
             <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1c-3.3 0-6 1.8-6 4v.5h12V13c0-2.2-2.7-4-6-4z"/></svg>
           </span>
         ) : (
@@ -143,7 +143,7 @@ function PersonCell({ value, members, onChange }: PersonCellProps) {
               return (
                 <button
                   key={m.memberId}
-                  className={`w-full flex items-center gap-2 px-3 py-1.5 hover:bg-[#F5F6F8] text-left ${selected ? "bg-[#EEF4FF]" : ""}`}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 hover:bg-[#F6F7FB] text-left ${selected ? "bg-[#EEF4FF]" : ""}`}
                   onClick={() => toggle(m.memberId)}
                 >
                   <span
@@ -709,7 +709,7 @@ export default function BoardPage() {
                   return (
                     <span
                       className="block w-full text-right text-[13px] cursor-text"
-                      style={{ color: row[col.key] != null ? "#323338" : "#C3C6D4" }}
+                      style={{ color: row[col.key] != null ? "#323338" : "#9699A6" }}
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         setEditingCell({ itemId: row.id, colKey: col.key });
@@ -872,7 +872,7 @@ export default function BoardPage() {
           sortable: true,
           sortValue: (row: BoardRow) => row.__lastActivityAt ? new Date(row.__lastActivityAt).getTime() : 0,
           render: (row: BoardRow) => {
-            if (!row.__lastActivityAt) return <span className="text-[#C3C6D4] text-[12px]">—</span>;
+            if (!row.__lastActivityAt) return <span className="text-[#9699A6] text-[12px]">—</span>;
             const d = new Date(row.__lastActivityAt);
             const now = Date.now();
             const diff = now - d.getTime();
@@ -998,7 +998,7 @@ export default function BoardPage() {
       title="לחץ לשינוי שם"
     >
       {board?.isPrivate && (
-        <Lock size={14} className="text-[#6161FF] flex-shrink-0" />
+        <Lock size={14} className="text-[#0073EA] flex-shrink-0" />
       )}
       {board?.name || "טוען..."}
       <Pencil
@@ -1019,7 +1019,7 @@ export default function BoardPage() {
           }}
           title="לחץ לשינוי שם"
         >
-          {board?.isPrivate && <Lock size={14} className="text-[#6161FF]" />}
+          {board?.isPrivate && <Lock size={14} className="text-[#0073EA]" />}
           {board?.name || "טוען..."}
           <Pencil size={13} className="text-[#9699A6] opacity-0 group-hover:opacity-100" />
         </button>
@@ -1040,7 +1040,7 @@ export default function BoardPage() {
           {canManagePermissions && (
             <button
               onClick={() => setPermissionsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] hover:border-[#6161FF] hover:text-[#6161FF] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F6F7FB] hover:border-[#0073EA] hover:text-[#0073EA] transition-colors"
             >
               <Shield size={14} />
               הרשאות
@@ -1048,14 +1048,14 @@ export default function BoardPage() {
           )}
           <button
             onClick={() => setAutomationsOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] hover:border-[#FDAB3D] hover:text-[#FDAB3D] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F6F7FB] hover:border-[#FDAB3D] hover:text-[#FDAB3D] transition-colors"
           >
             <Zap size={14} />
             אוטומציות
           </button>
           <button
             onClick={() => setColumnEditorOpen(true)}
-            className="px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+            className="px-3 py-1.5 text-[13px] text-[#323338] bg-white border border-[#D0D4E4] rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
           >
             + עמודה חדשה
           </button>
@@ -1414,7 +1414,7 @@ function BoardCalendarView({
   return (
     <div className="bg-white rounded-xl border border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.06)] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-[#E6E9EF] bg-[#F5F6F8]">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[#E6E9EF] bg-[#F6F7FB]">
         <button
           onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
           className="p-1.5 hover:bg-white rounded-[4px] transition-colors text-[#676879] hover:text-[#323338]"
@@ -1456,7 +1456,7 @@ function BoardCalendarView({
             <div
               key={idx}
               className={`min-h-[90px] p-1.5 border-b border-r border-[#E6E9EF] last:border-r-0 ${
-                day === null ? "bg-[#FAFBFC]" : "bg-white hover:bg-[#F5F6F8]/50 transition-colors"
+                day === null ? "bg-[#FAFBFC]" : "bg-white hover:bg-[#F6F7FB]/50 transition-colors"
               }`}
             >
               {day !== null && (
@@ -1529,7 +1529,7 @@ function BoardEmptyState({ onAddItem }: { onAddItem: () => void }) {
             <line x1="20" y1="10" x2="20" y2="40" stroke="#0073EA" strokeWidth="1" opacity="0.3"/>
             <line x1="34" y1="10" x2="34" y2="40" stroke="#0073EA" strokeWidth="1" opacity="0.3"/>
             {/* Plus badge */}
-            <circle cx="42" cy="12" r="7" fill="#00CA72"/>
+            <circle cx="42" cy="12" r="7" fill="#00C875"/>
             <line x1="42" y1="9" x2="42" y2="15" stroke="white" strokeWidth="2" strokeLinecap="round"/>
             <line x1="39" y1="12" x2="45" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>

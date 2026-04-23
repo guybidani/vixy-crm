@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, type MouseEvent } from "react";
+﻿import { useState, useMemo, useEffect, useRef, type MouseEvent } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,8 +28,6 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  AlertCircle,
-  CheckSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -54,6 +52,8 @@ import {
   type Task,
 } from "../api/tasks";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyTasks, EmptyError } from "../components/shared/illustrations";
 import { getWorkspaceMembers } from "../api/auth";
 import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
@@ -73,16 +73,16 @@ const TASK_TYPE_CONFIG: Record<string, { label: string; icon: typeof Circle; col
   CALL: { label: "שיחה", icon: Phone, color: "#579BFC", bg: "#EBF4FF" },
   EMAIL: { label: "מייל", icon: Mail, color: "#FDAB3D", bg: "#FFF5E0" },
   MEETING: { label: "פגישה", icon: Users, color: "#9B59B6", bg: "#F5EEFF" },
-  WHATSAPP: { label: "וואטסאפ", icon: MessageCircle, color: "#00CA72", bg: "#E0FAF0" },
+  WHATSAPP: { label: "וואטסאפ", icon: MessageCircle, color: "#00C875", bg: "#E0FAF0" },
   FOLLOW_UP: { label: "מעקב", icon: RefreshCw, color: "#FF7575", bg: "#FFF0F0" },
-  TASK: { label: "משימה", icon: ClipboardList, color: "#C3C6D4", bg: "#F4F5F8" },
+  TASK: { label: "משימה", icon: ClipboardList, color: "#9699A6", bg: "#F4F5F8" },
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  URGENT: "#FB275D",
+  URGENT: "#E2445C",
   HIGH: "#FDAB3D",
   MEDIUM: "#579BFC",
-  LOW: "#C3C6D4",
+  LOW: "#9699A6",
 };
 
 const PRIORITY_LABELS: Record<string, string> = {
@@ -93,16 +93,16 @@ const PRIORITY_LABELS: Record<string, string> = {
 };
 
 const TASK_CONTEXT_OPTIONS = [
-  { key: "", label: "הכל", color: "#6161FF", icon: null },
-  { key: "SALES", label: "מכירות", color: "#00CA72", icon: TrendingUp },
+  { key: "", label: "הכל", color: "#0073EA", icon: null },
+  { key: "SALES", label: "מכירות", color: "#00C875", icon: TrendingUp },
   { key: "SERVICE", label: "שירות", color: "#FDAB3D", icon: Headphones },
-  { key: "GENERAL", label: "כללי", color: "#C3C6D4", icon: Layers },
+  { key: "GENERAL", label: "כללי", color: "#9699A6", icon: Layers },
 ];
 
 const TASK_CONTEXT_BADGE: Record<string, { label: string; color: string }> = {
-  SALES: { label: "מכירות", color: "#00CA72" },
+  SALES: { label: "מכירות", color: "#00C875" },
   SERVICE: { label: "שירות", color: "#FDAB3D" },
-  GENERAL: { label: "כללי", color: "#C3C6D4" },
+  GENERAL: { label: "כללי", color: "#9699A6" },
 };
 
 // ─── Date grouping logic ──────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ function ContactAvatar({ name, id, onClick }: { name: string; id?: string; onCli
 // ─── PriorityBadge ────────────────────────────────────────────────────────────
 
 function PriorityBadge({ priority }: { priority: string }) {
-  const color = PRIORITY_COLORS[priority] ?? "#C3C6D4";
+  const color = PRIORITY_COLORS[priority] ?? "#9699A6";
   const label = PRIORITY_LABELS[priority] ?? priority;
   return (
     <span
@@ -300,7 +300,7 @@ function TaskDotMenu({
     <div ref={ref} className="relative flex-shrink-0">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="p-1 rounded hover:bg-[#F5F6F8] opacity-0 group-hover/row:opacity-100 transition-opacity text-[#9699A6] hover:text-[#323338]"
+        className="p-1 rounded hover:bg-[#F6F7FB] opacity-0 group-hover/row:opacity-100 transition-opacity text-[#9699A6] hover:text-[#323338]"
         title="פעולות"
         aria-haspopup="true"
         aria-expanded={open}
@@ -312,7 +312,7 @@ function TaskDotMenu({
           <button
             role="menuitem"
             onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
-            className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8] flex items-center gap-2 transition-colors text-[#323338]"
+            className="w-full text-right px-3 py-2 text-[13px] hover:bg-[#F6F7FB] flex items-center gap-2 transition-colors text-[#323338]"
           >
             <Pencil size={13} className="text-[#9699A6]" />
             עריכה
@@ -608,7 +608,7 @@ function DateGroupSection({
       {open && (
         <div>
           {/* Column headers */}
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-[#F5F6F8]/40 border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6]">
+          <div className="flex items-center gap-3 px-3 py-1.5 bg-[#F6F7FB]/40 border-b border-[#E6E9EF] text-[11px] font-semibold text-[#9699A6]">
             <div className="w-4 h-4 flex-shrink-0" />
             <div className="w-5 h-5 flex-shrink-0" />
             <div className="w-20 flex-shrink-0" />
@@ -658,7 +658,7 @@ function FilterChip({ label, color, active, onClick }: { label: string; color?: 
           ? "text-white shadow-sm"
           : "bg-white border border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
       }`}
-      style={active ? { backgroundColor: color || "#6161FF" } : undefined}
+      style={active ? { backgroundColor: color || "#0073EA" } : undefined}
     >
       {label}
     </button>
@@ -696,7 +696,7 @@ function PriorityFilterDropdown({ value, onChange }: { value: string; onChange: 
             : "bg-white border-[#E6E9EF] text-[#676879] hover:border-[#0073EA] hover:text-[#0073EA]"
         }`}
       >
-        {value && <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: PRIORITY_COLORS[value] || "#C3C6D4" }} />}
+        {value && <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: PRIORITY_COLORS[value] || "#9699A6" }} />}
         {active?.label ?? "כל העדיפויות"}
         <ChevronDown size={11} />
       </button>
@@ -710,7 +710,7 @@ function PriorityFilterDropdown({ value, onChange }: { value: string; onChange: 
                 value === opt.key ? "text-[#0073EA] font-semibold" : "text-[#323338]"
               }`}
             >
-              {opt.key && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLORS[opt.key] || "#C3C6D4" }} />}
+              {opt.key && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: PRIORITY_COLORS[opt.key] || "#9699A6" }} />}
               {opt.label}
             </button>
           ))}
@@ -726,7 +726,7 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
   const { priorities } = useWorkspaceOptions();
   const isDone = task.status === "DONE";
   const priorityInfo = priorities[task.priority];
-  const borderColor = PRIORITY_COLORS[task.priority] || "#C3C6D4";
+  const borderColor = PRIORITY_COLORS[task.priority] || "#9699A6";
   const isTaskOverdue =
     task.dueDate &&
     !isDone &&
@@ -741,7 +741,7 @@ function TaskKanbanCard({ task, isDragging }: { task: Task; isDragging?: boolean
   return (
     <div
       className={`bg-white rounded-xl p-3.5 shadow-sm border-l-[3px] transition-all ${isTaskOverdue ? "border-r-[3px] border-r-[#E44258]" : ""} ${isDragging ? "shadow-lg opacity-90 -translate-y-0.5" : isDone ? "opacity-70 hover:shadow-md" : "hover:shadow-md hover:-translate-y-0.5"}`}
-      style={{ borderLeftColor: isDragging ? "#6161FF" : isTaskOverdue ? "#FF4D4F" : borderColor }}
+      style={{ borderLeftColor: isDragging ? "#0073EA" : isTaskOverdue ? "#FF4D4F" : borderColor }}
     >
       <span className={`font-semibold text-[13px] block mb-1.5 ${isDone ? "line-through text-[#9699A6]" : "text-[#323338]"}`}>{task.title}</span>
       {task.description && <p className="text-xs text-[#9699A6] truncate mb-2">{task.description}</p>}
@@ -821,6 +821,24 @@ function StatsBar({ tasks }: { tasks: Task[] }) {
         הושלמו: <span className={`font-semibold ${completed > 0 ? "text-success" : "text-[#9699A6]"}`}>{completed}</span>
       </span>
     </div>
+  );
+}
+
+// ─── Error state ──────────────────────────────────────────────────────────────
+
+function TasksErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <EmptyState
+      illustration={<EmptyError />}
+      title="משהו השתבש"
+      description="לא הצלחנו לטעון את המשימות. נסו שוב בעוד רגע."
+      action={{
+        label: "נסה שוב",
+        onClick: onRetry,
+        icon: <RefreshCw size={14} />,
+      }}
+      variant="error"
+    />
   );
 }
 
@@ -1111,7 +1129,7 @@ export default function TasksPage() {
                             else { setSortBy(opt.key); setSortDir(opt.key === "dueDate" ? "asc" : "desc"); }
                             setShowSortMenu(false);
                           }}
-                          className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8]/50 transition-colors ${sortBy === opt.key ? "text-[#0073EA] font-semibold" : "text-[#676879]"}`}
+                          className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F6F7FB]/50 transition-colors ${sortBy === opt.key ? "text-[#0073EA] font-semibold" : "text-[#676879]"}`}
                         >
                           {opt.label}
                           {sortBy === opt.key && <span className="text-[10px] mr-1">{sortDir === "asc" ? "↑" : "↓"}</span>}
@@ -1224,20 +1242,7 @@ export default function TasksPage() {
           {/* Content */}
           {viewMode === "kanban" ? (
             boardError ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-                  <AlertCircle size={28} className="text-[#E44258]" />
-                </div>
-                <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת משימות</h2>
-                <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-                <button
-                  onClick={() => refetchBoard()}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-                >
-                  <RefreshCw size={14} />
-                  נסה שוב
-                </button>
-              </div>
+              <TasksErrorState onRetry={() => refetchBoard()} />
             ) : (
             <KanbanBoard<Task>
               columns={kanbanColumns}
@@ -1249,43 +1254,22 @@ export default function TasksPage() {
             />
             )
           ) : isError ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-                <AlertCircle size={28} className="text-[#E44258]" />
-              </div>
-              <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת משימות</h2>
-              <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-              <button
-                onClick={() => refetch()}
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-              >
-                <RefreshCw size={14} />
-                נסה שוב
-              </button>
-            </div>
+            <TasksErrorState onRetry={() => refetch()} />
           ) : isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-              <div className="mb-6">
-                <div className="w-20 h-20 rounded-full bg-[#E3EFFE] flex items-center justify-center">
-                  <CheckSquare size={36} className="text-[#0073EA]" />
-                </div>
-              </div>
-              <h3 className="text-[18px] font-semibold text-[#323338] mb-2">אין משימות</h3>
-              <p className="text-[14px] text-[#676879] max-w-xs mb-6 leading-relaxed">
-                צור את המשימה הראשונה שלך כדי להתחיל לעקוב אחרי כל המשימות במקום אחד.
-              </p>
-              <button
-                onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 px-5 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors"
-              >
-                <Plus size={16} />
-                משימה חדשה
-              </button>
-            </div>
+            <EmptyState
+              illustration={<EmptyTasks />}
+              title="כל המשימות יופיעו כאן"
+              description="צור משימה ראשונה כדי להתחיל לעקוב אחרי שיחות, פגישות ומעקבים במקום אחד."
+              action={{
+                label: "משימה חדשה",
+                onClick: () => setShowCreate(true),
+                icon: <Plus size={16} />,
+              }}
+            />
           ) : (
             <div className="space-y-3">
               {DATE_GROUP_CONFIG.map((cfg) => {
@@ -1368,10 +1352,10 @@ export default function TasksPage() {
           {showBulkPriorityMenu && (
             <div className="absolute bottom-full mb-2 right-0 bg-[#404046] rounded-[4px] shadow-lg border border-white/10 py-1 min-w-[130px] z-50">
               {[
-                { key: "URGENT", label: "דחוף", color: "#FB275D" },
+                { key: "URGENT", label: "דחוף", color: "#E2445C" },
                 { key: "HIGH", label: "גבוה", color: "#FDAB3D" },
                 { key: "MEDIUM", label: "בינוני", color: "#579BFC" },
-                { key: "LOW", label: "נמוך", color: "#C3C6D4" },
+                { key: "LOW", label: "נמוך", color: "#9699A6" },
               ].map((opt) => (
                 <button
                   key={opt.key}

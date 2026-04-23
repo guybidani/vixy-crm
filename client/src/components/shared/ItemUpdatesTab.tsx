@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+﻿import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pin, PinOff, Pencil, Trash2, Send } from "lucide-react";
 import toast from "react-hot-toast";
@@ -210,9 +210,9 @@ export default function ItemUpdatesTab({
           />
           <div
             className="flex items-center justify-between px-3 py-2 border-t"
-            style={{ borderColor: "#E6E9EF", background: "#F5F6F8" }}
+            style={{ borderColor: "#E6E9EF", background: "#F6F7FB" }}
           >
-            <span className="text-xs" style={{ color: "#C3C6D4" }}>
+            <span className="text-xs" style={{ color: "#9699A6" }}>
               Ctrl+Enter לשליחה
             </span>
             <button
@@ -243,7 +243,7 @@ export default function ItemUpdatesTab({
           <div className="text-center py-12">
             <div
               className="text-4xl mb-3"
-              style={{ color: "#C3C6D4" }}
+              style={{ color: "#9699A6" }}
             >
               💬
             </div>
@@ -322,10 +322,10 @@ export default function ItemUpdatesTab({
                     >
                       {authorName}
                     </span>
-                    <span className="text-xs" style={{ color: "#C3C6D4" }}>
+                    <span className="text-xs" style={{ color: "#9699A6" }}>
                       ·
                     </span>
-                    <span className="text-xs" style={{ color: "#C3C6D4" }}>
+                    <span className="text-xs" style={{ color: "#9699A6" }}>
                       {timeAgo(note.createdAt)}
                     </span>
                     {note.isPinned && (
@@ -365,7 +365,7 @@ export default function ItemUpdatesTab({
                         className="p-1 rounded hover:bg-red-50 transition-colors"
                         title="מחיקה"
                       >
-                        <Trash2 size={14} style={{ color: "#FB275D" }} />
+                        <Trash2 size={14} style={{ color: "#E2445C" }} />
                       </button>
                     </>
                   )}
@@ -396,7 +396,7 @@ export default function ItemUpdatesTab({
             ) : (
               <button
                 onClick={loadMore}
-                className="w-full py-2 text-[13px] text-[#0073EA] hover:bg-[#F5F6F8] rounded transition-colors"
+                className="w-full py-2 text-[13px] text-[#0073EA] hover:bg-[#F6F7FB] rounded transition-colors"
               >
                 טען עוד ({total - allNotes.length} נותרו)
               </button>

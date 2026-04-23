@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
+﻿import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import toast from "react-hot-toast";
 
@@ -8,12 +8,12 @@ export function cn(...inputs: ClassValue[]) {
 
 // ── Avatar color ──────────────────────────────────────────────
 const AVATAR_COLORS = [
-  "#6161FF",
+  "#0073EA",
   "#A25DDC",
-  "#00CA72",
+  "#00C875",
   "#579BFC",
   "#FDAB3D",
-  "#FB275D",
+  "#E2445C",
   "#FF642E",
   "#66CCFF",
   "#4ECCC6",

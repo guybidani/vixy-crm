@@ -11,10 +11,23 @@ interface ModalProps {
   title?: string;
   children: React.ReactNode;
   className?: string;
-  /** Max width class (default: max-w-lg) */
-  maxWidth?: string;
+  /**
+   * Max-width class.
+   * Preset shortcuts: "narrow" (480px), "wide" (640px).
+   * You can also pass a raw tailwind class like `max-w-xl` or `max-w-[720px]`.
+   * Default: "narrow" (480px) — matches Monday.com's common modal width.
+   */
+  maxWidth?: "narrow" | "wide" | string;
   /** Ref to the element that should receive focus initially */
   initialFocusRef?: React.RefObject<HTMLElement | null>;
+  /** Hide the default close (X) button */
+  hideCloseButton?: boolean;
+}
+
+function resolveMaxWidth(maxWidth: string): string {
+  if (maxWidth === "narrow") return "max-w-[480px]";
+  if (maxWidth === "wide") return "max-w-[640px]";
+  return maxWidth;
 }
 
 export default function Modal({
@@ -23,8 +36,9 @@ export default function Modal({
   title,
   children,
   className,
-  maxWidth = "max-w-lg",
+  maxWidth = "narrow",
   initialFocusRef,
+  hideCloseButton = false,
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -99,14 +113,21 @@ export default function Modal({
 
   if (!open) return null;
 
+  const maxWidthClass = resolveMaxWidth(maxWidth);
+
   return (
     <div
-      className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+      }}
     >
-      {/* Backdrop */}
+      {/* Backdrop click target */}
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
 
       {/* Content */}
@@ -114,21 +135,27 @@ export default function Modal({
         ref={dialogRef}
         tabIndex={-1}
         className={cn(
-          "relative bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.18)] w-full outline-none animate-in fade-in zoom-in-95 duration-150",
-          maxWidth,
+          "relative bg-white rounded-[8px] w-full outline-none animate-modal-spring",
+          maxWidthClass,
           className,
         )}
+        style={{ boxShadow: "0 16px 48px rgba(0, 0, 0, 0.18)" }}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E6E9EF]">
-            <h2 className="text-[15px] font-semibold text-[#323338]">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
-              aria-label="סגור"
-            >
-              <X size={16} />
-            </button>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E9EF]">
+            <h2 className="text-[20px] font-semibold text-[#323338] leading-tight">
+              {title}
+            </h2>
+            {!hideCloseButton && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#676879] hover:text-[#323338]"
+                aria-label="סגור"
+                type="button"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         )}
         {children}

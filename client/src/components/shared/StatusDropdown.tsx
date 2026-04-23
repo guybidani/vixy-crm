@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Check } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import { cn } from "../../lib/utils";
 
 interface StatusOption {
   label: string;
@@ -15,6 +16,11 @@ interface StatusDropdownProps {
   disabled?: boolean;
 }
 
+/**
+ * Monday-style status pill with a dropdown for picking another option.
+ * - Trigger: StatusBadge pill (vibrant bg, white text, hover brightness).
+ * - Dropdown: vibrant colored rows (matching Monday's single-select color menu).
+ */
 export default function StatusDropdown({
   value,
   options,
@@ -29,7 +35,7 @@ export default function StatusDropdown({
 
   const optionKeys = useMemo(() => Object.keys(options), [options]);
 
-  // Close on outside click or Escape
+  // Close on outside click or Escape; arrow-key / enter keyboard support
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -111,35 +117,39 @@ export default function StatusDropdown({
               ? `status-opt-${optionKeys[highlightIndex]}`
               : undefined
           }
-          className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] border border-[#E6E9EF] py-1 min-w-[140px] animate-in fade-in slide-in-from-top-1 duration-150"
+          className="absolute top-full mt-1 right-0 z-50 bg-white rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] border border-[#E6E9EF] p-1.5 min-w-[180px] animate-in fade-in slide-in-from-top-1 duration-150"
         >
           {optionKeys.map((key, idx) => {
             const opt = options[key];
             const isHighlighted = idx === highlightIndex;
+            const isSelected = key === value;
             return (
               <button
                 key={key}
                 id={`status-opt-${key}`}
                 role="option"
-                aria-selected={key === value}
+                aria-selected={isSelected}
                 data-status-idx={idx}
                 onClick={() => {
                   onChange(key);
                   setOpen(false);
                 }}
                 onMouseEnter={() => setHighlightIndex(idx)}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 transition-colors ${
-                  isHighlighted ? "bg-[#F5F6F8]" : "hover:bg-[#F5F6F8]"
-                }`}
+                className={cn(
+                  "w-full relative flex items-center gap-2 rounded-[3px] mb-1 last:mb-0 transition-[filter]",
+                  "text-white text-[12px] font-medium py-[7px] px-3 text-center",
+                  "hover:brightness-95",
+                  isHighlighted && "brightness-95",
+                )}
+                style={{ backgroundColor: opt.color }}
               >
-                <span
-                  className="inline-flex items-center justify-center font-semibold rounded-full text-[11px] px-3 py-[3px] min-w-[56px] text-white"
-                  style={{ backgroundColor: opt.color }}
-                >
-                  {opt.label}
-                </span>
-                {key === value && (
-                  <Check size={14} className="text-[#676879] mr-auto" />
+                <span className="flex-1 text-center truncate">{opt.label}</span>
+                {isSelected && (
+                  <Check
+                    size={14}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 text-white/90"
+                    aria-hidden
+                  />
                 )}
               </button>
             );

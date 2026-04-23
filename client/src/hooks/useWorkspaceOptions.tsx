@@ -1,4 +1,4 @@
-import {
+﻿import {
   createContext,
   useContext,
   useMemo,
@@ -92,7 +92,7 @@ const DEFAULT_LEAD_SOURCES = [
 const DEFAULT_TICKET_CHANNELS: Record<string, ChannelOption> = {
   email: { label: "אימייל", color: "#579BFC" },
   whatsapp: { label: "ווטסאפ", color: "#25D366" },
-  chat: { label: "צ׳אט", color: "#6161FF" },
+  chat: { label: "צ׳אט", color: "#0073EA" },
   phone: { label: "טלפון", color: "#FDAB3D" },
   portal: { label: "פורטל", color: "#A25DDC" },
 };

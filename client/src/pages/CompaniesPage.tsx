@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Building2, Users, Handshake, AlertCircle, RefreshCw, Mail, Phone, Clock } from "lucide-react";
+import { Plus, Building2, Users, Handshake, RefreshCw, Mail, Phone, Clock } from "lucide-react";
 import { useDebounce } from "../hooks/useDebounce";
 import toast from "react-hot-toast";
 import PageShell from "../components/layout/PageShell";
@@ -32,14 +32,16 @@ import { useWorkspaceOptions } from "../hooks/useWorkspaceOptions";
 import { useInlineUpdate } from "../hooks/useInlineUpdate";
 import SavedViewsBar, { type ViewState } from "../components/shared/SavedViewsBar";
 import { type SavedView } from "../api/views";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyError } from "../components/shared/illustrations";
 
 const COMPANY_COLORS = [
-  "#6161FF",
+  "#0073EA",
   "#A25DDC",
-  "#00CA72",
+  "#00C875",
   "#579BFC",
   "#FDAB3D",
-  "#FB275D",
+  "#E2445C",
   "#FF642E",
   "#66CCFF",
 ];
@@ -192,6 +194,7 @@ export default function CompaniesPage() {
       label: "סטטוס",
       width: "150px",
       sortable: true,
+      noPadding: true,
       render: (row) => (
         <MondayStatusCell
           value={row.status}
@@ -249,7 +252,7 @@ export default function CompaniesPage() {
       summary: "sum",
       render: (row) => (
         <div className="flex items-center gap-1.5">
-          <Users size={14} className="text-[#6161FF]" />
+          <Users size={14} className="text-[#0073EA]" />
           <span className="font-semibold text-[13px] text-[#323338]">
             {row.contactCount}
           </span>
@@ -264,7 +267,7 @@ export default function CompaniesPage() {
       summary: "sum",
       render: (row) => (
         <div className="flex items-center gap-1.5">
-          <Handshake size={14} className="text-[#00CA72]" />
+          <Handshake size={14} className="text-[#00C875]" />
           <span className="font-semibold text-[13px] text-[#323338]">
             {row.dealCount}
           </span>
@@ -465,7 +468,7 @@ function CompanyCard({
 
       {/* Industry badge */}
       {company.industry && (
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879] inline-block mb-2">
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#676879] inline-block mb-2">
           {company.industry}
         </span>
       )}
@@ -487,13 +490,13 @@ function CompanyCard({
       {/* Bottom row: contacts + deals count */}
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#E6E9EF]">
         <div className="flex items-center gap-1.5">
-          <Users size={12} className="text-[#6161FF]" />
+          <Users size={12} className="text-[#0073EA]" />
           <span className="text-[11px] font-semibold text-[#676879]">
             {company.contactCount}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <Handshake size={12} className="text-[#00CA72]" />
+          <Handshake size={12} className="text-[#00C875]" />
           <span className="text-[11px] font-semibold text-[#676879]">
             {company.dealCount}
           </span>
@@ -505,20 +508,17 @@ function CompanyCard({
 
 function CompaniesErrorState({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-[#FFF0F0] flex items-center justify-center mb-4">
-        <AlertCircle size={28} className="text-[#E44258]" />
-      </div>
-      <h2 className="text-base font-bold text-[#323338] mb-1">שגיאה בטעינת חברות</h2>
-      <p className="text-[13px] text-[#676879] mb-4">לא הצלחנו לטעון את הנתונים. נסו שוב.</p>
-      <button
-        onClick={onRetry}
-        className="flex items-center gap-1.5 px-4 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white text-[13px] font-semibold rounded-[4px] transition-colors"
-      >
-        <RefreshCw size={14} />
-        נסה שוב
-      </button>
-    </div>
+    <EmptyState
+      illustration={<EmptyError />}
+      title="משהו השתבש"
+      description="לא הצלחנו לטעון את החברות. נסו שוב בעוד רגע."
+      action={{
+        label: "נסה שוב",
+        onClick: onRetry,
+        icon: <RefreshCw size={14} />,
+      }}
+      variant="error"
+    />
   );
 }
 

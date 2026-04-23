@@ -1,4 +1,4 @@
-import { Search, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+﻿import { Search, ChevronRight, ChevronLeft, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 interface Column<T> {
@@ -64,7 +64,7 @@ export default function DataTable<T extends { id: string }>({
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
-              className="pr-8 pl-3 py-[6px] text-[13px] border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#C3C6D4] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 w-[220px] bg-white"
+              className="pr-8 pl-3 py-[6px] text-[13px] border border-[#D0D4E4] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 w-[220px] bg-white"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function DataTable<T extends { id: string }>({
                         <ArrowDown size={12} className="text-[#0073EA]" />
                       )
                     ) : col.sortable ? (
-                      <ArrowUpDown size={11} className="text-[#C3C6D4] opacity-0 group-hover/col:opacity-100 transition-opacity" />
+                      <ArrowUpDown size={11} className="text-[#9699A6] opacity-0 group-hover/col:opacity-100 transition-opacity" />
                     ) : null}
                   </span>
                 </th>
@@ -134,7 +134,7 @@ export default function DataTable<T extends { id: string }>({
             {loading ? (
               <>
                 {[1, 2, 3, 4, 5, 6].map((row) => (
-                  <tr key={row} className="border-b border-[#F5F6F8]">
+                  <tr key={row} className="border-b border-[#F6F7FB]">
                     {columns.map((col, ci) => (
                       <td key={ci} className="px-4 py-3">
                         <div className="animate-pulse">
@@ -162,8 +162,10 @@ export default function DataTable<T extends { id: string }>({
                 <tr
                   key={row.id}
                   className={cn(
-                    "group border-b border-[#E6E9EF] last:border-0 transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-[#F5F6F8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA]",
+                    "group border-b border-[#E6E9EF] last:border-0",
+                    // row-hoverable: 0.15s ease bg + subtle elevation on hover
+                    onRowClick && "row-hoverable cursor-pointer hover:bg-[#F6F7FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0073EA]",
+                    !onRowClick && "transition-colors",
                   )}
                   style={rowStyle?.(row)}
                   onClick={() => onRowClick?.(row)}
@@ -206,7 +208,7 @@ export default function DataTable<T extends { id: string }>({
             <button
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="עמוד הקודם"
             >
               <ChevronRight size={14} />
@@ -214,7 +216,7 @@ export default function DataTable<T extends { id: string }>({
             <button
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-[12px] text-[#323338] bg-white border border-[#D0D4E4] rounded hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="עמוד הבא"
             >
               <ChevronLeft size={14} />

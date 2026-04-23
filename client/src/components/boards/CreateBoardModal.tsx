@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { LayoutGrid, Users, Handshake, CheckSquare, Calendar, ChevronLeft } from "lucide-react";
@@ -97,7 +97,7 @@ export default function CreateBoardModal({
       open={open}
       onClose={onClose}
       title={step === "template" ? "בחר תבנית" : "צור בורד חדש"}
-      maxWidth="max-w-[620px]"
+      maxWidth="wide"
       className="max-h-[90vh] overflow-y-auto"
     >
       {step === "template" ? (
@@ -150,7 +150,7 @@ export default function CreateBoardModal({
 
           {/* Selected template preview */}
           {selectedTemplate && (
-            <div className="flex items-start gap-3 mb-5 p-4 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF]">
+            <div className="flex items-start gap-3 mb-5 p-4 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF]">
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
                 style={{ backgroundColor: selectedTemplate.color }}
@@ -181,12 +181,12 @@ export default function CreateBoardModal({
             </div>
           )}
 
-          <label className="block text-sm font-medium text-[#323338] mb-1.5">
-            שם הבורד
+          <label className="form-label">
+            שם הבורד<span className="form-required">*</span>
           </label>
           <input
             autoFocus
-            className="w-full px-3 py-2.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20"
+            className="input"
             placeholder="לדוגמה: ניהול לידים"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -194,14 +194,24 @@ export default function CreateBoardModal({
               if (e.key === "Enter") handleCreate();
             }}
           />
+          <p className="help-text">תן לבורד שלך שם ברור שיהיה קל לזהות ברשימה</p>
 
-          <button
-            onClick={handleCreate}
-            disabled={!name.trim() || createMut.isPending}
-            className="w-full mt-4 py-2.5 bg-[#0073EA] hover:bg-[#0060C2] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-[4px] transition-colors"
-          >
-            {createMut.isPending ? "יוצר..." : "צור בורד"}
-          </button>
+          <div className="flex items-center justify-start gap-2 mt-6 pt-4 border-t border-[#E6E9EF]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="modal-btn-secondary"
+            >
+              ביטול
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={!name.trim() || createMut.isPending}
+              className="modal-btn-primary"
+            >
+              {createMut.isPending ? "יוצר..." : "צור בורד"}
+            </button>
+          </div>
         </div>
       )}
     </Modal>

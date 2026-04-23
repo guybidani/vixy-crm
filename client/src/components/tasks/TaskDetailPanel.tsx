@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { formatRelativeTime } from "../../lib/utils";
@@ -28,8 +28,8 @@ import {
 } from "lucide-react";
 
 const TASK_TYPE_OPTIONS = [
-  { value: "TASK", label: "משימה", icon: "📋", color: "#6161FF" },
-  { value: "CALL", label: "שיחה", icon: "📞", color: "#00CA72" },
+  { value: "TASK", label: "משימה", icon: "📋", color: "#0073EA" },
+  { value: "CALL", label: "שיחה", icon: "📞", color: "#00C875" },
   { value: "EMAIL", label: "אימייל", icon: "📧", color: "#579BFC" },
   { value: "MEETING", label: "פגישה", icon: "🤝", color: "#A25DDC" },
   { value: "WHATSAPP", label: "וואטסאפ", icon: "💬", color: "#25D366" },
@@ -37,9 +37,9 @@ const TASK_TYPE_OPTIONS = [
 ];
 
 const TASK_CONTEXT_OPTIONS = [
-  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00CA72" },
+  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00C875" },
   { value: "SERVICE", label: "שירות", icon: Headphones, color: "#FDAB3D" },
-  { value: "GENERAL", label: "כללי", icon: Layers, color: "#C3C6D4" },
+  { value: "GENERAL", label: "כללי", icon: Layers, color: "#9699A6" },
 ];
 
 import ItemUpdatesTab from "../shared/ItemUpdatesTab";
@@ -63,8 +63,8 @@ import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 import { useAuth } from "../../hooks/useAuth";
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  NOTE: "#6161FF",
-  CALL: "#00CA72",
+  NOTE: "#0073EA",
+  CALL: "#00C875",
   EMAIL: "#579BFC",
   MEETING: "#A25DDC",
   WHATSAPP: "#25D366",
@@ -247,7 +247,7 @@ export default function TaskDetailPanel({
               ? "#D6F5E8"
               : isOverdue
                 ? "#FFE5E5"
-                : "#E8E8FF",
+                : "#CCE5FF",
           }}
         >
           <StatusIcon
@@ -283,7 +283,7 @@ export default function TaskDetailPanel({
             <h2
               role="button"
               tabIndex={0}
-              className={`text-lg font-bold cursor-text hover:bg-[#F5F6F8] rounded px-1 -mx-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/40 ${
+              className={`text-lg font-bold cursor-text hover:bg-[#F6F7FB] rounded px-1 -mx-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/40 ${
                 isDone
                   ? "line-through text-[#9699A6]"
                   : "text-[#323338]"
@@ -334,7 +334,7 @@ export default function TaskDetailPanel({
               ) : null;
             })()}
             {task.dueTime && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879] flex items-center gap-0.5">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#676879] flex items-center gap-0.5">
                 <Clock size={9} /> {task.dueTime}
               </span>
             )}
@@ -359,14 +359,14 @@ export default function TaskDetailPanel({
           </button>
           <button
             onClick={onClose}
-            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+            className="p-2 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] transition-colors"
           >
             <X size={16} />
           </button>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — animated underline via `.tab-underline` */}
       <div className="flex gap-1 mb-5 border-b border-[#E6E9EF]" role="tablist">
         {(
           [
@@ -380,11 +380,12 @@ export default function TaskDetailPanel({
             key={tab.key}
             role="tab"
             aria-selected={activeTab === tab.key}
+            data-active={activeTab === tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${
+            className={`tab-underline px-4 py-2.5 text-[13px] font-semibold transition-colors ${
               activeTab === tab.key
-                ? "border-[#0073EA] text-[#0073EA]"
-                : "border-transparent text-[#9699A6] hover:text-[#676879]"
+                ? "text-[#0073EA]"
+                : "text-[#9699A6] hover:text-[#676879]"
             }`}
           >
             {tab.label}
@@ -392,8 +393,9 @@ export default function TaskDetailPanel({
         ))}
       </div>
 
+      {/* Tab content cross-fade on activeTab change */}
       {activeTab === "info" ? (
-        <div className="space-y-4">
+        <div key="info" className="space-y-4 tab-content-enter">
           {/* Description */}
           <div>
             <label className="text-xs font-semibold text-[#9699A6] uppercase mb-1.5 block">
@@ -419,7 +421,7 @@ export default function TaskDetailPanel({
               <div
                 role="button"
                 tabIndex={0}
-                className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-[#F5F6F8] transition-colors min-h-[40px] whitespace-pre-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/30"
+                className="text-[13px] text-[#676879] cursor-text rounded-[4px] px-3 py-2 hover:bg-[#F6F7FB] transition-colors min-h-[40px] whitespace-pre-wrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]/30"
                 onClick={() => {
                   setDescriptionValue(task.description || "");
                   setEditingDescription(true);
@@ -614,7 +616,7 @@ export default function TaskDetailPanel({
               {task.contact && (
                 <button
                   onClick={() => navigate(`/contacts/${task.contact!.id}`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[13px] text-[#323338] group"
                 >
                   <User size={14} className="text-[#0073EA]" />
                   <span className="flex-1 text-right">{task.contact.name}</span>
@@ -627,7 +629,7 @@ export default function TaskDetailPanel({
               {task.deal && (
                 <button
                   onClick={() => navigate(`/deals?open=${task.deal!.id}`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Handshake size={14} className="text-success" />
                   <span className="flex-1 text-right">{task.deal.title}</span>
@@ -640,7 +642,7 @@ export default function TaskDetailPanel({
               {task.ticket && (
                 <button
                   onClick={() => navigate(`/tickets/${task.ticket!.id}`)}
-                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[13px] text-[#323338] group"
+                  className="flex items-center gap-2 w-full px-3 py-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[13px] text-[#323338] group"
                 >
                   <Ticket size={14} className="text-warning" />
                   <span className="flex-1 text-right">
@@ -696,10 +698,12 @@ export default function TaskDetailPanel({
           </div>
         </div>
       ) : activeTab === "updates" ? (
-        <ItemUpdatesTab entityType="task" entityId={taskId} />
+        <div key="updates" className="tab-content-enter">
+          <ItemUpdatesTab entityType="task" entityId={taskId} />
+        </div>
       ) : activeTab === "comments" ? (
         /* Comments Tab */
-        <div className="flex flex-col gap-4">
+        <div key="comments" className="flex flex-col gap-4 tab-content-enter">
           {/* Comment list */}
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
             {!comments || comments.length === 0 ? (
@@ -776,7 +780,7 @@ export default function TaskDetailPanel({
         </div>
       ) : (
         /* Activity Tab */
-        <div className="space-y-1">
+        <div key="activity" className="space-y-1 tab-content-enter">
           {!activities || activities.length === 0 ? (
             <p className="text-sm text-[#9699A6] text-center py-8">
               אין פעילות רשומה
@@ -787,7 +791,7 @@ export default function TaskDetailPanel({
               return (
                 <div
                   key={a.id}
-                  className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-[4px] hover:bg-[#F5F6F8] transition-all"
+                  className="flex items-center gap-3 py-2.5 border-r-[3px] pr-3 rounded-[4px] hover:bg-[#F6F7FB] transition-all"
                   style={{ borderRightColor: color }}
                 >
                   <div
@@ -830,7 +834,7 @@ export default function TaskDetailPanel({
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+                className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
               >
                 ביטול
               </button>

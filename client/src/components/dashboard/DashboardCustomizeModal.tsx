@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -167,7 +167,7 @@ export default function DashboardCustomizeModal({
           <h3 className="text-[12px] font-semibold text-[#9699A6] uppercase tracking-wide mb-2">
             תצוגה מקדימה
           </h3>
-          <div className="grid grid-cols-6 gap-1.5 p-3 bg-[#F5F6F8] rounded-xl">
+          <div className="grid grid-cols-6 gap-1.5 p-3 bg-[#F6F7FB] rounded-xl">
             {draft
               .filter((w) => w.visible)
               .map((w) => {
@@ -204,7 +204,7 @@ export default function DashboardCustomizeModal({
         <button
           onClick={onClose}
           disabled={saving}
-          className="px-3.5 py-[7px] text-[13px] font-medium text-[#323338] rounded-[4px] hover:bg-[#F5F6F8] transition-colors disabled:opacity-50"
+          className="px-3.5 py-[7px] text-[13px] font-medium text-[#323338] rounded-[4px] hover:bg-[#F6F7FB] transition-colors disabled:opacity-50"
         >
           ביטול
         </button>
@@ -262,14 +262,14 @@ function SortableRow({ config, onToggle, onSize }: RowProps) {
       <button
         {...attributes}
         {...listeners}
-        className="p-1.5 rounded-[4px] text-[#9699A6] hover:bg-[#F5F6F8] cursor-grab active:cursor-grabbing"
+        className="p-1.5 rounded-[4px] text-[#9699A6] hover:bg-[#F6F7FB] cursor-grab active:cursor-grabbing"
         aria-label="גרור לסידור מחדש"
       >
         <GripVertical size={16} />
       </button>
 
       {/* Icon + title */}
-      <div className="w-8 h-8 rounded-lg bg-[#F5F6F8] flex items-center justify-center text-[#676879] flex-shrink-0">
+      <div className="w-8 h-8 rounded-lg bg-[#F6F7FB] flex items-center justify-center text-[#676879] flex-shrink-0">
         {meta.icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -283,7 +283,7 @@ function SortableRow({ config, onToggle, onSize }: RowProps) {
 
       {/* Size picker */}
       {meta.resizable && (
-        <div className="flex items-center rounded-[6px] bg-[#F5F6F8] p-0.5">
+        <div className="flex items-center rounded-[6px] bg-[#F6F7FB] p-0.5">
           {SIZE_ORDER.map((s) => (
             <button
               key={s}
@@ -308,8 +308,8 @@ function SortableRow({ config, onToggle, onSize }: RowProps) {
         disabled={!meta.hideable}
         className={`p-1.5 rounded-[4px] transition-colors ${
           config.visible
-            ? "text-[#00CA72] hover:bg-[#D6F5E8]"
-            : "text-[#9699A6] hover:bg-[#F5F6F8]"
+            ? "text-[#00C875] hover:bg-[#D6F5E8]"
+            : "text-[#9699A6] hover:bg-[#F6F7FB]"
         } disabled:opacity-40 disabled:cursor-not-allowed`}
         aria-label={config.visible ? "הסתר" : "הצג"}
       >

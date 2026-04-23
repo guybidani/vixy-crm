@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -32,9 +32,9 @@ interface EntityDocumentsSectionProps {
 function getSmallFileIcon(mimeType: string | null) {
   if (!mimeType) return <File size={16} className="text-[#9699A6]" />;
   if (mimeType.startsWith("image/"))
-    return <Image size={16} className="text-[#00CA72]" />;
+    return <Image size={16} className="text-[#00C875]" />;
   if (mimeType.includes("pdf"))
-    return <FileText size={16} className="text-[#FB275D]" />;
+    return <FileText size={16} className="text-[#E2445C]" />;
   return <File size={16} className="text-[#579BFC]" />;
 }
 
@@ -113,7 +113,7 @@ export default function EntityDocumentsSection({
           <FileText size={15} className="text-[#FF642E]" />
           מסמכים
           {docLinks.length > 0 && (
-            <span className="text-xs bg-[#F5F6F8] text-[#9699A6] px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-[#F6F7FB] text-[#9699A6] px-1.5 py-0.5 rounded-full">
               {docLinks.length}
             </span>
           )}
@@ -121,7 +121,7 @@ export default function EntityDocumentsSection({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#0073EA]"
+            className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#9699A6] hover:text-[#0073EA]"
             aria-label="הוסף מסמך"
             aria-expanded={showMenu}
             aria-haspopup="menu"
@@ -144,7 +144,7 @@ export default function EntityDocumentsSection({
                     setShowMenu(false);
                     fileInputRef.current?.click();
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                 >
                   <Upload size={14} className="text-[#9699A6]" />
                   העלה קובץ
@@ -155,7 +155,7 @@ export default function EntityDocumentsSection({
                     setShowMenu(false);
                     setShowCreateRichText(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                 >
                   <FileText size={14} className="text-[#9699A6]" />
                   מסמך חדש
@@ -166,7 +166,7 @@ export default function EntityDocumentsSection({
                     setShowMenu(false);
                     setShowLinkModal(true);
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#323338] hover:bg-[#F6F7FB] transition-colors"
                 >
                   <Link2 size={14} className="text-[#9699A6]" />
                   קשר מסמך קיים
@@ -188,7 +188,7 @@ export default function EntityDocumentsSection({
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-[#F5F6F8] rounded-[4px] p-3 animate-pulse h-12"
+              className="bg-[#F6F7FB] rounded-[4px] p-3 animate-pulse h-12"
             />
           ))}
         </div>
@@ -201,11 +201,11 @@ export default function EntityDocumentsSection({
           {docLinks.map((link: EntityDocumentLink) => (
             <div
               key={link.id}
-              className="flex items-center gap-2.5 p-2.5 rounded-[4px] bg-[#F5F6F8]/50 hover:bg-[#F5F6F8] transition-colors group"
+              className="flex items-center gap-2.5 p-2.5 rounded-[4px] bg-[#F6F7FB]/50 hover:bg-[#F6F7FB] transition-colors group"
             >
               <div className="w-8 h-8 rounded-[4px] bg-white flex items-center justify-center flex-shrink-0">
                 {link.document.type === "RICH_TEXT" ? (
-                  <FileText size={16} className="text-[#6161FF]" />
+                  <FileText size={16} className="text-[#0073EA]" />
                 ) : (
                   getSmallFileIcon(link.document.mimeType)
                 )}
@@ -350,11 +350,11 @@ function LinkExistingDocModal({
               key={doc.id}
               onClick={() => linkMut.mutate(doc.id)}
               disabled={linkMut.isPending}
-              className="w-full flex items-center gap-2.5 p-2.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-right"
+              className="w-full flex items-center gap-2.5 p-2.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-right"
             >
-              <div className="w-8 h-8 rounded-[4px] bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-[4px] bg-[#F6F7FB] flex items-center justify-center flex-shrink-0">
                 {doc.type === "RICH_TEXT" ? (
-                  <FileText size={16} className="text-[#6161FF]" />
+                  <FileText size={16} className="text-[#0073EA]" />
                 ) : (
                   <File size={16} className="text-[#9699A6]" />
                 )}
@@ -429,7 +429,7 @@ function QuickCreateRichText({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
           >
             ביטול
           </button>

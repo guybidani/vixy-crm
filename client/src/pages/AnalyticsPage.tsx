@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BarChart3, TrendingUp, Users, Trophy, AlertCircle, RefreshCw } from "lucide-react";
 import PageShell, { PageCard } from "../components/layout/PageShell";
@@ -85,7 +85,7 @@ function ActivityBreakdownChart({ data }: { data: ActivityBreakdownItem[] }) {
               <span className="text-[#676879]">{label}</span>
               <span className="font-semibold text-[#323338]">{item.count}</span>
             </div>
-            <div className="h-6 bg-[#F5F6F8] rounded-md overflow-hidden">
+            <div className="h-6 bg-[#F6F7FB] rounded-md overflow-hidden">
               <div
                 className="h-full rounded-md transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: color }}
@@ -133,7 +133,7 @@ function DealFunnelChart({ data }: { data: DealFunnelItem[] }) {
                 <span className="font-semibold text-[#323338]">{item.count}</span>
               </div>
             </div>
-            <div className="h-5 bg-[#F5F6F8] rounded-md overflow-hidden">
+            <div className="h-5 bg-[#F6F7FB] rounded-md overflow-hidden">
               <div
                 className="h-full rounded-md transition-all duration-500"
                 style={{ width: `${pct}%`, backgroundColor: color }}
@@ -179,7 +179,7 @@ function TaskCompletionDonut({ data }: { data: TaskCompletionData }) {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#00CA72"
+            stroke="#00C875"
             strokeWidth={stroke}
             strokeDasharray={circumference}
             strokeDashoffset={circumference - completedArc}
@@ -194,7 +194,7 @@ function TaskCompletionDonut({ data }: { data: TaskCompletionData }) {
       </div>
       <div className="flex items-center gap-6 text-[13px]">
         <div className="flex items-center gap-2">
-          <span className="w-3 h-3 rounded-full bg-[#00CA72]" />
+          <span className="w-3 h-3 rounded-full bg-[#00C875]" />
           <span className="text-[#676879]">הושלמו: {totalCompleted}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
                 className="w-8 h-8 rounded-full object-cover flex-shrink-0"
               />
             ) : (
-              <span className="w-8 h-8 rounded-full bg-[#F5F6F8] flex items-center justify-center text-[13px] font-semibold text-[#676879] flex-shrink-0">
+              <span className="w-8 h-8 rounded-full bg-[#F6F7FB] flex items-center justify-center text-[13px] font-semibold text-[#676879] flex-shrink-0">
                 {item.name.charAt(0)}
               </span>
             )}
@@ -276,7 +276,7 @@ function TopPerformersList({ data }: { data: TopPerformerItem[] }) {
                 <span className="text-[#323338] font-medium truncate">{item.name}</span>
                 <span className="font-semibold text-[#323338]">{item.activitiesCount}</span>
               </div>
-              <div className="h-2 bg-[#F5F6F8] rounded-full overflow-hidden">
+              <div className="h-2 bg-[#F6F7FB] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-[#A25DDC] transition-all duration-500"
                   style={{ width: `${pct}%` }}
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
               className={`px-3 py-1.5 text-[13px] rounded-[4px] transition-colors ${
                 rangeKey === opt.key
                   ? "bg-[#0073EA] text-white font-semibold"
-                  : "bg-white text-[#676879] hover:bg-[#F5F6F8] border border-[#E6E9EF]"
+                  : "bg-white text-[#676879] hover:bg-[#F6F7FB] border border-[#E6E9EF]"
               }`}
             >
               {opt.label}
@@ -392,13 +392,13 @@ export default function AnalyticsPage() {
         {/* Activity Breakdown */}
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
-            <BarChart3 size={18} className="text-[#6161FF]" />
+            <BarChart3 size={18} className="text-[#0073EA]" />
             <h3 className="font-semibold text-[#323338]">פילוח פעילויות</h3>
           </div>
           {activityQ.isLoading ? (
             <div className="animate-pulse space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 bg-[#F5F6F8] rounded" />
+                <div key={i} className="h-10 bg-[#F6F7FB] rounded" />
               ))}
             </div>
           ) : activityQ.isError ? (
@@ -409,7 +409,7 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => activityQ.refetch()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <RefreshCw size={12} />
                 נסה שוב
@@ -423,13 +423,13 @@ export default function AnalyticsPage() {
         {/* Deal Funnel */}
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp size={18} className="text-[#00CA72]" />
+            <TrendingUp size={18} className="text-[#00C875]" />
             <h3 className="font-semibold text-[#323338]">משפך עסקאות</h3>
           </div>
           {funnelQ.isLoading ? (
             <div className="animate-pulse space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-8 bg-[#F5F6F8] rounded" />
+                <div key={i} className="h-8 bg-[#F6F7FB] rounded" />
               ))}
             </div>
           ) : funnelQ.isError ? (
@@ -440,7 +440,7 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => funnelQ.refetch()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <RefreshCw size={12} />
                 נסה שוב
@@ -454,12 +454,12 @@ export default function AnalyticsPage() {
         {/* Task Completion */}
         <PageCard>
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-4 h-4 rounded-full border-2 border-[#00CA72]" />
+            <div className="w-4 h-4 rounded-full border-2 border-[#00C875]" />
             <h3 className="font-semibold text-[#323338]">השלמת משימות</h3>
           </div>
           {taskQ.isLoading ? (
             <div className="flex justify-center py-8">
-              <div className="w-32 h-32 rounded-full bg-[#F5F6F8] animate-pulse" />
+              <div className="w-32 h-32 rounded-full bg-[#F6F7FB] animate-pulse" />
             </div>
           ) : taskQ.isError ? (
             <div className="flex flex-col items-center gap-2 justify-center py-8">
@@ -469,7 +469,7 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => taskQ.refetch()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <RefreshCw size={12} />
                 נסה שוב
@@ -491,7 +491,7 @@ export default function AnalyticsPage() {
               {[60, 85, 40, 95, 55].map((h, i) => (
                 <div
                   key={i}
-                  className="flex-1 max-w-12 bg-[#F5F6F8] rounded-t"
+                  className="flex-1 max-w-12 bg-[#F6F7FB] rounded-t"
                   style={{ height: h }}
                 />
               ))}
@@ -504,7 +504,7 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => growthQ.refetch()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <RefreshCw size={12} />
                 נסה שוב
@@ -525,9 +525,9 @@ export default function AnalyticsPage() {
             <div className="animate-pulse space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-[#F5F6F8]" />
-                  <div className="w-8 h-8 rounded-full bg-[#F5F6F8]" />
-                  <div className="flex-1 h-6 bg-[#F5F6F8] rounded" />
+                  <div className="w-6 h-6 rounded-full bg-[#F6F7FB]" />
+                  <div className="w-8 h-8 rounded-full bg-[#F6F7FB]" />
+                  <div className="flex-1 h-6 bg-[#F6F7FB] rounded" />
                 </div>
               ))}
             </div>
@@ -539,7 +539,7 @@ export default function AnalyticsPage() {
               </div>
               <button
                 onClick={() => performersQ.refetch()}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <RefreshCw size={12} />
                 נסה שוב

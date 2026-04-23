@@ -4,14 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Monday.com primary (blue)
         primary: {
-          DEFAULT: "#6161FF",
-          hover: "#4E4ED9",
-          light: "#E8E8FF",
-          dark: "#4040CC",
+          DEFAULT: "#0073EA",
+          hover: "#0060C2",
+          active: "#0060C2",
+          selected: "#CCE5FF",
+          light: "#CCE5FF",
+          dark: "#0060C2",
         },
+        // Status / semantic colors (Monday.com tuned)
         success: {
-          DEFAULT: "#00CA72",
+          DEFAULT: "#00C875",
           light: "#D6F5E8",
         },
         warning: {
@@ -19,8 +23,13 @@ export default {
           light: "#FEF0D8",
         },
         danger: {
-          DEFAULT: "#FB275D",
+          DEFAULT: "#E2445C",
+          hover: "#D62A41",
           light: "#FDE0E7",
+        },
+        info: {
+          DEFAULT: "#579BFC",
+          light: "#E0ECFE",
         },
         purple: {
           DEFAULT: "#A25DDC",
@@ -34,37 +43,68 @@ export default {
           DEFAULT: "#66CCFF",
           light: "#E0F4FF",
         },
+        // Surfaces (slight blue tint — Monday signature)
         surface: {
           DEFAULT: "#FFFFFF",
-          secondary: "#F5F6F8",
-          tertiary: "#EBEBEF",
+          secondary: "#F6F7FB",
+          tertiary: "#E6E9EF",
         },
+        bg: {
+          primary: "#FFFFFF",
+          secondary: "#F6F7FB",
+          tertiary: "#E6E9EF",
+        },
+        // Text hierarchy
         text: {
           primary: "#323338",
           secondary: "#676879",
-          tertiary: "#C3C6D4",
+          tertiary: "#9699A6",
+          placeholder: "#C5C7D0",
         },
+        // Borders
         border: {
-          DEFAULT: "#D0D4E4",
+          DEFAULT: "#E6E9EF",
+          hover: "#D0D4E4",
+          focus: "#0073EA",
           light: "#EEEFF3",
         },
       },
       fontFamily: {
-        sans: ["Poppins", "Inter", "system-ui", "-apple-system", "sans-serif"],
+        sans: [
+          "Figtree",
+          "Rubik",
+          "Poppins",
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "sans-serif",
+        ],
+      },
+      letterSpacing: {
+        button: "0.15px",
       },
       borderRadius: {
-        DEFAULT: "8px",
-        md: "8px",
-        lg: "12px",
-        xl: "16px",
+        DEFAULT: "4px",
+        sm: "4px",
+        md: "6px",
+        lg: "8px",
+        xl: "12px",
+        "2xl": "16px",
       },
       boxShadow: {
-        card: "0 1px 4px rgba(0, 0, 0, 0.08)",
-        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.12)",
-        "card-glow": "0 8px 32px rgba(97, 97, 255, 0.15)",
-        modal: "0 8px 32px rgba(0, 0, 0, 0.16)",
+        sm: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        DEFAULT: "0 4px 12px rgba(0, 0, 0, 0.08)",
+        lg: "0 8px 24px rgba(0, 0, 0, 0.12)",
+        popover: "0 4px 20px rgba(0, 0, 0, 0.15)",
+        card: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        "card-hover": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "card-glow": "0 8px 32px rgba(0, 115, 234, 0.15)",
+        modal: "0 8px 24px rgba(0, 0, 0, 0.12)",
         sidebar: "1px 0 8px rgba(0, 0, 0, 0.06)",
         glass: "0 4px 16px rgba(0, 0, 0, 0.06)",
+      },
+      transitionDuration: {
+        button: "100ms",
       },
       keyframes: {
         "fade-in-up": {

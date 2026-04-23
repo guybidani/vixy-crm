@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { handleMutationError } from "../../lib/utils";
 import {
@@ -37,7 +37,7 @@ const STATUS_INFO: Record<
   string,
   { color: string; label: string; icon: typeof CheckCircle2 }
 > = {
-  ACTIVE: { color: "#00CA72", label: "פעיל", icon: Play },
+  ACTIVE: { color: "#00C875", label: "פעיל", icon: Play },
   COMPLETED: { color: "#579BFC", label: "הושלם", icon: CheckCircle2 },
   CANCELLED: { color: "#C4C4C4", label: "בוטל", icon: XCircle },
   PAUSED: { color: "#FDAB3D", label: "מושהה", icon: Clock },
@@ -145,7 +145,7 @@ export default function FollowUpCard({ contactId }: { contactId: string }) {
                     key={seq.id}
                     onClick={() => startMut.mutate(seq.id)}
                     disabled={startMut.isPending}
-                    className="w-full text-right px-3 py-2.5 hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF] last:border-b-0"
+                    className="w-full text-right px-3 py-2.5 hover:bg-[#F6F7FB] transition-colors border-b border-[#E6E9EF] last:border-b-0"
                   >
                     <span className="text-sm font-semibold text-[#323338] block">
                       {seq.name}
@@ -220,7 +220,7 @@ function ActiveExecutionView({
         <span className="text-xs font-semibold text-[#323338]">
           {execution.sequence.name}
         </span>
-        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white bg-[#00CA72]">
+        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white bg-[#00C875]">
           פעיל
         </span>
       </div>
@@ -233,7 +233,7 @@ function ActiveExecutionView({
           </span>
           <span className="text-[10px] text-[#9699A6]">{progress}%</span>
         </div>
-        <div className="h-2 bg-[#F5F6F8] rounded-full overflow-hidden">
+        <div className="h-2 bg-[#F6F7FB] rounded-full overflow-hidden">
           <div
             className="h-full bg-[#FF642E] rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -253,10 +253,10 @@ function ActiveExecutionView({
               key={step.id}
               className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-[4px] text-[10px] font-semibold transition-all ${
                 isDone
-                  ? "bg-[#00CA72]/10 text-[#00CA72]"
+                  ? "bg-[#00C875]/10 text-[#00C875]"
                   : isCurrent
                     ? "bg-[#FF642E]/10 text-[#FF642E] ring-1 ring-[#FF642E]/30"
-                    : "bg-[#F5F6F8] text-[#9699A6]"
+                    : "bg-[#F6F7FB] text-[#9699A6]"
               }`}
               title={`שלב ${step.stepNumber}: ${ch?.label || step.channel}`}
             >

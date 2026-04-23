@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+﻿import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatRelativeTime } from "../lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +49,7 @@ import {
 const STAGE_COLORS: Record<string, string> = {
   LEAD: "#C4C4C4",
   QUALIFIED: "#A25DDC",
-  PROPOSAL: "#6161FF",
+  PROPOSAL: "#0073EA",
   NEGOTIATION: "#FDAB3D",
 };
 
@@ -64,8 +64,8 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  NOTE: "#6161FF",
-  CALL: "#00CA72",
+  NOTE: "#0073EA",
+  CALL: "#00C875",
   EMAIL: "#579BFC",
   MEETING: "#A25DDC",
   WHATSAPP: "#25D366",
@@ -125,8 +125,8 @@ function WelcomeBanner() {
   const steps = [
     {
       num: 1,
-      icon: <Users size={22} className="text-[#6161FF]" />,
-      iconBg: "#E8E8FF",
+      icon: <Users size={22} className="text-[#0073EA]" />,
+      iconBg: "#CCE5FF",
       title: "הוסף אנשי קשר",
       desc: "ייבא לידים או הוסף ידנית — כל לקוח פוטנציאלי מתחיל כאן.",
       cta: "הוסף איש קשר",
@@ -143,7 +143,7 @@ function WelcomeBanner() {
     },
     {
       num: 3,
-      icon: <Handshake size={22} className="text-[#00CA72]" />,
+      icon: <Handshake size={22} className="text-[#00C875]" />,
       iconBg: "#D6F5E8",
       title: "עקוב אחרי עסקאות",
       desc: "הגדר עסקאות וצא למסלול לאורך צינור המכירות שלך.",
@@ -153,7 +153,7 @@ function WelcomeBanner() {
   ];
 
   return (
-    <div className="relative bg-gradient-to-l from-[#6161FF]/10 via-white to-[#00CA72]/10 rounded-2xl border border-[#6161FF]/20 shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 mb-6 overflow-hidden">
+    <div className="relative bg-gradient-to-l from-[#0073EA]/10 via-white to-[#00C875]/10 rounded-2xl border border-[#0073EA]/20 shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-6 mb-6 overflow-hidden">
       {/* dismiss */}
       <button
         onClick={dismiss}
@@ -449,7 +449,7 @@ export default function DashboardPage() {
         {editMode ? (
           <button
             onClick={() => setEditMode(false)}
-            className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-[#00CA72] hover:bg-[#00A75F] text-white text-[12px] font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-[#00C875] hover:bg-[#00A75F] text-white text-[12px] font-semibold transition-colors"
           >
             <Check size={14} />
             סיום עריכה
@@ -458,7 +458,7 @@ export default function DashboardPage() {
           <>
             <button
               onClick={() => setEditMode(true)}
-              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F5F6F8] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
+              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F6F7FB] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
               title="ערוך תצוגה"
             >
               <Pencil size={14} />
@@ -466,7 +466,7 @@ export default function DashboardPage() {
             </button>
             <button
               onClick={() => setCustomizeOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F5F6F8] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
+              className="flex items-center gap-1.5 px-3 py-[7px] rounded-[4px] bg-white hover:bg-[#F6F7FB] text-[#323338] text-[12px] font-medium transition-colors border border-[#E6E9EF]"
             >
               <Sliders size={14} />
               התאם דשבורד
@@ -562,7 +562,7 @@ function WidgetFrame({
         <button
           onClick={() => onMove("up")}
           disabled={!canMoveUp}
-          className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] disabled:opacity-30"
+          className="p-1 rounded-[4px] hover:bg-[#F6F7FB] text-[#676879] disabled:opacity-30"
           title="הזז למעלה"
         >
           <GripVertical size={14} />
@@ -599,7 +599,7 @@ function WidgetFrame({
         <button
           onClick={() => onMove("down")}
           disabled={!canMoveDown}
-          className="p-1 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] disabled:opacity-30"
+          className="p-1 rounded-[4px] hover:bg-[#F6F7FB] text-[#676879] disabled:opacity-30"
           title="הזז למטה"
         >
           <GripVertical size={14} />
@@ -717,13 +717,13 @@ function GreetingHeader({ userName }: { userName: string }) {
       <div className="flex items-center gap-2 flex-shrink-0">
         <QuickActionButton
           label="ליד חדש"
-          color="#6161FF"
-          bg="#E8E8FF"
+          color="#0073EA"
+          bg="#CCE5FF"
           onClick={() => navigate("/contacts?new=1")}
         />
         <QuickActionButton
           label="עסקה חדשה"
-          color="#00CA72"
+          color="#00C875"
           bg="#D6F5E8"
           onClick={() => navigate("/deals?new=1")}
         />
@@ -752,10 +752,10 @@ function StatCardsRow({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 [&>*:nth-child(1)]:animate-fade-in-up [&>*:nth-child(2)]:animate-fade-in-up [&>*:nth-child(2)]:[animation-delay:50ms] [&>*:nth-child(3)]:animate-fade-in-up [&>*:nth-child(3)]:[animation-delay:100ms] [&>*:nth-child(4)]:animate-fade-in-up [&>*:nth-child(4)]:[animation-delay:150ms]">
       <StatCard
-        borderColor="#6161FF"
+        borderColor="#0073EA"
         icon={<Users size={22} />}
-        iconBg="#E8E8FF"
-        iconColor="#6161FF"
+        iconBg="#CCE5FF"
+        iconColor="#0073EA"
         label="לידים חדשים השבוע"
         value={kpis.contactsThisWeek}
         subValue={`סה"כ ${kpis.contactsTotal}`}
@@ -768,10 +768,10 @@ function StatCardsRow({
         onClick={() => onNavigate("/contacts")}
       />
       <StatCard
-        borderColor="#00CA72"
+        borderColor="#00C875"
         icon={<Handshake size={22} />}
         iconBg="#D6F5E8"
-        iconColor="#00CA72"
+        iconColor="#00C875"
         label="עסקאות פתוחות"
         value={kpis.dealsOpenCount}
         subValue={`₪${kpis.totalPipelineValue.toLocaleString()}`}
@@ -876,7 +876,7 @@ function StatCard({
 
   const trendColor =
     trend === "up"
-      ? "#00CA72"
+      ? "#00C875"
       : trend === "down"
         ? "#FF4D4F"
         : "#9CA3AF";
@@ -940,7 +940,7 @@ function PipelineFunnelWidget({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
+          <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F6F7FB] text-[#676879]">
             ₪{totalValue.toLocaleString()}
           </span>
           <button
@@ -960,7 +960,7 @@ function PipelineFunnelWidget({
       ) : (
         <div className="space-y-3">
           {/* Stacked horizontal bar */}
-          <div className="flex rounded-xl overflow-hidden h-8 mb-5 shadow-inner bg-[#F5F6F8] gap-0.5">
+          <div className="flex rounded-xl overflow-hidden h-8 mb-5 shadow-inner bg-[#F6F7FB] gap-0.5">
             {pipeline.map((p) => {
               const pct =
                 totalValue > 0 ? (p.value / totalValue) * 100 : 0;
@@ -1004,7 +1004,7 @@ function PipelineFunnelWidget({
                   </span>
                 </div>
                 {/* Horizontal progress bar */}
-                <div className="h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden mr-5">
+                <div className="h-1.5 bg-[#F6F7FB] rounded-full overflow-hidden mr-5">
                   <div
                     className="h-full rounded-full transition-all duration-700"
                     style={{
@@ -1054,7 +1054,7 @@ function ActivityFeedWidget({
             כל הצוות
           </p>
         </div>
-        <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
+        <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-[#F6F7FB] text-[#676879]">
           {activities.length} פעילויות
         </span>
       </div>
@@ -1085,7 +1085,7 @@ function ActivityFeedWidget({
                 tabIndex={activityTarget ? 0 : undefined}
                 onClick={activityTarget ? () => navigate(activityTarget) : undefined}
                 onKeyDown={activityTarget ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); navigate(activityTarget); } } : undefined}
-                className={`flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F5F6F8]/50 transition-all duration-150 group${activityTarget ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1" : ""}`}
+                className={`flex items-start gap-3 py-2.5 px-2 -mx-2 rounded-[4px] hover:bg-[#F6F7FB]/50 transition-all duration-150 group${activityTarget ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1" : ""}`}
               >
                 {/* Icon bubble */}
                 <div
@@ -1171,7 +1171,7 @@ function DealsAtRiskWidget({
           <button
             key={deal.id}
             onClick={() => onOpen(deal.id)}
-            className="flex items-center gap-3 p-3 bg-[#F5F6F8]/50 rounded-xl hover:bg-[#F5F6F8] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
+            className="flex items-center gap-3 p-3 bg-[#F6F7FB]/50 rounded-xl hover:bg-[#F6F7FB] transition-colors cursor-pointer group w-full text-right focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] focus-visible:ring-offset-1"
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[#323338] truncate">
@@ -1234,7 +1234,7 @@ function MyTasksWidget({
           {tasks.slice(0, 6).map((t) => (
             <li
               key={t.id}
-              className="flex items-center gap-3 px-3 py-2 bg-[#F5F6F8]/50 rounded-[4px]"
+              className="flex items-center gap-3 px-3 py-2 bg-[#F6F7FB]/50 rounded-[4px]"
             >
               <Circle size={14} className="text-[#9699A6] flex-shrink-0" />
               <span className="flex-1 text-sm text-[#323338] truncate">

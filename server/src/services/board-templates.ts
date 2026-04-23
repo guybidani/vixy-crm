@@ -1,4 +1,4 @@
-export interface BoardTemplateColumn {
+﻿export interface BoardTemplateColumn {
   key: string;
   label: string;
   type: string;
@@ -32,8 +32,8 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
         options: [
           { key: "todo", label: "לביצוע", color: "#579BFC" },
           { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-          { key: "done", label: "הושלם", color: "#00CA72" },
-          { key: "stuck", label: "תקוע", color: "#FB275D" },
+          { key: "done", label: "הושלם", color: "#00C875" },
+          { key: "stuck", label: "תקוע", color: "#E2445C" },
         ],
       },
     ],
@@ -43,7 +43,7 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
     name: "פייפליין מכירות",
     description: "נהל עסקאות ולידים לאורך כל מחזור המכירה",
     icon: "Handshake",
-    color: "#00CA72",
+    color: "#00C875",
     defaultGroupName: "עסקאות פתוחות",
     columns: [
       { key: "name", label: "שם לקוח", type: "TEXT" },
@@ -56,7 +56,7 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
           { key: "lead", label: "ליד", color: "#579BFC" },
           { key: "meeting", label: "פגישה", color: "#FDAB3D" },
           { key: "proposal", label: "הצעה", color: "#A25DDC" },
-          { key: "closed", label: "סגור", color: "#00CA72" },
+          { key: "closed", label: "סגור", color: "#00C875" },
         ],
       },
       { key: "stage", label: "שלב", type: "TEXT", width: "120px" },
@@ -81,7 +81,7 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
         options: [
           { key: "todo", label: "לביצוע", color: "#579BFC" },
           { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-          { key: "done", label: "הושלם", color: "#00CA72" },
+          { key: "done", label: "הושלם", color: "#00C875" },
         ],
       },
       {
@@ -91,9 +91,9 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
         width: "120px",
         options: [
           { key: "low", label: "נמוך", color: "#66CCFF" },
-          { key: "medium", label: "בינוני", color: "#6161FF" },
+          { key: "medium", label: "בינוני", color: "#0073EA" },
           { key: "high", label: "גבוה", color: "#FDAB3D" },
-          { key: "urgent", label: "דחוף", color: "#FB275D" },
+          { key: "urgent", label: "דחוף", color: "#E2445C" },
         ],
       },
       { key: "assignee", label: "אחראי", type: "PERSON", width: "120px" },
@@ -118,8 +118,8 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
         options: [
           { key: "new", label: "חדש", color: "#579BFC" },
           { key: "contacted", label: "יצרנו קשר", color: "#FDAB3D" },
-          { key: "interested", label: "מעוניין", color: "#00CA72" },
-          { key: "not_interested", label: "לא מעוניין", color: "#FB275D" },
+          { key: "interested", label: "מעוניין", color: "#00C875" },
+          { key: "not_interested", label: "לא מעוניין", color: "#E2445C" },
         ],
       },
       { key: "meeting_date", label: "פגישה מתוכננת", type: "DATE", width: "150px" },
@@ -131,7 +131,7 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
     name: "לוח עבודה שבועי",
     description: "ארגן את משימות השבוע לפי יום ואחריות",
     icon: "Calendar",
-    color: "#6161FF",
+    color: "#0073EA",
     defaultGroupName: "השבוע",
     columns: [
       { key: "task", label: "משימה", type: "TEXT" },
@@ -144,7 +144,7 @@ export const BOARD_TEMPLATES: Record<string, BoardTemplate> = {
         options: [
           { key: "todo", label: "לביצוע", color: "#579BFC" },
           { key: "in_progress", label: "בתהליך", color: "#FDAB3D" },
-          { key: "done", label: "הושלם", color: "#00CA72" },
+          { key: "done", label: "הושלם", color: "#00C875" },
         ],
       },
       { key: "assignee", label: "אחראי", type: "PERSON", width: "120px" },

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Plus, LogOut, Menu, Clock, User, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -108,7 +108,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       className={cn(
         "fixed top-0 left-0 h-14 bg-white z-30 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 transition-all duration-200 border-b border-[#E6E9EF]",
         // Mobile: full width. Desktop: offset by sidebar
-        "right-0 md:right-[220px]",
+        "right-0 md:right-[288px]",
         sidebarCollapsed && "md:right-12",
       )}
     >
@@ -116,7 +116,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       {onMobileMenuToggle && (
         <button
           onClick={onMobileMenuToggle}
-          className="p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] md:hidden flex-shrink-0"
+          className="p-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#9699A6] md:hidden flex-shrink-0"
           aria-label="תפריט"
         >
           <Menu size={20} />
@@ -158,7 +158,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
             }}
             placeholder="חיפוש..."
             aria-label="חיפוש גלובלי"
-            className="w-full pr-8 pl-3 py-[6px] text-[13px] bg-[#F5F6F8] border border-[#E6E9EF] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 focus:bg-white transition-all"
+            className="w-full pr-8 pl-3 py-[6px] text-[13px] bg-[#F6F7FB] border border-[#E6E9EF] rounded-[4px] text-[#323338] placeholder:text-[#9699A6] focus:outline-none focus:border-[#0073EA] focus:ring-1 focus:ring-[#0073EA]/20 focus:bg-white transition-all"
           />
           {showSearch && searchQuery.length >= 2 && (
             <SearchDropdown
@@ -186,7 +186,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
       {/* Today's Tasks Clock — always visible */}
       <button
         onClick={() => setTodayTasksOpen(true)}
-        className="relative p-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#0073EA] flex-shrink-0"
+        className="relative p-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#9699A6] hover:text-[#0073EA] flex-shrink-0"
         title="משימות להיום"
         aria-label="משימות להיום"
       >
@@ -234,7 +234,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                 autoFocus
                 tabIndex={0}
                 onClick={() => { navigate("/settings"); setProfileMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right focus:outline-none focus-visible:bg-[#F6F7FB]"
               >
                 <Settings size={14} className="text-[#676879]" />
                 הגדרות
@@ -244,7 +244,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                 role="menuitem"
                 tabIndex={-1}
                 onClick={() => { navigate("/settings?tab=profile"); setProfileMenuOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors text-right focus:outline-none focus-visible:bg-[#F5F6F8]"
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors text-right focus:outline-none focus-visible:bg-[#F6F7FB]"
               >
                 <User size={14} className="text-[#676879]" />
                 הפרופיל שלי
@@ -255,7 +255,7 @@ export default function Header({ sidebarCollapsed, onQuickAdd, onCommandPalette,
                   role="menuitem"
                   tabIndex={-1}
                   onClick={() => { logout(); setProfileMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#FB275D] hover:bg-[#FFEEF0] transition-colors text-right focus:outline-none focus-visible:bg-[#FFEEF0]"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-[13px] text-[#E2445C] hover:bg-[#FFEEF0] transition-colors text-right focus:outline-none focus-visible:bg-[#FFEEF0]"
                 >
                   <LogOut size={14} />
                   יציאה

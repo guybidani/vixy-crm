@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "../hooks/useDebounce";
 import { sanitizeHtml } from "../lib/sanitize";
@@ -36,12 +36,12 @@ import {
 type View = "list" | "article" | "editor";
 
 const CATEGORY_COLORS = [
-  "#6161FF",
-  "#00CA72",
+  "#0073EA",
+  "#00C875",
   "#FDAB3D",
   "#A25DDC",
   "#579BFC",
-  "#FB275D",
+  "#E2445C",
   "#25D366",
   "#FF642E",
 ];
@@ -170,7 +170,7 @@ export default function KnowledgeBasePage() {
             className={`w-full text-right px-3 py-2.5 rounded-[4px] text-[13px] font-medium transition-all flex items-center gap-2 ${
               !selectedCategory
                 ? "bg-[#F5F6FF] text-[#0073EA] font-semibold border-r-[3px] border-[#0073EA]"
-                : "text-[#676879] hover:bg-[#F5F6F8]"
+                : "text-[#676879] hover:bg-[#F6F7FB]"
             }`}
           >
             <BookOpen size={14} />
@@ -194,7 +194,7 @@ export default function KnowledgeBasePage() {
                 className={`w-full text-right px-3 py-2.5 rounded-[4px] text-[13px] font-medium transition-all flex items-center gap-2 ${
                   selectedCategory === cat.id
                     ? "bg-[#F5F6FF] font-semibold border-r-[3px]"
-                    : "text-[#676879] hover:bg-[#F5F6F8]"
+                    : "text-[#676879] hover:bg-[#F6F7FB]"
                 }`}
                 style={
                   selectedCategory === cat.id
@@ -342,7 +342,7 @@ function ArticleCard({
         </div>
         <StatusBadge
           label={article.status === "published" ? "מפורסם" : "טיוטה"}
-          color={article.status === "published" ? "#00CA72" : "#C4C4C4"}
+          color={article.status === "published" ? "#00C875" : "#C4C4C4"}
         />
       </div>
       <div className="flex items-center gap-4 mt-3 text-[12px] text-[#9699A6]">
@@ -379,7 +379,7 @@ function ArticleView({
 }) {
   const queryClient = useQueryClient();
   const catIdx = categories.findIndex((c) => c.id === article.categoryId);
-  const catColor = catIdx >= 0 ? getCategoryColor(catIdx) : "#6161FF";
+  const catColor = catIdx >= 0 ? getCategoryColor(catIdx) : "#0073EA";
 
   const voteMutation = useMutation({
     mutationFn: (helpful: boolean) => voteArticle(article.id, helpful),
@@ -400,7 +400,7 @@ function ArticleView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="p-2 hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          className="p-2 hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
         >
           <ArrowRight size={18} className="text-[#676879]" />
         </button>
@@ -448,7 +448,7 @@ function ArticleView({
           </div>
           <StatusBadge
             label={article.status === "published" ? "מפורסם" : "טיוטה"}
-            color={article.status === "published" ? "#00CA72" : "#C4C4C4"}
+            color={article.status === "published" ? "#00C875" : "#C4C4C4"}
           />
         </div>
 
@@ -518,7 +518,7 @@ function ArticleEditor({
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="p-2 hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+            className="p-2 hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
           >
             <ArrowRight size={18} className="text-[#676879]" />
           </button>

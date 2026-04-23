@@ -120,7 +120,7 @@ export default function KanbanBoard<TItem extends { id: string }>({
 
       <DragOverlay>
         {activeItem ? (
-          <div className="rotate-1 scale-105">
+          <div className="drag-lift">
             {renderCard(activeItem.item, true)}
           </div>
         ) : null}
@@ -156,9 +156,8 @@ function DroppableColumn({
       role="group"
       aria-label={`${label} — ${count} פריטים`}
       className={`flex-shrink-0 w-[280px] flex flex-col rounded-xl overflow-hidden transition-all ${
-        isOver ? "shadow-lg" : ""
+        isOver ? "shadow-lg drop-zone-active" : ""
       }`}
-      style={isOver ? { outline: `2px solid ${color}80`, outlineOffset: "-2px" } : undefined}
     >
       {/* Monday-style column header */}
       <div

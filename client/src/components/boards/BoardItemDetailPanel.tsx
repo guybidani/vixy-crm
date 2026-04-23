@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   X,
@@ -176,7 +176,7 @@ function StatusPillField({
                 onChange(opt.key);
                 setOpen(false);
               }}
-              className="w-full text-right px-3 py-1.5 hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
+              className="w-full text-right px-3 py-1.5 hover:bg-[#F6F7FB] transition-colors flex items-center gap-2"
             >
               <span
                 className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -242,11 +242,11 @@ function CopyableField({
   return (
     <div className="flex items-center gap-1.5 group/copy">
       <span
-        className="flex-1 text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 hover:bg-[#F5F6F8] cursor-text transition-colors truncate"
+        className="flex-1 text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 hover:bg-[#F6F7FB] cursor-text transition-colors truncate"
         onDoubleClick={() => setEditing(true)}
         title="לחץ פעמיים לעריכה"
       >
-        {value || <span className="text-[#C3C6D4]">—</span>}
+        {value || <span className="text-[#9699A6]">—</span>}
       </span>
       {value && (
         <button
@@ -324,7 +324,7 @@ function CommentItem({
     >
       <Avatar name={comment.author.user.name} size={34} />
       <div className="flex-1 min-w-0">
-        <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm relative">
+        <div className="bg-[#F6F7FB] rounded-xl rounded-tr-none px-4 py-3 shadow-sm relative">
           <div className="flex items-baseline gap-2 mb-1.5">
             <span className="text-[13px] font-semibold text-[#323338]">
               {comment.author.user.name}
@@ -333,7 +333,7 @@ function CommentItem({
               {formatRelativeTime(new Date(comment.createdAt))}
             </span>
             {comment.editedAt && (
-              <span className="text-[10px] text-[#C3C6D4]">(ערוך)</span>
+              <span className="text-[10px] text-[#9699A6]">(ערוך)</span>
             )}
           </div>
 
@@ -359,7 +359,7 @@ function CommentItem({
               <div className="flex gap-2 justify-end">
                 <button
                   onMouseDown={(e) => { e.preventDefault(); setIsEditing(false); }}
-                  className="px-3 py-1 text-[12px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                  className="px-3 py-1 text-[12px] text-[#676879] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
                 >
                   ביטול
                 </button>
@@ -396,7 +396,7 @@ function CommentItem({
             {/* Edit button */}
             <button
               onClick={startEdit}
-              className="p-1 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F5F6F8] transition-colors"
+              className="p-1 rounded-[4px] text-[#9699A6] hover:text-[#323338] hover:bg-[#F6F7FB] transition-colors"
               title="ערוך"
             >
               <Pencil size={12} />
@@ -429,13 +429,13 @@ function ActivityItem({ activity }: { activity: BoardItemActivity }) {
         );
       case "name_changed":
         return (
-          <div className="w-7 h-7 rounded-full bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#F6F7FB] flex items-center justify-center flex-shrink-0">
             <Pencil size={14} className="text-[#676879]" />
           </div>
         );
       case "value_changed":
         return (
-          <div className="w-7 h-7 rounded-full bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#F6F7FB] flex items-center justify-center flex-shrink-0">
             <ArrowRight size={14} className="text-[#676879]" />
           </div>
         );
@@ -459,7 +459,7 @@ function ActivityItem({ activity }: { activity: BoardItemActivity }) {
         );
       default:
         return (
-          <div className="w-7 h-7 rounded-full bg-[#F5F6F8] flex items-center justify-center flex-shrink-0">
+          <div className="w-7 h-7 rounded-full bg-[#F6F7FB] flex items-center justify-center flex-shrink-0">
             <div className="w-2 h-2 rounded-full bg-[#9699A6]" />
           </div>
         );
@@ -1015,7 +1015,7 @@ export default function BoardItemDetailPanel({
           {col.type === "DATE" && (
             <input
               type="date"
-              className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
+              className="w-full text-[13px] text-[#323338] bg-[#F6F7FB] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
               value={value ? new Date(value).toISOString().split("T")[0] : ""}
               onChange={(e) => saveValue(col, e.target.value)}
             />
@@ -1024,7 +1024,7 @@ export default function BoardItemDetailPanel({
           {col.type === "NUMBER" && (
             <input
               type="number"
-              className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
+              className="w-full text-[13px] text-[#323338] bg-[#F6F7FB] rounded-[4px] px-2 py-1 outline-none border border-transparent focus:border-[#0073EA] focus:bg-white transition-colors"
               defaultValue={value ?? ""}
               onBlur={(e) => saveValue(col, e.target.value)}
               onKeyDown={(e) => {
@@ -1039,7 +1039,7 @@ export default function BoardItemDetailPanel({
                 <input
                   autoFocus
                   type="url"
-                  className="flex-1 text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[4px] px-2 py-1 outline-none border border-[#0073EA] focus:bg-white transition-colors"
+                  className="flex-1 text-[13px] text-[#323338] bg-[#F6F7FB] rounded-[4px] px-2 py-1 outline-none border border-[#0073EA] focus:bg-white transition-colors"
                   value={editingLinkValue}
                   placeholder="https://..."
                   onChange={(e) => setEditingLinkValue(e.target.value)}
@@ -1081,7 +1081,7 @@ export default function BoardItemDetailPanel({
                     setEditingLinkColId(col.id);
                     setEditingLinkValue("");
                   }}
-                  className="w-full text-right text-[13px] text-[#C3C6D4] bg-[#F5F6F8] hover:bg-[#ECEDF0] rounded-[4px] px-2 py-1 transition-colors"
+                  className="w-full text-right text-[13px] text-[#9699A6] bg-[#F6F7FB] hover:bg-[#ECEDF0] rounded-[4px] px-2 py-1 transition-colors"
                 >
                   https://...
                 </button>
@@ -1107,7 +1107,7 @@ export default function BoardItemDetailPanel({
             col.type !== "PHONE" && (
               <input
                 type="text"
-                className="w-full text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 outline-none border border-transparent hover:bg-[#F5F6F8] focus:bg-white focus:border-[#0073EA] transition-colors cursor-pointer focus:cursor-text"
+                className="w-full text-[13px] text-[#323338] bg-transparent rounded-[4px] px-1 py-0.5 outline-none border border-transparent hover:bg-[#F6F7FB] focus:bg-white focus:border-[#0073EA] transition-colors cursor-pointer focus:cursor-text"
                 defaultValue={value ?? ""}
                 placeholder="—"
                 onBlur={(e) => saveValue(col, e.target.value)}
@@ -1162,7 +1162,7 @@ export default function BoardItemDetailPanel({
                     disabled={!prevItem}
                     onClick={() => prevItem && onNavigate?.(prevItem.id)}
                     title={prevItem?.name ?? ""}
-                    className="p-1 rounded-[4px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded-[4px] text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronUp size={16} />
                   </button>
@@ -1170,7 +1170,7 @@ export default function BoardItemDetailPanel({
                     disabled={!nextItem}
                     onClick={() => nextItem && onNavigate?.(nextItem.id)}
                     title={nextItem?.name ?? ""}
-                    className="p-1 rounded-[4px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    className="p-1 rounded-[4px] text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronDown size={16} />
                   </button>
@@ -1183,7 +1183,7 @@ export default function BoardItemDetailPanel({
                 target="_blank"
                 rel="noreferrer"
                 title="פתח בעמוד מלא"
-                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <ExternalLink size={15} />
               </a>
@@ -1192,7 +1192,7 @@ export default function BoardItemDetailPanel({
               <button
                 onClick={handleCopyLink}
                 title="העתק קישור"
-                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
               >
                 <LinkIcon size={15} />
               </button>
@@ -1201,7 +1201,7 @@ export default function BoardItemDetailPanel({
               <div className="relative" ref={moreMenuRef}>
                 <button
                   onClick={() => setMoreMenuOpen((v) => !v)}
-                  className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                  className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
                   title="אפשרויות נוספות"
                 >
                   <MoreHorizontal size={15} />
@@ -1211,7 +1211,7 @@ export default function BoardItemDetailPanel({
                   <div className="absolute top-full mt-1 left-0 bg-white border border-[#E6E9EF] rounded-[8px] shadow-xl z-30 py-1 min-w-[160px]" dir="rtl">
                     <button
                       onClick={() => duplicateItemMut.mutate()}
-                      className="w-full text-right px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
+                      className="w-full text-right px-3 py-2 text-[13px] text-[#323338] hover:bg-[#F6F7FB] transition-colors flex items-center gap-2"
                     >
                       <Copy size={14} className="text-[#676879]" />
                       שכפל פריט
@@ -1231,7 +1231,7 @@ export default function BoardItemDetailPanel({
               {/* Close */}
               <button
                 onClick={handleClose}
-                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors mr-1"
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors mr-1"
                 aria-label="סגור"
               >
                 <X size={18} />
@@ -1292,7 +1292,7 @@ export default function BoardItemDetailPanel({
             {editingDescription ? (
               <textarea
                 autoFocus
-                className="w-full text-[13px] text-[#323338] bg-[#F5F6F8] rounded-[6px] px-3 py-2 outline-none border border-[#0073EA] resize-none leading-relaxed transition-colors"
+                className="w-full text-[13px] text-[#323338] bg-[#F6F7FB] rounded-[6px] px-3 py-2 outline-none border border-[#0073EA] resize-none leading-relaxed transition-colors"
                 rows={3}
                 value={descriptionValue}
                 onChange={(e) => setDescriptionValue(e.target.value)}
@@ -1308,10 +1308,10 @@ export default function BoardItemDetailPanel({
             ) : (
               <div
                 onClick={() => setEditingDescription(true)}
-                className="text-[13px] text-[#676879] bg-[#F5F6F8] hover:bg-[#ECEDF0] rounded-[6px] px-3 py-2 cursor-text transition-colors min-h-[32px] leading-relaxed"
+                className="text-[13px] text-[#676879] bg-[#F6F7FB] hover:bg-[#ECEDF0] rounded-[6px] px-3 py-2 cursor-text transition-colors min-h-[32px] leading-relaxed"
               >
                 {descriptionValue || (
-                  <span className="text-[#C3C6D4]">הוסף תיאור...</span>
+                  <span className="text-[#9699A6]">הוסף תיאור...</span>
                 )}
               </div>
             )}
@@ -1330,7 +1330,7 @@ export default function BoardItemDetailPanel({
               עדכן
             </button>
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
               onClick={() => {
                 if (linkedContact) {
                   toast(`לקוח מקושר: ${linkedContact.fullName}`);
@@ -1343,19 +1343,19 @@ export default function BoardItemDetailPanel({
               אנשים
             </button>
             <button
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
               onClick={scrollToDateField}
             >
               <CalendarIcon size={14} className="text-[#676879]" />
               תאריך
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors">
               <Bell size={14} className="text-[#676879]" />
               תזכורת
             </button>
           </div>
 
-          {/* Tabs */}
+          {/* Tabs — animated underline slides between tabs */}
           <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl">
             {(
               [
@@ -1367,11 +1367,12 @@ export default function BoardItemDetailPanel({
             ).map((tab) => (
               <button
                 key={tab.key}
+                data-active={activeTab === tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
+                className={`tab-underline px-4 py-2.5 text-[13px] font-medium -mb-px transition-colors ${
                   activeTab === tab.key
-                    ? "border-[#0073EA] text-[#0073EA]"
-                    : "border-transparent text-[#676879] hover:text-[#323338] hover:border-[#D0D4E4]"
+                    ? "text-[#0073EA]"
+                    : "text-[#676879] hover:text-[#323338]"
                 }`}
               >
                 {tab.label}
@@ -1382,8 +1383,8 @@ export default function BoardItemDetailPanel({
 
         {/* ── Body: 2-column layout ── */}
         <div className="flex-1 flex overflow-hidden min-h-0" dir="rtl">
-          {/* LEFT: Tab content */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          {/* LEFT: Tab content — keyed cross-fade on activeTab */}
+          <div key={activeTab} className="flex-1 flex flex-col overflow-hidden tab-content-enter">
             {/* ── UPDATES TAB ── */}
             {activeTab === "updates" && (
               <>
@@ -1429,7 +1430,7 @@ export default function BoardItemDetailPanel({
                 <div className="flex-shrink-0 border-t border-[#E6E9EF] px-5 py-4 bg-white">
                   <div className="flex gap-3 items-start">
                     <Avatar name="אני" size={34} />
-                    <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
+                    <div className="flex-1 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
                       <textarea
                         ref={updateTextareaRef}
                         className="w-full px-4 pt-3 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
@@ -1448,7 +1449,7 @@ export default function BoardItemDetailPanel({
                         }}
                       />
                       <div className="flex items-center justify-between px-4 pb-3 pt-1">
-                        <span className="text-[11px] text-[#C3C6D4]">
+                        <span className="text-[11px] text-[#9699A6]">
                           Ctrl+Enter לשליחה
                         </span>
                         <button
@@ -1484,7 +1485,7 @@ export default function BoardItemDetailPanel({
                     <p className="text-[13px] font-medium text-[#676879]">
                       גרור קבצים לכאן או לחץ לבחירה
                     </p>
-                    <p className="text-[11px] text-[#C3C6D4]">מקסימום 10MB לקובץ</p>
+                    <p className="text-[11px] text-[#9699A6]">מקסימום 10MB לקובץ</p>
                     {uploadFileMut.isPending && (
                       <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/80">
                         <span className="text-[13px] text-[#0073EA] font-medium">מעלה...</span>
@@ -1514,7 +1515,7 @@ export default function BoardItemDetailPanel({
                       {itemFiles.map((f: BoardItemFile) => (
                         <div
                           key={f.id}
-                          className="flex items-center gap-3 p-3 bg-white border border-[#E6E9EF] rounded-xl hover:border-[#C3C6D4] transition-colors group"
+                          className="flex items-center gap-3 p-3 bg-white border border-[#E6E9EF] rounded-xl hover:border-[#9699A6] transition-colors group"
                         >
                           <span className="text-[20px] flex-shrink-0">{getFileIcon(f.mimeType)}</span>
                           <div className="flex-1 min-w-0">
@@ -1561,13 +1562,13 @@ export default function BoardItemDetailPanel({
                   </span>
                 </div>
                 <textarea
-                  className="w-full min-h-[200px] text-[14px] text-[#323338] bg-[#F5F6F8] hover:bg-[#ECEDF0] focus:bg-white rounded-[8px] px-4 py-3 outline-none border border-transparent focus:border-[#0073EA] focus:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] resize-none leading-relaxed transition-all"
+                  className="w-full min-h-[200px] text-[14px] text-[#323338] bg-[#F6F7FB] hover:bg-[#ECEDF0] focus:bg-white rounded-[8px] px-4 py-3 outline-none border border-transparent focus:border-[#0073EA] focus:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] resize-none leading-relaxed transition-all"
                   placeholder="לחץ להוסיף תיאור לפריט..."
                   value={descriptionValue}
                   onChange={(e) => setDescriptionValue(e.target.value)}
                   onBlur={saveDescription}
                 />
-                <p className="text-[11px] text-[#C3C6D4] mt-2">נשמר אוטומטית בעת יציאה מהשדה</p>
+                <p className="text-[11px] text-[#9699A6] mt-2">נשמר אוטומטית בעת יציאה מהשדה</p>
               </div>
             )}
 
@@ -1698,7 +1699,7 @@ export default function BoardItemDetailPanel({
                               <button
                                 key={c.id}
                                 onClick={() => linkContact(c.id)}
-                                className="w-full text-right px-3 py-2 hover:bg-[#F5F6F8] transition-colors flex items-center gap-2"
+                                className="w-full text-right px-3 py-2 hover:bg-[#F6F7FB] transition-colors flex items-center gap-2"
                               >
                                 <Avatar name={c.fullName} size={24} />
                                 <div className="text-right">
@@ -1760,7 +1761,7 @@ export default function BoardItemDetailPanel({
                             onClick={() => toggleSubItemMut.mutate({ subItemId: sub.id, done: !sub.done })}
                             className="flex-shrink-0 text-[#0073EA] hover:text-[#0060C2] transition-colors"
                           >
-                            {sub.done ? <CheckSquare size={15} /> : <Square size={15} className="text-[#C3C6D4]" />}
+                            {sub.done ? <CheckSquare size={15} /> : <Square size={15} className="text-[#9699A6]" />}
                           </button>
                           <span
                             className={`flex-1 text-[13px] ${
@@ -1782,7 +1783,7 @@ export default function BoardItemDetailPanel({
 
                   {addingSubItem && (
                     <div className="flex items-center gap-2 px-3 py-2 border-t border-[#F0F0F5]">
-                      <Square size={15} className="text-[#C3C6D4] flex-shrink-0" />
+                      <Square size={15} className="text-[#9699A6] flex-shrink-0" />
                       <input
                         ref={subItemInputRef}
                         autoFocus

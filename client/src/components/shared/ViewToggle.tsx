@@ -1,4 +1,4 @@
-import { LayoutGrid, List, LayoutDashboard } from "lucide-react";
+﻿import { LayoutGrid, List, LayoutDashboard } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 type ViewMode = "kanban" | "table" | "cards";
@@ -28,7 +28,7 @@ export default function ViewToggle({ viewMode, onChange, showCards = false }: Vi
             "p-[6px] transition-colors",
             viewMode === key
               ? "bg-[#0073EA] text-white"
-              : "bg-white text-[#676879] hover:bg-[#F5F6F8]",
+              : "bg-white text-[#676879] hover:bg-[#F6F7FB]",
           )}
         >
           <Icon size={15} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Filter, ArrowUpDown, Layers } from "lucide-react";
 import Modal from "./Modal";
 
@@ -94,7 +94,7 @@ export default function SaveViewDialog({
         </label>
 
         {mode === "create" && previewChips.length > 0 && (
-          <div className="rounded-[6px] border border-[#E6E9EF] bg-[#F5F6F8] p-3 space-y-2">
+          <div className="rounded-[6px] border border-[#E6E9EF] bg-[#F6F7FB] p-3 space-y-2">
             <div className="text-[11px] font-semibold text-[#676879] uppercase tracking-wide">
               יישמרו ההגדרות הבאות
             </div>
@@ -121,7 +121,7 @@ export default function SaveViewDialog({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
           >
             ביטול
           </button>

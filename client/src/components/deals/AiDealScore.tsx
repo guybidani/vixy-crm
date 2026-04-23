@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { Sparkles, Loader2, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAiHealth, scoreDeal } from "../../api/ai";
@@ -66,7 +66,7 @@ export default function AiDealScore({ dealId }: AiDealScoreProps) {
               setResult("");
               setError("");
             }}
-            className="absolute top-1.5 left-1.5 p-0.5 rounded-full hover:bg-[#F5F6F8] text-[#9699A6]"
+            className="absolute top-1.5 left-1.5 p-0.5 rounded-full hover:bg-[#F6F7FB] text-[#9699A6]"
           >
             <X size={10} />
           </button>

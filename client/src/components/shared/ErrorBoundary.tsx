@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+﻿import { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -73,7 +73,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-center gap-3">
             <button
               onClick={this.handleGoHome}
-              className="px-6 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#323338] font-semibold rounded-[4px] transition-colors text-sm border border-[#D0D4E4]"
+              className="px-6 py-2 bg-[#F6F7FB] hover:bg-[#E6E9EF] text-[#323338] font-semibold rounded-[4px] transition-colors text-sm border border-[#D0D4E4]"
             >
               דף הבית
             </button>

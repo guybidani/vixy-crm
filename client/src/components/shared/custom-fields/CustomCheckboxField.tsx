@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Check, X } from "lucide-react";
 import type { CustomField } from "../../../api/custom-fields";
 
@@ -20,7 +20,7 @@ export default function CustomCheckboxField({
   function displayIcon() {
     if (!value) return <span className="text-[#C5C7D0]">—</span>;
     return value === "true" ? (
-      <Check size={14} className="text-[#00CA72]" />
+      <Check size={14} className="text-[#00C875]" />
     ) : (
       <X size={14} className="text-[#C5C7D0]" />
     );

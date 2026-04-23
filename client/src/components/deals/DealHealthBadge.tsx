@@ -1,4 +1,4 @@
-import type { DealHealth } from "../../api/deals";
+﻿import type { DealHealth } from "../../api/deals";
 import type { DealHealthResult } from "../../lib/dealHealth";
 
 type HealthData = DealHealth | DealHealthResult;
@@ -23,7 +23,7 @@ export default function DealHealthBadge({ health, showScore = true }: DealHealth
     "#DC2626": "#FEF2F2",
   };
 
-  const bg = bgMap[health.color] ?? "#F5F6F8";
+  const bg = bgMap[health.color] ?? "#F6F7FB";
 
   return (
     <span

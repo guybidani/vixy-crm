@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -213,7 +213,7 @@ export default function SearchDropdown({
           (section) =>
             section.items.length > 0 && (
               <div key={section.key}>
-                <div className="flex items-center gap-2 px-3 py-2 bg-[#F5F6F8] border-b border-[#E6E9EF]" role="presentation">
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#F6F7FB] border-b border-[#E6E9EF]" role="presentation">
                   <section.icon size={14} className="text-[#9699A6]" />
                   <span className="text-[11px] font-bold text-[#9699A6] uppercase">
                     {section.label}
@@ -235,7 +235,7 @@ export default function SearchDropdown({
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-right transition-colors ${
                         isSelected
                           ? "bg-[#0073EA]/5"
-                          : "hover:bg-[#F5F6F8]"
+                          : "hover:bg-[#F6F7FB]"
                       }`}
                     >
                       <span className="text-[13px] text-[#323338] font-medium truncate">
@@ -247,7 +247,7 @@ export default function SearchDropdown({
                         </span>
                       )}
                       {isSelected && (
-                        <kbd className="px-1.5 py-0.5 bg-[#F5F6F8] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
+                        <kbd className="px-1.5 py-0.5 bg-[#F6F7FB] rounded border border-[#E6E9EF] text-[10px] font-mono text-[#9699A6] shrink-0">
                           Enter
                         </kbd>
                       )}

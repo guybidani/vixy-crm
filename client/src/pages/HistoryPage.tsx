@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Clock, Phone, Mail, Video, MessageCircle, StickyNote, AlertCircle, RefreshCw } from "lucide-react";
@@ -12,7 +12,7 @@ const ACTIVITY_TYPE_CONFIG: Record<
   { label: string; color: string; icon: typeof Phone }
 > = {
   NOTE: { label: "הערה", color: "#F7C948", icon: StickyNote },
-  CALL: { label: "שיחה", color: "#00CA72", icon: Phone },
+  CALL: { label: "שיחה", color: "#00C875", icon: Phone },
   EMAIL: { label: "אימייל", color: "#579BFC", icon: Mail },
   MEETING: { label: "פגישה", color: "#A25DDC", icon: Video },
   WHATSAPP: { label: "ווטסאפ", color: "#25D366", icon: MessageCircle },
@@ -122,8 +122,8 @@ function ContactCard({ item }: { item: RecentContact }) {
 
       {/* Right side: interaction count */}
       <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-[#F5F6F8] flex items-center justify-center">
-          <TypeIcon size={16} style={{ color: config?.color || "#6161FF" }} />
+        <div className="w-8 h-8 rounded-lg bg-[#F6F7FB] flex items-center justify-center">
+          <TypeIcon size={16} style={{ color: config?.color || "#0073EA" }} />
         </div>
         <span className="text-[10px] text-[#9699A6] font-medium">
           {activityCount} אינטראקציות
@@ -211,10 +211,10 @@ export default function HistoryPage() {
               key={i}
               className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] p-4 animate-pulse flex items-center gap-4"
             >
-              <div className="w-11 h-11 rounded-full bg-[#F5F6F8]" />
+              <div className="w-11 h-11 rounded-full bg-[#F6F7FB]" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-[#F5F6F8] rounded w-1/3" />
-                <div className="h-3 bg-[#F5F6F8] rounded w-1/2" />
+                <div className="h-4 bg-[#F6F7FB] rounded w-1/3" />
+                <div className="h-3 bg-[#F6F7FB] rounded w-1/2" />
               </div>
             </div>
           ))}

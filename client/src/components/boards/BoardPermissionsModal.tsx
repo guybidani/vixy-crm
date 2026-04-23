@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Lock, Unlock, Shield, ShieldCheck, Eye, Pencil, X } from "lucide-react";
@@ -135,7 +135,7 @@ export default function BoardPermissionsModal({
       <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E9EF]">
         <div className="flex items-center gap-2.5">
           {isPrivate ? (
-            <Lock size={18} className="text-[#6161FF]" />
+            <Lock size={18} className="text-[#0073EA]" />
           ) : (
             <Unlock size={18} className="text-[#9699A6]" />
           )}
@@ -145,7 +145,7 @@ export default function BoardPermissionsModal({
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#323338]"
+          className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#9699A6] hover:text-[#323338]"
           aria-label="סגור"
         >
           <X size={18} />
@@ -165,8 +165,8 @@ export default function BoardPermissionsModal({
             onClick={() => togglePrivacyMut.mutate(!isPrivate)}
             disabled={togglePrivacyMut.isPending}
             className={`
-              relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30
-              ${isPrivate ? "bg-[#6161FF]" : "bg-[#D0D4E4]"}
+              relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#0073EA]/30
+              ${isPrivate ? "bg-[#0073EA]" : "bg-[#D0D4E4]"}
               ${togglePrivacyMut.isPending ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}
             `}
             role="switch"
@@ -199,7 +199,7 @@ export default function BoardPermissionsModal({
 
           {accessLoading ? (
             <div className="flex items-center justify-center py-6">
-              <div className="w-5 h-5 border-2 border-[#6161FF] border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-[#0073EA] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : accessList.length === 0 ? (
             <p className="text-sm text-[#9699A6] py-3 text-center">
@@ -241,11 +241,11 @@ export default function BoardPermissionsModal({
                 {membersWithoutAccess.map((member) => (
                   <div
                     key={member.memberId}
-                    className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+                    className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6161FF]/20 to-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-semibold text-[#6161FF]">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0073EA]/20 to-[#0073EA]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-semibold text-[#0073EA]">
                           {getInitials(member.name)}
                         </span>
                       </div>
@@ -266,7 +266,7 @@ export default function BoardPermissionsModal({
                         })
                       }
                       disabled={setAccessMut.isPending}
-                      className="px-3 py-1 text-xs font-medium text-[#6161FF] bg-[#6161FF]/10 rounded-md hover:bg-[#6161FF]/20 transition-colors disabled:opacity-50"
+                      className="px-3 py-1 text-xs font-medium text-[#0073EA] bg-[#0073EA]/10 rounded-md hover:bg-[#0073EA]/20 transition-colors disabled:opacity-50"
                     >
                       + הוסף
                     </button>
@@ -301,10 +301,10 @@ function MemberRow({
   disabled: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F5F6F8] transition-colors">
+    <div className="flex items-center justify-between py-2 px-2 rounded-[4px] hover:bg-[#F6F7FB] transition-colors">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6161FF]/20 to-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-semibold text-[#6161FF]">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0073EA]/20 to-[#0073EA]/10 flex items-center justify-center flex-shrink-0">
+          <span className="text-xs font-semibold text-[#0073EA]">
             {getInitials(name)}
           </span>
         </div>
@@ -321,7 +321,7 @@ function MemberRow({
         <button
           onClick={onToggleDropdown}
           disabled={disabled}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#676879] bg-white border border-[#D0D4E4] rounded-md hover:border-[#6161FF] hover:text-[#6161FF] transition-colors disabled:opacity-50"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#676879] bg-white border border-[#D0D4E4] rounded-md hover:border-[#0073EA] hover:text-[#0073EA] transition-colors disabled:opacity-50"
         >
           {PERMISSION_LABELS[permission] || permission}
           <svg
@@ -353,8 +353,8 @@ function MemberRow({
                   onClick={() => onChangePermission(opt.value)}
                   className={`
                     w-full flex items-center gap-2 px-3 py-2 text-xs text-right transition-colors
-                    ${isActive ? "bg-[#6161FF]/10 text-[#6161FF] font-medium" : ""}
-                    ${isRemove ? "text-red-500 hover:bg-[#FFEEF0]" : "hover:bg-[#F5F6F8] text-[#676879]"}
+                    ${isActive ? "bg-[#0073EA]/10 text-[#0073EA] font-medium" : ""}
+                    ${isRemove ? "text-red-500 hover:bg-[#FFEEF0]" : "hover:bg-[#F6F7FB] text-[#676879]"}
                   `}
                 >
                   <Icon size={14} />

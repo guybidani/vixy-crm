@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-[#CCE5FF] via-[#F6F7FB] to-[#CCE5FF] flex items-center justify-center p-4"
       dir="rtl"
     >
       <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-8 w-full max-w-md animate-fade-in-up">

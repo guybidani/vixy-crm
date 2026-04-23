@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { X, Zap, Bell, Plus, CalendarClock } from "lucide-react";
 import type { AutomationConfig, AutomationTrigger, BoardColumn } from "../../api/boards";
 
@@ -26,7 +26,7 @@ const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
   },
   {
     id: "ITEM_CREATED",
-    icon: <Plus size={18} className="text-[#00CA72]" />,
+    icon: <Plus size={18} className="text-[#00C875]" />,
     title: "כשפריט נוצר → שמור משימה",
     description: "כשפריט חדש נוסף לבורד, צור אוטומטית משימת מעקב.",
     needsColumn: false,
@@ -132,7 +132,7 @@ export default function BoardAutomationsPanel({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-[#F5F6F8] text-[#9699A6] hover:text-[#323338] transition-colors"
+            className="p-1.5 rounded-full hover:bg-[#F6F7FB] text-[#9699A6] hover:text-[#323338] transition-colors"
           >
             <X size={16} />
           </button>
@@ -176,7 +176,7 @@ export default function BoardAutomationsPanel({
                   {/* Toggle */}
                   <button
                     className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors focus:outline-none ${
-                      isEnabled ? "bg-[#0073EA]" : "bg-[#C3C6D4]"
+                      isEnabled ? "bg-[#0073EA]" : "bg-[#9699A6]"
                     }`}
                     onClick={() => toggleEnabled(tpl.id)}
                     title={isEnabled ? "כבה אוטומציה" : "הפעל אוטומציה"}
@@ -192,8 +192,8 @@ export default function BoardAutomationsPanel({
                 {/* Enabled indicator */}
                 {isEnabled && (
                   <div className="px-4 pb-2 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00CA72] flex-shrink-0" />
-                    <span className="text-[11px] text-[#00CA72] font-medium">פעיל</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00C875] flex-shrink-0" />
+                    <span className="text-[11px] text-[#00C875] font-medium">פעיל</span>
                     <button
                       className="mr-auto text-[11px] text-[#0073EA] hover:underline"
                       onClick={() => setConfiguring(isConfiguring ? null : tpl.id)}

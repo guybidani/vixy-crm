@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+﻿import { useEffect, useRef, useCallback } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -114,14 +114,14 @@ export default function SidePanel({
       aria-modal="true"
       aria-label={title || "פאנל צדדי"}
     >
-      {/* Overlay */}
+      {/* Overlay — fades in alongside the panel */}
       <div
-        className="absolute inset-0 bg-black/20 transition-opacity"
+        className="absolute inset-0 bg-black/20 animate-modal-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Panel - slides from left in RTL */}
+      {/* Panel - slides from left in RTL (matches reading direction) */}
       <div
         ref={panelRef}
         tabIndex={-1}
@@ -136,7 +136,7 @@ export default function SidePanel({
             <h2 className="text-[15px] font-semibold text-[#323338]">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
+              className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#676879] hover:text-[#323338]"
               aria-label="סגור"
             >
               <X size={16} />
@@ -148,7 +148,7 @@ export default function SidePanel({
           <div className="sticky top-0 z-10 bg-white px-6 py-3 flex items-center justify-end">
             <button
               onClick={onClose}
-              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#9699A6] hover:text-[#323338]"
+              className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#9699A6] hover:text-[#323338]"
               aria-label="סגור"
             >
               <X size={18} />

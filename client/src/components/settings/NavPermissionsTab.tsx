@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { avatarColor, handleMutationError } from "../../lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -44,7 +44,7 @@ const ALL_NAV_KEYS = NAV_ITEMS.map((item) => item.key);
 
 const ROLE_COLORS: Record<string, { color: string; label: string }> = {
   OWNER: { color: "#FDAB3D", label: "בעלים" },
-  ADMIN: { color: "#6161FF", label: "מנהל" },
+  ADMIN: { color: "#0073EA", label: "מנהל" },
   AGENT: { color: "#C4C4C4", label: "נציג" },
 };
 

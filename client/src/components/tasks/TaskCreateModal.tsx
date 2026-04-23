@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+﻿import { useState, useEffect, useRef, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Phone,
@@ -63,7 +63,7 @@ const TASK_TYPES: {
   icon: typeof Phone;
   color: string;
 }[] = [
-  { value: "CALL", label: "שיחה", icon: Phone, color: "#00CA72" },
+  { value: "CALL", label: "שיחה", icon: Phone, color: "#00C875" },
   { value: "MEETING", label: "פגישה", icon: Calendar, color: "#A25DDC" },
   { value: "WHATSAPP", label: "ווטסאפ", icon: MessageSquare, color: "#25D366" },
   { value: "TASK", label: "כללי", icon: CheckSquare, color: "#579BFC" },
@@ -75,9 +75,9 @@ const TASK_CONTEXTS: {
   icon: typeof TrendingUp;
   color: string;
 }[] = [
-  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00CA72" },
+  { value: "SALES", label: "מכירות", icon: TrendingUp, color: "#00C875" },
   { value: "SERVICE", label: "שירות", icon: Headphones, color: "#FDAB3D" },
-  { value: "GENERAL", label: "כללי", icon: Layers, color: "#C3C6D4" },
+  { value: "GENERAL", label: "כללי", icon: Layers, color: "#9699A6" },
 ];
 
 const PRIORITY_OPTIONS: {
@@ -85,10 +85,10 @@ const PRIORITY_OPTIONS: {
   label: string;
   color: string;
 }[] = [
-  { value: "LOW", label: "נמוך", color: "#C3C6D4" },
+  { value: "LOW", label: "נמוך", color: "#9699A6" },
   { value: "MEDIUM", label: "בינוני", color: "#579BFC" },
   { value: "HIGH", label: "גבוה", color: "#FDAB3D" },
-  { value: "URGENT", label: "דחוף", color: "#FB275D" },
+  { value: "URGENT", label: "דחוף", color: "#E2445C" },
 ];
 
 const REMINDER_OPTIONS: { value: number; label: string }[] = [
@@ -173,13 +173,11 @@ function SearchableDropdown<T extends { id: string }>({
 
   return (
     <div className="relative" ref={ref}>
-      <label className="block text-xs font-medium text-[#676879] mb-1">
-        {label}
-      </label>
+      <label className="form-label">{label}</label>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] bg-white hover:border-[#0073EA]/50 focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 transition-colors text-right"
+        className="select flex items-center justify-between text-right"
       >
         <span className={selected ? "text-[#323338]" : "text-[#9699A6]"}>
           {selected ? getLabel(selected) : placeholder}
@@ -207,7 +205,7 @@ function SearchableDropdown<T extends { id: string }>({
                   setOpen(false);
                   setSearch("");
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F5F6F8] transition-colors text-right"
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F6F7FB] transition-colors text-right"
               >
                 <X size={14} className="text-[#9699A6]" />
                 <span className="text-[12px] text-[#676879]">הסר בחירה</span>
@@ -231,9 +229,9 @@ function SearchableDropdown<T extends { id: string }>({
                     setOpen(false);
                     setSearch("");
                   }}
-                  className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F5F6F8] transition-colors ${
+                  className={`w-full text-right px-3 py-2 text-[13px] hover:bg-[#F6F7FB] transition-colors ${
                     value === item.id
-                      ? "bg-[#E8F3FF] text-[#0073EA] font-medium"
+                      ? "bg-[#F0F4FF] text-[#0073EA] font-medium"
                       : "text-[#323338]"
                   }`}
                 >
@@ -396,26 +394,29 @@ export default function TaskCreateModal({
   ];
 
   return (
-    <Modal open={open} onClose={onClose} title="משימה חדשה" maxWidth="max-w-xl">
+    <Modal open={open} onClose={onClose} title="משימה חדשה" maxWidth="wide">
       <form onSubmit={handleSubmit}>
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Title */}
-          <input
-            ref={titleRef}
-            type="text"
-            value={form.title}
-            onChange={(e) => setField("title", e.target.value)}
-            placeholder="מה המשימה? *"
-            aria-label="כותרת המשימה"
-            className="w-full px-3 py-2.5 border border-[#E6E9EF] rounded-[4px] text-[13px] font-medium focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] placeholder:text-[#9699A6]"
-            required
-          />
+          <div>
+            <label className="form-label">
+              מה המשימה?<span className="form-required">*</span>
+            </label>
+            <input
+              ref={titleRef}
+              type="text"
+              value={form.title}
+              onChange={(e) => setField("title", e.target.value)}
+              placeholder="כותרת קצרה לתיאור המשימה"
+              aria-label="כותרת המשימה"
+              className="input font-medium"
+              required
+            />
+          </div>
 
           {/* Task Type — horizontal button group */}
           <div>
-            <label className="block text-xs font-medium text-[#676879] mb-2">
-              סוג משימה
-            </label>
+            <label className="form-label">סוג משימה</label>
             <div className="flex gap-2">
               {TASK_TYPES.map((tt) => {
                 const Icon = tt.icon;
@@ -450,9 +451,7 @@ export default function TaskCreateModal({
 
           {/* Task Context — sales / service / general */}
           <div>
-            <label className="block text-xs font-medium text-[#676879] mb-2">
-              הקשר
-            </label>
+            <label className="form-label">הקשר</label>
             <div className="flex gap-2">
               {TASK_CONTEXTS.map((tc) => {
                 const Icon = tc.icon;
@@ -487,24 +486,19 @@ export default function TaskCreateModal({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-[#676879] mb-1">
-              תיאור
-            </label>
+            <label className="form-label">תיאור</label>
             <textarea
               value={form.description}
               onChange={(e) => setField("description", e.target.value)}
               placeholder="פרטים נוספים..."
               aria-label="תיאור המשימה"
-              rows={2}
-              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] resize-none placeholder:text-[#9699A6]"
+              className="textarea"
             />
           </div>
 
           {/* Due Date + shortcuts */}
           <div>
-            <label className="block text-xs font-medium text-[#676879] mb-1">
-              תאריך יעד
-            </label>
+            <label className="form-label">תאריך יעד</label>
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               {DATE_SHORTCUTS.map((shortcut) => (
                 <button
@@ -538,7 +532,7 @@ export default function TaskCreateModal({
               type="date"
               value={form.dueDate}
               onChange={(e) => setField("dueDate", e.target.value)}
-              className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
+              className="input"
               dir="ltr"
             />
           </div>
@@ -547,29 +541,25 @@ export default function TaskCreateModal({
           {form.dueDate && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-[#676879] mb-1">
-                  שעה
-                </label>
+                <label className="form-label">שעה</label>
                 <input
                   type="time"
                   value={form.dueTime}
                   onChange={(e) => setField("dueTime", e.target.value)}
-                  className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
+                  className="input"
                   dir="ltr"
                 />
               </div>
               {/* Reminder — only when dueTime is set */}
               {form.dueTime && (
                 <div>
-                  <label className="block text-xs font-medium text-[#676879] mb-1">
-                    תזכורת
-                  </label>
+                  <label className="form-label">תזכורת</label>
                   <select
                     value={form.reminderMinutes}
                     onChange={(e) =>
                       setField("reminderMinutes", Number(e.target.value))
                     }
-                    className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white"
+                    className="select"
                   >
                     {REMINDER_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -584,9 +574,7 @@ export default function TaskCreateModal({
 
           {/* Priority */}
           <div>
-            <label className="block text-xs font-medium text-[#676879] mb-2">
-              עדיפות
-            </label>
+            <label className="form-label">עדיפות</label>
             <div className="flex gap-2">
               {PRIORITY_OPTIONS.map((opt) => {
                 const isActive = form.priority === opt.value;
@@ -641,12 +629,10 @@ export default function TaskCreateModal({
               )}
             </div>
             {form.isRecurring && (
-              <div className="space-y-3 p-3 bg-[#F5F6F8] rounded-lg border border-[#E6E9EF]">
+              <div className="space-y-3 p-3 bg-[#F6F7FB] rounded-lg border border-[#E6E9EF]">
                 {/* Recurrence type */}
                 <div>
-                  <label className="block text-xs font-medium text-[#676879] mb-1">
-                    תדירות
-                  </label>
+                  <label className="form-label">תדירות</label>
                   <div className="flex gap-2">
                     {RECURRENCE_OPTIONS.map((opt) => (
                       <button
@@ -671,9 +657,7 @@ export default function TaskCreateModal({
                 {/* Weekly: day of week selector (Sun-Thu) */}
                 {form.recurrenceType === "WEEKLY" && (
                   <div>
-                    <label className="block text-xs font-medium text-[#676879] mb-1">
-                      יום בשבוע
-                    </label>
+                    <label className="form-label">יום בשבוע</label>
                     <div className="flex gap-1.5">
                       {WEEKDAYS.map((day) => (
                         <button
@@ -696,9 +680,7 @@ export default function TaskCreateModal({
                 {/* Monthly: day of month input */}
                 {form.recurrenceType === "MONTHLY" && (
                   <div>
-                    <label className="block text-xs font-medium text-[#676879] mb-1">
-                      יום בחודש
-                    </label>
+                    <label className="form-label">יום בחודש</label>
                     <input
                       type="number"
                       min={1}
@@ -711,7 +693,7 @@ export default function TaskCreateModal({
                         )
                       }
                       placeholder="1-28"
-                      className="w-24 px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
+                      className="input w-24"
                       dir="ltr"
                     />
                   </div>
@@ -719,14 +701,12 @@ export default function TaskCreateModal({
 
                 {/* End date */}
                 <div>
-                  <label className="block text-xs font-medium text-[#676879] mb-1">
-                    עד תאריך (אופציונלי)
-                  </label>
+                  <label className="form-label">עד תאריך (אופציונלי)</label>
                   <input
                     type="date"
                     value={form.recurrenceEndDate}
                     onChange={(e) => setField("recurrenceEndDate", e.target.value)}
-                    className="w-full px-3 py-2 border border-[#E6E9EF] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA]"
+                    className="input"
                     dir="ltr"
                   />
                 </div>
@@ -770,19 +750,19 @@ export default function TaskCreateModal({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 px-6 py-4 border-t border-[#E6E9EF]">
+        {/* Footer — RTL: cancel first, primary at the end (left side in RTL) */}
+        <div className="flex items-center justify-start gap-2 px-6 py-4 border-t border-[#E6E9EF]">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="modal-btn-secondary"
           >
             ביטול
           </button>
           <button
             type="submit"
             disabled={!form.title.trim() || mutation.isPending}
-            className="flex-1 py-2 bg-[#0073EA] hover:bg-[#0060C2] text-white font-semibold rounded-[4px] transition-all hover:shadow-md text-[13px] disabled:opacity-50 flex items-center justify-center gap-2"
+            className="modal-btn-primary"
           >
             {mutation.isPending ? (
               <>

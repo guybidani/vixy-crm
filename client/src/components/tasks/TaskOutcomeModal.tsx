@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { CheckCircle2, X, CalendarPlus, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import type { Task, CallResult, TaskType } from "../../api/tasks";
@@ -155,13 +155,23 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
     "מעקב";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 " onClick={onClose} />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-backdrop"
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+      }}
+    >
+      <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+      <div
+        className="relative bg-white rounded-[8px] w-full max-w-[480px] p-6 animate-modal-spring max-h-[90vh] overflow-y-auto"
+        style={{ boxShadow: "0 16px 48px rgba(0, 0, 0, 0.18)" }}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F5F6F8] transition-colors"
+          className="absolute top-4 left-4 w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#F6F7FB] transition-colors"
         >
           <X size={14} className="text-[#676879]" />
         </button>
@@ -202,13 +212,13 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
         {/* Notes */}
         <div className="mb-4">
+          <label className="form-label">הערות</label>
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder="הערות (אופציונלי)..."
-            rows={2}
             dir="rtl"
-            className="w-full text-sm border border-[#E6E9EF] rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338] placeholder:text-[#9699A6]"
+            className="textarea"
           />
         </div>
 
@@ -219,14 +229,14 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
               type="checkbox"
               checked={followUp}
               onChange={e => setFollowUp(e.target.checked)}
-              className="w-4 h-4 rounded border-[#E6E9EF] text-[#0073EA] focus:ring-[#0073EA]/20 accent-[#0073EA]"
+              className="checkbox"
             />
             <CalendarPlus size={14} className="text-[#676879]" />
             <span className="text-xs font-semibold text-[#323338]">תזמן משימת המשך</span>
           </label>
 
           {followUp && (
-            <div className="mt-3 space-y-3 p-3 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF]">
+            <div className="mt-3 space-y-3 p-3 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF]">
               {/* Quick presets */}
               <div>
                 <p className="text-[11px] font-semibold text-[#676879] mb-1.5">מתי?</p>
@@ -263,75 +273,75 @@ export default function TaskOutcomeModal({ task, onConfirm, onClose }: Props) {
 
               {/* Custom date */}
               <div>
-                <p className="text-[11px] font-semibold text-[#676879] mb-1">תאריך</p>
+                <label className="form-label">תאריך</label>
                 <input
                   type="date"
                   value={followUpDate}
                   onChange={e => handleDateChange(e.target.value)}
                   min={formatDateForInput(new Date())}
-                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
+                  className="input"
                 />
               </div>
 
               {/* Time (optional) */}
               <div>
-                <p className="text-[11px] font-semibold text-[#676879] mb-1">שעה (אופציונלי)</p>
+                <label className="form-label">שעה (אופציונלי)</label>
                 <input
                   type="time"
                   value={followUpTime}
                   onChange={e => setFollowUpTime(e.target.value)}
-                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
+                  className="input"
                 />
               </div>
 
               {/* Follow-up type */}
               <div>
-                <p className="text-[11px] font-semibold text-[#676879] mb-1">סוג משימה</p>
+                <label className="form-label">סוג משימה</label>
                 <div className="relative">
                   <select
                     value={followUpType}
                     onChange={e => setFollowUpType(e.target.value as TaskType)}
                     dir="rtl"
-                    className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 pr-3 appearance-none bg-white focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
+                    className="select appearance-none ps-3 pe-8"
                   >
                     {FOLLOW_UP_TYPES.map(t => (
                       <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
-                  <ChevronDown size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none" />
+                  <ChevronDown size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9699A6] pointer-events-none" />
                 </div>
               </div>
 
               {/* Title */}
               <div>
-                <p className="text-[11px] font-semibold text-[#676879] mb-1">כותרת</p>
+                <label className="form-label">כותרת</label>
                 <input
                   type="text"
                   value={followUpTitle}
                   onChange={e => setFollowUpTitle(e.target.value)}
                   dir="rtl"
-                  className="w-full text-[12px] border border-[#E6E9EF] rounded-[4px] px-2.5 py-1.5 focus:outline-none focus:border-[#0073EA] transition-colors text-[#323338]"
+                  className="input"
                 />
               </div>
             </div>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-2">
+        {/* Actions — RTL: skip first, primary at end */}
+        <div className="flex items-center justify-start gap-2">
           <button
             onClick={handleSkip}
             disabled={saving}
-            className="flex-1 py-2 text-[13px] font-semibold text-[#676879] bg-[#F5F6F8] hover:bg-[#E6E9EF] rounded-xl transition-colors"
+            className="modal-btn-secondary"
           >
             דלג
           </button>
           <button
             onClick={handleConfirm}
             disabled={saving}
-            className="flex-2 px-6 py-2 text-sm font-semibold text-white bg-[#0073EA] hover:bg-[#0060C2] rounded-xl transition-colors disabled:opacity-50"
+            className="modal-btn-primary"
           >
-            {saving ? "שומר..." : "שמור ✓"}
+            {saving ? "שומר..." : "שמור"}
           </button>
         </div>
       </div>

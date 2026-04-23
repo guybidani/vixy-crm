@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+﻿import { useQuery } from "@tanstack/react-query";
 import { Trophy, UserPlus } from "lucide-react";
 import { getTeamPerformance, type TeamMemberPerformance } from "../../api/dashboard";
 
@@ -32,7 +32,7 @@ export default function TeamLeaderboard() {
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-center">
-          <div className="w-12 h-12 rounded-full bg-[#F5F6F8] flex items-center justify-center mb-3">
+          <div className="w-12 h-12 rounded-full bg-[#F6F7FB] flex items-center justify-center mb-3">
             <UserPlus size={22} className="text-[#9699A6]" />
           </div>
           <p className="text-[13px] text-[#676879] font-medium">
@@ -61,7 +61,7 @@ export default function TeamLeaderboard() {
             ביצועי צוות השבוע
           </h2>
         </div>
-        <span className="text-[12px] font-medium px-3 py-1 rounded-full bg-[#F5F6F8] text-[#676879]">
+        <span className="text-[12px] font-medium px-3 py-1 rounded-full bg-[#F6F7FB] text-[#676879]">
           {members.length} חברי צוות
         </span>
       </div>
@@ -106,7 +106,7 @@ function MemberRow({
   );
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-[4px] hover:bg-[#F5F6F8] transition-colors">
+    <div className="flex items-center gap-3 p-3 rounded-[4px] hover:bg-[#F6F7FB] transition-colors">
       {/* Rank */}
       <span className="w-7 text-center text-base flex-shrink-0">
         {badge || <span className="text-[12px] text-[#9699A6] font-bold">#{rank + 1}</span>}
@@ -126,14 +126,14 @@ function MemberRow({
         <p className="text-[13px] font-semibold text-[#323338] truncate">
           {member.name}
         </p>
-        <div className="w-full bg-[#F5F6F8] rounded-full h-1.5 mt-1.5">
+        <div className="w-full bg-[#F6F7FB] rounded-full h-1.5 mt-1.5">
           <div
             className="h-1.5 rounded-full transition-all duration-500"
             style={{
               width: `${progressPct}%`,
               backgroundColor:
                 rank === 0
-                  ? "#00CA72"
+                  ? "#00C875"
                   : rank === 1
                     ? "#579BFC"
                     : rank === 2
@@ -157,7 +157,7 @@ function MemberRow({
           </span>
         )}
         {member.dealsWonValue > 0 && (
-          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#E8E8FF] text-[#4A4AE8]">
+          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#CCE5FF] text-[#4A4AE8]">
             ₪{member.dealsWonValue.toLocaleString()} עסקאות
           </span>
         )}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -30,7 +30,7 @@ import {
 } from "../api/templates";
 
 const CATEGORIES: Record<string, { label: string; color: string }> = {
-  SALES: { label: "מכירות", color: "#00CA72" },
+  SALES: { label: "מכירות", color: "#00C875" },
   SERVICE: { label: "שירות", color: "#579BFC" },
   GENERAL: { label: "כללי", color: "#A25DDC" },
 };
@@ -344,7 +344,7 @@ function TemplateCard({
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
           <button
             onClick={(e) => { e.stopPropagation(); onPreview(); }}
-            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            className="p-1.5 hover:bg-[#F6F7FB] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
             title="תצוגה מקדימה"
             aria-label={`תצוגה מקדימה — ${template.name}`}
           >
@@ -352,7 +352,7 @@ function TemplateCard({
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1.5 hover:bg-[#F5F6F8] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
+            className="p-1.5 hover:bg-[#F6F7FB] rounded-[4px] transition-colors text-[#9699A6] hover:text-[#0073EA] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA]"
             title="עריכה"
             aria-label={`ערוך — ${template.name}`}
           >
@@ -654,7 +654,7 @@ function PreviewModal({
         <h3 className="text-lg font-bold text-[#323338]">{template.name}</h3>
 
         {/* Rendered content */}
-        <div className="bg-[#F5F6F8] rounded-[4px] p-4 space-y-2">
+        <div className="bg-[#F6F7FB] rounded-[4px] p-4 space-y-2">
           {renderedSubject && (
             <p className="text-[13px] font-medium text-[#323338]">
               <span className="text-[#9699A6]">נושא: </span>

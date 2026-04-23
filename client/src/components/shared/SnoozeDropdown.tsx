@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+﻿import { useState, useRef, useEffect, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlarmClockOff, Clock } from "lucide-react";
 import toast from "react-hot-toast";
@@ -110,7 +110,7 @@ export default function SnoozeDropdown({
             e.stopPropagation();
             setOpen((v) => !v);
           }}
-          className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#F5F6F8] transition-all"
+          className="w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#F6F7FB] transition-all"
           title="דחה משימה"
           aria-label="דחה משימה"
           aria-haspopup="menu"
@@ -168,8 +168,8 @@ export default function SnoozeDropdown({
                 handleSnooze(opt);
               }}
               onMouseEnter={() => setFocusedIndex(i)}
-              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-[#F5F6F8] transition-colors flex items-center gap-2 focus:outline-none focus-visible:bg-[#F5F6F8] ${
-                focusedIndex === i ? "bg-[#F5F6F8]" : ""
+              className={`w-full text-right px-3 py-1.5 text-xs hover:bg-[#F6F7FB] transition-colors flex items-center gap-2 focus:outline-none focus-visible:bg-[#F6F7FB] ${
+                focusedIndex === i ? "bg-[#F6F7FB]" : ""
               }`}
             >
               <Clock

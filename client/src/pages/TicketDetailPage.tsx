@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
@@ -111,8 +111,8 @@ export default function TicketDetailPage() {
             <div className="bg-white rounded-xl shadow-sm p-4">
               <div className="h-4 w-12 bg-[#E6E9EF] rounded mb-3" />
               <div className="space-y-2">
-                <div className="h-3 w-full bg-[#F5F6F8] rounded" />
-                <div className="h-3 w-4/5 bg-[#F5F6F8] rounded" />
+                <div className="h-3 w-full bg-[#F6F7FB] rounded" />
+                <div className="h-3 w-4/5 bg-[#F6F7FB] rounded" />
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-sm p-4">
@@ -120,7 +120,7 @@ export default function TicketDetailPage() {
               <div className="space-y-3">
                 {[1, 2].map((i) => (
                   <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                    <div className="w-3/5 h-14 bg-[#F5F6F8] rounded-xl" />
+                    <div className="w-3/5 h-14 bg-[#F6F7FB] rounded-xl" />
                   </div>
                 ))}
               </div>
@@ -177,7 +177,7 @@ export default function TicketDetailPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate("/tickets")}
-          className="p-2 hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+          className="p-2 hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
         >
           <ArrowRight size={18} className="text-[#676879]" />
         </button>
@@ -374,7 +374,7 @@ export default function TicketDetailPage() {
                 <select
                   value={ticket.assignee?.id || ""}
                   onChange={(e) => assignMutation.mutate(e.target.value)}
-                  className="text-[12px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[130px]"
+                  className="text-[12px] text-[#323338] bg-[#F6F7FB] border border-[#E6E9EF] rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[130px]"
                 >
                   <option value="">לא שויך</option>
                   {(members || []).map((m) => (
@@ -499,7 +499,7 @@ export default function TicketDetailPage() {
 
 const ACTIVITY_TYPES = [
   { key: "NOTE", label: "הערה", icon: StickyNote, color: "#676879" },
-  { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00CA72" },
+  { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00C875" },
   { key: "EMAIL", label: "מייל", icon: AtSign, color: "#579BFC" },
   { key: "MEETING", label: "פגישה", icon: Calendar, color: "#FFCB00" },
 ] as const;
@@ -587,7 +587,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
                   className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0073EA] ${
                     activityType === t.key
                       ? "text-white"
-                      : "text-[#676879] hover:bg-[#F5F6F8]"
+                      : "text-[#676879] hover:bg-[#F6F7FB]"
                   }`}
                   style={activityType === t.key ? { backgroundColor: t.color } : {}}
                 >
@@ -609,7 +609,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
             <button
               type="button"
               onClick={() => { setShowCompose(false); setActivityBody(""); }}
-              className="text-[12px] px-3 py-1.5 text-[#676879] hover:bg-[#F5F6F8] rounded-md transition-colors"
+              className="text-[12px] px-3 py-1.5 text-[#676879] hover:bg-[#F6F7FB] rounded-md transition-colors"
             >
               ביטול
             </button>
@@ -665,7 +665,7 @@ function TicketActivityLog({ ticketId }: { ticketId: string }) {
                           onClick={() => { if (editingText.trim()) editMut.mutate({ id: act.id, body: editingText.trim() }); }}
                           className="px-2 py-0.5 bg-[#0073EA] text-white rounded"
                         >שמור</button>
-                        <button onClick={() => setEditingId(null)} className="px-2 py-0.5 text-[#676879] hover:bg-[#F5F6F8] rounded">ביטול</button>
+                        <button onClick={() => setEditingId(null)} className="px-2 py-0.5 text-[#676879] hover:bg-[#F6F7FB] rounded">ביטול</button>
                       </div>
                     </div>
                   ) : (
@@ -738,7 +738,7 @@ function MessageBubble({ message }: { message: TicketMessage }) {
           isInternal
             ? "bg-yellow-50 border border-yellow-200"
             : isAgent
-              ? "bg-[#F5F6F8]"
+              ? "bg-[#F6F7FB]"
               : "bg-[#0073EA] text-white"
         }`}
       >
@@ -882,7 +882,7 @@ function ReplyComposer({
           className={`text-[12px] px-2 py-1 rounded-md transition-colors ${
             !isInternal
               ? "bg-[#0073EA] text-white"
-              : "text-[#676879] hover:bg-[#F5F6F8]"
+              : "text-[#676879] hover:bg-[#F6F7FB]"
           }`}
         >
           תגובה ללקוח
@@ -893,7 +893,7 @@ function ReplyComposer({
           className={`text-[12px] px-2 py-1 rounded-md transition-colors flex items-center gap-1 ${
             isInternal
               ? "bg-warning text-white"
-              : "text-[#676879] hover:bg-[#F5F6F8]"
+              : "text-[#676879] hover:bg-[#F6F7FB]"
           }`}
         >
           <Eye size={12} />
@@ -917,7 +917,7 @@ function ReplyComposer({
                 <button
                   type="button"
                   onClick={() => setShowCanned(false)}
-                  className="p-0.5 rounded hover:bg-[#F5F6F8]"
+                  className="p-0.5 rounded hover:bg-[#F6F7FB]"
                 >
                   <X size={12} className="text-[#9699A6]" />
                 </button>
@@ -928,7 +928,7 @@ function ReplyComposer({
                     key={cr.id}
                     type="button"
                     onClick={() => insertCannedResponse(cr)}
-                    className="w-full text-right px-3 py-2 hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF] last:border-0"
+                    className="w-full text-right px-3 py-2 hover:bg-[#F6F7FB] transition-colors border-b border-[#E6E9EF] last:border-0"
                   >
                     <div className="text-[12px] font-medium text-[#323338]">
                       {cr.title}

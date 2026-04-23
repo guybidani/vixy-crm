@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 
 interface MondayTextCellProps {
   value: string;
@@ -86,7 +86,7 @@ export default function MondayTextCell({
       aria-label="ערוך טקסט"
     >
       {value || (
-        <span className="text-[#C3C6D4] hover:text-[#0073EA]/60 transition-colors text-[12px] italic">
+        <span className="text-[#9699A6] hover:text-[#0073EA]/60 transition-colors text-[12px] italic">
           {placeholder}
         </span>
       )}

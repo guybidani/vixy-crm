@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
+﻿import { useState, useEffect, useRef, useCallback, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -149,14 +149,14 @@ export default function LandingPage() {
   const features = [
     {
       icon: Users,
-      color: "#6161FF",
-      bg: "#E8E8FF",
+      color: "#0073EA",
+      bg: "#CCE5FF",
       title: "אנשי קשר",
       desc: "נהלו את כל אנשי הקשר שלכם במקום אחד עם פילטרים חכמים, תגיות ותצוגות מותאמות.",
     },
     {
       icon: TrendingUp,
-      color: "#00CA72",
+      color: "#00C875",
       bg: "#D6F5E8",
       title: "עסקאות",
       desc: "עקבו אחרי צינור המכירות שלכם עם בורדים ויזואליים, תחזיות הכנסה ודוחות בזמן אמת.",
@@ -170,7 +170,7 @@ export default function LandingPage() {
     },
     {
       icon: Headphones,
-      color: "#FB275D",
+      color: "#E2445C",
       bg: "#FDE0E7",
       title: "פניות",
       desc: "מערכת טיקטים מלאה לניהול פניות לקוחות עם מעקב סטטוס ו-SLA.",
@@ -273,7 +273,7 @@ export default function LandingPage() {
       role: "מנכ\"ל, סטארטאפ טק",
       text: "עברנו מ-Salesforce ל-Vixy ולא הסתכלנו אחורה. הממשק הנקי והתמיכה בעברית שינו את הדרך שבה אנחנו מנהלים לקוחות. הצוות שלנו אימץ את המערכת תוך שבוע.",
       avatar: "ד",
-      color: "#6161FF",
+      color: "#0073EA",
     },
     {
       name: "מיכל לוי",
@@ -287,7 +287,7 @@ export default function LandingPage() {
       role: "מנהל לקוחות, סוכנות דיגיטל",
       text: "הבורדים המותאמים של Vixy נתנו לנו גמישות שלא הכרנו. כל מחלקה בנתה את התצוגה שמתאימה לה. המאגר ידע ריכז לנו את כל המידע.",
       avatar: "י",
-      color: "#00CA72",
+      color: "#00C875",
     },
   ];
 
@@ -336,7 +336,7 @@ export default function LandingPage() {
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
             >
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#6161FF] flex items-center justify-center shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#0073EA] flex items-center justify-center shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
                 <span className="text-white font-bold text-lg">V</span>
               </div>
               <span className="text-xl font-bold text-[#323338]">Vixy CRM</span>
@@ -365,7 +365,7 @@ export default function LandingPage() {
               </button>
               <button
                 onClick={() => navigate("/register")}
-                className="px-5 py-2 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-lg hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300"
+                className="px-5 py-2 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#0073EA] rounded-lg hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300"
               >
                 הרשמה חינם
               </button>
@@ -396,7 +396,7 @@ export default function LandingPage() {
             </button>
             <button
               onClick={() => navigate("/register")}
-              className="block w-full py-2.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-lg text-center"
+              className="block w-full py-2.5 text-[13px] font-semibold text-white bg-gradient-to-l from-[#0073EA] to-[#0073EA] rounded-lg text-center"
             >
               הרשמה חינם
             </button>
@@ -417,7 +417,7 @@ export default function LandingPage() {
             className="absolute inset-0 opacity-[0.03]"
             style={{
               backgroundImage:
-                "radial-gradient(circle at 1px 1px, #6161FF 1px, transparent 0)",
+                "radial-gradient(circle at 1px 1px, #0073EA 1px, transparent 0)",
               backgroundSize: "40px 40px",
             }}
           />
@@ -433,7 +433,7 @@ export default function LandingPage() {
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
                 ה-
-                <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-l from-[#0073EA] to-[#0073EA] bg-clip-text text-transparent">
                   CRM
                 </span>
                 {" "}שעובד
@@ -448,7 +448,7 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <button
                   onClick={() => navigate("/register")}
-                  className="group px-8 py-3.5 text-base font-bold text-white bg-gradient-to-l from-[#0073EA] to-[#6161FF] rounded-xl hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                  className="group px-8 py-3.5 text-base font-bold text-white bg-gradient-to-l from-[#0073EA] to-[#0073EA] rounded-xl hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
                 >
                   התחלה חינם
                   <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
@@ -471,7 +471,7 @@ export default function LandingPage() {
                   <div className="w-3 h-3 rounded-full bg-danger/60" />
                   <div className="w-3 h-3 rounded-full bg-warning/60" />
                   <div className="w-3 h-3 rounded-full bg-success/60" />
-                  <div className="flex-1 mx-3 h-6 rounded-md bg-[#F5F6F8]" />
+                  <div className="flex-1 mx-3 h-6 rounded-md bg-[#F6F7FB]" />
                 </div>
 
                 {/* KPI cards row */}
@@ -489,13 +489,13 @@ export default function LandingPage() {
                 </div>
 
                 {/* Mini bar chart */}
-                <div className="bg-[#F5F6F8] rounded-lg p-3 mb-4">
+                <div className="bg-[#F6F7FB] rounded-lg p-3 mb-4">
                   <p className="text-[10px] text-[#676879] mb-2">מכירות שבועיות</p>
                   <div className="flex items-end gap-1.5 h-16">
                     {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-t-sm bg-gradient-to-t from-[#0073EA] to-[#6161FF]/60 transition-all duration-500"
+                        className="flex-1 rounded-t-sm bg-gradient-to-t from-[#0073EA] to-[#0073EA]/60 transition-all duration-500"
                         style={{ height: `${h}%` }}
                       />
                     ))}
@@ -521,7 +521,7 @@ export default function LandingPage() {
               </div>
               {/* Floating accent */}
               <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-2xl bg-gradient-to-br from-success to-success/50 blur-2xl opacity-40" />
-              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0073EA] to-[#6161FF] blur-2xl opacity-30" />
+              <div className="absolute -top-4 -right-4 w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0073EA] to-[#0073EA] blur-2xl opacity-30" />
             </div>
           </div>
         </div>
@@ -530,7 +530,7 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  STATS BAR                                                    */}
       {/* ============================================================ */}
-      <div ref={statsSection.ref} className="relative py-12 bg-gradient-to-l from-[#0073EA] to-[#6161FF]">
+      <div ref={statsSection.ref} className="relative py-12 bg-gradient-to-l from-[#0073EA] to-[#0073EA]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
             {[
@@ -571,7 +571,7 @@ export default function LandingPage() {
             <p className="text-[13px] font-semibold text-[#0073EA] mb-2">תכונות</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               כל מה שאתם צריכים,{" "}
-              <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-l from-[#0073EA] to-[#0073EA] bg-clip-text text-transparent">
                 במקום אחד
               </span>
             </h2>
@@ -608,7 +608,7 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  WHY VIXY                                                     */}
       {/* ============================================================ */}
-      <Section className="py-20 sm:py-28 bg-[#F5F6F8]">
+      <Section className="py-20 sm:py-28 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <p className="text-[13px] font-semibold text-[#0073EA] mb-2">למה Vixy?</p>
@@ -651,7 +651,7 @@ export default function LandingPage() {
             <p className="text-[13px] font-semibold text-[#0073EA] mb-2">תמחור</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
               תוכנית לכל{" "}
-              <span className="bg-gradient-to-l from-[#0073EA] to-[#6161FF] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-l from-[#0073EA] to-[#0073EA] bg-clip-text text-transparent">
                 גודל עסק
               </span>
             </h2>
@@ -666,12 +666,12 @@ export default function LandingPage() {
                 key={i}
                 className={`relative rounded-2xl border p-7 transition-all duration-300 hover:scale-[1.03] ${
                   plan.highlighted
-                    ? "bg-gradient-to-b from-[#0073EA]/[0.03] to-[#6161FF]/[0.03] border-[#0073EA]/30 shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
+                    ? "bg-gradient-to-b from-[#0073EA]/[0.03] to-[#0073EA]/[0.03] border-[#0073EA]/30 shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
                     : "bg-white border-[#E6E9EF] shadow-[0_1px_6px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.1)]"
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-l from-[#0073EA] to-[#6161FF] text-white text-xs font-bold shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-l from-[#0073EA] to-[#0073EA] text-white text-xs font-bold shadow-[0_1px_6px_rgba(0,0,0,0.08)]">
                     {plan.badge}
                   </div>
                 )}
@@ -696,8 +696,8 @@ export default function LandingPage() {
                   onClick={() => plan.price === "צרו קשר" ? window.location.href = "mailto:sales@vixy.co.il" : navigate("/register")}
                   className={`w-full py-3 rounded-xl text-[13px] font-bold transition-all duration-300 ${
                     plan.highlighted
-                      ? "bg-gradient-to-l from-[#0073EA] to-[#6161FF] text-white hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
-                      : "bg-[#F5F6F8] text-[#323338] hover:bg-[#E8F3FF] hover:text-[#0073EA]"
+                      ? "bg-gradient-to-l from-[#0073EA] to-[#0073EA] text-white hover:shadow-[0_1px_6px_rgba(0,0,0,0.08)]"
+                      : "bg-[#F6F7FB] text-[#323338] hover:bg-[#E8F3FF] hover:text-[#0073EA]"
                   }`}
                 >
                   {plan.price === "צרו קשר" ? "צרו קשר" : "התחלה חינם"}
@@ -711,7 +711,7 @@ export default function LandingPage() {
       {/* ============================================================ */}
       {/*  TESTIMONIALS                                                 */}
       {/* ============================================================ */}
-      <Section className="py-20 sm:py-28 bg-[#F5F6F8]">
+      <Section className="py-20 sm:py-28 bg-[#F6F7FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <p className="text-[13px] font-semibold text-[#0073EA] mb-2">המלצות</p>
@@ -803,7 +803,7 @@ export default function LandingPage() {
       {/*  FINAL CTA                                                    */}
       {/* ============================================================ */}
       <section className="relative py-20 sm:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-bl from-[#0073EA] via-[#6161FF] to-[#0073EA]" />
+        <div className="absolute inset-0 bg-gradient-to-bl from-[#0073EA] via-[#0073EA] to-[#0073EA]" />
         <div className="absolute inset-0 opacity-10">
           <div
             className="w-full h-full"
@@ -853,7 +853,7 @@ export default function LandingPage() {
             {/* Brand */}
             <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#6161FF] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#0073EA] to-[#0073EA] flex items-center justify-center">
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
                 <span className="text-xl font-bold text-white">Vixy CRM</span>

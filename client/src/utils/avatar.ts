@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Shared avatar utility — single source of truth for avatar background colors.
  * Import `getAvatarColor` wherever you need a consistent color from a name.
  *
@@ -6,12 +6,12 @@
  */
 
 const AVATAR_COLORS = [
-  "#6161FF",
+  "#0073EA",
   "#A25DDC",
-  "#00CA72",
+  "#00C875",
   "#579BFC",
   "#FDAB3D",
-  "#FB275D",
+  "#E2445C",
   "#FF642E",
   "#66CCFF",
   "#4ECCC6",

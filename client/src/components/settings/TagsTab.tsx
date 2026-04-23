@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
@@ -12,15 +12,15 @@ import {
 } from "../../api/tags";
 
 const TAG_COLORS = [
-  "#6161FF",
+  "#0073EA",
   "#579BFC",
   "#66CCFF",
-  "#00CA72",
+  "#00C875",
   "#25D366",
   "#CAB641",
   "#FDAB3D",
   "#FF642E",
-  "#FB275D",
+  "#E2445C",
   "#A25DDC",
   "#FF7EB3",
   "#C4C4C4",
@@ -181,7 +181,7 @@ export default function TagsTab() {
             {tags.map((tag: Tag) => (
               <div
                 key={tag.id}
-                className="flex items-center gap-3 px-5 py-3 hover:bg-[#F5F6F8] transition-colors group"
+                className="flex items-center gap-3 px-5 py-3 hover:bg-[#F6F7FB] transition-colors group"
               >
                 {editingId === tag.id ? (
                   <>

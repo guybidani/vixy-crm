@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { handleMutationError } from "../../lib/utils";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -133,14 +133,14 @@ export default function AutomationTab() {
                 key={seq.id}
                 className="bg-white rounded-xl shadow-[0_1px_6px_rgba(0,0,0,0.08)] overflow-hidden border-r-4 transition-all"
                 style={{
-                  borderRightColor: seq.isActive ? "#00CA72" : "#C4C4C4",
+                  borderRightColor: seq.isActive ? "#00C875" : "#C4C4C4",
                 }}
               >
                 {/* Header */}
                 <div className="px-4 py-3 flex items-center gap-3">
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : seq.id)}
-                    className="p-1 rounded hover:bg-[#F5F6F8] transition-colors"
+                    className="p-1 rounded hover:bg-[#F6F7FB] transition-colors"
                   >
                     {isExpanded ? (
                       <ChevronUp size={16} className="text-[#9699A6]" />
@@ -156,15 +156,15 @@ export default function AutomationTab() {
                       </h3>
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded-full text-white ${
-                          seq.isActive ? "bg-[#00CA72]" : "bg-[#C4C4C4]"
+                          seq.isActive ? "bg-[#00C875]" : "bg-[#C4C4C4]"
                         }`}
                       >
                         {seq.isActive ? "פעיל" : "מושהה"}
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
                         {seq.steps.length} שלבים
                       </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F5F6F8] text-[#9699A6]">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#F6F7FB] text-[#9699A6]">
                         {seq._count.executions} הרצות
                       </span>
                     </div>
@@ -178,7 +178,7 @@ export default function AutomationTab() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => toggleMut.mutate(seq.id)}
-                      className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#F6F7FB] transition-colors"
                       title={seq.isActive ? "השהה" : "הפעל"}
                     >
                       {seq.isActive ? (
@@ -192,7 +192,7 @@ export default function AutomationTab() {
                         setEditing(seq);
                         setShowForm(true);
                       }}
-                      className="p-1.5 rounded-md hover:bg-[#F5F6F8] transition-colors"
+                      className="p-1.5 rounded-md hover:bg-[#F6F7FB] transition-colors"
                     >
                       <Pencil size={14} className="text-[#9699A6]" />
                     </button>
@@ -241,17 +241,17 @@ export default function AutomationTab() {
                         return (
                           <div
                             key={step.id}
-                            className="flex items-center gap-3 p-2.5 bg-[#F5F6F8] rounded-[4px]"
+                            className="flex items-center gap-3 p-2.5 bg-[#F6F7FB] rounded-[4px]"
                           >
                             <div
                               className="w-7 h-7 rounded-[4px] flex items-center justify-center flex-shrink-0"
                               style={{
-                                backgroundColor: `${ch?.color || "#6161FF"}20`,
+                                backgroundColor: `${ch?.color || "#0073EA"}20`,
                               }}
                             >
                               <Icon
                                 size={14}
-                                style={{ color: ch?.color || "#6161FF" }}
+                                style={{ color: ch?.color || "#0073EA" }}
                               />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -265,7 +265,7 @@ export default function AutomationTab() {
                                 <span
                                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-white"
                                   style={{
-                                    backgroundColor: ch?.color || "#6161FF",
+                                    backgroundColor: ch?.color || "#0073EA",
                                   }}
                                 >
                                   {ch?.label || step.channel}
@@ -462,7 +462,7 @@ function SequenceForm({
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
           >
             <X size={18} className="text-[#9699A6]" />
           </button>
@@ -567,13 +567,13 @@ function SequenceForm({
                 return (
                   <div
                     key={idx}
-                    className="border border-[#E6E9EF] rounded-xl p-3 bg-[#F5F6F8]/30"
+                    className="border border-[#E6E9EF] rounded-xl p-3 bg-[#F6F7FB]/30"
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <GripVertical size={14} className="text-[#9699A6]" />
                       <span
                         className="text-[12px] font-bold text-white px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: ch?.color || "#6161FF" }}
+                        style={{ backgroundColor: ch?.color || "#0073EA" }}
                       >
                         שלב {step.stepNumber}
                       </span>
@@ -665,7 +665,7 @@ function SequenceForm({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
+              className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-sm"
             >
               ביטול
             </button>

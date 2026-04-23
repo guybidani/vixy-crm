@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { X, Users, Handshake, CheckSquare, LayoutGrid, Loader2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -13,8 +13,8 @@ import { useWorkspaceOptions } from "../../hooks/useWorkspaceOptions";
 type TabType = "contact" | "deal" | "task" | "board";
 
 const TABS: { key: TabType; label: string; icon: React.ReactNode; color: string; bg: string }[] = [
-  { key: "contact", label: "איש קשר", icon: <Users size={16} />, color: "#6161FF", bg: "#E8E8FF" },
-  { key: "deal",    label: "עסקה",    icon: <Handshake size={16} />, color: "#00CA72", bg: "#D6F5E8" },
+  { key: "contact", label: "איש קשר", icon: <Users size={16} />, color: "#0073EA", bg: "#CCE5FF" },
+  { key: "deal",    label: "עסקה",    icon: <Handshake size={16} />, color: "#00C875", bg: "#D6F5E8" },
   { key: "task",    label: "משימה",   icon: <CheckSquare size={16} />, color: "#A25DDC", bg: "#EDE1F5" },
   { key: "board",   label: "פריט בבורד", icon: <LayoutGrid size={16} />, color: "#FDAB3D", bg: "#FEF0D8" },
 ];
@@ -28,10 +28,9 @@ const TASK_TYPES = [
   { key: "TASK",      label: "משימה כללית" },
 ];
 
-const INPUT_CLASS =
-  "w-full px-3 py-[7px] border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white";
-const SELECT_CLASS =
-  "w-full px-3 py-[7px] border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-white";
+// Monday-style input / select classes defined in globals.css
+const INPUT_CLASS = "input";
+const SELECT_CLASS = "select";
 
 interface QuickAddModalProps {
   open: boolean;
@@ -72,31 +71,38 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 z-50 flex items-start justify-center pt-[12vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] animate-modal-backdrop"
       onClick={onClose}
+      style={{
+        backgroundColor: "rgba(0, 0, 0, 0.4)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
+      }}
     >
       <div
-        className="bg-white rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.2)] w-full max-w-[480px] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200"
+        className="bg-white rounded-[8px] w-full max-w-[480px] overflow-hidden animate-modal-spring"
+        style={{ boxShadow: "0 16px 48px rgba(0, 0, 0, 0.18)" }}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-label="הוספה מהירה"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <h2 className="text-[15px] font-semibold text-[#323338]">הוספה מהירה</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E6E9EF]">
+          <h2 className="text-[20px] font-semibold text-[#323338] leading-tight">הוספה מהירה</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors text-[#676879] hover:text-[#323338]"
+            className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors text-[#676879] hover:text-[#323338]"
             aria-label="סגור"
+            type="button"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Tab bar */}
         <div
-          className="flex gap-1 px-4 pb-3 border-b border-[#E6E9EF]"
+          className="flex gap-1 px-6 pt-3 pb-3 border-b border-[#E6E9EF]"
           role="tablist"
           aria-label="סוג פריט להוספה"
         >
@@ -131,7 +137,7 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[4px] text-[12px] font-medium transition-all ${
                 tab === t.key
                   ? "text-white"
-                  : "text-[#676879] hover:bg-[#F5F6F8]"
+                  : "text-[#676879] hover:bg-[#F6F7FB]"
               }`}
               style={tab === t.key ? { backgroundColor: t.color } : undefined}
             >
@@ -142,7 +148,7 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
         </div>
 
         {/* Tab icon accent */}
-        <div className="px-4 pt-3 pb-1 flex items-center gap-2">
+        <div className="px-6 pt-5 pb-1 flex items-center gap-2">
           <div
             className="w-7 h-7 rounded-[4px] flex items-center justify-center"
             style={{ backgroundColor: activeTab.bg, color: activeTab.color }}
@@ -156,7 +162,7 @@ export default function QuickAddModal({ open, onClose }: QuickAddModalProps) {
 
         {/* Forms */}
         <div
-          className="px-4 pt-1 pb-3"
+          className="px-6 pt-2 pb-6"
           role="tabpanel"
           id={`quick-add-panel-${tab}`}
           aria-labelledby={`quick-add-tab-${tab}`}
@@ -212,47 +218,64 @@ function ContactForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-      className="space-y-2.5 mt-2"
+      className="space-y-3 mt-3"
     >
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="form-label">
+            שם פרטי<span className="form-required">*</span>
+          </label>
+          <input
+            ref={firstInputRef as React.RefObject<HTMLInputElement>}
+            type="text"
+            placeholder="יוסי"
+            value={form.firstName}
+            onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+            className={INPUT_CLASS}
+            required
+          />
+        </div>
+        <div>
+          <label className="form-label">שם משפחה</label>
+          <input
+            type="text"
+            placeholder="כהן"
+            value={form.lastName}
+            onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+            className={INPUT_CLASS}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="form-label">טלפון</label>
         <input
-          ref={firstInputRef as React.RefObject<HTMLInputElement>}
-          type="text"
-          placeholder="שם פרטי *"
-          value={form.firstName}
-          onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-          className={INPUT_CLASS}
-          required
-        />
-        <input
-          type="text"
-          placeholder="שם משפחה"
-          value={form.lastName}
-          onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+          type="tel"
+          placeholder="050-0000000"
+          value={form.phone}
+          onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
           className={INPUT_CLASS}
         />
       </div>
-      <input
-        type="tel"
-        placeholder="טלפון"
-        value={form.phone}
-        onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-        className={INPUT_CLASS}
-      />
-      <input
-        type="email"
-        placeholder="אימייל"
-        value={form.email}
-        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-        className={INPUT_CLASS}
-      />
-      <input
-        type="text"
-        placeholder="חברה"
-        value={form.company}
-        onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-        className={INPUT_CLASS}
-      />
+      <div>
+        <label className="form-label">אימייל</label>
+        <input
+          type="email"
+          placeholder="name@example.com"
+          value={form.email}
+          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          className={INPUT_CLASS}
+        />
+      </div>
+      <div>
+        <label className="form-label">חברה</label>
+        <input
+          type="text"
+          placeholder="שם החברה"
+          value={form.company}
+          onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
+          className={INPUT_CLASS}
+        />
+      </div>
       <FormFooter onClose={onClose} isPending={mut.isPending} />
     </form>
   );
@@ -293,43 +316,59 @@ function DealForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-      className="space-y-2.5 mt-2"
+      className="space-y-3 mt-3"
     >
-      <input
-        ref={firstInputRef as React.RefObject<HTMLInputElement>}
-        type="text"
-        placeholder="שם העסקה *"
-        value={form.title}
-        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-        className={INPUT_CLASS}
-        required
-      />
-      <input
-        type="number"
-        placeholder="שווי (₪)"
-        value={form.value}
-        onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-        className={INPUT_CLASS}
-        min={0}
-      />
-      <select
-        value={form.stage}
-        onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value }))}
-        className={SELECT_CLASS}
-      >
-        {stageEntries.map(([key, val]) => (
-          <option key={key} value={key}>
-            {val.label}
-          </option>
-        ))}
-      </select>
-      <input
-        type="text"
-        placeholder="איש קשר (שם)"
-        value={form.contact}
-        onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
-        className={INPUT_CLASS}
-      />
+      <div>
+        <label className="form-label">
+          שם העסקה<span className="form-required">*</span>
+        </label>
+        <input
+          ref={firstInputRef as React.RefObject<HTMLInputElement>}
+          type="text"
+          placeholder="לדוגמה: פגישת מכירה חברת XYZ"
+          value={form.title}
+          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+          className={INPUT_CLASS}
+          required
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="form-label">שווי (₪)</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={form.value}
+            onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
+            className={INPUT_CLASS}
+            min={0}
+          />
+        </div>
+        <div>
+          <label className="form-label">שלב</label>
+          <select
+            value={form.stage}
+            onChange={(e) => setForm((f) => ({ ...f, stage: e.target.value }))}
+            className={SELECT_CLASS}
+          >
+            {stageEntries.map(([key, val]) => (
+              <option key={key} value={key}>
+                {val.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className="form-label">איש קשר</label>
+        <input
+          type="text"
+          placeholder="שם איש הקשר"
+          value={form.contact}
+          onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
+          className={INPUT_CLASS}
+        />
+      </div>
       <FormFooter onClose={onClose} isPending={mut.isPending} />
     </form>
   );
@@ -367,42 +406,57 @@ function TaskForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-      className="space-y-2.5 mt-2"
+      className="space-y-3 mt-3"
     >
-      <input
-        ref={firstInputRef as React.RefObject<HTMLInputElement>}
-        type="text"
-        placeholder="שם המשימה *"
-        value={form.title}
-        onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-        className={INPUT_CLASS}
-        required
-      />
-      <select
-        value={form.taskType}
-        onChange={(e) => setForm((f) => ({ ...f, taskType: e.target.value }))}
-        className={SELECT_CLASS}
-      >
-        {TASK_TYPES.map((t) => (
-          <option key={t.key} value={t.key}>
-            {t.label}
-          </option>
-        ))}
-      </select>
-      <input
-        type="date"
-        value={form.dueDate}
-        onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-        className={INPUT_CLASS}
-        placeholder="תאריך יעד"
-      />
-      <input
-        type="text"
-        placeholder="איש קשר (שם)"
-        value={form.contact}
-        onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
-        className={INPUT_CLASS}
-      />
+      <div>
+        <label className="form-label">
+          שם המשימה<span className="form-required">*</span>
+        </label>
+        <input
+          ref={firstInputRef as React.RefObject<HTMLInputElement>}
+          type="text"
+          placeholder="מה צריך לעשות?"
+          value={form.title}
+          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+          className={INPUT_CLASS}
+          required
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="form-label">סוג</label>
+          <select
+            value={form.taskType}
+            onChange={(e) => setForm((f) => ({ ...f, taskType: e.target.value }))}
+            className={SELECT_CLASS}
+          >
+            {TASK_TYPES.map((t) => (
+              <option key={t.key} value={t.key}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="form-label">תאריך יעד</label>
+          <input
+            type="date"
+            value={form.dueDate}
+            onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+            className={INPUT_CLASS}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="form-label">איש קשר</label>
+        <input
+          type="text"
+          placeholder="שם איש הקשר"
+          value={form.contact}
+          onChange={(e) => setForm((f) => ({ ...f, contact: e.target.value }))}
+          className={INPUT_CLASS}
+        />
+      </div>
       <FormFooter onClose={onClose} isPending={mut.isPending} />
     </form>
   );
@@ -468,55 +522,70 @@ function BoardItemForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); if (canSubmit) mut.mutate(); }}
-      className="space-y-2.5 mt-2"
+      className="space-y-3 mt-3"
     >
       {/* Board selector */}
-      {loadingBoards ? (
-        <div className="flex items-center justify-center py-4">
-          <Loader2 size={18} className="animate-spin text-[#0073EA]" />
-        </div>
-      ) : (
+      <div>
+        <label className="form-label">
+          בורד<span className="form-required">*</span>
+        </label>
+        {loadingBoards ? (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 size={18} className="animate-spin text-[#0073EA]" />
+          </div>
+        ) : (
+          <select
+            value={boardId}
+            onChange={(e) => setBoardId(e.target.value)}
+            className={SELECT_CLASS}
+            required
+          >
+            {!boardId && <option value="">בחר בורד...</option>}
+            {(boards ?? []).map((b: BoardSummary) => (
+              <option key={b.id} value={b.id}>
+                {b.icon} {b.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Group selector */}
+      <div>
+        <label className="form-label">
+          קבוצה<span className="form-required">*</span>
+        </label>
         <select
-          value={boardId}
-          onChange={(e) => setBoardId(e.target.value)}
+          value={groupId}
+          onChange={(e) => setGroupId(e.target.value)}
           className={SELECT_CLASS}
+          disabled={!fullBoard}
           required
         >
-          {!boardId && <option value="">בחר בורד...</option>}
-          {(boards ?? []).map((b: BoardSummary) => (
-            <option key={b.id} value={b.id}>
-              {b.icon} {b.name}
+          {!groupId && <option value="">בחר קבוצה...</option>}
+          {(fullBoard?.groups ?? []).map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
             </option>
           ))}
         </select>
-      )}
-
-      {/* Group selector */}
-      <select
-        value={groupId}
-        onChange={(e) => setGroupId(e.target.value)}
-        className={SELECT_CLASS}
-        disabled={!fullBoard}
-        required
-      >
-        {!groupId && <option value="">בחר קבוצה...</option>}
-        {(fullBoard?.groups ?? []).map((g) => (
-          <option key={g.id} value={g.id}>
-            {g.name}
-          </option>
-        ))}
-      </select>
+      </div>
 
       {/* Item name */}
-      <input
-        ref={firstInputRef as React.RefObject<HTMLInputElement>}
-        type="text"
-        placeholder="שם הפריט *"
-        value={itemName}
-        onChange={(e) => setItemName(e.target.value)}
-        className={INPUT_CLASS}
-        required
-      />
+      <div>
+        <label className="form-label">
+          שם הפריט<span className="form-required">*</span>
+        </label>
+        <input
+          ref={firstInputRef as React.RefObject<HTMLInputElement>}
+          type="text"
+          placeholder="מה שמו?"
+          value={itemName}
+          onChange={(e) => setItemName(e.target.value)}
+          className={INPUT_CLASS}
+          required
+        />
+      </div>
 
       <FormFooter onClose={onClose} isPending={mut.isPending} disabled={!canSubmit} />
     </form>
@@ -534,19 +603,20 @@ function FormFooter({
   isPending: boolean;
   disabled?: boolean;
 }) {
+  // RTL: justify-start places the pair on the right (cancel first, primary at the end).
   return (
-    <div className="flex gap-2 pt-1">
+    <div className="flex items-center justify-start gap-2 pt-4 mt-2 border-t border-[#E6E9EF]">
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 py-[7px] bg-[#F5F6F8] hover:bg-[#E6E9EF] text-[#676879] font-medium rounded-[4px] transition-colors text-[13px]"
+        className="modal-btn-secondary"
       >
         ביטול
       </button>
       <button
         type="submit"
         disabled={isPending || disabled}
-        className="flex-1 py-[7px] bg-[#0073EA] hover:bg-[#0060C2] text-white font-medium rounded-[4px] transition-colors text-[13px] disabled:opacity-50 flex items-center justify-center gap-1.5"
+        className="modal-btn-primary"
       >
         {isPending ? (
           <>

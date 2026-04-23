@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { downloadExport } from "../../api/export";
@@ -28,7 +28,7 @@ export default function ExportButton({ entity, filters }: ExportButtonProps) {
       onClick={handleExport}
       disabled={loading}
       aria-busy={loading}
-      className="flex items-center gap-1.5 px-3 py-[7px] text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] border border-[#D0D4E4] rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-1.5 px-3 py-[7px] text-[13px] text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] border border-[#D0D4E4] rounded-[4px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       title="ייצוא ל-CSV"
       aria-label={loading ? "מייצא..." : "ייצוא ל-CSV"}
     >

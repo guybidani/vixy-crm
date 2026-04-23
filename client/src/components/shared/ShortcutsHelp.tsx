@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 import { X, Keyboard } from "lucide-react";
 
 interface ShortcutsHelpProps {
@@ -115,7 +115,7 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] transition-colors"
+            className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] transition-colors"
             aria-label="סגירה"
           >
             <X size={16} className="text-[#9699A6]" />
@@ -133,7 +133,7 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
                 {group.shortcuts.map((shortcut) => (
                   <div
                     key={shortcut.label}
-                    className="flex items-center justify-between py-1.5 px-2 rounded-[4px] hover:bg-[#F5F6F8]/60 transition-colors"
+                    className="flex items-center justify-between py-1.5 px-2 rounded-[4px] hover:bg-[#F6F7FB]/60 transition-colors"
                   >
                     <span className="text-sm text-[#323338]">
                       {shortcut.label}
@@ -158,7 +158,7 @@ export default function ShortcutsHelp({ open, onClose }: ShortcutsHelpProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-[#E6E9EF] bg-[#F5F6F8]/30">
+        <div className="px-4 py-3 border-t border-[#E6E9EF] bg-[#F6F7FB]/30">
           <p className="text-[11px] text-[#9699A6] text-center">
             קיצורים פעילים רק כשלא מקלידים בשדה טקסט
           </p>

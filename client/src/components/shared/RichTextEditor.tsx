@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+﻿import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
@@ -96,7 +96,7 @@ export default function RichTextEditor({
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E6E9EF] bg-[#F5F6F8]/30 flex-wrap" role="toolbar" aria-label="עיצוב טקסט">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-[#E6E9EF] bg-[#F6F7FB]/30 flex-wrap" role="toolbar" aria-label="עיצוב טקסט">
         <ToolbarButton
           active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -236,7 +236,7 @@ function ToolbarButton({
         "p-1.5 rounded transition-colors",
         active
           ? "bg-[#0073EA]/10 text-[#0073EA]"
-          : "text-[#9699A6] hover:bg-[#F5F6F8] hover:text-[#323338]",
+          : "text-[#9699A6] hover:bg-[#F6F7FB] hover:text-[#323338]",
       )}
     >
       {children}

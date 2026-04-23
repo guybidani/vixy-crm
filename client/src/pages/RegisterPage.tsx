@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+﻿import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Check } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
@@ -103,7 +103,7 @@ export default function RegisterPage() {
   if (showSuccess) {
     return (
       <div
-        className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
+        className="min-h-screen bg-gradient-to-br from-[#CCE5FF] via-[#F6F7FB] to-[#CCE5FF] flex items-center justify-center p-4"
         dir="rtl"
       >
         <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-12 w-full max-w-md animate-fade-in-up text-center">
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-[#f0f0ff] via-[#f5f6f8] to-[#e8e8ff] flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-[#CCE5FF] via-[#F6F7FB] to-[#CCE5FF] flex items-center justify-center p-4"
       dir="rtl"
     >
       <div className="bg-white rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-[#E6E9EF] p-8 w-full max-w-md animate-fade-in-up">
@@ -155,12 +155,12 @@ export default function RegisterPage() {
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
               step >= 1
                 ? "bg-gradient-to-br from-[#0073EA] to-[#0060C2] text-white shadow-sm"
-                : "bg-[#F5F6F8] text-[#9699A6]"
+                : "bg-[#F6F7FB] text-[#9699A6]"
             }`}
           >
             {step > 1 ? <Check size={14} strokeWidth={3} /> : "1"}
           </div>
-          <div className="w-16 h-1 rounded-full bg-[#F5F6F8] overflow-hidden">
+          <div className="w-16 h-1 rounded-full bg-[#F6F7FB] overflow-hidden">
             <div
               className={`h-full bg-gradient-to-l from-[#0073EA] to-[#0060C2] rounded-full transition-all duration-500 ease-out ${
                 step >= 2 ? "w-full" : "w-0"
@@ -171,7 +171,7 @@ export default function RegisterPage() {
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
               step >= 2
                 ? "bg-gradient-to-br from-[#0073EA] to-[#0060C2] text-white shadow-sm"
-                : "bg-[#F5F6F8] text-[#9699A6]"
+                : "bg-[#F6F7FB] text-[#9699A6]"
             }`}
           >
             2
@@ -244,7 +244,7 @@ export default function RegisterPage() {
                   {/* Password strength indicator */}
                   {passwordStrength !== "none" && (
                     <div className="mt-2">
-                      <div className="h-1.5 w-full bg-[#F5F6F8] rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[#F6F7FB] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ease-out ${strengthConfig[passwordStrength].color}`}
                           style={{

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/shared/ConfirmDialog";
@@ -38,6 +38,8 @@ import MondayBoard, {
 import { type ContextMenuItem } from "../components/shared/RowContextMenu";
 import MondayPersonCell from "../components/shared/MondayPersonCell";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import EmptyState from "../components/shared/EmptyState";
+import { EmptyTickets, EmptySearch } from "../components/shared/illustrations";
 import {
   listTickets,
   createTicket,
@@ -79,9 +81,9 @@ const STATUS_TABS = [
 
 // Priority border colors
 const PRIORITY_BORDER: Record<string, string> = {
-  URGENT: "#FB275D",
+  URGENT: "#E2445C",
   HIGH: "#FDAB3D",
-  MEDIUM: "#6161FF",
+  MEDIUM: "#0073EA",
   LOW: "#C4C4C4",
 };
 
@@ -420,7 +422,7 @@ export default function TicketsPage() {
   const STATUS_GROUP_ORDER = ["NEW", "OPEN", "PENDING", "RESOLVED", "CLOSED"];
   const STATUS_GROUP_COLORS: Record<string, string> = {
     NEW: "#579BFC",
-    OPEN: "#00CA72",
+    OPEN: "#00C875",
     PENDING: "#FDAB3D",
     RESOLVED: "#A25DDC",
     CLOSED: "#C4C4C4",
@@ -472,7 +474,7 @@ export default function TicketsPage() {
         className={`p-[6px] transition-colors ${
           viewMode === "queue"
             ? "bg-[#0073EA] text-white"
-            : "bg-white text-[#676879] hover:bg-[#F5F6F8]"
+            : "bg-white text-[#676879] hover:bg-[#F6F7FB]"
         }`}
       >
         <LayoutList size={15} />
@@ -484,7 +486,7 @@ export default function TicketsPage() {
         className={`p-[6px] transition-colors ${
           viewMode === "table"
             ? "bg-[#0073EA] text-white"
-            : "bg-white text-[#676879] hover:bg-[#F5F6F8]"
+            : "bg-white text-[#676879] hover:bg-[#F6F7FB]"
         }`}
       >
         <List size={15} />
@@ -495,7 +497,7 @@ export default function TicketsPage() {
   // ── Table view ──
   if (viewMode === "table") {
     return (
-      <div className="bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6 min-h-[calc(100vh-56px)]">
+      <div className="bg-[#F6F7FB] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6 min-h-[calc(100vh-56px)]">
         {/* Header */}
         <div className="px-6 pt-5 pb-3 bg-white border-b border-[#E6E9EF]">
           <div className="flex items-center justify-between mb-1">
@@ -614,7 +616,7 @@ export default function TicketsPage() {
 
   // ── Queue view (original, untouched) ──
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F5F6F8] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#F6F7FB] -mx-3 -mt-3 sm:-mx-6 sm:-mt-6">
       {/* ── Left: Ticket List ── */}
       <div className={`w-full md:w-[340px] flex-shrink-0 flex flex-col border-l border-[#E6E9EF] bg-white ${selectedId ? "hidden md:flex" : "flex"}`}>
         {/* Header */}
@@ -643,7 +645,7 @@ export default function TicketsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="חיפוש קריאות..."
-              className="w-full pr-8 pl-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-[#F5F6F8]"
+              className="w-full pr-8 pl-3 py-1.5 border border-[#D0D4E4] rounded-[4px] text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0073EA]/20 focus:border-[#0073EA] bg-[#F6F7FB]"
             />
           </div>
           {/* Status Tabs */}
@@ -656,7 +658,7 @@ export default function TicketsPage() {
                 className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium transition-all ${
                   statusFilter === tab.key
                     ? "bg-[#0073EA] text-white"
-                    : "bg-[#F5F6F8] text-[#676879] hover:bg-[#E6E9EF]"
+                    : "bg-[#F6F7FB] text-[#676879] hover:bg-[#E6E9EF]"
                 }`}
               >
                 {tab.label}
@@ -668,12 +670,12 @@ export default function TicketsPage() {
         {/* Ticket List */}
         <div className="flex-1 overflow-y-auto">
           {isError && page === 1 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-[#9699A6] text-sm gap-2">
-              <AlertCircle size={24} className="text-[#E44258] opacity-60" />
-              <span>שגיאה בטעינת קריאות</span>
+            <div className="flex flex-col items-center justify-center h-48 text-[#9699A6] text-sm gap-2 px-4">
+              <AlertCircle size={22} className="text-[#E44258] opacity-60" />
+              <span className="text-[13px] font-medium text-[#323338]">משהו השתבש</span>
               <button
                 onClick={() => refetch()}
-                className="text-[12px] text-[#0073EA] hover:underline"
+                className="text-[12px] text-[#0073EA] hover:underline mt-1"
               >
                 נסה שוב
               </button>
@@ -698,10 +700,37 @@ export default function TicketsPage() {
               ))}
             </div>
           ) : sortedRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-[#9699A6] text-sm gap-2">
-              <MessageSquare size={24} className="opacity-30" />
-              אין קריאות
-            </div>
+            debouncedSearch ? (
+              <EmptyState
+                compact
+                illustration={<EmptySearch size={96} />}
+                title={`לא מצאנו תוצאות ל-"${debouncedSearch}"`}
+                description="נסו חיפוש אחר או נקו את החיפוש."
+                secondaryAction={{ label: "נקה חיפוש", onClick: () => setSearch("") }}
+                variant="search"
+              />
+            ) : statusFilter ? (
+              <EmptyState
+                compact
+                illustration={<EmptyTickets size={96} color="#A25DDC" />}
+                title="אין קריאות בסטטוס הזה"
+                description="נסו לבחור טאב אחר או לפתוח קריאה חדשה."
+                secondaryAction={{ label: "כל הקריאות", onClick: () => { setStatusFilter(""); setPage(1); } }}
+                variant="filtered"
+              />
+            ) : (
+              <EmptyState
+                compact
+                illustration={<EmptyTickets size={96} />}
+                title="הכל שקט כאן"
+                description="אין קריאות פתוחות כרגע. כשיגיעו פניות חדשות הן יופיעו כאן."
+                action={{
+                  label: "קריאה חדשה",
+                  onClick: () => setShowCreate(true),
+                  icon: <Plus size={16} />,
+                }}
+              />
+            )
           ) : (
             sortedRows.map((ticket) => (
               <TicketListItem
@@ -735,7 +764,7 @@ export default function TicketsPage() {
             {/* Mobile back button */}
             <button
               onClick={() => setSelectedId(null)}
-              className="md:hidden flex items-center gap-1.5 px-4 py-2.5 bg-white border-b border-[#E6E9EF] text-[13px] font-medium text-[#0073EA] hover:bg-[#F5F6F8] transition-colors flex-shrink-0"
+              className="md:hidden flex items-center gap-1.5 px-4 py-2.5 bg-white border-b border-[#E6E9EF] text-[13px] font-medium text-[#0073EA] hover:bg-[#F6F7FB] transition-colors flex-shrink-0"
             >
               <ArrowRight size={14} />
               חזרה לרשימה
@@ -797,10 +826,10 @@ function TicketListItem({
       className={`w-full text-right px-3 py-3 border-b border-[#E6E9EF] transition-colors relative flex gap-0 ${
         isSelected
           ? "bg-[#0073EA]/5 border-r-[3px] border-r-[#0073EA]"
-          : "hover:bg-[#F5F6F8] border-r-[3px]"
+          : "hover:bg-[#F6F7FB] border-r-[3px]"
       }`}
       style={{
-        borderRightColor: isSelected ? "#6161FF" : priorityColor,
+        borderRightColor: isSelected ? "#0073EA" : priorityColor,
       }}
     >
       <div className="flex-1 min-w-0">
@@ -847,7 +876,7 @@ function TicketListItem({
           </span>
           {CHANNEL_ICONS[ticket.channel] && (
             <span
-              className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-[#F5F6F8] text-[#676879]"
+              className="flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-[#F6F7FB] text-[#676879]"
               title={ticketChannels[ticket.channel]?.label || ticket.channel}
             >
               {CHANNEL_ICONS[ticket.channel]}
@@ -937,14 +966,14 @@ function TicketDetailPanel({
           <div className="flex-1 px-4 py-3 space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                <div className="w-3/5 rounded-xl bg-[#F5F6F8] h-16" />
+                <div className="w-3/5 rounded-xl bg-[#F6F7FB] h-16" />
               </div>
             ))}
           </div>
         </div>
         <div className="w-[220px] flex-shrink-0 border-r border-[#E6E9EF] bg-white p-3 space-y-4">
           <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
-          <div className="h-10 w-full bg-[#F5F6F8] rounded-lg" />
+          <div className="h-10 w-full bg-[#F6F7FB] rounded-lg" />
           <div className="h-3 w-16 bg-[#E6E9EF] rounded" />
           <div className="space-y-2">
             {[1, 2, 3, 4].map((i) => (
@@ -1049,7 +1078,7 @@ function TicketDetailPanel({
           <div className="flex gap-1.5 flex-shrink-0">
             <button
               onClick={onNavigateFull}
-              className="p-1.5 rounded-[4px] hover:bg-[#F5F6F8] text-[#676879] hover:text-[#323338] transition-colors"
+              className="p-1.5 rounded-[4px] hover:bg-[#F6F7FB] text-[#676879] hover:text-[#323338] transition-colors"
               aria-label="פתח בעמוד מלא"
               title="פתח בעמוד מלא"
             >
@@ -1223,7 +1252,7 @@ function TicketDetailPanel({
                     const val = e.target.value;
                     assignMutation.mutate(val);
                   }}
-                  className="text-[11px] text-[#323338] bg-[#F5F6F8] border border-[#E6E9EF] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[100px]"
+                  className="text-[11px] text-[#323338] bg-[#F6F7FB] border border-[#E6E9EF] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073EA]/20 max-w-[100px]"
                 >
                   <option value="">לא שויך</option>
                   {(members || []).map((m) => (
@@ -1453,7 +1482,7 @@ function ReplyComposer({
           type="button"
           onClick={() => setIsInternal(false)}
           className={`text-[12px] px-2 py-1 rounded-md transition-colors ${
-            !isInternal ? "bg-[#0073EA] text-white" : "text-[#676879] hover:bg-[#F5F6F8]"
+            !isInternal ? "bg-[#0073EA] text-white" : "text-[#676879] hover:bg-[#F6F7FB]"
           }`}
         >
           תגובה ללקוח
@@ -1462,7 +1491,7 @@ function ReplyComposer({
           type="button"
           onClick={() => setIsInternal(true)}
           className={`text-[12px] px-2 py-1 rounded-md transition-colors flex items-center gap-1 ${
-            isInternal ? "bg-warning text-white" : "text-[#676879] hover:bg-[#F5F6F8]"
+            isInternal ? "bg-warning text-white" : "text-[#676879] hover:bg-[#F6F7FB]"
           }`}
         >
           <Eye size={11} />
@@ -1482,7 +1511,7 @@ function ReplyComposer({
             <div className="absolute left-0 bottom-full mb-1 bg-white rounded-xl shadow-modal border border-[#E6E9EF] z-20 w-72 max-h-60 overflow-y-auto">
               <div className="p-2 border-b border-[#E6E9EF] flex items-center justify-between">
                 <span className="text-[12px] font-semibold text-[#323338]">תגובות מוכנות</span>
-                <button type="button" onClick={() => setShowCanned(false)} className="p-0.5 rounded hover:bg-[#F5F6F8]">
+                <button type="button" onClick={() => setShowCanned(false)} className="p-0.5 rounded hover:bg-[#F6F7FB]">
                   <X size={12} className="text-[#9699A6]" />
                 </button>
               </div>
@@ -1492,7 +1521,7 @@ function ReplyComposer({
                     key={cr.id}
                     type="button"
                     onClick={() => insertCannedResponse(cr)}
-                    className="w-full text-right px-3 py-2 hover:bg-[#F5F6F8] transition-colors border-b border-[#E6E9EF] last:border-0"
+                    className="w-full text-right px-3 py-2 hover:bg-[#F6F7FB] transition-colors border-b border-[#E6E9EF] last:border-0"
                   >
                     <div className="text-[12px] font-medium text-[#323338]">{cr.title}</div>
                     <p className="text-[10px] text-[#9699A6] truncate mt-0.5">{cr.body.slice(0, 60)}...</p>
@@ -1672,7 +1701,7 @@ function CreateTicketModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 bg-[#F5F6F8] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
+            className="flex-1 py-2 bg-[#F6F7FB] hover:bg-border text-[#676879] font-semibold rounded-[4px] transition-colors text-[13px]"
           >
             ביטול
           </button>

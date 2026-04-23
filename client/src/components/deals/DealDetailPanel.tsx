@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../shared/ConfirmDialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -388,7 +388,7 @@ export default function DealDetailPanel({
                 <div key={i} className="flex gap-3">
                   <div className="w-[34px] h-[34px] bg-[#E6E9EF] rounded-full flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="bg-[#F5F6F8] rounded-xl p-4 space-y-2">
+                    <div className="bg-[#F6F7FB] rounded-xl p-4 space-y-2">
                       <div className="flex items-center gap-2">
                         <div className="h-3 w-12 bg-[#E6E9EF] rounded" />
                         <div className="h-2.5 w-20 bg-[#E6E9EF] rounded" />
@@ -500,7 +500,7 @@ export default function DealDetailPanel({
               </button>
               <button
                 onClick={handleClose}
-                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                className="p-1.5 text-[#676879] hover:text-[#323338] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
                 aria-label="סגור"
               >
                 <X size={18} />
@@ -598,7 +598,7 @@ export default function DealDetailPanel({
             </button>
             <button
               onClick={() => setActiveTab("activity")}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F5F6F8] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F7FB] text-[#323338] text-[13px] font-medium rounded-[6px] border border-[#D0D4E4] transition-colors"
             >
               <PhoneCall size={14} className="text-[#676879]" />
               פעילות ({deal.activities?.length || 0})
@@ -611,7 +611,7 @@ export default function DealDetailPanel({
             )}
           </div>
 
-          {/* Tabs */}
+          {/* Tabs — animated underline via `.tab-underline`, slides on activation */}
           <div className="flex gap-1 px-6 border-t border-[#E6E9EF]" dir="rtl" role="tablist">
             {(
               [
@@ -625,11 +625,12 @@ export default function DealDetailPanel({
                 key={tab.key}
                 role="tab"
                 aria-selected={activeTab === tab.key}
+                data-active={activeTab === tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors ${
+                className={`tab-underline px-4 py-2.5 text-[13px] font-medium -mb-px transition-colors ${
                   activeTab === tab.key
-                    ? "border-[#0073EA] text-[#0073EA]"
-                    : "border-transparent text-[#676879] hover:text-[#323338] hover:border-[#D0D4E4]"
+                    ? "text-[#0073EA]"
+                    : "text-[#676879] hover:text-[#323338]"
                 }`}
               >
                 {tab.label}
@@ -640,8 +641,10 @@ export default function DealDetailPanel({
 
         {/* ── Body: 2-column layout ── */}
         <div className="flex-1 flex overflow-hidden min-h-0" dir="rtl">
-          {/* LEFT: Activity/Feed column */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          {/* LEFT: Activity/Feed column.
+              `key` on activeTab re-triggers the tab-content-enter animation,
+              producing a cross-fade instead of a snap. */}
+          <div key={activeTab} className="flex-1 flex flex-col overflow-hidden tab-content-enter">
             {activeTab === "activity" && (
               <>
                 {/* Activity list */}
@@ -679,7 +682,7 @@ export default function DealDetailPanel({
                           </div>
                           {/* Bubble */}
                           <div className="flex-1 min-w-0 pb-4 group/activity">
-                            <div className="bg-[#F5F6F8] rounded-xl rounded-tr-none px-4 py-3 shadow-sm relative">
+                            <div className="bg-[#F6F7FB] rounded-xl rounded-tr-none px-4 py-3 shadow-sm relative">
                               <div className="flex items-baseline gap-2 mb-1">
                                 <span className="text-[13px] font-semibold text-[#323338]">
                                   {actType?.label || activity.type}
@@ -774,8 +777,8 @@ export default function DealDetailPanel({
                   {/* Activity type tabs */}
                   <div className="flex gap-1" dir="rtl">
                     {([
-                      { key: "NOTE", label: "הערה", icon: StickyNote, color: "#6161FF" },
-                      { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00CA72" },
+                      { key: "NOTE", label: "הערה", icon: StickyNote, color: "#0073EA" },
+                      { key: "CALL", label: "שיחה", icon: PhoneCall, color: "#00C875" },
                       { key: "EMAIL", label: "מייל", icon: Mail, color: "#579BFC" },
                       { key: "MEETING", label: "פגישה", icon: Calendar, color: "#A25DDC" },
                       { key: "WHATSAPP", label: "ווטסאפ", icon: MessageCircle, color: "#25D366" },
@@ -786,7 +789,7 @@ export default function DealDetailPanel({
                         className={`flex items-center gap-1 px-2.5 py-1 rounded-[4px] text-[12px] font-medium transition-colors ${
                           newActivityType === key
                             ? "text-white"
-                            : "text-[#676879] hover:bg-[#F5F6F8]"
+                            : "text-[#676879] hover:bg-[#F6F7FB]"
                         }`}
                         style={newActivityType === key ? { backgroundColor: color } : {}}
                       >
@@ -797,7 +800,7 @@ export default function DealDetailPanel({
                   </div>
                   <div className="flex gap-3 items-start">
                     <Avatar name={user?.name || "אני"} size={34} />
-                    <div className="flex-1 bg-[#F5F6F8] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
+                    <div className="flex-1 bg-[#F6F7FB] rounded-xl border border-[#E6E9EF] focus-within:border-[#0073EA] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,115,234,0.12)] transition-all overflow-hidden">
                       <textarea
                         ref={activityTextareaRef}
                         className="w-full px-4 pt-3 pb-1 text-[13px] text-[#323338] bg-transparent outline-none resize-none leading-relaxed"
@@ -819,7 +822,7 @@ export default function DealDetailPanel({
                         }}
                       />
                       <div className="flex items-center justify-between px-4 pb-3 pt-1">
-                        <span className="text-[11px] text-[#C3C6D4]">Ctrl+Enter לשליחה</span>
+                        <span className="text-[11px] text-[#9699A6]">Ctrl+Enter לשליחה</span>
                         <button
                           onClick={postNote}
                           disabled={!newActivityText.trim() || postingActivity}
@@ -872,7 +875,7 @@ export default function DealDetailPanel({
                         </span>
                         <button
                           onClick={() => setEditingNotes(false)}
-                          className="px-3 py-1.5 text-[12px] text-[#676879] hover:bg-[#F5F6F8] rounded-[4px] transition-colors"
+                          className="px-3 py-1.5 text-[12px] text-[#676879] hover:bg-[#F6F7FB] rounded-[4px] transition-colors"
                         >
                           סגור
                         </button>
@@ -880,7 +883,7 @@ export default function DealDetailPanel({
                     </div>
                   ) : (
                     <p
-                      className="text-[13px] text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F5F6F8] rounded-[4px] p-2 -m-2 transition-colors min-h-[80px]"
+                      className="text-[13px] text-[#676879] whitespace-pre-wrap cursor-pointer hover:bg-[#F6F7FB] rounded-[4px] p-2 -m-2 transition-colors min-h-[80px]"
                       onClick={() => { setEditingNotes(true); setNotes(deal?.notes || ""); }}
                     >
                       {deal.notes || "לחץ להוספת הערות..."}
@@ -918,7 +921,7 @@ export default function DealDetailPanel({
                       value={newTaskTitle}
                       onChange={(e) => setNewTaskTitle(e.target.value)}
                       placeholder="כותרת משימה..."
-                      className="w-full text-[13px] text-[#323338] bg-transparent outline-none placeholder:text-[#C3C6D4]"
+                      className="w-full text-[13px] text-[#323338] bg-transparent outline-none placeholder:text-[#9699A6]"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && newTaskTitle.trim()) {
                           createTaskMut.mutate({ title: newTaskTitle.trim(), dueDate: newTaskDueDate || undefined });
@@ -988,7 +991,7 @@ export default function DealDetailPanel({
                         >
                           <CheckSquare
                             size={15}
-                            className={task.status === "DONE" ? "text-[#00CA72]" : "text-[#C5C7D0] hover:text-[#00CA72] transition-colors"}
+                            className={task.status === "DONE" ? "text-[#00C875]" : "text-[#C5C7D0] hover:text-[#00C875] transition-colors"}
                           />
                         </button>
                         {/* Navigate to task detail */}
@@ -1092,12 +1095,12 @@ export default function DealDetailPanel({
                         />
                       ) : (
                         <>
-                          <div className="w-16 h-[4px] bg-[#F5F6F8] rounded-full overflow-hidden">
+                          <div className="w-16 h-[4px] bg-[#F6F7FB] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full"
                               style={{
                                 width: `${deal.probability}%`,
-                                backgroundColor: deal.probability >= 70 ? "#00CA72" : deal.probability >= 40 ? "#FDAB3D" : "#C4C4C4",
+                                backgroundColor: deal.probability >= 70 ? "#00C875" : deal.probability >= 40 ? "#FDAB3D" : "#C4C4C4",
                               }}
                             />
                           </div>
@@ -1124,7 +1127,7 @@ export default function DealDetailPanel({
                   <FieldRow icon={<Clock size={14} />} label="ימים בשלב">
                     <span
                       className={`text-[13px] font-semibold ${
-                        deal.daysInStage >= 14 ? "text-[#FB275D]" : deal.daysInStage >= 7 ? "text-[#FDAB3D]" : "text-[#676879]"
+                        deal.daysInStage >= 14 ? "text-[#E2445C]" : deal.daysInStage >= 7 ? "text-[#FDAB3D]" : "text-[#676879]"
                       }`}
                     >
                       {deal.daysInStage} ימים
@@ -1221,10 +1224,10 @@ export default function DealDetailPanel({
                       </a>
                       <a
                         href={getTelUrl(deal.contact.phone)}
-                        className="p-1 rounded hover:bg-[#00CA72]/10 transition-colors"
+                        className="p-1 rounded hover:bg-[#00C875]/10 transition-colors"
                         title="התקשר"
                       >
-                        <Phone size={13} color="#00CA72" />
+                        <Phone size={13} color="#00C875" />
                       </a>
                     </div>
                   )}
@@ -1444,7 +1447,7 @@ function HealthBadge({ health }: { health: DealHealth }) {
       <button
         type="button"
         onClick={() => setShowBreakdown((v) => !v)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border transition-colors hover:bg-[#F5F6F8]"
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] border transition-colors hover:bg-[#F6F7FB]"
         style={{ borderColor: health.color + "40" }}
       >
         <HeartPulse size={13} style={{ color: health.color }} />
@@ -1470,7 +1473,7 @@ function HealthBadge({ health }: { health: DealHealth }) {
                     {row.score > 0 ? <span className="text-[#10B981]">+{row.score}</span> : <span className="text-[#DC2626]">+0</span>}
                   </span>
                 </div>
-                <div className="w-full h-1.5 bg-[#F5F6F8] rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-[#F6F7FB] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -1565,7 +1568,7 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
             {fields.map((f, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full ${data[f.key] ? "bg-[#00CA72]" : "bg-[#E6E9EF]"}`}
+                className={`w-2 h-2 rounded-full ${data[f.key] ? "bg-[#00C875]" : "bg-[#E6E9EF]"}`}
               />
             ))}
           </div>
@@ -1586,7 +1589,7 @@ function BantSection({ bantData, onUpdate }: BantSectionProps) {
               <div className="flex items-center gap-1 mb-1">
                 <span className="text-[#676879]">{field.icon}</span>
                 <span className="text-[10px] font-medium text-[#676879]">{field.label}</span>
-                {isFilled ? <Check size={10} className="text-[#00CA72] mr-auto" /> : <Circle size={10} className="text-[#C5C7D0] mr-auto" />}
+                {isFilled ? <Check size={10} className="text-[#00C875] mr-auto" /> : <Circle size={10} className="text-[#C5C7D0] mr-auto" />}
               </div>
 
               {isEditing ? (

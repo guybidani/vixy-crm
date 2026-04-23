@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -754,10 +754,10 @@ async function main() {
     }),
     // --- 3 new tags ---
     prisma.tag.create({
-      data: { workspaceId: workspace.id, name: "דחוף", color: "#FB275D" },
+      data: { workspaceId: workspace.id, name: "דחוף", color: "#E2445C" },
     }),
     prisma.tag.create({
-      data: { workspaceId: workspace.id, name: "ממליץ", color: "#00CA72" },
+      data: { workspaceId: workspace.id, name: "ממליץ", color: "#00C875" },
     }),
     prisma.tag.create({
       data: { workspaceId: workspace.id, name: "Enterprise", color: "#FF9900" },
@@ -1332,8 +1332,8 @@ async function main() {
             options: [
               { key: "new", label: "חדש", color: "#579BFC" },
               { key: "contacted", label: "יצרנו קשר", color: "#FDAB3D" },
-              { key: "interested", label: "מעוניין", color: "#00CA72" },
-              { key: "not_interested", label: "לא מעוניין", color: "#FB275D" },
+              { key: "interested", label: "מעוניין", color: "#00C875" },
+              { key: "not_interested", label: "לא מעוניין", color: "#E2445C" },
             ],
           },
           { key: "source", label: "מקור", type: "TEXT", width: "120px", order: 3 },
@@ -1359,7 +1359,7 @@ async function main() {
       name: "בורד פרויקטים",
       description: "מעקב אחרי פרויקטים פעילים",
       icon: "FolderKanban",
-      color: "#00CA72",
+      color: "#00C875",
       createdById: admin.id,
       columns: {
         create: [
@@ -1374,8 +1374,8 @@ async function main() {
               { key: "planning", label: "תכנון", color: "#579BFC" },
               { key: "in_progress", label: "בביצוע", color: "#FDAB3D" },
               { key: "review", label: "בבדיקה", color: "#A25DDC" },
-              { key: "done", label: "הושלם", color: "#00CA72" },
-              { key: "stuck", label: "תקוע", color: "#FB275D" },
+              { key: "done", label: "הושלם", color: "#00C875" },
+              { key: "stuck", label: "תקוע", color: "#E2445C" },
             ],
           },
           { key: "assignee", label: "אחראי", type: "PERSON", width: "120px", order: 2 },
@@ -1385,7 +1385,7 @@ async function main() {
       },
       groups: {
         create: [
-          { name: "פרויקטים פעילים", color: "#00CA72", order: 0 },
+          { name: "פרויקטים פעילים", color: "#00C875", order: 0 },
           { name: "פרויקטים בהמתנה", color: "#FDAB3D", order: 1 },
         ],
       },

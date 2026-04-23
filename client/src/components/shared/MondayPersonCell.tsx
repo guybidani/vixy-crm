@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useMemo } from "react";
 import { Search, X } from "lucide-react";
 import { avatarColor } from "../../lib/utils";
 
@@ -122,7 +122,7 @@ export default function MondayPersonCell({
             <span className="truncate">{value.name}</span>
           </>
         ) : (
-          <span className="text-[#C3C6D4] hover:text-[#0073EA]/60 transition-colors text-[12px] italic">
+          <span className="text-[#9699A6] hover:text-[#0073EA]/60 transition-colors text-[12px] italic">
             + {placeholder}
           </span>
         )}
@@ -136,7 +136,7 @@ export default function MondayPersonCell({
         >
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-[#E6E9EF]">
-            <Search size={14} className="text-[#C3C6D4] flex-shrink-0" />
+            <Search size={14} className="text-[#9699A6] flex-shrink-0" />
             <input
               ref={searchRef}
               value={search}
@@ -157,17 +157,17 @@ export default function MondayPersonCell({
                 aria-selected={false}
                 onClick={() => selectItem(null)}
                 onMouseEnter={() => setHighlightIndex(0)}
-                className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F5F6F8] transition-colors text-right ${
-                  highlightIndex === 0 ? "bg-[#F5F6F8]" : ""
+                className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F6F7FB] transition-colors text-right ${
+                  highlightIndex === 0 ? "bg-[#F6F7FB]" : ""
                 }`}
               >
-                <X size={14} className="text-[#C3C6D4]" />
+                <X size={14} className="text-[#9699A6]" />
                 <span className="text-[12px] text-[#676879]">הסר שיוך</span>
               </button>
             )}
 
             {filtered.length === 0 ? (
-              <div className="text-center py-4 text-[12px] text-[#C3C6D4]">
+              <div className="text-center py-4 text-[12px] text-[#9699A6]">
                 לא נמצאו תוצאות
               </div>
             ) : (
@@ -180,9 +180,9 @@ export default function MondayPersonCell({
                     aria-selected={value?.id === option.id}
                     onClick={() => selectItem(option.id)}
                     onMouseEnter={() => setHighlightIndex(itemIndex)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F5F6F8] transition-colors text-right ${
+                    className={`w-full flex items-center gap-2 px-3 py-2 hover:bg-[#F6F7FB] transition-colors text-right ${
                       highlightIndex === itemIndex
-                        ? "bg-[#F5F6F8]"
+                        ? "bg-[#F6F7FB]"
                         : value?.id === option.id
                           ? "bg-[#F0F3FF]"
                           : ""
