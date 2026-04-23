@@ -90,7 +90,7 @@ dealsRouter.get("/pipeline", async (req, res, next) => {
 
 // POST /api/v1/deals/bulk-delete
 const bulkDeleteSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
 });
 
 dealsRouter.post(
@@ -119,7 +119,7 @@ dealsRouter.post(
 
 // POST /api/v1/deals/bulk-update
 const bulkUpdateSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
   data: z.object({
     stage: z
       .enum([
@@ -132,6 +132,8 @@ const bulkUpdateSchema = z.object({
       ])
       .optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+    // Bulk reassign to a workspace member
+    assigneeId: z.string().uuid().optional(),
     tagId: z.string().uuid().optional(),
   }),
 });
@@ -168,6 +170,21 @@ dealsRouter.post(
         }
       }
       if (data.priority) updateData.priority = data.priority;
+
+      // Validate assigneeId belongs to this workspace (prevent BOLA) before
+      // letting it slip into updateMany.
+      if (data.assigneeId) {
+        const assignee = await prisma.workspaceMember.findFirst({
+          where: { id: data.assigneeId, workspaceId: req.workspaceId! },
+          select: { id: true },
+        });
+        if (!assignee) {
+          return res.status(400).json({
+            error: { code: "INVALID_REFERENCE", message: "Assignee not found in workspace" },
+          });
+        }
+        updateData.assigneeId = data.assigneeId;
+      }
 
       if (Object.keys(updateData).length > 0) {
         await prisma.deal.updateMany({

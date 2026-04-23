@@ -196,6 +196,7 @@ export function bulkUpdateTasks(
     priority?: string;
     assigneeId?: string;
     dueDate?: string;
+    snoozedUntil?: string | null;
   },
 ) {
   return api<{ updated: number }>("/tasks/bulk-update", {

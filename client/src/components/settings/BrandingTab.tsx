@@ -188,6 +188,8 @@ export default function BrandingTab() {
               <img
                 src={preview}
                 alt="לוגו"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -327,6 +329,8 @@ export default function BrandingTab() {
                   <img
                     src={preview}
                     alt="לוגו"
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (

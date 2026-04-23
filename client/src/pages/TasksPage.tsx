@@ -53,6 +53,10 @@ import {
   type Task,
 } from "../api/tasks";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import BulkActionDropdown from "../components/shared/BulkActionDropdown";
+import { useSnoozeOptions, resolveSnoozeDate } from "../hooks/useSnoozeOptions";
+import { sortedEntries } from "../hooks/useWorkspaceOptions";
+import { listMentionableMembers } from "../api/auth";
 import EmptyState from "../components/shared/EmptyState";
 import { EmptyTasks, EmptyError, EmptySearch } from "../components/shared/illustrations";
 import { getWorkspaceMembers } from "../api/auth";
@@ -901,8 +905,12 @@ export default function TasksPage() {
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-  const [showBulkPriorityMenu, setShowBulkPriorityMenu] = useState(false);
-  const bulkPriorityRef = useRef<HTMLDivElement>(null);
+  const { snoozeOptions } = useSnoozeOptions();
+  const { data: membersData } = useQuery({
+    queryKey: ["mentionable-members"],
+    queryFn: listMentionableMembers,
+  });
+  const workspaceMembers = membersData?.members ?? [];
 
   // Close sort menu on Escape key
   useEffect(() => {
@@ -1053,8 +1061,13 @@ export default function TasksPage() {
   });
 
   const bulkUpdateMutation = useMutation({
-    mutationFn: ({ ids, data: updateData }: { ids: string[]; data: { status?: string; priority?: string; assigneeId?: string; dueDate?: string } }) =>
-      bulkUpdateTasks(ids, updateData),
+    mutationFn: ({
+      ids,
+      data: updateData,
+    }: {
+      ids: string[];
+      data: Parameters<typeof bulkUpdateTasks>[1];
+    }) => bulkUpdateTasks(ids, updateData),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-board"] });
@@ -1065,27 +1078,24 @@ export default function TasksPage() {
   });
 
   const handleBulkDelete = () => setShowBulkDeleteConfirm(true);
-  const handleBulkMarkDone = () => bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { status: "DONE" } });
-  const handleBulkPriority = (priority: string) => {
+  const handleBulkStatus = (status: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { status } });
+  const handleBulkPriority = (priority: string) =>
     bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { priority } });
-    setShowBulkPriorityMenu(false);
+  const handleBulkAssignee = (assigneeId: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedTaskIds), data: { assigneeId } });
+  const handleBulkSnooze = (optionKey: string) => {
+    const opt = snoozeOptions.find(
+      (o) => `${o.special ?? ""}|${o.minutes}|${o.label}` === optionKey,
+    );
+    if (!opt) return;
+    const until = resolveSnoozeDate(opt).toISOString();
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedTaskIds),
+      data: { snoozedUntil: until },
+    });
   };
 
-  useEffect(() => {
-    if (!showBulkPriorityMenu) return;
-    function clickHandler(e: MouseEvent) {
-      if (bulkPriorityRef.current && !bulkPriorityRef.current.contains(e.target as Node)) setShowBulkPriorityMenu(false);
-    }
-    function keyHandler(e: KeyboardEvent) {
-      if (e.key === "Escape") setShowBulkPriorityMenu(false);
-    }
-    document.addEventListener("mousedown", clickHandler);
-    window.addEventListener("keydown", keyHandler);
-    return () => {
-      document.removeEventListener("mousedown", clickHandler);
-      window.removeEventListener("keydown", keyHandler);
-    };
-  }, [showBulkPriorityMenu]);
 
   const sortOptions = [
     { key: "createdAt", label: "תאריך יצירה" },
@@ -1396,42 +1406,46 @@ export default function TasksPage() {
         onDelete={handleBulkDelete}
         deleting={bulkDeleteMutation.isPending}
       >
-        <button
-          onClick={handleBulkMarkDone}
+        <BulkActionDropdown
+          label="שנה סטטוס"
+          icon={<CheckCircle2 size={14} />}
           disabled={bulkUpdateMutation.isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors disabled:opacity-50"
-        >
-          <CheckCircle2 size={14} />
-          סמן כמושלם
-        </button>
-        <div ref={bulkPriorityRef} className="relative">
-          <button
-            onClick={() => setShowBulkPriorityMenu((v) => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] hover:bg-white/10 rounded-[4px] transition-colors"
-          >
-            <ChevronDown size={14} />
-            שנה עדיפות
-          </button>
-          {showBulkPriorityMenu && (
-            <div className="absolute bottom-full mb-2 right-0 bg-[#404046] rounded-[4px] shadow-lg border border-white/10 py-1 min-w-[130px] z-50">
-              {[
-                { key: "URGENT", label: "דחוף", color: "#E2445C" },
-                { key: "HIGH", label: "גבוה", color: "#FDAB3D" },
-                { key: "MEDIUM", label: "בינוני", color: "#579BFC" },
-                { key: "LOW", label: "נמוך", color: "#9699A6" },
-              ].map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => handleBulkPriority(opt.key)}
-                  className="w-full text-right px-3 py-1.5 text-xs text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
-                >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          options={sortedEntries(taskStatuses).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+          }))}
+          onSelect={handleBulkStatus}
+        />
+        <BulkActionDropdown
+          label="שנה עדיפות"
+          disabled={bulkUpdateMutation.isPending}
+          options={sortedEntries(priorities).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+          }))}
+          onSelect={handleBulkPriority}
+        />
+        <BulkActionDropdown
+          label="שנה אחראי"
+          disabled={bulkUpdateMutation.isPending}
+          searchable
+          options={workspaceMembers.map((m) => ({
+            key: m.id,
+            label: m.name,
+          }))}
+          onSelect={handleBulkAssignee}
+        />
+        <BulkActionDropdown
+          label="דחה"
+          disabled={bulkUpdateMutation.isPending}
+          options={snoozeOptions.map((o) => ({
+            key: `${o.special ?? ""}|${o.minutes}|${o.label}`,
+            label: o.label,
+          }))}
+          onSelect={handleBulkSnooze}
+        />
       </BulkActionBar>
 
       <ConfirmDialog

@@ -15,6 +15,7 @@ import KanbanBoard, {
 } from "../components/shared/KanbanBoard";
 import ExportButton from "../components/shared/ExportButton";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import BulkActionDropdown from "../components/shared/BulkActionDropdown";
 import MondayBoard, {
   MondayStatusCell,
   type MondayGroup,
@@ -31,9 +32,12 @@ import {
   updateContact,
   getContactsBoard,
   bulkDeleteContacts,
+  bulkUpdateContacts,
   restoreContact,
   type Contact,
 } from "../api/contacts";
+import { listTags } from "../api/tags";
+import { sortedEntries } from "../hooks/useWorkspaceOptions";
 import UndoToast from "../components/shared/UndoToast";
 import { listCompanies } from "../api/companies";
 import { createActivity } from "../api/activities";
@@ -202,6 +206,46 @@ export default function ContactsPage() {
     },
     onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
   });
+
+  // Load tags lazily (used only by bulk-add-tag dropdown)
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["tags"],
+    queryFn: listTags,
+  });
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: ({
+      ids,
+      data: updateData,
+    }: {
+      ids: string[];
+      data: Parameters<typeof bulkUpdateContacts>[1];
+    }) => bulkUpdateContacts(ids, updateData),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts-board"] });
+      toast.success(`${result.updated ?? 0} אנשי קשר עודכנו`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const handleBulkStatus = (status: string) =>
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedIds),
+      data: { status: status as "LEAD" | "QUALIFIED" | "CUSTOMER" | "CHURNED" | "INACTIVE" },
+    });
+  const handleBulkCompany = (companyId: string) =>
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedIds),
+      // Empty string = clear company association
+      data: { companyId: companyId === "__none__" ? null : companyId },
+    });
+  const handleBulkTag = (tagId: string) =>
+    bulkUpdateMutation.mutate({
+      ids: Array.from(selectedIds),
+      data: { tagId },
+    });
 
   // Quick activity logging
   const quickActivityTypes = [
@@ -778,7 +822,39 @@ export default function ContactsPage() {
         onClear={() => setSelectedIds(new Set())}
         onDelete={() => setShowBulkDeleteConfirm(true)}
         deleting={bulkDeleteMutation.isPending}
-      />
+      >
+        <BulkActionDropdown
+          label="שנה סטטוס"
+          disabled={bulkUpdateMutation.isPending}
+          options={sortedEntries(contactStatuses).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+          }))}
+          onSelect={handleBulkStatus}
+        />
+        <BulkActionDropdown
+          label="שייך לחברה"
+          disabled={bulkUpdateMutation.isPending}
+          searchable
+          options={[
+            { key: "__none__", label: "— הסר שיוך —" },
+            ...companyOptions.map((c) => ({ key: c.id, label: c.name })),
+          ]}
+          onSelect={handleBulkCompany}
+        />
+        <BulkActionDropdown
+          label="הוסף תגית"
+          disabled={bulkUpdateMutation.isPending}
+          searchable
+          options={allTags.map((t) => ({
+            key: t.id,
+            label: t.name,
+            color: t.color,
+          }))}
+          onSelect={handleBulkTag}
+        />
+      </BulkActionBar>
 
       <ConfirmDialog
         open={showBulkDeleteConfirm}

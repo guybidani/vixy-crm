@@ -58,7 +58,7 @@ contactsRouter.get("/board", async (req, res, next) => {
 
 // POST /api/v1/contacts/bulk-delete
 const bulkDeleteSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
 });
 
 contactsRouter.post(
@@ -87,11 +87,13 @@ contactsRouter.post(
 
 // POST /api/v1/contacts/bulk-update
 const bulkUpdateSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
   data: z.object({
     status: z
       .enum(["LEAD", "QUALIFIED", "CUSTOMER", "CHURNED", "INACTIVE"])
       .optional(),
+    // Bulk assign contacts to a company (or clear with null)
+    companyId: z.string().uuid().nullable().optional(),
     tagId: z.string().uuid().optional(),
   }),
 });
@@ -104,15 +106,39 @@ contactsRouter.post(
     try {
       const { ids, data } = req.body;
 
-      if (data.status) {
-        await prisma.contact.updateMany({
+      // Build a single updateMany payload for direct column updates so we
+      // only hit the DB once regardless of how many fields are changing.
+      const updateData: Record<string, unknown> = {};
+      if (data.status) updateData.status = data.status;
+      if (data.companyId !== undefined) {
+        // Validate the company belongs to this workspace to prevent BOLA:
+        // otherwise an attacker could re-parent contacts to a company in
+        // another workspace.
+        if (data.companyId !== null) {
+          const company = await prisma.company.findFirst({
+            where: { id: data.companyId, workspaceId: req.workspaceId! },
+            select: { id: true },
+          });
+          if (!company) {
+            return res.status(400).json({
+              error: { code: "INVALID_REFERENCE", message: "Company not found in workspace" },
+            });
+          }
+        }
+        updateData.companyId = data.companyId;
+      }
+
+      let updatedCount = 0;
+      if (Object.keys(updateData).length > 0) {
+        const result = await prisma.contact.updateMany({
           where: {
             id: { in: ids },
             workspaceId: req.workspaceId!,
             deletedAt: null,
           },
-          data: { status: data.status },
+          data: updateData,
         });
+        updatedCount = result.count;
       }
 
       if (data.tagId) {
@@ -144,9 +170,10 @@ contactsRouter.post(
             }),
           ),
         );
+        if (updatedCount === 0) updatedCount = ownedIds.length;
       }
 
-      res.json({ success: true });
+      res.json({ success: true, updated: updatedCount });
     } catch (err) {
       next(err);
     }

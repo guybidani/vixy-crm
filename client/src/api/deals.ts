@@ -190,7 +190,12 @@ export function bulkDeleteDeals(ids: string[]) {
 
 export function bulkUpdateDeals(
   ids: string[],
-  data: { stage?: string; priority?: string; tagId?: string },
+  data: {
+    stage?: string;
+    priority?: string;
+    assigneeId?: string;
+    tagId?: string;
+  },
 ) {
   return api<{ success: boolean }>("/deals/bulk-update", {
     method: "POST",

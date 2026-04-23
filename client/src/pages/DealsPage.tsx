@@ -32,6 +32,7 @@ import KanbanBoard, {
 } from "../components/shared/KanbanBoard";
 import ExportButton from "../components/shared/ExportButton";
 import BulkActionBar from "../components/shared/BulkActionBar";
+import BulkActionDropdown from "../components/shared/BulkActionDropdown";
 import MondayBoard, {
   MondayStatusCell,
   type MondayGroup,
@@ -52,10 +53,14 @@ import {
   createDeal,
   updateDeal,
   bulkDeleteDeals,
+  bulkUpdateDeals,
   restoreDeal,
   type Deal,
   type PipelineResponse,
 } from "../api/deals";
+import { listTags } from "../api/tags";
+import { listMentionableMembers } from "../api/auth";
+import { sortedEntries } from "../hooks/useWorkspaceOptions";
 import UndoToast from "../components/shared/UndoToast";
 import { listContacts } from "../api/contacts";
 import { listCompanies } from "../api/companies";
@@ -246,6 +251,43 @@ export default function DealsPage() {
     },
     onError: () => toast.error("שגיאה במחיקה"),
   });
+
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["tags"],
+    queryFn: listTags,
+  });
+
+  const { data: membersData } = useQuery({
+    queryKey: ["mentionable-members"],
+    queryFn: listMentionableMembers,
+  });
+  const workspaceMembers = membersData?.members ?? [];
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: ({
+      ids,
+      data: updateData,
+    }: {
+      ids: string[];
+      data: Parameters<typeof bulkUpdateDeals>[1];
+    }) => bulkUpdateDeals(ids, updateData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["deals-pipeline"] });
+      toast.success(`${selectedIds.size} עסקאות עודכנו`);
+      setSelectedIds(new Set());
+    },
+    onError: (err) => handleMutationError(err, "שגיאה בעדכון"),
+  });
+
+  const handleBulkStage = (stage: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedIds), data: { stage } });
+  const handleBulkPriority = (priority: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedIds), data: { priority } });
+  const handleBulkAssignee = (assigneeId: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedIds), data: { assigneeId } });
+  const handleBulkTag = (tagId: string) =>
+    bulkUpdateMutation.mutate({ ids: Array.from(selectedIds), data: { tagId } });
 
   // Inline update
   const inlineUpdate = useInlineUpdate(updateDeal, [
@@ -700,7 +742,49 @@ export default function DealsPage() {
         onClear={() => setSelectedIds(new Set())}
         onDelete={() => setConfirmDelete({ ids: Array.from(selectedIds), message: `האם אתה בטוח שברצונך למחוק ${selectedIds.size} עסקאות?` })}
         deleting={bulkDeleteMutation.isPending}
-      />
+      >
+        <BulkActionDropdown
+          label="שנה שלב"
+          disabled={bulkUpdateMutation.isPending}
+          options={sortedEntries(dealStages).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+          }))}
+          onSelect={handleBulkStage}
+        />
+        <BulkActionDropdown
+          label="שנה עדיפות"
+          disabled={bulkUpdateMutation.isPending}
+          options={sortedEntries(priorities).map(([key, info]) => ({
+            key,
+            label: info.label,
+            color: info.color,
+          }))}
+          onSelect={handleBulkPriority}
+        />
+        <BulkActionDropdown
+          label="שנה אחראי"
+          disabled={bulkUpdateMutation.isPending}
+          searchable
+          options={workspaceMembers.map((m) => ({
+            key: m.id,
+            label: m.name,
+          }))}
+          onSelect={handleBulkAssignee}
+        />
+        <BulkActionDropdown
+          label="הוסף תגית"
+          disabled={bulkUpdateMutation.isPending}
+          searchable
+          options={allTags.map((t) => ({
+            key: t.id,
+            label: t.name,
+            color: t.color,
+          }))}
+          onSelect={handleBulkTag}
+        />
+      </BulkActionBar>
 
       <ConfirmDialog
         open={!!confirmDelete}

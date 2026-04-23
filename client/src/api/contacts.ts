@@ -126,3 +126,17 @@ export function bulkDeleteContacts(ids: string[]) {
     body: JSON.stringify({ ids }),
   });
 }
+
+export function bulkUpdateContacts(
+  ids: string[],
+  data: {
+    status?: "LEAD" | "QUALIFIED" | "CUSTOMER" | "CHURNED" | "INACTIVE";
+    companyId?: string | null;
+    tagId?: string;
+  },
+) {
+  return api<{ success: boolean; updated: number }>("/contacts/bulk-update", {
+    method: "POST",
+    body: JSON.stringify({ ids, data }),
+  });
+}

@@ -114,7 +114,7 @@ tasksRouter.get("/stats", async (req, res, next) => {
 
 // POST /api/v1/tasks/bulk-delete
 const bulkDeleteSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
 });
 
 tasksRouter.post(
@@ -147,12 +147,14 @@ tasksRouter.post(
 
 // POST /api/v1/tasks/bulk-update
 const bulkUpdateSchema = z.object({
-  ids: z.array(z.string().uuid()).min(1).max(100),
+  ids: z.array(z.string().uuid()).min(1).max(500),
   data: z.object({
     status: z.enum(["TODO", "IN_PROGRESS", "DONE", "CANCELLED"]).optional(),
     priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
     assigneeId: z.string().uuid().optional(),
     dueDate: z.string().optional(),
+    // Bulk snooze — ISO datetime string (or null to clear snooze)
+    snoozedUntil: z.string().datetime().nullable().optional(),
   }),
 });
 
@@ -182,6 +184,9 @@ tasksRouter.post(
       if (data.priority) updateData.priority = data.priority;
       if (data.assigneeId) updateData.assigneeId = data.assigneeId;
       if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
+      if (data.snoozedUntil !== undefined) {
+        updateData.snoozedUntil = data.snoozedUntil ? new Date(data.snoozedUntil) : null;
+      }
       if (data.status === "DONE") {
         updateData.completedAt = new Date();
       } else if (data.status) {
